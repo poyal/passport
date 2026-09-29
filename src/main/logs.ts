@@ -6,8 +6,12 @@ import type { LogFile } from "../shared/model";
 export class SessionLogs {
   active = new Map<string, string>();
   private lastPrune = 0;
+  private chunkLimit = 16 * 1024 ** 2;
   readonly folder: string;
-  constructor(readonly store: Store) {
+  constructor(
+    readonly store: Store,
+    readonly onError: (message: string) => void = () => {},
+  ) {
     this.folder = path.join(store.directory, "logs");
     fs.mkdirSync(this.folder, { recursive: true, mode: 0o700 });
     store.db.exec(
@@ -28,16 +32,25 @@ export class SessionLogs {
     this.active.delete(session);
   }
   append(session: string, data: string) {
-    const id = this.active.get(session);
+    let id = this.active.get(session);
     if (!id) return;
     try {
+      const row = this.get(id);
+      if (row.bytes && row.bytes + Buffer.byteLength(data) > this.chunkLimit) {
+        this.stop(session);
+        this.start(session, row.name);
+        id = this.active.get(session)!;
+      }
       fs.appendFileSync(this.file(id), data);
       this.store.db
         .prepare("UPDATE session_logs SET bytes=bytes+? WHERE id=?")
         .run(Buffer.byteLength(data), id);
       if (Date.now() - this.lastPrune > 1000) this.prune();
-    } catch {
+    } catch (error) {
       this.active.delete(session);
+      this.onError(
+        `세션 로그 기록이 중단되었습니다: ${error instanceof Error ? error.message : "저장 오류"}`,
+      );
     }
   }
   private file(id: string) {
@@ -131,19 +144,27 @@ export class SessionLogs {
   prune() {
     this.lastPrune = Date.now();
     const settings = this.store.read().settings;
+    this.chunkLimit = Math.min(
+      16 * 1024 ** 2,
+      (settings.logLimitMiB * 1024 ** 2) / 4,
+    );
     const rows = this.store.db
       .prepare(
-        "SELECT id,started,bytes FROM session_logs ORDER BY started DESC",
+        "SELECT id,name,started,bytes FROM session_logs ORDER BY started DESC, rowid DESC",
       )
-      .all() as { id: string; started: number; bytes: number }[];
+      .all() as { id: string; name: string; started: number; bytes: number }[];
     let total = 0;
     for (const r of rows) {
-      total += r.bytes;
       if (
         Date.now() - r.started > settings.logRetentionDays * 86400000 ||
-        total > settings.logLimitMiB * 1024 ** 2
-      )
+        total + r.bytes > settings.logLimitMiB * 1024 ** 2
+      ) {
+        const recording = [...this.active]
+          .filter(([, id]) => id === r.id)
+          .map(([session]) => session);
         this.delete(r.id);
+        for (const session of recording) this.start(session, r.name);
+      } else total += r.bytes;
     }
   }
   remember(text: string) {

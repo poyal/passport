@@ -50,8 +50,10 @@ it("records only opted-in output, searches across chunks, persists bookmarks, ex
     logs.start("b", "large");
     logs.append("b", "x");
     store.db.prepare("UPDATE session_logs SET bytes=?").run(1025 * 1024 ** 2);
-    expect(logs.list()).toHaveLength(0);
-    expect(logs.active.size).toBe(0);
+    expect(logs.list()).toHaveLength(1);
+    expect(logs.active.size).toBe(1);
+    logs.append("b", "after rotation");
+    expect(logs.read(logs.list()[0].id).text).toBe("after rotation");
   } finally {
     store.close();
     await fs.rm(dir, { recursive: true, force: true });
@@ -159,5 +161,47 @@ it("runs a native local PTY, accepts input and resize, and closes its process", 
     expect(local.sessions.size).toBe(0);
   } finally {
     await local.shutdown();
+  }
+});
+
+it("keeps recording after retention rotation, bounds disk usage, and reports write failures", async () => {
+  const dir = await fs.mkdtemp(
+    path.join(os.tmpdir(), "passport-log-rotation-"),
+  );
+  const store = new Store(dir, {
+    isEncryptionAvailable: () => false,
+    encryptString: () => Buffer.alloc(0),
+    decryptString: () => "",
+  });
+  try {
+    const settings = store.read();
+    settings.settings.logLimitMiB = 10;
+    store.save(settings);
+    const errors: string[] = [],
+      logs = new SessionLogs(store, (error) => errors.push(error));
+    logs.start("live", "still connected");
+    logs.append("live", "old output");
+    store.db
+      .prepare("UPDATE session_logs SET started=?")
+      .run(Date.now() - 31 * 86400000);
+    logs.prune();
+    logs.append("live", "new output");
+    expect(logs.list()).toHaveLength(1);
+    expect(logs.read(logs.list()[0].id).text).toBe("new output");
+    for (let i = 0; i < 12; i++) logs.append("live", "x".repeat(1024 ** 2));
+    const rows = logs.list();
+    expect(rows.reduce((n, row) => n + row.bytes, 0)).toBeLessThanOrEqual(
+      10 * 1024 ** 2,
+    );
+    expect(rows.some((row) => row.recording)).toBe(true);
+    await fs.rm(logs.folder, { recursive: true });
+    logs.append("live", "cannot write");
+    logs.append("live", "already stopped");
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toContain("기록이 중단");
+    expect(logs.active.has("live")).toBe(false);
+  } finally {
+    store.close();
+    await fs.rm(dir, { recursive: true, force: true });
   }
 });

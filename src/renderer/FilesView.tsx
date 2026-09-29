@@ -26,6 +26,8 @@ import {
 import type { Endpoint, FileEntry, TransferJob } from "../shared/model";
 import { useApp } from "./context";
 import { api } from "./api";
+import { HostIcon } from "./HostIcon";
+import { HostPicker } from "./HostPicker";
 import { IconButton, Empty, sizeLabel } from "./components";
 const fileMime = "application/x-passport-files";
 type Snapshot = {
@@ -37,7 +39,7 @@ const parentPath = (p: string) => {
   const parts = p.replace(/[\\/]$/, "").split(/[\\/]/);
   parts.pop();
   return parts.length
-    ? parts.join(p.includes("\\") ? "\\" : "/") +
+    ? (parts.join(p.includes("\\") ? "\\" : "/") || "/") +
         (parts.length === 1 && /^[A-Z]:$/i.test(parts[0]) ? "\\" : "")
     : p.startsWith("/")
       ? "/"
@@ -254,6 +256,7 @@ function FilePanel({
     }>({ key: "name", reverse: false }),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
+    [choosingHost, setChoosingHost] = useState(false),
     [hostId, setHostId] = useState("local"),
     [menu, setMenu] = useState<{
       x: number;
@@ -294,8 +297,10 @@ function FilePanel({
         setPosition(position + 1);
       }
     } catch (e) {
-      if (request === generation.current)
+      if (request === generation.current) {
         setError(e instanceof Error ? e.message : "폴더를 열 수 없습니다.");
+        app.notify(e);
+      }
     } finally {
       if (request === generation.current) setBusy(false);
     }
@@ -327,6 +332,7 @@ function FilePanel({
       if (next && next !== endpointRef.current)
         void api.call("files.close", { id: next.id }).catch(() => {});
       setError(e instanceof Error ? e.message : "파일 연결에 실패했습니다.");
+      app.notify(e);
     } finally {
       setBusy(false);
     }
@@ -507,24 +513,37 @@ function FilePanel({
         <div className="endpoint-icon">
           {endpoint?.protocol === "local" ? (
             <HardDrive size={17} />
+          ) : app.document.hosts.find((h) => h.id === hostId) ? (
+            <HostIcon host={app.document.hosts.find((h) => h.id === hostId)!} />
           ) : (
             <Server size={17} />
           )}
         </div>
-        <select
+        <button
+          className="endpoint-picker"
           aria-label={side ? "오른쪽 연결" : "왼쪽 연결"}
           disabled={busy}
-          value={hostId}
-          onChange={(e) => void connect(e.target.value)}
+          onClick={() => setChoosingHost(true)}
         >
-          <option value="local">내 컴퓨터</option>
-          {app.document.hosts.map((h) => (
-            <option key={h.id} value={h.id}>
-              {h.name} ·{" "}
-              {h.protocol === "ssh" ? "SFTP" : h.protocol.toUpperCase()}
-            </option>
-          ))}
-        </select>
+          <span>
+            {hostId === "local"
+              ? "내 컴퓨터"
+              : app.document.hosts.find((h) => h.id === hostId)?.name ||
+                "연결 선택"}
+          </span>
+          <ChevronDown size={16} />
+        </button>
+        {choosingHost && (
+          <HostPicker
+            title={side ? "오른쪽 파일 연결" : "왼쪽 파일 연결"}
+            local
+            onClose={() => setChoosingHost(false)}
+            onSelect={(id) => {
+              setChoosingHost(false);
+              void connect(id);
+            }}
+          />
+        )}
         <IconButton
           label="파일 연결 다시 열기"
           disabled={busy}
@@ -676,10 +695,16 @@ function FilePanel({
           <tbody>
             <tr
               className="parent-row"
-              onDoubleClick={() => void navigate(parentPath(path))}
+              onClick={() => void navigate(parentPath(path))}
             >
               <td colSpan={4}>
-                <button onClick={() => void navigate(parentPath(path))}>
+                <button
+                  aria-label="상위 폴더로 이동"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void navigate(parentPath(path));
+                  }}
+                >
                   <Folder size={17} />
                   <span>..</span>
                 </button>

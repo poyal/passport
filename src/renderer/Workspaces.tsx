@@ -38,7 +38,8 @@ import { themes, getTheme } from "../shared/themes";
 import { useApp } from "./context";
 import { api, uuid } from "./api";
 import { attachTerminal, applyAppearance, terminals } from "./terminals";
-import { IconButton, Modal, Empty } from "./components";
+import { HostPicker } from "./HostPicker";
+import { IconButton, Modal, Empty, NumberField } from "./components";
 export const dragMime = "application/x-passport-layout";
 type Edge = "left" | "right" | "top" | "bottom";
 const minimum = (n: Layout): [number, number] => {
@@ -61,12 +62,14 @@ function Leaf({
   setMaximized: (id: string | null) => void;
 }) {
   const app = useApp(),
-    host = paneHost(app.document, pane);
+    host = paneHost(app.document, pane, app.boot.profiles);
   const container = useRef<HTMLDivElement>(null);
   const [edge, setEdge] = useState<Edge | null>(null),
     [search, setSearch] = useState<string | null>(null),
     [split, setSplit] = useState(false),
-    [splitHost, setSplitHost] = useState(""),
+    [splitDirection, setSplitDirection] = useState<"horizontal" | "vertical">(
+      "horizontal",
+    ),
     [moving, setMoving] = useState(false),
     [moveTarget, setMoveTarget] = useState(""),
     [moveEdge, setMoveEdge] = useState<Edge>("right");
@@ -168,7 +171,10 @@ function Leaf({
       app.notify(error);
     }
   };
-  const addSplit = async (direction: "horizontal" | "vertical") => {
+  const addSplit = async (
+    direction: "horizontal" | "vertical",
+    splitHost: string,
+  ) => {
     const h = app.document.hosts.find((x) => x.id === splitHost);
     if (!h) {
       app.notify("연결할 호스트를 선택해 주세요.");
@@ -318,30 +324,29 @@ function Leaf({
         </div>
       )}
       {split && (
-        <div className="split-picker">
-          <select
-            aria-label="분할할 호스트"
-            value={splitHost}
-            onChange={(e) => setSplitHost(e.target.value)}
-          >
-            <option value="">연결할 SSH 호스트</option>
-            {app.document.hosts
-              .filter((h) => h.protocol === "ssh")
-              .map((h) => (
-                <option value={h.id} key={h.id}>
-                  {h.name}
-                </option>
-              ))}
-          </select>
-          <button onClick={() => void addSplit("horizontal")}>
-            <Columns2 size={14} />
-            좌우
-          </button>
-          <button onClick={() => void addSplit("vertical")}>
-            <Rows2 size={14} />
-            상하
-          </button>
-        </div>
+        <HostPicker
+          title="터미널 분할"
+          sshOnly
+          onClose={() => setSplit(false)}
+          onSelect={(id) => void addSplit(splitDirection, id)}
+        >
+          <div className="segmented" role="group" aria-label="분할 방향">
+            <button
+              aria-pressed={splitDirection === "horizontal"}
+              onClick={() => setSplitDirection("horizontal")}
+            >
+              <Columns2 size={16} />
+              좌우 분할
+            </button>
+            <button
+              aria-pressed={splitDirection === "vertical"}
+              onClick={() => setSplitDirection("vertical")}
+            >
+              <Rows2 size={16} />
+              상하 분할
+            </button>
+          </div>
+        </HostPicker>
       )}
       <div
         className="terminal-mount"
@@ -971,7 +976,7 @@ export function AppearancePanel({ workspace }: { workspace?: Workspace }) {
       ? (panes(workspace.root).find((p) => p.id === app.activePane) ??
         panes(workspace.root)[0])
       : undefined,
-    host = pane ? paneHost(app.document, pane) : undefined;
+    host = pane ? paneHost(app.document, pane, app.boot.profiles) : undefined;
   const appearance = {
     ...app.document.settings.appearance,
     ...(scope !== "global" ? host?.appearance : {}),
@@ -1054,24 +1059,22 @@ export function AppearancePanel({ workspace }: { workspace?: Workspace }) {
       </label>
       <label>
         줄 간격
-        <input
-          type="number"
+        <NumberField
           step="0.1"
           min="1"
           max="2"
           value={appearance.lineHeight}
-          onChange={(e) => change({ lineHeight: Number(e.target.value) })}
+          onChange={(value) => change({ lineHeight: value })}
         />
       </label>
       <label>
         자간
-        <input
-          type="number"
+        <NumberField
           step="0.1"
           min="-1"
           max="5"
           value={appearance.letterSpacing}
-          onChange={(e) => change({ letterSpacing: Number(e.target.value) })}
+          onChange={(value) => change({ letterSpacing: value })}
         />
       </label>
       <label>

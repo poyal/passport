@@ -1,0 +1,60 @@
+[
+  {
+    "title": "Alpine Linux",
+    "hex": "0D597F",
+    "source": "https://alpinelinux.org"
+  },
+  {
+    "title": "Apple",
+    "hex": "000000",
+    "source": "https://www.apple.com"
+  },
+  {
+    "title": "CentOS",
+    "hex": "262577",
+    "source": "https://wiki.centos.org/ArtWork/Brand/Logo"
+  },
+  {
+    "title": "Debian",
+    "hex": "A81D33",
+    "source": "https://www.debian.org/logos",
+    "guidelines": "https://www.debian.org/logos/",
+    "license": {
+      "type": "CC-BY-SA-3.0"
+    }
+  },
+  {
+    "title": "Fedora",
+    "hex": "51A2DA",
+    "source": "https://docs.fedoraproject.org/en-US/project/brand/",
+    "guidelines": "https://fedoraproject.org/wiki/Legal:Trademark_guidelines",
+    "license": {
+      "type": "custom",
+      "url": "https://docs.fedoraproject.org/en-US/project/brand/"
+    }
+  },
+  {
+    "title": "Linux",
+    "hex": "FCC624",
+    "source": "https://www.linuxfoundation.org/the-linux-mark/"
+  },
+  {
+    "title": "Red Hat",
+    "hex": "EE0000",
+    "source": "https://www.redhat.com/en/about/brand/new-brand/details"
+  },
+  {
+    "title": "Rocky Linux",
+    "hex": "10B981",
+    "source": "https://github.com/rocky-linux/branding/blob/94e97dd30b87d909cc4f6a6838a2926f77f9ac47/logo/src/icon-black.svg",
+    "license": {
+      "type": "CC-BY-SA-4.0"
+    }
+  },
+  {
+    "title": "Ubuntu",
+    "hex": "E95420",
+    "source": "https://design.ubuntu.com/resources",
+    "guidelines": "https://design.ubuntu.com/brand"
+  }
+]

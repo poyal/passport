@@ -7,13 +7,15 @@ import {
   ArrowUpRight,
   Download,
   Trash2,
+  Network,
 } from "lucide-react";
 import { useApp } from "./context";
 import { api, uuid } from "./api";
-import { Modal, IconButton } from "./components";
+import { Modal, IconButton, NumberField, Empty } from "./components";
 import { panes } from "../shared/layout";
 import {
   effectiveHost,
+  connectionHost,
   interpolate,
   variables,
   executableCommand,
@@ -44,7 +46,7 @@ export function HostExtras({
   onChange: (h: Host) => void;
 }) {
   const app = useApp(),
-    resolved = effectiveHost(app.document, host);
+    resolved = connectionHost(app.document, host, app.boot.profiles);
   const [environment, setEnvironment] = useState(
       JSON.stringify(host.environment, null, 2),
     ),
@@ -464,7 +466,7 @@ export function ExecuteCommand({
             const p = app.document.workspaces
               .flatMap((w) => panes(w.root))
               .find((p) => p.id === id);
-            return p ? paneHost(app.document, p).name : id;
+            return p ? paneHost(app.document, p, app.boot.profiles).name : id;
           })
           .join(" · ")}
       </p>
@@ -575,6 +577,10 @@ export function WorkspaceOperations({ workspace }: { workspace: Workspace }) {
     );
     return () => clearTimeout(timer);
   }, [query, source, sourcePath]);
+  useEffect(reload, [
+    app.sessionStates[selected?.id || ""]?.status,
+    app.document.settings.autoLog,
+  ]);
   const recording = logs.some(
     (l) => l.sessionId === selected?.id && l.recording,
   );
@@ -683,7 +689,7 @@ export function WorkspaceOperations({ workspace }: { workspace: Workspace }) {
               )
             }
           />
-          {paneHost(app.document, p).name}
+          {paneHost(app.document, p, app.boot.profiles).name}
         </label>
       ))}
       <button
@@ -697,6 +703,12 @@ export function WorkspaceOperations({ workspace }: { workspace: Workspace }) {
       </button>
       <div className="section-line" />
       <h4>현재 터미널 로그</h4>
+      <p className="recording-status">
+        <span className={`dot ${recording ? "" : "muted"}`} />
+        {recording
+          ? "이 터미널의 출력을 자동으로 기록 중입니다."
+          : "현재 기록이 일시 중지되어 있습니다."}
+      </p>
       <button
         disabled={!selected}
         onClick={() =>
@@ -707,11 +719,16 @@ export function WorkspaceOperations({ workspace }: { workspace: Workspace }) {
             .catch(app.notify)
         }
       >
-        {recording ? "기록 중지" : "로그 기록 시작"}
+        {recording ? "기록 일시 중지" : "기록 다시 시작"}
       </button>
       <small className="hint">
-        기록은 기본 꺼짐입니다. 기록 보기·검색·내보내기는 설정 → 세션 로그에서
-        할 수 있습니다.
+        접속부터 자동 기록하며 최대 30일 보관합니다.
+        <button
+          className="text-button"
+          onClick={() => app.openSettings("logs")}
+        >
+          로그 보기 및 보관 설정
+        </button>
       </small>
       <div className="section-line" />
       <h4>작업 탭 창 이동</h4>
@@ -796,6 +813,13 @@ export function TunnelSettings() {
           <Plus size={15} />새 규칙
         </button>
       </div>
+      {!app.document.tunnels.length && (
+        <Empty
+          icon={<Network size={28} />}
+          title="저장된 규칙이 없습니다"
+          description="새 규칙을 추가해 SSH 서버를 통한 포트 연결을 설정하세요."
+        />
+      )}
       {app.document.tunnels.map((rule) => (
         <section className="settings-card" key={rule.id}>
           <div className="row">
@@ -1005,25 +1029,44 @@ export function LogSettings() {
       <div className="page-heading">
         <div>
           <h1>세션 로그</h1>
-          <p>기록을 켠 터미널의 출력만 이 기기에 저장합니다.</p>
+          <p>
+            접속한 터미널의 출력을 이 기기에 자동 저장하고 최대 30일 보관합니다.
+          </p>
         </div>
         <button onClick={refresh}>새로고침</button>
       </div>
       <section className="settings-card">
+        <label className="check-label">
+          <input
+            type="checkbox"
+            checked={app.document.settings.autoLog}
+            onChange={(e) =>
+              void app.update((d) => ({
+                ...d,
+                settings: { ...d.settings, autoLog: e.target.checked },
+              }))
+            }
+          />
+          접속한 터미널 자동 기록
+        </label>
+        <p className="hint">
+          인증에 입력한 비밀번호와 개인 키는 기록하지 않습니다. 터미널에 출력된
+          내용은 저장되며 기간 또는 용량을 초과한 오래된 로그부터 삭제합니다.
+        </p>
+
         <div className="form-row">
           <label>
             보관 일수
-            <input
-              type="number"
+            <NumberField
               min={1}
-              max={365}
+              max={30}
               value={app.document.settings.logRetentionDays}
-              onChange={(e) =>
+              onChange={(value) =>
                 void app.update((d) => ({
                   ...d,
                   settings: {
                     ...d.settings,
-                    logRetentionDays: Number(e.target.value),
+                    logRetentionDays: value,
                   },
                 }))
               }
@@ -1031,17 +1074,16 @@ export function LogSettings() {
           </label>
           <label>
             전체 용량 · MiB
-            <input
-              type="number"
+            <NumberField
               min={10}
               max={1024}
               value={app.document.settings.logLimitMiB}
-              onChange={(e) =>
+              onChange={(value) =>
                 void app.update((d) => ({
                   ...d,
                   settings: {
                     ...d.settings,
-                    logLimitMiB: Number(e.target.value),
+                    logLimitMiB: value,
                   },
                 }))
               }
@@ -1049,7 +1091,7 @@ export function LogSettings() {
           </label>
         </div>
       </section>
-      <div className="log-layout">
+      <div className={`log-layout ${items.length ? "" : "is-empty"}`}>
         <div className="log-list">
           {items.map((log) => (
             <button
@@ -1155,7 +1197,11 @@ export function LogSettings() {
               ))}
             </>
           ) : (
-            <p className="hint">왼쪽에서 기록을 선택하세요.</p>
+            <p className="hint">
+              {items.length
+                ? "왼쪽에서 기록을 선택하세요."
+                : "아직 기록이 없습니다. 터미널에 접속하면 자동으로 기록을 시작합니다."}
+            </p>
           )}
         </section>
       </div>

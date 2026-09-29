@@ -26,6 +26,8 @@ export type AppContextValue = {
   ) => Promise<Secret | undefined | null>;
   openHost: (host: Host) => Promise<void>;
   connectPane: (id: string, hostId: string) => Promise<void>;
+  settingsSection: string;
+  openSettings: (section: string) => void;
   active: string;
   setActive: (id: string) => void;
   activePane: string;

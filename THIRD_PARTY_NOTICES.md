@@ -22,3 +22,14 @@ JetBrains Mono: Copyright JetBrains s.r.o., SIL Open Font License 1.1. 앱에 40
 | Campbell | Microsoft Corporation | MIT · https://github.com/microsoft/terminal |
 
 애플리케이션 브랜드, 아이콘, 기능 및 화면은 해당 프로젝트가 Passport를 보증한다는 의미가 아닙니다.
+
+## 운영체제 아이콘
+
+Alpine Linux, CentOS, Red Hat, Rocky Linux, Ubuntu, Debian, Fedora, Linux, Apple 로고는 [Simple Icons](https://github.com/simple-icons/simple-icons/tree/d4e6ba93e48f178898707f0145ec285f28b64b38)에서 가져왔습니다. SVG 경로는 원본 그대로이며 앱에서는 흰색 로고와 색상 타일로 표시합니다. 브랜드의 권리와 상표는 각 소유자에게 있습니다. Windows 타일은 네 개의 사각형으로 그립니다.
+
+- Simple Icons 구성물: CC0-1.0.
+- Debian Open Use 로고: Software in the Public Interest, Inc., [CC BY-SA 3.0](https://www.debian.org/logos/).
+- Rocky Linux 로고: Rocky Linux / Rocky Enterprise Software Foundation, [CC BY-SA 4.0](https://github.com/rocky-linux/branding).
+- Fedora 로고: Fedora Project / Red Hat, Inc., [Fedora 브랜드 안내](https://docs.fedoraproject.org/en-US/project/brand/).
+
+원본 출처, 개별 라이선스 정보와 고지는 `licenses/os-icons/` 및 설치본의 `dist/licenses/os-icons/`에 포함합니다.

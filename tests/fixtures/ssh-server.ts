@@ -52,6 +52,11 @@ export async function sshFixture(root: string) {
     client.on("ready", () =>
       client.on("session", (accept) => {
         const session = accept();
+        session.on("exec", (accept) => {
+          const stream = accept();
+          stream.end('Linux\nPRETTY_NAME="Alpine Linux 3.22"\n');
+          stream.exit(0);
+        });
         session.on("pty", (accept) => accept?.());
         session.on("window-change", (accept) => accept?.());
         session.on("shell", (accept) => {

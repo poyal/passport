@@ -27,7 +27,7 @@ import { Hosts } from "./Hosts";
 import { FilesView } from "./FilesView";
 import { WorkspaceView, dragMime } from "./Workspaces";
 import { Settings, SecretEditor, blankSecret } from "./Settings";
-import { IconButton, Modal } from "./components";
+import { IconButton, Modal, Tooltips } from "./components";
 import {
   configureTerminals,
   ensureTerminal,
@@ -40,6 +40,7 @@ import {
 } from "./terminals";
 import {
   effectiveHost,
+  connectionHost,
   LOCAL_HOST_ID,
   shortcutMatch,
   variables,
@@ -67,7 +68,8 @@ export function App() {
     [activePane, setActivePane] = useState(""),
     [states, setStates] = useState<Record<string, SessionState>>({}),
     [jobs, setJobs] = useState<TransferJob[]>([]),
-    [toast, setToast] = useState<string | null>(null),
+    [toast, setToast] = useState<{ text: string; error: boolean } | null>(null),
+    [settingsSection, setSettingsSection] = useState("appearance"),
     [requests, setRequests] = useState<Request[]>([]),
     [chooser, setChooser] = useState(false),
     [hostSearch, setHostSearch] = useState(""),
@@ -79,10 +81,6 @@ export function App() {
     [sessionAppearance, setSessionAppearance] = useState<
       Record<string, Partial<Appearance>>
     >({}),
-    [pastePreview, setPastePreview] = useState<{
-      text: string;
-      ids: string[];
-    } | null>(null),
     [fatal, setFatal] = useState("");
   const bootRef = useRef(boot),
     queue = useRef<Promise<unknown>>(Promise.resolve()),
@@ -92,10 +90,21 @@ export function App() {
   bootRef.current = boot;
   statusRef.current = states;
   const notify = useCallback((error: unknown) => {
-    setToast(typeof error === "string" ? error : message(error));
+    const isError = typeof error !== "string";
+    setToast({ text: isError ? message(error) : error, error: isError });
     clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToast(null), 6500);
+    if (!isError) toastTimer.current = setTimeout(() => setToast(null), 5000);
   }, []);
+  useEffect(() => {
+    const rejection = (e: PromiseRejectionEvent) => {
+      e.preventDefault();
+      notify(
+        e.reason instanceof Error ? e.reason : new Error(message(e.reason)),
+      );
+    };
+    window.addEventListener("unhandledrejection", rejection);
+    return () => window.removeEventListener("unhandledrejection", rejection);
+  }, [notify]);
   const refresh = useCallback(async () => {
     const data = await api.call("bootstrap", undefined);
     bootRef.current = data;
@@ -137,6 +146,8 @@ export function App() {
         if (!known && !terminals.has(event.state.id)) return;
         const entry = ensureTerminal(event.state.id);
         entry.connected = event.state.status === "connected";
+        if (event.state.status === "error")
+          notify(new Error(event.state.message || "서버 연결에 실패했습니다."));
         setStates((prev) => ({ ...prev, [event.state.id]: event.state }));
       } else if (event.kind === "output") {
         if (
@@ -160,13 +171,19 @@ export function App() {
               .call("session.ack", { id: event.id, bytes: event.bytes })
               .catch(() => {}),
         );
-      } else if (event.kind === "transfer")
+      } else if (event.kind === "transfer") {
+        if (event.job.state === "error")
+          notify(new Error(event.job.error || "파일 전송에 실패했습니다."));
         setJobs((prev) =>
           prev.some((j) => j.id === event.job.id)
             ? prev.map((j) => (j.id === event.job.id ? event.job : j))
             : [...prev, event.job],
         );
-      else if (event.kind === "document") {
+      } else if (event.kind === "notice") {
+        notify(new Error(event.message));
+      } else if (event.kind === "tunnel" && event.state.status === "error") {
+        notify(new Error(event.state.message || "포트 포워딩에 실패했습니다."));
+      } else if (event.kind === "document") {
         if (bootRef.current) {
           const next = {
             ...bootRef.current,
@@ -269,8 +286,17 @@ export function App() {
     host: Host,
     sftp = false,
   ): Promise<Secret | undefined | null> => {
-    if (bootRef.current) host = effectiveHost(bootRef.current.document, host);
-    const authId = sftp ? (host.sftpAuthId ?? host.authId) : host.authId;
+    if (bootRef.current)
+      host = connectionHost(
+        bootRef.current.document,
+        host,
+        bootRef.current.profiles,
+        sftp,
+      );
+    const authId =
+      sftp && (host.protocol === "ssh" || host.protocol === "sftp")
+        ? (host.sftpAuthId ?? host.authId)
+        : host.authId;
     if (bootRef.current?.profiles.find((p) => p.id === authId)?.hasSecret)
       return undefined;
     return new Promise<Secret | null>((resolve) =>
@@ -329,6 +355,29 @@ export function App() {
       await connectPane(paneId, host.id);
     }
   };
+  const deliverPaste = (text: string, ids: string[]) => {
+    const failures: string[] = [];
+    for (const id of [...new Set(ids)]) {
+      const entry = terminals.get(id);
+      try {
+        if (!entry?.connected) throw new Error("연결된 터미널이 없습니다.");
+        const prepared = preparePaste(
+          text,
+          entry.term.modes.bracketedPasteMode,
+        );
+        entry.pasting = true;
+        try {
+          entry.term.paste(prepared);
+        } finally {
+          entry.pasting = false;
+        }
+      } catch (error) {
+        failures.push(message(error));
+      }
+    }
+    if (failures.length) notify(new Error([...new Set(failures)].join("\n")));
+    terminals.get(activePane)?.term.focus();
+  };
   const paste = (text: string, ids: string[]) => {
     const connected = [...new Set(ids)].filter(
       (id) => statusRef.current[id]?.status === "connected",
@@ -347,14 +396,11 @@ export function App() {
         if (value === null) return;
         values[name] = value;
       }
-      setPastePreview({
-        text: interpolate(text, values).replace(/[\r\n]+$/, ""),
-        ids: connected,
-      });
+      deliverPaste(interpolate(text, values), connected);
     })();
   };
   useEffect(() => {
-    configureTerminals(paste, notify);
+    configureTerminals(deliverPaste, notify);
   });
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -448,6 +494,11 @@ export function App() {
         openHost,
         connectPane,
         active,
+        settingsSection,
+        openSettings: (section) => {
+          setSettingsSection(section);
+          setActive("settings");
+        },
         setActive,
         activePane,
         setActivePane,
@@ -613,13 +664,17 @@ export function App() {
                 {jobs.filter((j) => j.state === "running").length}개 전송 중
               </span>
             )}
-            <span>Passport 0.3.0</span>
+            <span>Passport 0.3.1</span>
           </div>
         </footer>
+        <Tooltips />
         {toast && (
-          <div className="toast" role="status">
+          <div
+            className={`toast ${toast.error ? "error" : ""}`}
+            role={toast.error ? "alert" : "status"}
+          >
             <Info size={16} />
-            <span>{toast}</span>
+            <span>{toast.text}</span>
             <IconButton label="알림 닫기" onClick={() => setToast(null)}>
               <X size={14} />
             </IconButton>
@@ -702,7 +757,11 @@ export function App() {
                     <div>
                       <strong>{h.name}</strong>
                       <small>
-                        {h.username}@{h.address}:{h.port}
+                        {
+                          connectionHost(boot.document, h, boot.profiles)
+                            .username
+                        }
+                        @{h.address}:{h.port}
                       </small>
                     </div>
                     <ArrowUpRight size={16} />
@@ -718,80 +777,6 @@ export function App() {
             >
               호스트 관리로 이동
             </button>
-          </Modal>
-        )}
-        {pastePreview && (
-          <Modal
-            title="터미널에 붙여넣기"
-            onClose={() => setPastePreview(null)}
-            wide
-          >
-            <p>대상 {pastePreview.ids.length}개 · Enter를 전송하지 않습니다.</p>
-            <div className="paste-targets">
-              {pastePreview.ids.map((id) => {
-                const pane = boot.document.workspaces
-                    .flatMap((w) => panes(w.root))
-                    .find((p) => p.id === id),
-                  host = boot.document.hosts.find((h) => h.id === pane?.hostId);
-                return (
-                  <span className="pill" key={id}>
-                    {host?.name} · {host?.username}
-                  </span>
-                );
-              })}
-            </div>
-            <label>
-              내용
-              <textarea
-                className="code"
-                rows={8}
-                value={pastePreview.text}
-                onChange={(e) =>
-                  setPastePreview({ ...pastePreview, text: e.target.value })
-                }
-              />
-            </label>
-            <p className="hint">
-              여러 줄 입력은 bracketed paste를 지원하는 대상에만 전달합니다.
-            </p>
-            <div className="modal-actions">
-              <button onClick={() => setPastePreview(null)}>취소</button>
-              <button
-                className="primary"
-                onClick={() => {
-                  const failures: string[] = [];
-                  let count = 0;
-                  for (const id of pastePreview.ids) {
-                    const entry = terminals.get(id);
-                    try {
-                      if (!entry?.connected)
-                        throw new Error("연결이 종료되었습니다.");
-                      entry.term.paste(
-                        preparePaste(
-                          pastePreview.text,
-                          entry.term.modes.bracketedPasteMode,
-                        ),
-                      );
-                      count++;
-                    } catch (e) {
-                      const pane = boot.document.workspaces
-                        .flatMap((w) => panes(w.root))
-                        .find((p) => p.id === id);
-                      failures.push(
-                        `${boot.document.hosts.find((h) => h.id === pane?.hostId)?.name ?? id}: ${message(e)}`,
-                      );
-                    }
-                  }
-                  setPastePreview(null);
-                  notify(
-                    `${count}개 터미널에 붙여넣었습니다.${failures.length ? "\n" + failures.join("\n") : ""}`,
-                  );
-                  terminals.get(activePane)?.term.focus();
-                }}
-              >
-                붙여넣기
-              </button>
-            </div>
           </Modal>
         )}
         {requests[0] && (

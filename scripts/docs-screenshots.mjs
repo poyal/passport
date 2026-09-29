@@ -48,7 +48,10 @@ try {
     timeout: 30000,
   });
   const page = await app.firstWindow();
-  await app.evaluate(({ BrowserWindow, dialog }) => {
+  await app.evaluate(({ BrowserWindow, dialog, safeStorage }) => {
+    safeStorage.isEncryptionAvailable = () => true;
+    safeStorage.encryptString = (text) => Buffer.from(text);
+    safeStorage.decryptString = (buffer) => buffer.toString();
     // The only SSH endpoint used here is our disposable loopback fixture.
     dialog.showMessageBox = async () => ({
       response: 1,
@@ -87,7 +90,7 @@ try {
             ? ["검증"]
             : ["운영"],
       favorite: i === 0 || i === 4,
-      icon: "linux",
+      icon: ["alpine", "centos", "redhat", "rocky", "ubuntu", "windows"][i],
       startPath: i === 1 ? "/archive" : "/releases",
       appearance: { theme: ["mocha", "nord", "tokyo-night"][i % 3] },
     }),
@@ -138,13 +141,31 @@ try {
       },
     },
   ];
-  await page.evaluate(async (document) => {
-    const current = await window.passport.call("bootstrap", undefined);
-    await window.passport.call("save", {
-      ...document,
-      revision: current.document.revision,
-    });
-  }, document);
+  const profileId = randomUUID();
+  document.hosts.forEach((host) => {
+    host.authId = profileId;
+  });
+  await page.evaluate(
+    async ({ document, profileId }) => {
+      await window.passport.call("auth.save", {
+        id: profileId,
+        name: "개발 공통 인증",
+        username: "tester",
+        secret: {
+          type: "password",
+          password: "test-only-password",
+          privateKey: "",
+          passphrase: "",
+        },
+      });
+      const current = await window.passport.call("bootstrap", undefined);
+      await window.passport.call("save", {
+        ...document,
+        revision: current.document.revision,
+      });
+    },
+    { document, profileId },
+  );
   await page.reload();
   await page.locator(".workspace-tab>button").first().click();
   // Sequential connection preserves the pane-to-fixture-channel order.
@@ -257,12 +278,11 @@ try {
   await capture("hosts.png");
   await page.getByRole("button", { name: "파일", exact: true }).click();
   for (const [index, label] of ["왼쪽 연결", "오른쪽 연결"].entries()) {
-    await page.getByLabel(label, { exact: true }).selectOption(hosts[index].id);
-    const dialog = page.getByRole("dialog");
-    await dialog
-      .getByLabel("비밀번호", { exact: true })
-      .fill("test-only-password");
-    await dialog.getByRole("button", { name: "연결", exact: true }).click();
+    await page.getByRole("button", { name: label, exact: true }).click();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: new RegExp(hosts[index].name) })
+      .click();
     await expect(
       page.getByLabel(index ? "오른쪽 경로" : "왼쪽 경로", { exact: true }),
     ).toHaveValue(index ? "/archive" : "/releases");

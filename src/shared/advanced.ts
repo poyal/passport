@@ -4,9 +4,13 @@ import {
   type Pane,
   type PassportDocument,
   type Appearance,
+  type AuthProfile,
 } from "./model";
 export const LOCAL_HOST_ID = "00000000-0000-4000-8000-000000000001";
-export function effectiveHost(document: PassportDocument, host: Host): Host {
+export function resolveHostSettings(
+  document: PassportDocument,
+  host: Host,
+): Host {
   const ancestors = [];
   let id = host.groupId;
   const seen = new Set<string>();
@@ -27,9 +31,38 @@ export function effectiveHost(document: PassportDocument, host: Host): Host {
   for (const field of host.inherit)
     if (defaults[field] !== undefined)
       Object.assign(next, { [field]: defaults[field] });
-  return hostSchema.parse(next);
+  return next;
 }
-export function paneHost(document: PassportDocument, pane: Pane): Host {
+export function effectiveHost(document: PassportDocument, host: Host): Host {
+  return hostSchema.parse(resolveHostSettings(document, host));
+}
+export function connectionHost(
+  document: PassportDocument,
+  host: Host,
+  profiles: AuthProfile[],
+  sftp = false,
+): Host {
+  const resolved = resolveHostSettings(document, host);
+  const fileAccount =
+    sftp && (resolved.protocol === "ssh" || resolved.protocol === "sftp");
+  const profile = profiles.find(
+    (p) =>
+      p.id ===
+      (fileAccount
+        ? (resolved.sftpAuthId ?? resolved.authId)
+        : resolved.authId),
+  );
+  if (profile?.username) {
+    if (fileAccount) resolved.sftpUsername = profile.username;
+    else resolved.username = profile.username;
+  }
+  return resolved;
+}
+export function paneHost(
+  document: PassportDocument,
+  pane: Pane,
+  profiles: AuthProfile[] = [],
+): Host {
   if (pane.local)
     return hostSchema.parse({
       id: LOCAL_HOST_ID,
@@ -39,7 +72,7 @@ export function paneHost(document: PassportDocument, pane: Pane): Host {
     });
   const host = document.hosts.find((x) => x.id === pane.hostId);
   if (!host) throw new Error("호스트를 찾을 수 없습니다.");
-  return effectiveHost(document, host);
+  return hostSchema.parse(connectionHost(document, host, profiles));
 }
 export function variables(text: string) {
   return [

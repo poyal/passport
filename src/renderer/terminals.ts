@@ -22,6 +22,7 @@ type Entry = {
   backspace: "DEL" | "BS";
   physicalKey?: string;
   composing: boolean;
+  pasting?: boolean;
   hydrating?: boolean;
 };
 export const terminals = new Map<string, Entry>();
@@ -102,23 +103,19 @@ export function ensureTerminal(id: string) {
     },
     true,
   );
-  element.addEventListener(
-    "keydown",
-    (event) => {
-      entry.physicalKey = event.key;
-      setTimeout(() => {
-        entry.physicalKey = undefined;
-      }, 0);
-    },
-    true,
-  );
+  term.onKey(({ key }) => {
+    entry.physicalKey = key;
+  });
   term.onData((data) => {
     if (!entry.connected || entry.hydrating) return;
+    const physicalKey = entry.physicalKey === data;
+    entry.physicalKey = undefined;
     if (entry.backspace === "BS" && data === "\x7f") data = "\b";
     // Only a physical key/composition can fan out. Device status reports and paste stay at their source.
     if (
       broadcast.includes(id) &&
-      (entry.physicalKey || entry.composing) &&
+      !entry.pasting &&
+      (physicalKey || (entry.composing && !data.includes("\x1b"))) &&
       !data.startsWith("\x1b[200~")
     )
       void api
@@ -148,6 +145,8 @@ export function ensureTerminal(id: string) {
       mac,
     );
     if (copy) {
+      event.preventDefault();
+      event.stopPropagation();
       if (event.type === "keydown") {
         void api
           .call("clipboard.write", { text: term.getSelection() })
@@ -156,6 +155,8 @@ export function ensureTerminal(id: string) {
       return false;
     }
     if (paste) {
+      event.preventDefault();
+      event.stopPropagation();
       if (event.type === "keydown")
         void api
           .call("clipboard.read", undefined)
@@ -163,7 +164,7 @@ export function ensureTerminal(id: string) {
           .catch(errorHandler);
       return false;
     }
-    // Browser Ctrl+V must not bypass the paste preview on Windows.
+    // Route browser paste through the same clipboard handling on Windows.
     if (event.ctrlKey && event.code === "KeyV") return false;
     return true;
   });

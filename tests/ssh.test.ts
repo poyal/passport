@@ -124,6 +124,13 @@ it("runs a startup command once and never repeats it after automatic reconnect",
   for (let n = 0; n < 200 && server.shells.length < 2; n++)
     await new Promise((r) => setTimeout(r, 20));
   expect(server.shells.length).toBe(2);
+  for (
+    let n = 0;
+    n < 100 && manager.sessions.get(id)?.status !== "connected";
+    n++
+  )
+    await new Promise((r) => setTimeout(r, 20));
+  expect(manager.sessions.get(id)?.status).toBe("connected");
   manager.input(id, "AFTER_RECONNECT");
   for (
     let n = 0;

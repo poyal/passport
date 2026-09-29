@@ -1,6 +1,6 @@
 {
   "name": "passport",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "type": "module",
   "description": "개인용 SSH 및 파일 전송 데스크톱 앱",

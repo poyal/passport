@@ -43,3 +43,9 @@
 확정 원본은 v2 PNG다. [빌드 스크립트](../scripts/build.mjs)가 이 파일을 `build/icon.png`로 복사하며 앱 화면과 패키징에 사용한다. Mac 설치본에 적용했고, Windows 설치본과 작업표시줄 표시는 Windows 실환경 검증이 남아 있다.
 
 원본 이미지와 생성 프롬프트는 앱에서 참조하는 `design/icons/`에 보관한다. 문서용 실제 앱 화면은 [스크린샷 안내](screenshots.md)를 참고한다.
+
+## 서버 운영체제 아이콘
+
+0.3.1은 앱 아이콘과 별도로 서버 OS용 SVG 로고를 사용한다. Alpine은 파랑, CentOS는 노랑, Red Hat은 빨강, Rocky는 초록, Ubuntu는 주황으로 구분한다. Debian·Fedora·Linux·macOS·Windows도 제공한다. 호스트 목록·파일 패널·연결 선택 창에서 같은 컴포넌트를 사용하며 감지 실패는 공통 서버 아이콘으로 표시한다.
+
+[SVG 자산](../src/renderer/assets/os/) · [출처와 고지](../licenses/os-icons/SOURCE.md) · [오픈소스 고지](../THIRD_PARTY_NOTICES.md#운영체제-아이콘).

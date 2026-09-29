@@ -102,6 +102,7 @@ it("upgrades v0.1 metadata without losing hosts and rejects a future database ve
       name: "기존 서버",
       address: "localhost",
       username: "user",
+      icon: "server",
     });
     store.save({ ...store.read(), hosts: [host] });
     const old = store.read() as any;
@@ -116,16 +117,57 @@ it("upgrades v0.1 metadata without losing hosts and rejects a future database ve
     store.db.pragma("user_version = 1");
     store.close();
     store = new Store(dir, vault);
-    expect(store.db.pragma("user_version", { simple: true })).toBe(2);
+    expect(store.db.pragma("user_version", { simple: true })).toBe(3);
     expect(store.read().hosts[0].name).toBe("기존 서버");
+    expect(store.read().hosts[0].icon).toBe("auto");
     expect(store.read().tunnels).toEqual([]);
     expect(store.read().settings.shortcuts.newTab).toBe("Mod+Shift+T");
     store.close();
     const future = new Database(path.join(dir, "passport.sqlite"));
-    future.pragma("user_version=3");
+    future.pragma("user_version=4");
     future.close();
     expect(() => new Store(dir, vault)).toThrow("새로운 Passport");
   } finally {
+    await fs.rm(dir, { recursive: true, force: true });
+  }
+});
+
+it("migrates credential-only v2 profiles and preserves account metadata through backup and import", async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "passport-profile-v2-"));
+  const id = randomUUID();
+  const old = new Database(path.join(dir, "passport.sqlite"));
+  const secret = {
+    type: "password" as const,
+    password: "fixture",
+    privateKey: "",
+    passphrase: "",
+  };
+  old.exec(
+    "CREATE TABLE credentials(id TEXT PRIMARY KEY,name TEXT NOT NULL,type TEXT NOT NULL,secret BLOB); PRAGMA user_version=2;",
+  );
+  old
+    .prepare("INSERT INTO credentials VALUES(?,?,?,?)")
+    .run(id, "legacy", "password", vault.encryptString(JSON.stringify(secret)));
+  old.close();
+  const store = new Store(dir, vault);
+  try {
+    expect(store.profiles()[0]).toMatchObject({
+      id,
+      username: "",
+      hasSecret: true,
+    });
+    expect(store.getSecret(id)).toEqual(secret);
+    store.saveSecret(id, "account profile", secret, "tester");
+    store.backup();
+    const backup = store.readBackup(store.backups()[0]);
+    expect(backup.profiles[0].username).toBe("tester");
+    store.apply(backup.document, backup.profiles, backup.secrets!);
+    expect(store.profiles()[0].username).toBe("tester");
+    expect(() => store.saveSecret(id, "bad", secret, "a\nb")).toThrow(
+      "사용자 이름",
+    );
+  } finally {
+    store.close();
     await fs.rm(dir, { recursive: true, force: true });
   }
 });

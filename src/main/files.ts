@@ -1,3 +1,4 @@
+import { detectRemoteOS } from "./remote-os";
 import fs from "node:fs";
 import fsp from "node:fs/promises";
 import path from "node:path";
@@ -354,6 +355,7 @@ export class Files {
   constructor(
     readonly store: Store,
     readonly confirm: TrustPrompt,
+    readonly onDetectedOS?: (host: Host, os: string) => void,
   ) {}
   async open(host: Host | null, secret?: Secret): Promise<Endpoint> {
     let adapter: FileAdapter;
@@ -387,6 +389,12 @@ export class Files {
           adapter = new SFTPAdapter(endpoint, client, sftp);
           endpoint.initialPath =
             host.startPath || (await adapter.realpath("."));
+          if (this.onDetectedOS)
+            void detectRemoteOS(client)
+              .then((os) => {
+                if (os) this.onDetectedOS?.(host, os);
+              })
+              .catch(() => {});
         } catch (error) {
           client.end();
           throw error;

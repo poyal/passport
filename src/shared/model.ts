@@ -102,7 +102,23 @@ export const hostSchema = z.object({
   groupId: idSchema.nullable().default(null),
   tags: z.array(short).max(100).default([]),
   favorite: z.boolean().default(false),
-  icon: z.enum(["server", "linux", "apple", "windows"]).default("server"),
+  icon: z
+    .enum([
+      "auto",
+      "server",
+      "alpine",
+      "centos",
+      "redhat",
+      "rocky",
+      "ubuntu",
+      "debian",
+      "fedora",
+      "linux",
+      "apple",
+      "windows",
+    ])
+    .default("auto"),
+  detectedOS: short.optional(),
   authId: idSchema.nullable().default(null),
   startPath: z
     .string()
@@ -211,7 +227,14 @@ export const settingsSchema = z.object({
       previousPane: "Alt+ArrowLeft",
       newTab: "Mod+Shift+T",
     }),
-  logRetentionDays: z.number().int().min(1).max(365).default(30),
+  autoLog: z.boolean().default(true),
+  logRetentionDays: z
+    .number()
+    .int()
+    .min(1)
+    .max(365)
+    .transform((days) => Math.min(days, 30))
+    .default(30),
   logLimitMiB: z.number().int().min(10).max(1024).default(1024),
 });
 export const documentSchema = z
@@ -301,11 +324,19 @@ export const secretSchema = z.object({
   passphrase: z.string().max(65536).default(""),
 });
 export type Secret = z.infer<typeof secretSchema>;
+export const profileUsernameSchema = z
+  .string()
+  .max(256)
+  .refine(
+    (v) => !/[\r\n\0]/.test(v),
+    "사용자 이름에 제어 문자를 넣을 수 없습니다.",
+  );
 export type AuthProfile = {
   id: string;
   name: string;
   type: "password" | "key";
   hasSecret?: boolean;
+  username?: string;
 };
 export type Bootstrap = {
   document: PassportDocument;
@@ -356,6 +387,7 @@ export type TransferJob = {
   cleanup?: string;
 };
 export type AppEvent =
+  | { kind: "notice"; message: string }
   | { kind: "session"; state: SessionState }
   | { kind: "output"; id: string; data: string; bytes: number }
   | { kind: "transfer"; job: TransferJob }
@@ -407,7 +439,7 @@ export interface Calls {
   bootstrap: { input: undefined; output: Bootstrap };
   save: { input: PassportDocument; output: PassportDocument };
   "auth.save": {
-    input: { id: string; name: string; secret: Secret };
+    input: { id: string; name: string; username?: string; secret: Secret };
     output: AuthProfile[];
   };
   "auth.delete": { input: { id: string }; output: AuthProfile[] };

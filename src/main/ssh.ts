@@ -1,3 +1,4 @@
+import { detectRemoteOS } from "./remote-os";
 import { Client, type ClientChannel } from "ssh2";
 import { createHash } from "node:crypto";
 import { StringDecoder } from "node:string_decoder";
@@ -99,6 +100,7 @@ export class Sessions {
     readonly store: Store,
     readonly confirm: TrustPrompt,
     readonly emit: (event: AppEvent) => void,
+    readonly onDetectedOS?: (host: Host, os: string) => void,
   ) {}
   async open(id: string, host: Host, secret: Secret, startup?: string) {
     if (host.protocol !== "ssh")
@@ -163,6 +165,13 @@ export class Sessions {
       }
       s.stream = stream;
       this.status(s, "connected");
+      if (this.onDetectedOS)
+        void detectRemoteOS(client)
+          .then((os) => {
+            if (os && !s.intentional && s.client === client)
+              this.onDetectedOS?.(s.host, os);
+          })
+          .catch(() => {});
       stream.on("data", (data: Buffer) => {
         s.queue += s.decoder.write(data);
         if (s.inFlight + Buffer.byteLength(s.queue) >= 256 * 1024) {
@@ -181,7 +190,15 @@ export class Sessions {
       });
       stream.once("close", () => {
         s.queue += s.decoder.end();
-        this.schedule(s);
+        clearTimeout(s.flush);
+        s.flush = undefined;
+        if (s.queue && !s.intentional) {
+          const data = s.queue;
+          s.queue = "";
+          const bytes = Buffer.byteLength(data);
+          s.inFlight += bytes;
+          this.emit({ kind: "output", id: s.id, data, bytes });
+        }
         client.end();
       });
       if (startup) stream.write(startup + "\r");

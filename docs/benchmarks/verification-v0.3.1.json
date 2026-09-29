@@ -1,0 +1,67 @@
+{
+  "version": "0.3.1",
+  "date": "2026-09-29",
+  "platform": "darwin",
+  "arch": "arm64",
+  "unitIntegration": {
+    "passed": 54,
+    "skipped": 2,
+    "ftpFtpsIncluded": true,
+    "skippedSuites": [
+      "Docker OpenSSH matrix",
+      "large-file stress"
+    ]
+  },
+  "gui": {
+    "uniquePassed": 18,
+    "lastTargetedRunPassed": 5,
+    "lastTargetedSuite": "tests/e2e/usability.spec.ts",
+    "nativePtyShutdownCases": 3,
+    "skipped": [
+      "10-minute 16-terminal stress"
+    ]
+  },
+  "visual": {
+    "themes": [
+      "light",
+      "dark"
+    ],
+    "sizes": [
+      [
+        1440,
+        900
+      ],
+      [
+        1024,
+        680
+      ]
+    ],
+    "mainScreenshots": 36,
+    "credentialScreenshots": 2,
+    "productScreenshots": 4
+  },
+  "limitations": [
+    "Windows installation/runtime not tested",
+    "Physical mouse window dragging and native IME not tested by Playwright",
+    "0.3.0 Docker and sustained stress results were not rerun for 0.3.1"
+  ],
+  "package": {
+    "artifact": "release/Passport-0.3.1-mac-arm64.dmg",
+    "sha256": "d85fc624fbc85953a0b8265a3e000733da6b17233bce15317fbebf807a6af16e",
+    "signature": "ad-hoc; deep strict verification passed",
+    "notarized": false,
+    "smoke": {
+      "packagedSmoke": "passed",
+      "localPTY": "passed",
+      "shutdown": "passed",
+      "exitCode": 0,
+      "appVersion": "0.3.1",
+      "arch": "arm64",
+      "platform": "darwin",
+      "hosts": 0,
+      "fonts": 247,
+      "version": 1,
+      "nodeAvailable": false
+    }
+  }
+}

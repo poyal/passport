@@ -10,15 +10,20 @@ import {
   Trash2,
   Terminal,
   ArrowLeftRight,
-  FolderPlus,
+  Settings as SettingsIcon,
   Clock,
   Layers,
+  ContactRound,
+  KeyRound,
 } from "lucide-react";
-import { HostExtras, GroupDefaults, BulkHosts } from "./Advanced";
+import { resolveHostSettings, connectionHost } from "../shared/advanced";
+import { AuthPicker } from "./AuthPicker";
+import { HostExtras, BulkHosts } from "./Advanced";
 import { hostSchema, type Host } from "../shared/model";
 import { useApp } from "./context";
-import { uuid } from "./api";
+import { api, uuid } from "./api";
 import { Empty, IconButton } from "./components";
+import { HostIcon, hostIconNames } from "./HostIcon";
 import { themes } from "../shared/themes";
 import { panes, removeNode } from "../shared/layout";
 
@@ -31,9 +36,14 @@ export function Hosts() {
     [filter, setFilter] = useState("all"),
     [tag, setTag] = useState(""),
     [sort, setSort] = useState("name"),
-    [groupDefaults, setGroupDefaults] = useState<string | null>(null),
     [checked, setChecked] = useState<string[]>([]),
-    [bulk, setBulk] = useState(false);
+    [bulk, setBulk] = useState(false),
+    [choosingAuth, setChoosingAuth] = useState(false),
+    [password, setPassword] = useState(""),
+    [saving, setSaving] = useState(false);
+  useEffect(() => {
+    setPassword("");
+  }, [selected]);
   useEffect(() => {
     if (selected) setDraft(doc.hosts.find((h) => h.id === selected) ?? null);
   }, [selected, doc.hosts]);
@@ -57,7 +67,7 @@ export function Hosts() {
           (filter === "recent" && h.lastConnected > 0) ||
           inGroup(h, filter)) &&
         (!tag || h.tags.includes(tag)) &&
-        `${h.name} ${h.address} ${h.username} ${h.tags.join(" ")}`
+        `${h.name} ${h.address} ${connectionHost(doc, h, app.boot.profiles).username} ${h.tags.join(" ")}`
           .toLowerCase()
           .includes(search.toLowerCase()),
     )
@@ -69,21 +79,55 @@ export function Hosts() {
           : a.name.localeCompare(b.name, "ko"),
     );
   const create = () => {
+    setPassword("");
     setSelected(null);
-    setDraft(
-      hostSchema.parse({
+    setDraft({
+      ...hostSchema.parse({
         id: uuid(),
         name: "새 호스트",
         address: "localhost",
         username: "root",
         groupId: doc.groups.some((g) => g.id === filter) ? filter : null,
       }),
-    );
+      name: "",
+      address: "",
+      username: "",
+      port: 0,
+    });
   };
   const save = async (event: FormEvent) => {
     event.preventDefault();
+    if (saving) return;
+    setSaving(true);
     try {
-      const h = hostSchema.parse(draft);
+      const profile = app.boot.profiles.find(
+        (p) => p.id === (draft ? resolveHostSettings(doc, draft).authId : null),
+      );
+      const h = hostSchema.parse({
+        ...draft,
+        username: profile?.username || draft?.username,
+        port:
+          draft?.port ||
+          (draft?.protocol === "ftp" || draft?.protocol === "ftps" ? 21 : 22),
+      });
+      if (password && !profile) {
+        const id = uuid();
+        await api.call("auth.save", {
+          id,
+          name: `${h.name} 인증`.slice(0, 256),
+          username: h.username,
+          secret: {
+            type: "password",
+            password,
+            privateKey: "",
+            passphrase: "",
+          },
+        });
+        h.authId = id;
+        h.inherit = h.inherit.filter((field) => field !== "authId");
+        setPassword("");
+        setDraft(h);
+      }
       const ok = await update((d) => ({
         ...d,
         hosts: d.hosts.some((x) => x.id === h.id)
@@ -96,6 +140,8 @@ export function Hosts() {
       }
     } catch (e) {
       notify(e);
+    } finally {
+      setSaving(false);
     }
   };
   const remove = async (h: Host) => {
@@ -123,22 +169,6 @@ export function Hosts() {
       setDraft(null);
     }
   };
-  const addGroup = async () => {
-    const name = await ask("새 그룹", "현재 선택한 그룹 아래에 만듭니다.", "");
-    if (name?.trim())
-      await update((d) => ({
-        ...d,
-        groups: [
-          ...d.groups,
-          {
-            id: uuid(),
-            name: name.trim(),
-            parentId: d.groups.some((g) => g.id === filter) ? filter : null,
-            defaults: {},
-          },
-        ],
-      }));
-  };
   const renderGroups = (parent: string | null, depth = 0): React.ReactNode =>
     doc.groups
       .filter((g) => g.parentId === parent)
@@ -156,12 +186,24 @@ export function Hosts() {
           {renderGroups(g.id, depth + 1)}
         </div>
       ));
+  const authProfile = app.boot.profiles.find(
+    (p) => p.id === (draft ? resolveHostSettings(doc, draft).authId : null),
+  );
   return (
     <div className="hosts-view">
-      {groupDefaults && doc.groups.find((g) => g.id === groupDefaults) && (
-        <GroupDefaults
-          group={doc.groups.find((g) => g.id === groupDefaults)!}
-          onClose={() => setGroupDefaults(null)}
+      {choosingAuth && draft && (
+        <AuthPicker
+          selected={authProfile?.id || null}
+          onClose={() => setChoosingAuth(false)}
+          onSelect={(id) => {
+            setDraft({
+              ...draft,
+              authId: id,
+              inherit: draft.inherit.filter((field) => field !== "authId"),
+            });
+            setPassword("");
+            setChoosingAuth(false);
+          }}
         />
       )}
       {bulk && (
@@ -201,69 +243,14 @@ export function Hosts() {
         </button>
         <div className="sidebar-label row">
           그룹
-          <IconButton label="새 그룹" onClick={() => void addGroup()}>
-            <FolderPlus size={16} />
+          <IconButton
+            label="그룹 관리 설정"
+            onClick={() => app.openSettings("groups")}
+          >
+            <SettingsIcon size={16} />
           </IconButton>
         </div>
         {renderGroups(null)}
-        {doc.groups.some((g) => g.id === filter) && (
-          <div className="group-actions">
-            <button onClick={() => setGroupDefaults(filter)}>
-              그룹 기본값
-            </button>
-            <button
-              onClick={() =>
-                void (async () => {
-                  const g = doc.groups.find((x) => x.id === filter)!;
-                  const name = await ask(
-                    "그룹 이름 변경",
-                    "그룹의 새 이름을 입력해 주세요.",
-                    g.name,
-                  );
-                  if (name?.trim())
-                    await update((d) => ({
-                      ...d,
-                      groups: d.groups.map((x) =>
-                        x.id === g.id ? { ...x, name: name.trim() } : x,
-                      ),
-                    }));
-                })()
-              }
-            >
-              이름 변경
-            </button>
-            <button
-              onClick={() =>
-                void (async () => {
-                  if (
-                    await confirm(
-                      "그룹 삭제",
-                      "하위 그룹과 호스트는 상위 그룹으로 이동합니다.",
-                    )
-                  ) {
-                    const g = doc.groups.find((x) => x.id === filter)!;
-                    await update((d) => ({
-                      ...d,
-                      groups: d.groups
-                        .filter((x) => x.id !== g.id)
-                        .map((x) =>
-                          x.parentId === g.id
-                            ? { ...x, parentId: g.parentId }
-                            : x,
-                        ),
-                      hosts: d.hosts.map((h) =>
-                        h.groupId === g.id ? { ...h, groupId: g.parentId } : h,
-                      ),
-                    }));
-                    setFilter("all");
-                  }
-                })()
-              }
-            >
-              삭제
-            </button>
-          </div>
-        )}
         <div className="sidebar-foot">
           <span className="dot" />내 기기에 저장됨
         </div>
@@ -364,13 +351,13 @@ export function Hosts() {
                   )
                 }
               />
-              <div className={`host-icon ${h.icon}`}>
-                <Server size={20} />
-              </div>
+              <HostIcon host={h} />
               <div className="host-copy">
                 <strong>{h.name}</strong>
                 <span>
-                  {h.protocol.toUpperCase()} · {h.username}@{h.address}:{h.port}
+                  {h.protocol.toUpperCase()} ·{" "}
+                  {connectionHost(doc, h, app.boot.profiles).username}@
+                  {h.address}:{resolveHostSettings(doc, h).port}
                   {h.groupId ? ` · ${groupPath(h.groupId)}` : ""}
                 </span>
               </div>
@@ -453,6 +440,7 @@ export function Hosts() {
               <input
                 required
                 maxLength={256}
+                placeholder="예: 운영 웹 서버"
                 value={draft.name}
                 onChange={(e) => setDraft({ ...draft, name: e.target.value })}
               />
@@ -467,7 +455,11 @@ export function Hosts() {
                     setDraft({
                       ...draft,
                       protocol,
-                      port: protocol === "ftp" || protocol === "ftps" ? 21 : 22,
+                      port: selected
+                        ? protocol === "ftp" || protocol === "ftps"
+                          ? 21
+                          : 22
+                        : 0,
                     });
                   }}
                 >
@@ -483,8 +475,12 @@ export function Hosts() {
                   type="number"
                   min="1"
                   max="65535"
-                  required
-                  value={draft.port}
+                  placeholder={
+                    draft.protocol === "ftp" || draft.protocol === "ftps"
+                      ? "21"
+                      : "22"
+                  }
+                  value={draft.port || ""}
                   onChange={(e) =>
                     setDraft({ ...draft, port: Number(e.target.value) })
                   }
@@ -502,35 +498,72 @@ export function Hosts() {
                 }
               />
             </label>
-            <label>
-              사용자 이름
-              <input
-                required
-                value={draft.username}
-                onChange={(e) =>
-                  setDraft({ ...draft, username: e.target.value })
+            <div className="credential-section">
+              <div className="field-heading">인증</div>
+              <button
+                type="button"
+                className={`credential-card ${authProfile ? "selected" : ""}`}
+                aria-label={
+                  authProfile ? "저장된 인증 변경" : "저장된 인증 선택"
                 }
-              />
-            </label>
-            <label>
-              인증 프로필
-              <select
-                value={draft.authId ?? ""}
-                onChange={(e) =>
-                  setDraft({ ...draft, authId: e.target.value || null })
-                }
+                onClick={() => setChoosingAuth(true)}
               >
-                <option value="">연결할 때 입력</option>
-                {app.boot.profiles.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} · {p.type === "key" ? "키" : "비밀번호"}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <small className="hint">
-              인증 프로필은 설정에서 등록하고 여러 호스트에 사용할 수 있습니다.
-            </small>
+                {authProfile?.type === "key" ? (
+                  <KeyRound size={22} />
+                ) : (
+                  <ContactRound size={22} />
+                )}
+                <span>
+                  <strong>{authProfile?.name || "저장된 인증 선택"}</strong>
+                  <small>
+                    {authProfile
+                      ? `${authProfile.username || "공통 인증"} · ${authProfile.type === "key" ? "SSH 개인 키" : "비밀번호"}`
+                      : "등록한 프로필을 선택하거나 아래에 직접 입력"}
+                  </small>
+                </span>
+                <ChevronRight size={17} />
+              </button>
+              {!authProfile?.username && (
+                <label>
+                  사용자 이름
+                  <input
+                    required
+                    placeholder="예: root"
+                    autoComplete="off"
+                    value={draft.username}
+                    onChange={(e) =>
+                      setDraft({ ...draft, username: e.target.value })
+                    }
+                  />
+                </label>
+              )}
+              {!authProfile && (
+                <>
+                  <label>
+                    비밀번호
+                    <input
+                      type="password"
+                      autoComplete="new-password"
+                      aria-describedby="host-password-help"
+                      placeholder="비워 두면 연결할 때 입력"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                  </label>
+                  <small className="hint" id="host-password-help">
+                    입력한 비밀번호는 호스트 저장 시 암호화된 인증 프로필로
+                    보관합니다.
+                  </small>
+                </>
+              )}
+              {authProfile && (
+                <small className="hint">
+                  {authProfile.username
+                    ? "이 프로필의 계정으로 연결합니다. 카드를 눌러 인증을 변경할 수 있습니다."
+                    : "여러 계정에서 공유하는 인증입니다. 이 호스트의 사용자 이름만 입력하세요."}
+                </small>
+              )}
+            </div>
             <div className="section-line" />
             <label>
               그룹
@@ -575,12 +608,18 @@ export function Hosts() {
                   setDraft({ ...draft, icon: e.target.value as Host["icon"] })
                 }
               >
-                <option value="server">서버</option>
-                <option value="linux">Linux</option>
-                <option value="apple">macOS</option>
-                <option value="windows">Windows</option>
+                {Object.entries(hostIconNames).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
               </select>
             </label>
+            <small className="hint">
+              {draft.detectedOS
+                ? `감지된 운영체제: ${draft.detectedOS}`
+                : "SSH 연결 후 운영체제에 맞는 아이콘을 표시합니다."}
+            </small>
             <HostExtras host={draft} onChange={setDraft} />
             <label>
               파일 시작 경로
@@ -718,7 +757,7 @@ export function Hosts() {
                 />
               </label>
             </details>
-            <button className="primary full" type="submit">
+            <button className="primary full" type="submit" disabled={saving}>
               호스트 저장
             </button>
             {selected && (

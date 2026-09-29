@@ -76,10 +76,11 @@ test("host CRUD, live SSH, split session preservation, themes, and persistence",
     .locator(".terminal-pane")
     .getAttribute("data-pane-id");
   await page.getByRole("button", { name: "터미널 분할", exact: true }).click();
+  await page.getByLabel("연결할 호스트 검색").fill("로컬 검증");
   await page
-    .getByLabel("분할할 호스트")
-    .selectOption({ label: "로컬 검증 서버" });
-  await page.getByRole("button", { name: "좌우", exact: true }).click();
+    .getByRole("dialog")
+    .getByRole("button", { name: /로컬 검증 서버/ })
+    .click();
   await page
     .getByRole("dialog")
     .getByLabel("비밀번호", { exact: true })
@@ -136,11 +137,7 @@ test("host CRUD, live SSH, split session preservation, themes, and persistence",
     .getByRole("button", { name: "저장", exact: true })
     .click();
   await page.getByRole("button", { name: "현재 탭 전체", exact: true }).click();
-  await expect(page.getByRole("dialog")).toContainText("대상 1개");
-  await page
-    .getByRole("dialog")
-    .getByRole("button", { name: "붙여넣기", exact: true })
-    .click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect
     .poll(() => server.input.join(""))
     .toBe("\x1b[200~printf test\x1b[201~");

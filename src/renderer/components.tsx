@@ -1,4 +1,5 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 export function IconButton({
   label,
@@ -19,7 +20,7 @@ export function IconButton({
     <button
       type="button"
       className={`icon-button ${className}`}
-      title={label}
+      data-tooltip={label}
       aria-label={label}
       onClick={onClick}
       disabled={disabled}
@@ -43,9 +44,10 @@ export function Modal({
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
-    const first = ref.current?.querySelector<HTMLElement>(
-      "input,textarea,select,button",
-    );
+    const first =
+      ref.current?.querySelector<HTMLElement>(
+        "input:not(:disabled),textarea:not(:disabled),select:not(:disabled)",
+      ) ?? ref.current?.querySelector<HTMLElement>("button:not(:disabled)");
     first?.focus();
     return () => previous?.focus();
   }, []);
@@ -63,11 +65,14 @@ export function Modal({
         aria-label={title}
         className={`modal ${wide ? "wide" : ""}`}
         onKeyDown={(e) => {
-          if (e.key === "Escape") onClose();
+          if (e.key === "Escape") {
+            e.stopPropagation();
+            onClose();
+          }
           if (e.key === "Tab") {
             const elements = [
               ...e.currentTarget.querySelectorAll<HTMLElement>(
-                'button:not(:disabled), input:not(:disabled), textarea, select, [tabindex="0"]',
+                'button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), [tabindex="0"]',
               ),
             ];
             const first = elements[0],
@@ -121,3 +126,109 @@ export const sizeLabel = (bytes: number) =>
       : bytes < 1024 ** 3
         ? `${(bytes / 1024 ** 2).toFixed(1)} MB`
         : `${(bytes / 1024 ** 3).toFixed(2)} GB`;
+
+export function Tooltips() {
+  const [tip, setTip] = useState<{ text: string; x: number; y: number } | null>(
+    null,
+  );
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    const hide = () => {
+      clearTimeout(timer);
+      setTip(null);
+    };
+    const show = (event: Event) => {
+      hide();
+      const target =
+        event.target instanceof Element
+          ? event.target.closest<HTMLElement>("[data-tooltip],[title]")
+          : null;
+      const text = target?.dataset.tooltip || target?.title;
+      if (!target || !text) return;
+      timer = setTimeout(() => {
+        const r = target.getBoundingClientRect();
+        setTip({
+          text,
+          x: Math.max(140, Math.min(innerWidth - 140, r.left + r.width / 2)),
+          y: r.bottom + 8 > innerHeight - 50 ? r.top - 42 : r.bottom + 8,
+        });
+      }, 300);
+    };
+    document.addEventListener("pointerover", show);
+    document.addEventListener("focusin", show);
+    for (const event of [
+      "pointerout",
+      "focusout",
+      "pointerdown",
+      "keydown",
+      "scroll",
+    ])
+      document.addEventListener(event, hide, true);
+    return () => {
+      hide();
+      document.removeEventListener("pointerover", show);
+      document.removeEventListener("focusin", show);
+      for (const event of [
+        "pointerout",
+        "focusout",
+        "pointerdown",
+        "keydown",
+        "scroll",
+      ])
+        document.removeEventListener(event, hide, true);
+    };
+  }, []);
+  return tip
+    ? createPortal(
+        <div
+          role="tooltip"
+          className="tooltip"
+          style={{ left: tip.x, top: tip.y }}
+        >
+          {tip.text}
+        </div>,
+        document.body,
+      )
+    : null;
+}
+
+export function NumberField({
+  value,
+  onChange,
+  ...props
+}: Omit<
+  import("react").InputHTMLAttributes<HTMLInputElement>,
+  "value" | "onChange" | "type"
+> & { value: number; onChange: (value: number) => void }) {
+  const [draft, setDraft] = useState(String(value));
+  useEffect(() => setDraft(String(value)), [value]);
+  return (
+    <input
+      {...props}
+      type="number"
+      required
+      value={draft}
+      onChange={(event) => {
+        event.currentTarget.setCustomValidity("");
+        setDraft(event.target.value);
+      }}
+      onBlur={(event) => {
+        const input = event.currentTarget;
+        if (!input.checkValidity()) {
+          input.setCustomValidity(
+            `${props.min ?? "최솟값"}~${props.max ?? "최댓값"} 범위의 숫자를 입력하세요.`,
+          );
+          input.reportValidity();
+          return;
+        }
+        if (Number(draft) !== value) onChange(Number(draft));
+      }}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          event.currentTarget.blur();
+        }
+      }}
+    />
+  );
+}

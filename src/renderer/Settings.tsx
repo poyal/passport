@@ -9,8 +9,10 @@ import {
   Trash2,
   Shield,
   Archive,
+  Network,
+  FileText,
+  Keyboard,
   Check,
-  Settings as SettingsIcon,
 } from "lucide-react";
 import type { Secret, ImportPreview } from "../shared/model";
 import { api, uuid } from "./api";
@@ -22,6 +24,7 @@ import {
   CustomThemes,
   ShortcutSettings,
 } from "./Advanced";
+import { GroupSettings } from "./GroupSettings";
 import { AppearancePanel } from "./Workspaces";
 export const blankSecret = (): Secret => ({
   type: "password",
@@ -103,10 +106,11 @@ export function SecretEditor({
 }
 export function Settings() {
   const app = useApp(),
-    [section, setSection] = useState("appearance"),
+    section = app.settingsSection,
     [profile, setProfile] = useState<{
       id: string;
       name: string;
+      username: string;
       secret: Secret;
     } | null>(null),
     [includeSecrets, setIncludeSecrets] = useState(false),
@@ -120,7 +124,7 @@ export function Settings() {
   const loadBackups = () =>
     void api.call("backup.list", undefined).then(setBackups).catch(app.notify);
   const chooseSection = (s: string) => {
-    setSection(s);
+    app.openSettings(s);
     if (s === "data") loadBackups();
   };
   return (
@@ -129,14 +133,15 @@ export function Settings() {
         <div className="sidebar-label">환경 설정</div>
         {[
           { id: "appearance", label: "외형", icon: <Palette size={16} /> },
-          { id: "tunnels", label: "포트 포워딩", icon: <KeyRound size={16} /> },
-          { id: "logs", label: "세션 로그", icon: <Archive size={16} /> },
+          { id: "tunnels", label: "포트 포워딩", icon: <Network size={16} /> },
+          { id: "logs", label: "세션 로그", icon: <FileText size={16} /> },
+          { id: "groups", label: "그룹 관리", icon: <FolderOpen size={16} /> },
           { id: "auth", label: "인증 프로필", icon: <KeyRound size={16} /> },
           { id: "data", label: "내보내기와 백업", icon: <Archive size={16} /> },
           {
             id: "shortcuts",
             label: "단축키",
-            icon: <SettingsIcon size={16} />,
+            icon: <Keyboard size={16} />,
           },
         ].map((s) => (
           <button
@@ -148,9 +153,10 @@ export function Settings() {
             {s.label}
           </button>
         ))}
-        <div className="sidebar-foot">Passport 0.3.0</div>
+        <div className="sidebar-foot">Passport 0.3.1</div>
       </aside>
       <div className="settings-content">
+        {section === "groups" && <GroupSettings />}
         {section === "tunnels" && <TunnelSettings />}
         {section === "logs" && <LogSettings />}
         {section === "appearance" && (
@@ -213,7 +219,12 @@ export function Settings() {
               <button
                 className="primary"
                 onClick={() =>
-                  setProfile({ id: uuid(), name: "", secret: blankSecret() })
+                  setProfile({
+                    id: uuid(),
+                    name: "",
+                    username: "",
+                    secret: blankSecret(),
+                  })
                 }
               >
                 <Plus size={16} />
@@ -231,6 +242,7 @@ export function Settings() {
                 <div>
                   <strong>{p.name}</strong>
                   <small>
+                    {p.username ? `${p.username} · ` : "계정 공통 · "}
                     {p.type === "key" ? "SSH 개인 키" : "비밀번호"} ·{" "}
                     {
                       app.document.hosts.filter(
@@ -246,6 +258,7 @@ export function Settings() {
                     setProfile({
                       id: p.id,
                       name: p.name,
+                      username: p.username || "",
                       secret: { ...blankSecret(), type: p.type },
                     })
                   }
@@ -443,19 +456,12 @@ export function Settings() {
                 <p>터미널 조작 단축키를 변경할 수 있습니다.</p>
               </div>
             </div>
-            <div className="settings-card">
-              <ShortcutSettings />
+            <ShortcutSettings />
+            <div className="settings-card shortcut-reference">
+              <h3>기본 조작</h3>
               <table className="shortcut-table">
                 <tbody>
                   {[
-                    [
-                      "터미널 복사",
-                      app.boot.platform === "darwin" ? "⌘ C" : "Ctrl Shift C",
-                    ],
-                    [
-                      "터미널 붙여넣기",
-                      app.boot.platform === "darwin" ? "⌘ V" : "Ctrl Shift V",
-                    ],
                     ["현재 명령 중단", "Ctrl C"],
                     [
                       "터미널 글자 크기 조절",
@@ -470,7 +476,6 @@ export function Settings() {
                     ["파일 이름 변경", "F2"],
                     ["컨텍스트 메뉴", "Shift F10"],
                     ["분할 크기 조절", "경계선 포커스 후 방향키"],
-                    ["터미널 창 포커스 이동", "Alt ← / →"],
                     ["메뉴 · 대화상자 닫기", "Esc"],
                   ].map(([label, key]) => (
                     <tr key={label}>
@@ -511,6 +516,21 @@ export function Settings() {
                   setProfile({ ...profile, name: e.target.value })
                 }
               />
+            </label>
+            <label>
+              사용자 이름
+              <input
+                placeholder="비워 두면 호스트별 계정 사용"
+                value={profile.username}
+                maxLength={256}
+                onChange={(e) =>
+                  setProfile({ ...profile, username: e.target.value })
+                }
+              />
+              <small className="hint">
+                지정하면 연결할 때 이 계정을 사용하며 호스트에서 변경할 수
+                없습니다.
+              </small>
             </label>
             <SecretEditor
               secret={profile.secret}

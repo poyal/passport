@@ -6,7 +6,7 @@
 
 ## 현재 상태
 
-2026-09-29 기준 버전은 0.3.0이다. Apple Silicon Mac용 테스트 DMG를 생성하고 실제 패키지 실행을 확인했다. Windows x64·ARM64는 빌드 스크립트와 수동 CI를 준비했으나 실제 설치·실행 확인이 남아 있다. 공개 다운로드 페이지나 GitHub Release를 게시하지 않았다.
+2026-09-29 기준 버전은 0.3.1이다. Apple Silicon Mac용 테스트 DMG를 생성하고 실제 패키지 실행을 확인했다. Windows x64·ARM64는 빌드 스크립트와 수동 CI를 준비했으나 실제 설치·실행 확인이 남아 있다. 공개 다운로드 페이지나 GitHub Release를 게시하지 않았다.
 
 Mac 설치본은 ad-hoc 서명이며 Developer ID 서명·Apple 공증을 포함하지 않는다. `codesign` 무결성 검사 통과는 Apple 공증이나 Gatekeeper의 실행 허용을 뜻하지 않는다. 현재 결과와 DMG 해시는 [검증 기록](verification.md)에 보관한다.
 
@@ -16,9 +16,9 @@ Mac 설치본은 ad-hoc 서명이며 Developer ID 서명·Apple 공증을 포함
 
 | 대상                | 명령                     | 결과 파일                              |
 | ------------------- | ------------------------ | -------------------------------------- |
-| macOS Apple Silicon | `npm run dist:mac`       | `release/Passport-0.3.0-mac-arm64.dmg` |
-| Windows x64         | `npm run dist:win`       | `release/Passport-0.3.0-win-x64.exe`   |
-| Windows ARM64       | `npm run dist:win:arm64` | `release/Passport-0.3.0-win-arm64.exe` |
+| macOS Apple Silicon | `npm run dist:mac`       | `release/Passport-0.3.1-mac-arm64.dmg` |
+| Windows x64         | `npm run dist:win`       | `release/Passport-0.3.1-win-x64.exe`   |
+| Windows ARM64       | `npm run dist:win:arm64` | `release/Passport-0.3.1-win-arm64.exe` |
 
 파일 이름의 버전은 `package.json`을 따른다. `npm run pack`은 설치 프로그램 없이 현재 환경의 앱 폴더를 만든다. `release/`와 `dist/`는 생성물이며 저장소에 커밋하지 않는다. README의 다운로드 링크는 실제 게시된 설치 파일이 있을 때 추가한다.
 

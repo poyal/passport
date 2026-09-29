@@ -12,6 +12,7 @@ import {
   emptyDocument,
   hostSchema,
   secretSchema,
+  profileUsernameSchema,
   type PassportDocument,
   type AuthProfile,
   type Secret,
@@ -27,6 +28,7 @@ export const packageSchema = z.object({
         id: z.string().uuid(),
         name: z.string().max(256),
         type: z.enum(["password", "key"]),
+        username: profileUsernameSchema.optional(),
       }),
     )
     .max(5000),

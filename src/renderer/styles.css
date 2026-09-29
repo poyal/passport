@@ -123,6 +123,12 @@ input[type="range"] {
 }
 select {
   cursor: pointer;
+  appearance: none;
+  padding-right: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238995a3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  text-overflow: ellipsis;
 }
 textarea {
   resize: vertical;
@@ -231,7 +237,7 @@ small {
   white-space: nowrap;
 }
 .inline-label select {
-  padding: 6px;
+  padding: 6px 36px 6px 10px;
 }
 .form-row {
   display: flex;
@@ -319,7 +325,7 @@ small {
   -webkit-app-region: drag;
 }
 .app-titlebar button,
-.app-titlebar nav {
+.app-titlebar .workspace-tab {
   -webkit-app-region: no-drag;
 }
 .mac .app-titlebar {
@@ -525,7 +531,7 @@ small {
 }
 .host-toolbar select {
   font-size: 11px;
-  padding: 7px;
+  padding: 7px 36px 7px 10px;
 }
 .list-label {
   display: flex;
@@ -571,18 +577,6 @@ small {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-}
-.host-icon.linux {
-  background: #533f2440;
-  color: #d7b074;
-}
-.host-icon.apple {
-  background: #407b6c33;
-  color: #87c8b7;
-}
-.host-icon.windows {
-  background: #294f7533;
-  color: #85b4eb;
 }
 .host-copy {
   display: flex;
@@ -872,7 +866,7 @@ summary {
   flex: 1;
   font-size: 11px;
   min-width: 80px;
-  padding: 5px;
+  padding: 5px 36px 5px 10px;
 }
 .split-picker button {
   padding: 4px 6px;
@@ -1893,9 +1887,19 @@ kbd {
   color: var(--muted);
 }
 .log-layout {
+  margin-top: 20px;
   display: grid;
   grid-template-columns: 240px minmax(0, 1fr);
   gap: 16px;
+}
+.log-layout.is-empty {
+  grid-template-columns: 1fr;
+}
+.log-layout.is-empty .log-list {
+  display: none;
+}
+.shortcut-reference {
+  margin-top: 20px;
 }
 .log-list {
   display: flex;
@@ -1976,4 +1980,266 @@ kbd {
 .list-label,
 .bulk-toolbar {
   flex-shrink: 0;
+}
+
+/* Shared controls remain consistent in forms, drawers and compact windows. */
+.tool-body > input:not([type="checkbox"]),
+.tool-body > textarea,
+.modal form > input {
+  width: 100%;
+}
+.tool-body > input {
+  margin-bottom: 12px;
+}
+.form-row > label,
+.row > label {
+  min-width: 0;
+}
+input:disabled,
+select:disabled {
+  color: var(--muted);
+  background-color: var(--surface);
+  cursor: default;
+}
+.parent-row {
+  cursor: pointer;
+}
+.parent-row td > button {
+  width: 100%;
+  justify-content: flex-start;
+}
+.toast {
+  z-index: 1200;
+  max-width: min(750px, calc(100vw - 32px));
+}
+.toast.error {
+  border-color: var(--danger);
+}
+.toast.error > svg {
+  color: var(--danger);
+}
+.toast > span {
+  overflow-wrap: anywhere;
+  max-height: 30vh;
+  overflow: auto;
+}
+.tooltip {
+  position: fixed;
+  z-index: 1500;
+  pointer-events: none;
+  transform: translateX(-50%);
+  max-width: 270px;
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--raised);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.tabs {
+  margin-right: 48px;
+}
+
+.picker-toolbar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.picker-toolbar .search-box {
+  flex: 1;
+  min-width: 0;
+}
+.picker-toolbar select {
+  max-width: 220px;
+}
+.host-picker-list {
+  overflow-y: auto;
+  max-height: min(50vh, 460px);
+  min-height: 120px;
+}
+.host-choice {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  text-align: left;
+  justify-content: flex-start;
+  gap: 12px;
+}
+.host-choice:hover,
+.host-choice:focus-visible {
+  background: var(--surface);
+  border-color: var(--line);
+}
+.host-choice > span {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  flex: 1;
+}
+.host-choice strong,
+.host-choice small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.host-choice small {
+  color: var(--muted);
+  font-weight: 400;
+}
+.segmented {
+  display: flex;
+  gap: 8px;
+}
+.segmented button {
+  flex: 1;
+}
+.segmented button[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.endpoint-picker {
+  border: 0;
+  background: transparent;
+  flex: 1;
+  min-width: 0;
+  justify-content: space-between;
+  padding-right: 12px;
+}
+.endpoint-picker span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.group-settings-list {
+  margin-top: 18px;
+}
+.group-settings-list .profile-row {
+  gap: 12px;
+}
+.group-settings-list .profile-row > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+/* OS marks retain their original paths and share a clear, filled tile treatment. */
+.host-icon {
+  color: #fff;
+  background: #075b83;
+}
+.host-icon img,
+.host-icon > svg {
+  width: 22px;
+  height: 22px;
+}
+.host-icon img {
+  filter: brightness(0) invert(1);
+  object-fit: contain;
+}
+.host-icon.alpine {
+  background: #0d597f;
+}
+.host-icon.centos {
+  background: #efa724;
+}
+.host-icon.redhat {
+  background: #ee0000;
+}
+.host-icon.rocky {
+  background: #10b981;
+}
+.host-icon.ubuntu {
+  background: #e95420;
+}
+.host-icon.debian {
+  background: #a81d33;
+}
+.host-icon.fedora {
+  background: #294172;
+}
+.host-icon.linux {
+  background: #66521a;
+}
+.host-icon.apple {
+  background: #535a64;
+}
+.host-icon.windows {
+  background: #0078d4;
+}
+@media (max-width: 900px) {
+  .picker-toolbar {
+    flex-wrap: wrap;
+  }
+  .picker-toolbar select {
+    max-width: 100%;
+  }
+}
+
+.endpoint-icon .host-icon {
+  width: 32px;
+  height: 32px;
+  margin: 0;
+}
+.recording-status {
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.credential-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.credential-section > label {
+  margin: 0;
+}
+.field-heading {
+  color: var(--muted);
+  font-size: 12px;
+}
+.credential-card {
+  width: 100%;
+  padding: 13px 14px;
+  gap: 12px;
+  text-align: left;
+  white-space: normal;
+}
+.credential-card > svg:first-child {
+  color: var(--accent);
+}
+.credential-card > span {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.credential-card strong {
+  font-size: 13px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.credential-card small {
+  font-size: 11px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.credential-card.selected {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+  background: color-mix(in srgb, var(--accent) 7%, var(--panel));
+}
+.credential-card:hover {
+  background: var(--hover);
+}
+.auth-picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 48vh;
+  overflow-y: auto;
+  margin-top: 18px;
 }

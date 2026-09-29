@@ -53,6 +53,7 @@ import { SessionLogs } from "./logs";
 import { Tunnels } from "./tunnels";
 import {
   effectiveHost,
+  connectionHost,
   executableCommand,
   validateShortcuts,
 } from "../shared/advanced";
@@ -72,7 +73,8 @@ let window: BrowserWindow | undefined,
   sessions: Sessions,
   files: Files,
   transfers: Transfers,
-  backupTimer: ReturnType<typeof setInterval>;
+  backupTimer: ReturnType<typeof setInterval>,
+  logPruneTimer: ReturnType<typeof setInterval>;
 const previews = new Map<
   string,
   { data: Portable; warnings: string[]; kind: ImportPreview["kind"] }
@@ -125,12 +127,35 @@ function assertOwned(id: string, caller: BrowserWindow) {
     throw new Error("이 창에 속한 터미널이 아닙니다.");
 }
 
+function sessionLogName(id: string) {
+  const workspace = workspaceFor(id);
+  const pane = workspace && panes(workspace.root).find((p) => p.id === id);
+  const host = (documentCache ??= store.read()).hosts.find(
+    (h) => h.id === pane?.hostId,
+  );
+  return host
+    ? `${host.name} · ${connectionHost(documentCache!, host, store.profiles()).username}@${host.address}`
+    : workspace?.name || "로컬 터미널";
+}
 let quitting = false;
 let shutdown: Promise<void> | undefined;
 let shutdownComplete = false;
 const emit = (event: AppEvent, replay = false) => {
   if (shutdown) return;
-  if (event.kind === "session") states.set(event.state.id, event.state);
+  if (event.kind === "session") {
+    states.set(event.state.id, event.state);
+    if (event.state.status === "connected" && store.read().settings.autoLog) {
+      try {
+        logs.start(event.state.id, sessionLogName(event.state.id));
+      } catch (error) {
+        emit({
+          kind: "notice",
+          message: `세션 로그를 기록하지 못했습니다: ${error instanceof Error ? error.message : "저장 오류"}`,
+        });
+      }
+    } else if (event.state.status === "disconnected")
+      logs?.stop(event.state.id);
+  }
   if (event.kind === "output" && !replay) logs?.append(event.id, event.data);
   if (event.kind === "output" || event.kind === "session") {
     const id = event.kind === "output" ? event.id : event.state.id;
@@ -193,6 +218,11 @@ const schemas: Record<Call, z.ZodType> = {
   "auth.save": z.object({
     id: idSchema,
     name: z.string().min(1).max(256),
+    username: z
+      .string()
+      .max(256)
+      .refine((v) => !/[\r\n\0]/.test(v))
+      .optional(),
     secret: secretSchema,
   }),
   "auth.delete": idObject,
@@ -382,11 +412,20 @@ function preview(
 function secretFor(hostId: string, override?: Secret, sftp = false) {
   const document = store.read();
   const raw = document.hosts.find((h) => h.id === hostId);
-  const host = raw ? effectiveHost(document, raw) : undefined;
+  const host = raw
+    ? connectionHost(
+        document,
+        effectiveHost(document, raw),
+        store.profiles(),
+        sftp,
+      )
+    : undefined;
   if (!host) throw new Error("호스트를 찾을 수 없습니다.");
-  const secret =
-    override ??
-    store.getSecret(sftp ? (host.sftpAuthId ?? host.authId) : host.authId);
+  const authId =
+    sftp && (host.protocol === "ssh" || host.protocol === "sftp")
+      ? (host.sftpAuthId ?? host.authId)
+      : host.authId;
+  const secret = override ?? store.getSecret(authId);
   if (!secret) throw new Error("인증 정보를 입력해 주세요.");
   return { host, secret };
 }
@@ -442,6 +481,22 @@ async function call<K extends Call>(
         ),
       }));
       const saved = store.save(doc);
+      if (doc.settings.autoLog !== previous.settings.autoLog) {
+        for (const [id, state] of states) {
+          if (!doc.settings.autoLog) logs.stop(id);
+          else if (state.status === "connected") {
+            try {
+              logs.start(id, sessionLogName(id));
+            } catch (error) {
+              emit({
+                kind: "notice",
+                message: `로그 기록 실패: ${error instanceof Error ? error.message : "저장 오류"}`,
+              });
+            }
+          }
+        }
+      }
+      logs.prune();
       const allowed = new Set(
         doc.workspaces.flatMap((w) => panes(w.root).map((p) => p.id)),
       );
@@ -461,7 +516,7 @@ async function call<K extends Call>(
       return saved;
     }
     case "auth.save": {
-      const profiles = store.saveSecret(i.id, i.name, i.secret);
+      const profiles = store.saveSecret(i.id, i.name, i.secret, i.username);
       publishDocument();
       return profiles;
     }
@@ -1046,13 +1101,30 @@ void app
   .then(async () => {
     fonts = await getFonts({ disableQuoting: true }).catch(() => []);
     store = new Store(app.getPath("userData"), safeStorage);
-    logs = new SessionLogs(store);
+    logs = new SessionLogs(store, (message) =>
+      emit({ kind: "notice", message }),
+    );
     locals = new LocalSessions(emit);
     tunnels = new Tunnels(store, confirm, (state) =>
       emit({ kind: "tunnel", state }),
     );
-    sessions = new Sessions(store, confirm, emit);
-    files = new Files(store, confirm);
+    const detectedOS = (host: import("../shared/model").Host, os: string) => {
+      const doc = store.read();
+      const current = doc.hosts.find((h) => h.id === host.id);
+      if (!current || current.detectedOS === os) return;
+      const effective = effectiveHost(doc, current);
+      if (effective.address !== host.address || effective.port !== host.port)
+        return;
+      store.save({
+        ...doc,
+        hosts: doc.hosts.map((h) =>
+          h.id === host.id ? { ...h, detectedOS: os } : h,
+        ),
+      });
+      publishDocument();
+    };
+    sessions = new Sessions(store, confirm, emit, detectedOS);
+    files = new Files(store, confirm, detectedOS);
     transfers = new Transfers(files, emit);
     nativeTheme.themeSource = store.read().settings.colorMode;
     const renderer = path.join(__dirname, "../renderer");
@@ -1161,6 +1233,17 @@ void app
       60 * 60 * 1000,
     );
     backupTimer.unref();
+    logPruneTimer = setInterval(() => {
+      try {
+        logs.prune();
+      } catch (error) {
+        emit({
+          kind: "notice",
+          message: `로그 정리 실패: ${error instanceof Error ? error.message : "저장 오류"}`,
+        });
+      }
+    }, 60_000);
+    logPruneTimer.unref();
     await createWindow();
     app.on("activate", () => {
       if (!window) void createWindow();
@@ -1179,6 +1262,7 @@ app.on("window-all-closed", () => {
 app.on("before-quit", () => {
   quitting = true;
   clearInterval(backupTimer);
+  clearInterval(logPruneTimer);
 });
 app.on("will-quit", (event) => {
   if (shutdownComplete) return;

@@ -12,6 +12,7 @@ import {
   documentSchema,
   emptyDocument,
   secretSchema,
+  profileUsernameSchema,
   type PassportDocument,
   type AuthProfile,
   type Secret,
@@ -30,15 +31,38 @@ export class Store {
   ) {
     mkdirSync(directory, { recursive: true, mode: 0o700 });
     this.db = new Database(path.join(directory, "passport.sqlite"));
-    if (Number(this.db.pragma("user_version", { simple: true })) > 2) {
+    const version = Number(this.db.pragma("user_version", { simple: true }));
+    if (version > 3) {
       this.db.close();
       throw new Error("더 새로운 Passport 버전에서 만든 데이터베이스입니다.");
     }
     this.db.pragma("journal_mode = WAL");
     this.db.pragma("foreign_keys = ON");
     this.db.exec(
-      "CREATE TABLE IF NOT EXISTS metadata (id INTEGER PRIMARY KEY CHECK(id=1), value TEXT NOT NULL); CREATE TABLE IF NOT EXISTS credentials (id TEXT PRIMARY KEY, name TEXT NOT NULL, type TEXT NOT NULL, secret BLOB); CREATE TABLE IF NOT EXISTS known_hosts (address TEXT NOT NULL, port INTEGER NOT NULL, fingerprint TEXT NOT NULL, PRIMARY KEY(address,port)); PRAGMA user_version = 2;",
+      "CREATE TABLE IF NOT EXISTS metadata (id INTEGER PRIMARY KEY CHECK(id=1), value TEXT NOT NULL); CREATE TABLE IF NOT EXISTS credentials (id TEXT PRIMARY KEY, name TEXT NOT NULL, type TEXT NOT NULL, secret BLOB); CREATE TABLE IF NOT EXISTS known_hosts (address TEXT NOT NULL, port INTEGER NOT NULL, fingerprint TEXT NOT NULL, PRIMARY KEY(address,port));",
     );
+    if (
+      !(this.db.pragma("table_info(credentials)") as { name: string }[]).some(
+        (c) => c.name === "username",
+      )
+    )
+      this.db.exec(
+        "ALTER TABLE credentials ADD COLUMN username TEXT NOT NULL DEFAULT ''",
+      );
+    if (version < 3) {
+      const metadata = this.db
+        .prepare("SELECT value FROM metadata WHERE id=1")
+        .get() as { value: string } | undefined;
+      if (metadata) {
+        const document = documentSchema.parse(JSON.parse(metadata.value));
+        for (const host of document.hosts)
+          if (host.icon === "server") host.icon = "auto";
+        this.db
+          .prepare("UPDATE metadata SET value=? WHERE id=1")
+          .run(JSON.stringify(document));
+      }
+    }
+    this.db.pragma("user_version = 3");
     if (!this.db.prepare("SELECT id FROM metadata").get())
       this.save(emptyDocument());
     chmodSync(path.join(directory, "passport.sqlite"), 0o600);
@@ -82,23 +106,29 @@ export class Store {
     return (
       this.db
         .prepare(
-          "SELECT id,name,type,secret IS NOT NULL AS hasSecret FROM credentials ORDER BY name",
+          "SELECT id,name,type,username,secret IS NOT NULL AS hasSecret FROM credentials ORDER BY name",
         )
         .all() as (Omit<AuthProfile, "hasSecret"> & { hasSecret: number })[]
     ).map((p) => ({ ...p, hasSecret: !!p.hasSecret }));
   }
-  saveSecret(id: string, name: string, raw: Secret): AuthProfile[] {
+  saveSecret(
+    id: string,
+    name: string,
+    raw: Secret,
+    username = "",
+  ): AuthProfile[] {
     if (!this.vault.isEncryptionAvailable())
       throw new Error(
         "이 기기에서 암호화 저장을 사용할 수 없습니다. 이번 연결에만 입력해 주세요.",
       );
+    username = profileUsernameSchema.parse(username);
     const secret = secretSchema.parse(raw),
       encrypted = this.vault.encryptString(JSON.stringify(secret));
     this.db
       .prepare(
-        "INSERT INTO credentials(id,name,type,secret) VALUES(?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name,type=excluded.type,secret=excluded.secret",
+        "INSERT INTO credentials(id,name,type,secret,username) VALUES(?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name,type=excluded.type,secret=excluded.secret,username=excluded.username",
       )
-      .run(id, name, secret.type, encrypted);
+      .run(id, name, secret.type, encrypted, username);
     return this.profiles();
   }
   getSecret(id: string | null): Secret | undefined {
@@ -162,12 +192,17 @@ export class Store {
       for (const p of profiles)
         this.db
           .prepare(
-            "INSERT INTO credentials(id,name,type) VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name, secret=CASE WHEN credentials.type=excluded.type THEN credentials.secret ELSE NULL END, type=excluded.type",
+            "INSERT INTO credentials(id,name,type,username) VALUES(?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name, secret=CASE WHEN credentials.type=excluded.type THEN credentials.secret ELSE NULL END, type=excluded.type,username=excluded.username",
           )
-          .run(p.id, p.name, p.type);
+          .run(
+            p.id,
+            p.name,
+            p.type,
+            profileUsernameSchema.parse(p.username ?? ""),
+          );
       for (const [id, s] of Object.entries(secrets)) {
         const p = profiles.find((x) => x.id === id);
-        if (p) this.saveSecret(id, p.name, s);
+        if (p) this.saveSecret(id, p.name, s, p.username);
       }
       this.save(document);
     })();

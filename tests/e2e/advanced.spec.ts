@@ -99,7 +99,7 @@ test.afterAll(async () => {
   }
 });
 
-test("broadcast uses physical keys only, explicit execution records history, logs are opt-in", async () => {
+test("broadcast uses physical keys only, explicit execution records history, logs start automatically", async () => {
   await page
     .locator(`[data-pane-id="${paneA}"] .xterm-helper-textarea`)
     .focus();
@@ -128,20 +128,23 @@ test("broadcast uses physical keys only, explicit execution records history, log
     .focus();
   await page.keyboard.press("b");
   await expect.poll(() => server.input.join("")).toBe("b");
-  expect(
-    await page.evaluate(() => window.passport.call("logs.list", undefined)),
-  ).toEqual([]);
-  await page
-    .getByRole("button", { name: "로그 기록 시작", exact: true })
-    .click();
+  const initialLogs = await page.evaluate(() =>
+    window.passport.call("logs.list", undefined),
+  );
+  expect(initialLogs).toHaveLength(2);
+  expect(initialLogs.every((l) => l.recording)).toBe(true);
   server.shells[0].write("\r\nLOG_MARKER_한글\r\n");
   await expect
     .poll(async () => {
       return page.evaluate(async () => {
         const logs = await window.passport.call("logs.list", undefined);
-        return logs[0]
-          ? (await window.passport.call("logs.read", { id: logs[0].id })).text
-          : "";
+        return (
+          await Promise.all(
+            logs.map((l) => window.passport.call("logs.read", { id: l.id })),
+          )
+        )
+          .map((l) => l.text)
+          .join("\n");
       });
     })
     .toContain("LOG_MARKER_한글");
@@ -165,7 +168,9 @@ test("broadcast uses physical keys only, explicit execution records history, log
       expect.objectContaining({ text: "printf '한글'" }),
     ]),
   );
-  await page.getByRole("button", { name: "기록 중지", exact: true }).click();
+  await page
+    .getByRole("button", { name: "기록 일시 중지", exact: true })
+    .click();
 });
 
 test("moves a live split workspace to another native window and back with scrollback intact", async () => {
