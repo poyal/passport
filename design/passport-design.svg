@@ -1,0 +1,290 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1710" viewBox="0 0 1600 1710" role="img" aria-labelledby="title description">
+  <title id="title">Passport 앱 디자인 결정안</title>
+  <desc id="description">차콜과 민트 색상의 SSH 3분할 작업 화면, 호스트 관리, 좌우 파일 전송 화면과 밝은 외형의 색상 기준. 모든 데이터는 가상의 검토용 예시입니다.</desc>
+  <defs>
+    <style>
+      text { font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; fill: #E6EDF3; }
+      .muted { fill: #A8B5C4; }
+      .mint { fill: #65DDB7; }
+      .ink { fill: #111418; }
+      .mono, .mono text { font-family: 'JetBrains Mono', Menlo, Consolas, monospace; }
+      .term { fill: #CDD6F4; }
+      .green { fill: #78D6A3; }
+      .amber { fill: #EBC777; }
+      .bold { font-weight: 600; }
+      .small { font-size: 12px; }
+      .body { font-size: 14px; }
+      .line { fill: none; stroke: #A8B5C4; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+    </style>
+    <g id="server" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="1" y="1" width="18" height="7" rx="2"/><rect x="1" y="12" width="18" height="7" rx="2"/>
+      <path d="M5 4.5h.1M5 15.5h.1M11 4.5h5M11 15.5h5"/>
+    </g>
+    <g id="folder" fill="currentColor"><path d="M1 4a2 2 0 0 1 2-2h5l2 3h8a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2z"/></g>
+    <g id="settings" class="line"><circle cx="10" cy="10" r="6"/><circle cx="10" cy="10" r="2"/><path d="M10 1v2m0 14v2M1 10h2m14 0h2M3.6 3.6 5 5m10 10 1.4 1.4M3.6 16.4 5 15m10-10 1.4-1.4"/></g>
+    <g id="pane-actions" class="line"><path d="M0 3h12v12H0zM6 3v12M34 3h-5v5m0-5 5 5m-3 7h5v-5m0 5-5-5M58 5l8 8m0-8-8 8"/></g>
+    <g id="traffic"><circle cx="0" cy="0" r="6" fill="#FF6B6B"/><circle cx="20" cy="0" r="6" fill="#EBC777"/><circle cx="40" cy="0" r="6" fill="#78D6A3"/></g>
+  </defs>
+
+  <rect width="1600" height="1710" fill="#0B0E12"/>
+  <rect x="40" y="38" width="44" height="44" rx="10" fill="#65DDB7"/>
+  <path d="m51 51 8 8-8 8m13 0h10" fill="none" stroke="#111418" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="100" y="61" font-size="28" class="bold">Passport</text>
+  <text x="100" y="84" font-size="14" class="muted">앱 디자인 · 차콜과 민트 · Windows / macOS</text>
+  <rect x="1370" y="42" width="190" height="34" rx="17" fill="#203B36"/>
+  <text x="1465" y="64" text-anchor="middle" class="mint body">정적 시안 · 구현 승인 대기</text>
+  <text x="40" y="129" font-size="18" class="bold">01   SSH 작업 화면</text>
+  <text x="260" y="129" class="muted body">탭을 끌어서 분할 · 입력 대상 강조 · 필요한 도구만 오른쪽에</text>
+
+  <!-- Main desktop: tab strip, three terminal panes and snippets. -->
+  <rect x="40" y="156" width="1520" height="760" rx="10" fill="#111418" stroke="#343E4C"/>
+  <path d="M50 156h1500a10 10 0 0 1 10 10v34H40v-34a10 10 0 0 1 10-10" fill="#191E25"/>
+  <use href="#traffic" x="60" y="178"/>
+  <text x="145" y="183" class="muted body">호스트</text>
+  <text x="231" y="183" class="muted body">파일 전송</text>
+  <rect x="327" y="160" width="212" height="40" rx="6" fill="#232B35"/>
+  <text x="344" y="183" class="body bold">빌드 작업</text>
+  <text x="420" y="183" class="muted small">3개 세션</text>
+  <path d="m516 175 7 7m0-7-7 7" class="line"/>
+  <rect x="343" y="198" width="180" height="2" fill="#65DDB7"/>
+  <text x="560" y="183" class="muted body">배포 점검</text>
+  <path d="M709 172v12m-6-6h12" class="line"/>
+  <rect x="1294" y="162" width="84" height="32" rx="6" fill="#203B36"/>
+  <text x="1336" y="183" text-anchor="middle" class="mint body">스니펫</text>
+  <text x="1414" y="183" text-anchor="middle" class="muted body">꾸미기</text>
+  <use href="#settings" x="1515" y="168"/>
+
+  <rect x="56" y="212" width="656" height="328" rx="8" fill="#1E1E2E" stroke="#65DDB7" stroke-width="2"/>
+  <path d="M64 213h640a7 7 0 0 1 7 7v28H57v-28a7 7 0 0 1 7-7" fill="#203B36"/>
+  <use href="#server" x="70" y="220" color="#65DDB7"/>
+  <text x="100" y="235" class="body bold">빌드 01</text>
+  <text x="165" y="235" class="muted small">root · 192.0.2.21</text>
+  <rect x="389" y="219" width="78" height="23" rx="4" fill="#65DDB7"/>
+  <text x="428" y="235" text-anchor="middle" class="small ink bold">입력 대상</text>
+  <circle cx="486" cy="231" r="3.5" fill="#78D6A3"/>
+  <text x="497" y="235" class="green small">연결됨</text>
+  <use href="#pane-actions" x="626" y="221"/>
+  <g class="mono" font-size="16">
+    <text x="76" y="279" class="term">root@build-01:~# ./build.sh</text>
+    <text x="76" y="313" class="muted">[1/3] Checking dependencies...</text>
+    <text x="76" y="340" class="muted">[2/3] Compiling application...</text>
+    <text x="76" y="367" class="muted">[3/3] Running checks...</text>
+    <text x="76" y="412" class="green">Build completed successfully.</text>
+    <text x="76" y="457" class="term">root@build-01:~#</text>
+    <rect x="240" y="442" width="9" height="19" fill="#CDD6F4"/>
+  </g>
+
+  <rect x="56" y="552" width="656" height="320" rx="8" fill="#1E1E2E" stroke="#343E4C"/>
+  <path d="M64 553h640a7 7 0 0 1 7 7v28H57v-28a7 7 0 0 1 7-7" fill="#191E25"/>
+  <use href="#server" x="70" y="560" color="#A8B5C4"/>
+  <text x="100" y="575" class="body bold">로그 01</text>
+  <text x="165" y="575" class="muted small">admin · 192.0.2.41</text>
+  <circle cx="486" cy="571" r="3.5" fill="#78D6A3"/>
+  <text x="497" y="575" class="green small">연결됨</text>
+  <use href="#pane-actions" x="626" y="561"/>
+  <g class="mono" font-size="15">
+    <text x="76" y="620" class="term">admin@logs-01:~$ tail -f /var/log/app.log</text>
+    <text x="76" y="661" class="muted">10:24:01 <tspan fill="#78D6A3">INFO</tspan><tspan fill="#CDD6F4">  Application started</tspan></text>
+    <text x="76" y="688" class="muted">10:24:02 <tspan fill="#78D6A3">INFO</tspan><tspan fill="#CDD6F4">  Listening on :8080</tspan></text>
+    <text x="76" y="715" class="muted">10:24:18 <tspan fill="#78D6A3">INFO</tspan><tspan fill="#CDD6F4">  GET /health 200  3ms</tspan></text>
+    <text x="76" y="742" class="muted">10:24:23 <tspan fill="#78D6A3">INFO</tspan><tspan fill="#CDD6F4">  GET /api/jobs 200  12ms</tspan></text>
+    <text x="76" y="769" class="muted">10:24:30 <tspan fill="#78D6A3">INFO</tspan><tspan fill="#CDD6F4">  Worker ready</tspan></text>
+  </g>
+
+  <rect x="724" y="212" width="488" height="660" rx="8" fill="#1E1E2E" stroke="#343E4C"/>
+  <path d="M732 213h472a7 7 0 0 1 7 7v28H725v-28a7 7 0 0 1 7-7" fill="#191E25"/>
+  <use href="#server" x="738" y="220" color="#A8B5C4"/>
+  <text x="768" y="235" class="body bold">웹 01</text>
+  <text x="820" y="235" class="muted small">deploy</text>
+  <circle cx="984" cy="231" r="3.5" fill="#78D6A3"/>
+  <text x="995" y="235" class="green small">연결됨</text>
+  <use href="#pane-actions" x="1126" y="221"/>
+  <g class="mono" font-size="15">
+    <text x="744" y="279" class="term">deploy@web-01:~$ systemctl status app</text>
+    <text x="744" y="322" class="green">● app.service - Application</text>
+    <text x="764" y="351" class="term">Loaded: loaded; enabled</text>
+    <text x="764" y="380" class="term">Active: <tspan fill="#78D6A3">active (running)</tspan></text>
+    <text x="764" y="409" class="term">Main PID: 1428 (app)</text>
+    <text x="764" y="438" class="term">Memory: 128.4M</text>
+    <text x="764" y="467" class="term">CPU: 2.041s</text>
+    <text x="744" y="528" class="term">deploy@web-01:~$</text>
+  </g>
+
+  <rect x="1224" y="212" width="320" height="660" rx="8" fill="#191E25" stroke="#343E4C"/>
+  <text x="1240" y="239" class="body bold">스니펫</text>
+  <text x="1476" y="239" class="mint small">+ 새 스니펫</text>
+  <path d="M1240 254h288" stroke="#343E4C"/>
+  <text x="1240" y="279" class="small muted">붙여넣을 대상</text>
+  <rect x="1240" y="291" width="288" height="36" rx="6" fill="#111418"/>
+  <rect x="1242" y="293" width="142" height="32" rx="5" fill="#203B36"/>
+  <text x="1313" y="314" text-anchor="middle" class="mint body">선택한 창</text>
+  <text x="1456" y="314" text-anchor="middle" class="muted body">현재 탭 전체</text>
+  <circle cx="1245" cy="346" r="4" fill="#65DDB7"/>
+  <text x="1258" y="350" class="body">빌드 01 · root</text>
+  <text x="1528" y="350" text-anchor="end" class="small muted">1개 대상</text>
+  <rect x="1240" y="370" width="288" height="36" rx="6" fill="#232B35" stroke="#343E4C"/>
+  <circle cx="1258" cy="386" r="5" class="line"/><path d="m1262 390 4 4" class="line"/>
+  <text x="1278" y="393" class="muted body">스니펫 검색</text>
+  <text x="1240" y="434" class="muted small bold">운영 명령</text>
+  <rect x="1240" y="449" width="288" height="72" rx="6" fill="#203B36"/>
+  <rect x="1240" y="460" width="3" height="50" rx="1.5" fill="#65DDB7"/>
+  <text x="1254" y="475" class="body bold">앱 로그 보기</text>
+  <text x="1254" y="500" class="small mono muted">tail -n 100 /var/log/app.log</text>
+  <text x="1254" y="550" class="body">디스크 용량 확인</text>
+  <text x="1254" y="573" class="small mono muted">df -h</text>
+  <path d="M1240 591h288" stroke="#343E4C"/>
+  <text x="1254" y="618" class="body">프로세스 확인</text>
+  <text x="1254" y="641" class="small mono muted">ps aux</text>
+  <text x="1240" y="698" class="small muted">명령 미리보기</text>
+  <rect x="1240" y="713" width="288" height="64" rx="6" fill="#111418" stroke="#343E4C"/>
+  <text x="1252" y="742" class="small mono">tail -n 100 /var/log/app.log</text>
+  <text x="1240" y="802" class="small muted">붙여넣은 뒤 터미널에서 실행하세요.</text>
+  <rect x="1240" y="818" width="288" height="36" rx="6" fill="#65DDB7"/>
+  <text x="1384" y="841" text-anchor="middle" class="ink body bold">선택한 창에 붙여넣기</text>
+
+  <path d="M40 892h1520" stroke="#343E4C"/>
+  <circle cx="58" cy="904" r="3" fill="#78D6A3"/>
+  <text x="70" y="908" class="small muted">SSH 3개 연결됨</text>
+  <text x="213" y="908" class="small muted">입력 대상: 빌드 01</text>
+  <text x="1539" y="908" text-anchor="end" class="small muted">가상 데이터 · 화면 구성 예시</text>
+
+  <text x="40" y="969" font-size="18" class="bold">02   호스트 관리</text>
+  <text x="245" y="969" class="muted body">그룹 → 목록 → 상세 편집</text>
+  <text x="816" y="969" font-size="18" class="bold">03   파일 전송</text>
+  <text x="1008" y="969" class="muted body">서로 다른 서버 · 좌우 독립 탐색</text>
+
+  <!-- Reduced host-management layout; display sizes are illustrative. -->
+  <g transform="translate(40 990)">
+    <rect width="744" height="438" rx="8" fill="#111418" stroke="#343E4C"/>
+    <path d="M8 0h728a8 8 0 0 1 8 8v32H0V8a8 8 0 0 1 8-8" fill="#191E25"/>
+    <use href="#traffic" transform="translate(18 20) scale(.7)"/>
+    <rect x="67" y="5" width="70" height="34" rx="5" fill="#232B35"/>
+    <text x="102" y="26" text-anchor="middle" class="small">호스트</text>
+    <rect x="78" y="38" width="48" height="2" fill="#65DDB7"/>
+    <text x="151" y="26" class="small muted">파일 전송</text>
+    <text x="236" y="26" class="small muted">빌드 작업</text>
+    <use href="#settings" transform="translate(712 11) scale(.85)"/>
+    <rect x="1" y="40" width="143" height="373" fill="#191E25"/>
+    <text x="18" y="73" class="small muted bold">라이브러리</text>
+    <rect x="10" y="88" width="124" height="32" rx="5" fill="#203B36"/>
+    <text x="20" y="109" class="small mint">전체 호스트</text><text x="123" y="109" text-anchor="end" class="small mint">8</text>
+    <text x="20" y="145" class="small muted">즐겨찾기</text>
+    <text x="20" y="179" class="small muted">최근 접속</text>
+    <path d="M16 197h112" stroke="#343E4C"/>
+    <text x="18" y="223" class="small muted bold">그룹</text>
+    <text x="20" y="257" class="small">⌄  개발</text>
+    <text x="36" y="290" class="small muted">빌드 서버</text>
+    <text x="36" y="321" class="small muted">웹 서버</text>
+    <text x="20" y="357" class="small">›  운영</text>
+    <rect x="160" y="55" width="220" height="32" rx="5" fill="#232B35"/>
+    <text x="172" y="76" class="small muted">이름, 주소, 태그 검색</text>
+    <rect x="390" y="55" width="99" height="32" rx="5" fill="#65DDB7"/>
+    <text x="439" y="76" text-anchor="middle" class="small ink bold">+ 호스트 추가</text>
+    <text x="164" y="109" class="small muted">전체 호스트 · 8개</text>
+    <rect x="154" y="124" width="345" height="56" rx="5" fill="#203B36"/>
+    <rect x="154" y="135" width="3" height="34" fill="#65DDB7"/>
+    <use href="#server" x="168" y="140" color="#65DDB7"/>
+    <text x="201" y="145" class="body bold">빌드 01</text>
+    <text x="201" y="166" class="small muted">192.0.2.21 · root</text>
+    <rect x="428" y="141" width="54" height="22" rx="11" fill="#344B45"/>
+    <text x="455" y="157" text-anchor="middle" class="small mint">빌드</text>
+    <use href="#server" x="168" y="201" color="#A8B5C4"/>
+    <text x="201" y="207" class="body">웹 01</text>
+    <text x="201" y="229" class="small muted">192.0.2.31 · deploy</text>
+    <path d="M164 242h325" stroke="#343E4C"/>
+    <use href="#server" x="168" y="260" color="#A8B5C4"/>
+    <text x="201" y="267" class="body">로그 01</text>
+    <text x="201" y="289" class="small muted">192.0.2.41 · admin</text>
+    <path d="M164 302h325" stroke="#343E4C"/>
+    <use href="#server" x="168" y="320" color="#A8B5C4"/>
+    <text x="201" y="327" class="body">스테이징 01</text>
+    <text x="201" y="349" class="small muted">192.0.2.51 · deploy</text>
+    <rect x="510" y="40" width="233" height="373" fill="#191E25"/>
+    <text x="528" y="76" font-size="17" class="bold">빌드 01</text>
+    <text x="708" y="76" text-anchor="end" class="small mint">편집</text>
+    <text x="528" y="110" class="small muted">주소</text>
+    <text x="528" y="134" class="body mono">192.0.2.21</text>
+    <path d="M528 151h197" stroke="#343E4C"/>
+    <text x="528" y="177" class="small muted">그룹</text>
+    <text x="528" y="202" class="body">개발 / 빌드 서버</text>
+    <text x="528" y="236" class="small muted">SSH 포트 / 계정</text>
+    <text x="528" y="261" class="body mono">22 / root</text>
+    <text x="528" y="294" class="small muted">인증 정보</text>
+    <text x="528" y="319" class="body">개발 서버 키</text>
+    <rect x="528" y="345" width="197" height="28" rx="5" fill="#65DDB7"/>
+    <text x="626" y="364" text-anchor="middle" class="small ink bold">SSH 연결</text>
+    <text x="626" y="398" text-anchor="middle" class="small muted">파일 전송 ▾</text>
+    <path d="M0 413h744" stroke="#343E4C"/>
+    <text x="16" y="430" class="small muted">8개 호스트 · 선택 1개</text>
+  </g>
+
+  <!-- Reduced independent SFTP panels and transfer queue. -->
+  <g transform="translate(816 990)">
+    <rect width="744" height="438" rx="8" fill="#111418" stroke="#343E4C"/>
+    <path d="M8 0h728a8 8 0 0 1 8 8v32H0V8a8 8 0 0 1 8-8" fill="#191E25"/>
+    <use href="#traffic" transform="translate(18 20) scale(.7)"/>
+    <text x="88" y="26" class="small muted">호스트</text>
+    <rect x="147" y="5" width="89" height="34" rx="5" fill="#232B35"/>
+    <text x="191" y="26" text-anchor="middle" class="small">파일 전송</text>
+    <rect x="159" y="38" width="65" height="2" fill="#65DDB7"/>
+    <text x="260" y="26" class="small muted">빌드 작업</text>
+    <use href="#settings" transform="translate(712 11) scale(.85)"/>
+    <rect x="1" y="41" width="369" height="271" fill="#191E25"/>
+    <rect x="374" y="41" width="369" height="271" fill="#191E25"/>
+    <use href="#server" transform="translate(16 57) scale(.8)" color="#65DDB7"/>
+    <text x="44" y="70" class="body bold">빌드 01 ▾</text>
+    <text x="169" y="70" class="small muted">SFTP</text>
+    <text x="347" y="70" text-anchor="end" class="small green">● 연결됨</text>
+    <use href="#server" transform="translate(390 57) scale(.8)" color="#65DDB7"/>
+    <text x="418" y="70" class="body bold">웹 01 ▾</text>
+    <text x="543" y="70" class="small muted">SFTP</text>
+    <text x="725" y="70" text-anchor="end" class="small green">● 연결됨</text>
+    <rect x="13" y="88" width="343" height="30" rx="5" fill="#232B35"/>
+    <text x="25" y="108" class="small mono muted">↑  /opt/build/releases</text>
+    <rect x="387" y="88" width="343" height="30" rx="5" fill="#232B35"/>
+    <text x="399" y="108" class="small mono muted">↑  /var/www/releases</text>
+    <text x="19" y="143" class="small muted">이름</text><text x="347" y="143" text-anchor="end" class="small muted">크기</text>
+    <text x="393" y="143" class="small muted">이름</text><text x="725" y="143" text-anchor="end" class="small muted">크기</text>
+    <path d="M12 152h344m30 0h344" stroke="#343E4C"/>
+    <use href="#folder" transform="translate(19 164) scale(.7)" color="#A8B5C4"/>
+    <text x="44" y="178" class="small">archive</text>
+    <rect x="12" y="193" width="344" height="32" rx="4" fill="#203B36"/>
+    <text x="22" y="214" class="small mint">app-0.1.0.tar.gz</text><text x="344" y="214" text-anchor="end" class="small muted">48 MB</text>
+    <text x="22" y="247" class="small">checksums.txt</text><text x="344" y="247" text-anchor="end" class="small muted">1 KB</text>
+    <use href="#folder" transform="translate(393 164) scale(.7)" color="#A8B5C4"/>
+    <text x="418" y="178" class="small">previous</text>
+    <text x="396" y="214" class="small">app-0.0.9.tar.gz</text><text x="719" y="214" text-anchor="end" class="small muted">46 MB</text>
+    <rect x="182" y="268" width="174" height="30" rx="5" fill="#65DDB7"/>
+    <text x="269" y="288" text-anchor="middle" class="small ink bold">오른쪽으로 복사 →</text>
+    <text x="18" y="289" class="small muted">1개 선택됨</text>
+    <path d="M0 313h744" stroke="#343E4C"/>
+    <text x="17" y="338" class="small bold">전송 대기열</text><text x="105" y="338" class="small mint">1개 진행 중</text>
+    <text x="17" y="367" class="small">app-0.1.0.tar.gz</text>
+    <text x="195" y="367" class="small muted">빌드 01 → 웹 01</text>
+    <rect x="369" y="358" width="148" height="6" rx="3" fill="#343E4C"/>
+    <rect x="369" y="358" width="92" height="6" rx="3" fill="#65DDB7"/>
+    <text x="533" y="367" class="small mint">62%</text>
+    <text x="586" y="367" class="small muted">8.4 MB/s</text><text x="705" y="367" text-anchor="end" class="small muted">취소</text>
+    <text x="17" y="397" class="small muted">출발지와 도착지를 확인하고 파일을 복사합니다.</text>
+    <path d="M0 413h744" stroke="#343E4C"/>
+    <text x="16" y="430" class="small muted">좌우 연결 독립 · 파일 전송 예시</text>
+  </g>
+
+  <text x="40" y="1487" font-size="18" class="bold">04   외형과 설정 기준</text>
+  <rect x="40" y="1511" width="744" height="112" rx="8" fill="#191E25" stroke="#343E4C"/>
+  <text x="60" y="1542" class="body bold">어두운 외형</text>
+  <rect x="60" y="1560" width="42" height="42" rx="6" fill="#111418" stroke="#343E4C"/>
+  <rect x="110" y="1560" width="42" height="42" rx="6" fill="#232B35" stroke="#343E4C"/>
+  <rect x="160" y="1560" width="42" height="42" rx="6" fill="#65DDB7"/>
+  <text x="225" y="1576" class="body">차콜 배경 · 민트 선택 표시</text>
+  <text x="225" y="1600" class="small muted">앱 14px · 터미널 JetBrains Mono 14px · 모서리 6~8px</text>
+  <rect x="816" y="1511" width="744" height="112" rx="8" fill="#F4F6F8" stroke="#CED6DF"/>
+  <text x="836" y="1542" style="fill:#18212B" class="body bold">밝은 외형</text>
+  <rect x="836" y="1560" width="42" height="42" rx="6" fill="#FFFFFF" stroke="#CED6DF"/>
+  <rect x="886" y="1560" width="42" height="42" rx="6" fill="#EAF0F4" stroke="#CED6DF"/>
+  <rect x="936" y="1560" width="42" height="42" rx="6" fill="#08785A"/>
+  <text x="1001" y="1576" style="fill:#18212B" class="body">밝은 회색 배경 · 짙은 녹색 강조</text>
+  <text x="1001" y="1600" style="fill:#536373" class="small">시스템 밝기 기본 · 터미널 테마는 별도로 선택</text>
+  <text x="40" y="1667" class="muted body">한국어 고정 · 설정 이동은 파일 내보내기 / 가져오기 · 앱 업데이트 기능 제외</text>
+  <text x="1560" y="1667" text-anchor="end" class="small muted">디자인 검토 자료 / 2026.09.29</text>
+</svg>

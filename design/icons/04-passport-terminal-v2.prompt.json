@@ -1,0 +1,19 @@
+{
+  "mode": "built-in image_gen edit",
+  "file": "04-passport-terminal-v2.png",
+  "status": "user-approved final app icon design; implementation approval pending",
+  "approved_on": "2026-09-29",
+  "approval_note": "사용자가 이걸로 확정이라고 최종 아이콘을 선택함",
+  "references": [
+    {
+      "file": "04-passport-book.png",
+      "role": "edit target"
+    },
+    {
+      "file": "01-terminal-gate.png",
+      "role": "symbol reference"
+    }
+  ],
+  "transparent_background": true,
+  "prompt": "Use case: precise-object-edit.\nAsset type: revised Passport desktop app icon concept.\nInput image 1 is the EDIT TARGET: the passport booklet icon on an off-white rounded square, with charcoal cover, mint spine, and a mint > on the cover.\nInput image 2 is a SYMBOL REFERENCE ONLY: the charcoal terminal icon with a mint >_ symbol.\nPrimary request: preserve image 1's entire icon design and replace only the single > on its book cover with the complete >_ terminal prompt symbol from image 2.\nTake the bold rounded mint chevron AND the short rounded horizontal underscore from image 2, scale them together as one balanced unit, and center that unit optically on the charcoal book cover. The underscore sits to the lower right of the chevron with a clear small gap; its bottom baseline aligns with the chevron bottom. The whole >_ fits comfortably inside the cover with generous margins and remains readable at app icon size.\nDo not put the separate rounded square tile from image 2 on the book; transfer just its two mint glyph shapes.\nPreserve image 1's off-white outer tile, dark book shape, mint spine, visible page opening, slight perspective, rounded corners, shading, image framing, and transparent background outside the tile. Keep the original palette. No new text, letters, labels, decorations, numbers, extra icon, or watermark.\nOutput one complete icon only. Preserve true transparency."
+}

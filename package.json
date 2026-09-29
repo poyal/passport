@@ -1,0 +1,97 @@
+{
+  "name": "passport",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "description": "개인용 SSH 및 파일 전송 데스크톱 앱",
+  "main": "dist/main/index.cjs",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "tsc --noEmit && node scripts/build.mjs",
+    "start": "electron .",
+    "test": "node scripts/test.mjs",
+    "test:e2e": "npm run build && playwright test",
+    "check": "tsc --noEmit && node scripts/test.mjs",
+    "postinstall": "electron-builder install-app-deps",
+    "pack": "npm run build && electron-builder --dir",
+    "dist:mac": "npm run build && electron-builder --mac dmg --arm64",
+    "dist:win": "npm run build && electron-builder --win nsis --x64",
+    "format": "prettier --write src tests scripts *.config.ts",
+    "dist:win:arm64": "npm run build && electron-builder --win nsis --arm64",
+    "test:ssh:docker": "node scripts/docker-ssh.mjs"
+  },
+  "build": {
+    "appId": "io.passport.desktop",
+    "productName": "Passport",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "build/icon.png",
+      "package.json",
+      "THIRD_PARTY_NOTICES.md"
+    ],
+    "asarUnpack": [
+      "**/*.node",
+      "node_modules/font-list/libs/**",
+      "node_modules/node-pty/**"
+    ],
+    "npmRebuild": true,
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.developer-tools",
+      "minimumSystemVersion": "14.0",
+      "identity": "-",
+      "icon": "build/icon.png"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "differentialPackage": false
+    },
+    "dmg": {
+      "writeUpdateInfo": false
+    },
+    "publish": null,
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
+  },
+  "dependencies": {
+    "@fontsource/jetbrains-mono": "5.3.0",
+    "@xterm/addon-fit": "0.11.0",
+    "@xterm/addon-search": "0.16.0",
+    "@xterm/addon-serialize": "0.14.0",
+    "@xterm/xterm": "6.0.0",
+    "basic-ftp": "6.2.1",
+    "better-sqlite3": "13.0.3",
+    "font-list": "2.1.0",
+    "lucide-react": "1.48.0",
+    "node-pty": "1.1.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "ssh2": "1.17.0",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@types/better-sqlite3": "9.6.0",
+    "@types/node": "26.6.3",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@types/ssh2": "1.15.6",
+    "@vitejs/plugin-react": "6.1.1",
+    "electron": "44.4.5",
+    "electron-builder": "26.15.3",
+    "esbuild": "0.28.2",
+    "prettier": "3.9.9",
+    "typescript": "7.0.2",
+    "vite": "8.3.1",
+    "vitest": "4.1.11"
+  }
+}

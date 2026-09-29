@@ -1,0 +1,11 @@
+{
+  "date": "2026-09-29",
+  "packagedSmoke": "passed",
+  "arch": "arm64",
+  "platform": "darwin",
+  "hosts": 0,
+  "fonts": 247,
+  "version": 1,
+  "nodeAvailable": false,
+  "dmgSha256": "e6f9524bb8191c5cc180740e252ca8da03f9447970a149ac8c86fb6ef3ac2b49"
+}

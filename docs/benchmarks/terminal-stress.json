@@ -1,0 +1,29 @@
+{
+  "durationMs": 600002,
+  "version": "0.3.0",
+  "highlight": "log + addresses",
+  "panes": 16,
+  "hostCount": 500,
+  "bytesPerSession": [
+    60835840,
+    60835840,
+    60835840,
+    60835840,
+    60835840,
+    60835840,
+    60835840,
+    60835840,
+    60835840,
+    60835840,
+    60835840,
+    60835840,
+    60835840,
+    60835840,
+    60835840,
+    60835840
+  ],
+  "inputLoopbackP95Ms": 15,
+  "peakWorkingSetMiB": 1147,
+  "lastWorkingSetMiB": 1131,
+  "note": "Loopback IPC/SSH response includes local network delay. Windows/Intel Mac not measured."
+}

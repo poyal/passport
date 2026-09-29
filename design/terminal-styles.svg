@@ -1,0 +1,314 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="2140" viewBox="0 0 1600 2140" role="img" aria-labelledby="title desc">
+<title id="title">Passport 터미널 스타일 비교</title>
+<desc id="desc">동일한 가상 ANSI 출력을 사용한 12종 테마 비교와 같은 One Dark 테마 위에서 비교하는 4종 출력 강조 프리셋. 앱 구현 전 정적 검토 시안입니다.</desc>
+<metadata>{&quot;note&quot;:&quot;Representative palette study, not a complete installable terminal theme. Upstream sources are recorded in docs/plan.md.&quot;,&quot;themes&quot;:[{&quot;name&quot;:&quot;Catppuccin Mocha&quot;,&quot;source&quot;:&quot;https://github.com/catppuccin/catppuccin&quot;},{&quot;name&quot;:&quot;One Dark&quot;,&quot;source&quot;:&quot;https://github.com/atom/one-dark-syntax&quot;},{&quot;name&quot;:&quot;Dracula&quot;,&quot;source&quot;:&quot;https://draculatheme.com/spec&quot;},{&quot;name&quot;:&quot;Tokyo Night&quot;,&quot;source&quot;:&quot;https://github.com/folke/tokyonight.nvim/blob/main/extras/alacritty/tokyonight_night.toml&quot;},{&quot;name&quot;:&quot;Nord&quot;,&quot;source&quot;:&quot;https://www.nordtheme.com/docs/colors-and-palettes/&quot;},{&quot;name&quot;:&quot;Gruvbox Dark&quot;,&quot;source&quot;:&quot;https://github.com/morhetz/gruvbox&quot;},{&quot;name&quot;:&quot;Solarized Dark&quot;,&quot;source&quot;:&quot;https://ethanschoonover.com/solarized/&quot;},{&quot;name&quot;:&quot;Campbell&quot;,&quot;source&quot;:&quot;https://github.com/microsoft/terminal/blob/main/src/tools/ColorTool/schemes/campbell.ini&quot;},{&quot;name&quot;:&quot;기본 블랙&quot;,&quot;source&quot;:&quot;Passport 자체 프리셋&quot;},{&quot;name&quot;:&quot;Catppuccin Latte&quot;,&quot;source&quot;:&quot;https://github.com/catppuccin/catppuccin&quot;},{&quot;name&quot;:&quot;Gruvbox Light&quot;,&quot;source&quot;:&quot;https://github.com/morhetz/gruvbox&quot;},{&quot;name&quot;:&quot;Solarized Light&quot;,&quot;source&quot;:&quot;https://ethanschoonover.com/solarized/&quot;}]}</metadata>
+<style>text{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif}.mono,.mono tspan{font-family:'JetBrains Mono',Menlo,Consolas,monospace}</style>
+<rect x="0" y="0" width="1600" height="2140" rx="0" fill="#0B0E12" />
+<rect x="40" y="38" width="44" height="44" rx="10" fill="#65DDB7" />
+<path d="m51 51 8 8-8 8m13 0h10" fill="none" stroke="#111418" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="100" y="61" fill="#E6EDF3" font-size="28" font-weight="600">Passport / 터미널 스타일</text>
+<text x="100" y="86" fill="#A8B5C4" font-size="15" >동일한 출력으로 비교하는 색상 테마와 출력 강조 방식</text>
+<rect x="1384" y="43" width="176" height="32" rx="16" fill="#203B36" />
+<text x="1472" y="65" fill="#65DDB7" font-size="12" text-anchor="middle">계획 검토용 · 가상 데이터</text>
+<text x="40" y="135" fill="#E6EDF3" font-size="20" font-weight="600">01   색상 테마 12종</text>
+<text x="295" y="135" fill="#A8B5C4" font-size="15" >v0.1  ·  서버가 보낸 같은 ANSI 컬러 출력으로 비교</text>
+<g transform="translate(40 162)">
+<rect x="0" y="0" width="480" height="280" rx="8" fill="#191E25" stroke="#65DDB7" stroke-width="2"/>
+<text x="16" y="28" fill="#E6EDF3" font-size="18" font-weight="600">Catppuccin Mocha</text>
+<text x="462" y="28" fill="#65DDB7" font-size="12" text-anchor="end">기본 · 어둡게</text>
+<path d="M1 44h478v228a7 7 0 0 1-7 7H8a7 7 0 0 1-7-7Z" fill="#1e1e2e"/>
+<text x="18" y="76" fill="#cdd6f4" font-size="15" class="mono">dev@build-01:~$ ls</text>
+<text x="18" y="104" fill="#cdd6f4" font-size="15" class="mono" xml:space="preserve"><tspan fill="#89b4fa">app/     scripts/</tspan>     <tspan fill="#f38ba8">release.tgz</tspan></text>
+<text x="18" y="132" fill="#cdd6f4" font-size="15" class="mono">$ ./health-check</text>
+<text x="18" y="160" fill="#cdd6f4" font-size="15" class="mono" xml:space="preserve"><tspan fill="#a6e3a1">[INFO] </tspan> service ready</text>
+<text x="18" y="188" fill="#cdd6f4" font-size="15" class="mono" xml:space="preserve"><tspan fill="#f9e2af">[WARN] </tspan> disk usage 82%</text>
+<text x="18" y="216" fill="#cdd6f4" font-size="15" class="mono" xml:space="preserve"><tspan fill="#f38ba8">[ERROR]</tspan> request timed out</text>
+<text x="18" y="245" fill="#cdd6f4" font-size="15" class="mono">dev@build-01:~$</text>
+<rect x="156" y="232" width="9" height="17" rx="0" fill="#cdd6f4" />
+<rect x="278" y="248" width="18" height="6" rx="2" fill="#cdd6f4" />
+<rect x="304" y="248" width="18" height="6" rx="2" fill="#f38ba8" />
+<rect x="330" y="248" width="18" height="6" rx="2" fill="#a6e3a1" />
+<rect x="356" y="248" width="18" height="6" rx="2" fill="#f9e2af" />
+<rect x="382" y="248" width="18" height="6" rx="2" fill="#89b4fa" />
+<rect x="408" y="248" width="18" height="6" rx="2" fill="#cba6f7" />
+<rect x="434" y="248" width="18" height="6" rx="2" fill="#94e2d5" />
+</g>
+<g transform="translate(560 162)">
+<rect x="0" y="0" width="480" height="280" rx="8" fill="#191E25" stroke="#343E4C" stroke-width="1"/>
+<text x="16" y="28" fill="#E6EDF3" font-size="18" font-weight="600">One Dark</text>
+<text x="462" y="28" fill="#A8B5C4" font-size="12" text-anchor="end">어둡게</text>
+<path d="M1 44h478v228a7 7 0 0 1-7 7H8a7 7 0 0 1-7-7Z" fill="#282c34"/>
+<text x="18" y="76" fill="#abb2bf" font-size="15" class="mono">dev@build-01:~$ ls</text>
+<text x="18" y="104" fill="#abb2bf" font-size="15" class="mono" xml:space="preserve"><tspan fill="#61afef">app/     scripts/</tspan>     <tspan fill="#e06c75">release.tgz</tspan></text>
+<text x="18" y="132" fill="#abb2bf" font-size="15" class="mono">$ ./health-check</text>
+<text x="18" y="160" fill="#abb2bf" font-size="15" class="mono" xml:space="preserve"><tspan fill="#98c379">[INFO] </tspan> service ready</text>
+<text x="18" y="188" fill="#abb2bf" font-size="15" class="mono" xml:space="preserve"><tspan fill="#e5c07b">[WARN] </tspan> disk usage 82%</text>
+<text x="18" y="216" fill="#abb2bf" font-size="15" class="mono" xml:space="preserve"><tspan fill="#e06c75">[ERROR]</tspan> request timed out</text>
+<text x="18" y="245" fill="#abb2bf" font-size="15" class="mono">dev@build-01:~$</text>
+<rect x="156" y="232" width="9" height="17" rx="0" fill="#abb2bf" />
+<rect x="278" y="248" width="18" height="6" rx="2" fill="#abb2bf" />
+<rect x="304" y="248" width="18" height="6" rx="2" fill="#e06c75" />
+<rect x="330" y="248" width="18" height="6" rx="2" fill="#98c379" />
+<rect x="356" y="248" width="18" height="6" rx="2" fill="#e5c07b" />
+<rect x="382" y="248" width="18" height="6" rx="2" fill="#61afef" />
+<rect x="408" y="248" width="18" height="6" rx="2" fill="#c678dd" />
+<rect x="434" y="248" width="18" height="6" rx="2" fill="#56b6c2" />
+</g>
+<g transform="translate(1080 162)">
+<rect x="0" y="0" width="480" height="280" rx="8" fill="#191E25" stroke="#343E4C" stroke-width="1"/>
+<text x="16" y="28" fill="#E6EDF3" font-size="18" font-weight="600">Dracula</text>
+<text x="462" y="28" fill="#A8B5C4" font-size="12" text-anchor="end">어둡게</text>
+<path d="M1 44h478v228a7 7 0 0 1-7 7H8a7 7 0 0 1-7-7Z" fill="#282a36"/>
+<text x="18" y="76" fill="#f8f8f2" font-size="15" class="mono">dev@build-01:~$ ls</text>
+<text x="18" y="104" fill="#f8f8f2" font-size="15" class="mono" xml:space="preserve"><tspan fill="#bd93f9">app/     scripts/</tspan>     <tspan fill="#ff5555">release.tgz</tspan></text>
+<text x="18" y="132" fill="#f8f8f2" font-size="15" class="mono">$ ./health-check</text>
+<text x="18" y="160" fill="#f8f8f2" font-size="15" class="mono" xml:space="preserve"><tspan fill="#50fa7b">[INFO] </tspan> service ready</text>
+<text x="18" y="188" fill="#f8f8f2" font-size="15" class="mono" xml:space="preserve"><tspan fill="#f1fa8c">[WARN] </tspan> disk usage 82%</text>
+<text x="18" y="216" fill="#f8f8f2" font-size="15" class="mono" xml:space="preserve"><tspan fill="#ff5555">[ERROR]</tspan> request timed out</text>
+<text x="18" y="245" fill="#f8f8f2" font-size="15" class="mono">dev@build-01:~$</text>
+<rect x="156" y="232" width="9" height="17" rx="0" fill="#f8f8f2" />
+<rect x="278" y="248" width="18" height="6" rx="2" fill="#f8f8f2" />
+<rect x="304" y="248" width="18" height="6" rx="2" fill="#ff5555" />
+<rect x="330" y="248" width="18" height="6" rx="2" fill="#50fa7b" />
+<rect x="356" y="248" width="18" height="6" rx="2" fill="#f1fa8c" />
+<rect x="382" y="248" width="18" height="6" rx="2" fill="#bd93f9" />
+<rect x="408" y="248" width="18" height="6" rx="2" fill="#ff79c6" />
+<rect x="434" y="248" width="18" height="6" rx="2" fill="#8be9fd" />
+</g>
+<g transform="translate(40 472)">
+<rect x="0" y="0" width="480" height="280" rx="8" fill="#191E25" stroke="#343E4C" stroke-width="1"/>
+<text x="16" y="28" fill="#E6EDF3" font-size="18" font-weight="600">Tokyo Night</text>
+<text x="462" y="28" fill="#A8B5C4" font-size="12" text-anchor="end">어둡게</text>
+<path d="M1 44h478v228a7 7 0 0 1-7 7H8a7 7 0 0 1-7-7Z" fill="#1a1b26"/>
+<text x="18" y="76" fill="#c0caf5" font-size="15" class="mono">dev@build-01:~$ ls</text>
+<text x="18" y="104" fill="#c0caf5" font-size="15" class="mono" xml:space="preserve"><tspan fill="#7aa2f7">app/     scripts/</tspan>     <tspan fill="#f7768e">release.tgz</tspan></text>
+<text x="18" y="132" fill="#c0caf5" font-size="15" class="mono">$ ./health-check</text>
+<text x="18" y="160" fill="#c0caf5" font-size="15" class="mono" xml:space="preserve"><tspan fill="#9ece6a">[INFO] </tspan> service ready</text>
+<text x="18" y="188" fill="#c0caf5" font-size="15" class="mono" xml:space="preserve"><tspan fill="#e0af68">[WARN] </tspan> disk usage 82%</text>
+<text x="18" y="216" fill="#c0caf5" font-size="15" class="mono" xml:space="preserve"><tspan fill="#f7768e">[ERROR]</tspan> request timed out</text>
+<text x="18" y="245" fill="#c0caf5" font-size="15" class="mono">dev@build-01:~$</text>
+<rect x="156" y="232" width="9" height="17" rx="0" fill="#c0caf5" />
+<rect x="278" y="248" width="18" height="6" rx="2" fill="#c0caf5" />
+<rect x="304" y="248" width="18" height="6" rx="2" fill="#f7768e" />
+<rect x="330" y="248" width="18" height="6" rx="2" fill="#9ece6a" />
+<rect x="356" y="248" width="18" height="6" rx="2" fill="#e0af68" />
+<rect x="382" y="248" width="18" height="6" rx="2" fill="#7aa2f7" />
+<rect x="408" y="248" width="18" height="6" rx="2" fill="#bb9af7" />
+<rect x="434" y="248" width="18" height="6" rx="2" fill="#7dcfff" />
+</g>
+<g transform="translate(560 472)">
+<rect x="0" y="0" width="480" height="280" rx="8" fill="#191E25" stroke="#343E4C" stroke-width="1"/>
+<text x="16" y="28" fill="#E6EDF3" font-size="18" font-weight="600">Nord</text>
+<text x="462" y="28" fill="#A8B5C4" font-size="12" text-anchor="end">어둡게</text>
+<path d="M1 44h478v228a7 7 0 0 1-7 7H8a7 7 0 0 1-7-7Z" fill="#2e3440"/>
+<text x="18" y="76" fill="#d8dee9" font-size="15" class="mono">dev@build-01:~$ ls</text>
+<text x="18" y="104" fill="#d8dee9" font-size="15" class="mono" xml:space="preserve"><tspan fill="#81a1c1">app/     scripts/</tspan>     <tspan fill="#bf616a">release.tgz</tspan></text>
+<text x="18" y="132" fill="#d8dee9" font-size="15" class="mono">$ ./health-check</text>
+<text x="18" y="160" fill="#d8dee9" font-size="15" class="mono" xml:space="preserve"><tspan fill="#a3be8c">[INFO] </tspan> service ready</text>
+<text x="18" y="188" fill="#d8dee9" font-size="15" class="mono" xml:space="preserve"><tspan fill="#ebcb8b">[WARN] </tspan> disk usage 82%</text>
+<text x="18" y="216" fill="#d8dee9" font-size="15" class="mono" xml:space="preserve"><tspan fill="#bf616a">[ERROR]</tspan> request timed out</text>
+<text x="18" y="245" fill="#d8dee9" font-size="15" class="mono">dev@build-01:~$</text>
+<rect x="156" y="232" width="9" height="17" rx="0" fill="#d8dee9" />
+<rect x="278" y="248" width="18" height="6" rx="2" fill="#d8dee9" />
+<rect x="304" y="248" width="18" height="6" rx="2" fill="#bf616a" />
+<rect x="330" y="248" width="18" height="6" rx="2" fill="#a3be8c" />
+<rect x="356" y="248" width="18" height="6" rx="2" fill="#ebcb8b" />
+<rect x="382" y="248" width="18" height="6" rx="2" fill="#81a1c1" />
+<rect x="408" y="248" width="18" height="6" rx="2" fill="#b48ead" />
+<rect x="434" y="248" width="18" height="6" rx="2" fill="#88c0d0" />
+</g>
+<g transform="translate(1080 472)">
+<rect x="0" y="0" width="480" height="280" rx="8" fill="#191E25" stroke="#343E4C" stroke-width="1"/>
+<text x="16" y="28" fill="#E6EDF3" font-size="18" font-weight="600">Gruvbox Dark</text>
+<text x="462" y="28" fill="#A8B5C4" font-size="12" text-anchor="end">어둡게</text>
+<path d="M1 44h478v228a7 7 0 0 1-7 7H8a7 7 0 0 1-7-7Z" fill="#282828"/>
+<text x="18" y="76" fill="#ebdbb2" font-size="15" class="mono">dev@build-01:~$ ls</text>
+<text x="18" y="104" fill="#ebdbb2" font-size="15" class="mono" xml:space="preserve"><tspan fill="#83a598">app/     scripts/</tspan>     <tspan fill="#fb4934">release.tgz</tspan></text>
+<text x="18" y="132" fill="#ebdbb2" font-size="15" class="mono">$ ./health-check</text>
+<text x="18" y="160" fill="#ebdbb2" font-size="15" class="mono" xml:space="preserve"><tspan fill="#b8bb26">[INFO] </tspan> service ready</text>
+<text x="18" y="188" fill="#ebdbb2" font-size="15" class="mono" xml:space="preserve"><tspan fill="#fabd2f">[WARN] </tspan> disk usage 82%</text>
+<text x="18" y="216" fill="#ebdbb2" font-size="15" class="mono" xml:space="preserve"><tspan fill="#fb4934">[ERROR]</tspan> request timed out</text>
+<text x="18" y="245" fill="#ebdbb2" font-size="15" class="mono">dev@build-01:~$</text>
+<rect x="156" y="232" width="9" height="17" rx="0" fill="#ebdbb2" />
+<rect x="278" y="248" width="18" height="6" rx="2" fill="#ebdbb2" />
+<rect x="304" y="248" width="18" height="6" rx="2" fill="#fb4934" />
+<rect x="330" y="248" width="18" height="6" rx="2" fill="#b8bb26" />
+<rect x="356" y="248" width="18" height="6" rx="2" fill="#fabd2f" />
+<rect x="382" y="248" width="18" height="6" rx="2" fill="#83a598" />
+<rect x="408" y="248" width="18" height="6" rx="2" fill="#d3869b" />
+<rect x="434" y="248" width="18" height="6" rx="2" fill="#8ec07c" />
+</g>
+<g transform="translate(40 782)">
+<rect x="0" y="0" width="480" height="280" rx="8" fill="#191E25" stroke="#343E4C" stroke-width="1"/>
+<text x="16" y="28" fill="#E6EDF3" font-size="18" font-weight="600">Solarized Dark</text>
+<text x="462" y="28" fill="#A8B5C4" font-size="12" text-anchor="end">어둡게</text>
+<path d="M1 44h478v228a7 7 0 0 1-7 7H8a7 7 0 0 1-7-7Z" fill="#002b36"/>
+<text x="18" y="76" fill="#839496" font-size="15" class="mono">dev@build-01:~$ ls</text>
+<text x="18" y="104" fill="#839496" font-size="15" class="mono" xml:space="preserve"><tspan fill="#268bd2">app/     scripts/</tspan>     <tspan fill="#dc322f">release.tgz</tspan></text>
+<text x="18" y="132" fill="#839496" font-size="15" class="mono">$ ./health-check</text>
+<text x="18" y="160" fill="#839496" font-size="15" class="mono" xml:space="preserve"><tspan fill="#859900">[INFO] </tspan> service ready</text>
+<text x="18" y="188" fill="#839496" font-size="15" class="mono" xml:space="preserve"><tspan fill="#b58900">[WARN] </tspan> disk usage 82%</text>
+<text x="18" y="216" fill="#839496" font-size="15" class="mono" xml:space="preserve"><tspan fill="#dc322f">[ERROR]</tspan> request timed out</text>
+<text x="18" y="245" fill="#839496" font-size="15" class="mono">dev@build-01:~$</text>
+<rect x="156" y="232" width="9" height="17" rx="0" fill="#839496" />
+<rect x="278" y="248" width="18" height="6" rx="2" fill="#839496" />
+<rect x="304" y="248" width="18" height="6" rx="2" fill="#dc322f" />
+<rect x="330" y="248" width="18" height="6" rx="2" fill="#859900" />
+<rect x="356" y="248" width="18" height="6" rx="2" fill="#b58900" />
+<rect x="382" y="248" width="18" height="6" rx="2" fill="#268bd2" />
+<rect x="408" y="248" width="18" height="6" rx="2" fill="#d33682" />
+<rect x="434" y="248" width="18" height="6" rx="2" fill="#2aa198" />
+</g>
+<g transform="translate(560 782)">
+<rect x="0" y="0" width="480" height="280" rx="8" fill="#191E25" stroke="#343E4C" stroke-width="1"/>
+<text x="16" y="28" fill="#E6EDF3" font-size="18" font-weight="600">Campbell</text>
+<text x="462" y="28" fill="#A8B5C4" font-size="12" text-anchor="end">어둡게</text>
+<path d="M1 44h478v228a7 7 0 0 1-7 7H8a7 7 0 0 1-7-7Z" fill="#0c0c0c"/>
+<text x="18" y="76" fill="#cccccc" font-size="15" class="mono">dev@build-01:~$ ls</text>
+<text x="18" y="104" fill="#cccccc" font-size="15" class="mono" xml:space="preserve"><tspan fill="#3b78ff">app/     scripts/</tspan>     <tspan fill="#e74856">release.tgz</tspan></text>
+<text x="18" y="132" fill="#cccccc" font-size="15" class="mono">$ ./health-check</text>
+<text x="18" y="160" fill="#cccccc" font-size="15" class="mono" xml:space="preserve"><tspan fill="#16c60c">[INFO] </tspan> service ready</text>
+<text x="18" y="188" fill="#cccccc" font-size="15" class="mono" xml:space="preserve"><tspan fill="#f9f1a5">[WARN] </tspan> disk usage 82%</text>
+<text x="18" y="216" fill="#cccccc" font-size="15" class="mono" xml:space="preserve"><tspan fill="#e74856">[ERROR]</tspan> request timed out</text>
+<text x="18" y="245" fill="#cccccc" font-size="15" class="mono">dev@build-01:~$</text>
+<rect x="156" y="232" width="9" height="17" rx="0" fill="#cccccc" />
+<rect x="278" y="248" width="18" height="6" rx="2" fill="#cccccc" />
+<rect x="304" y="248" width="18" height="6" rx="2" fill="#e74856" />
+<rect x="330" y="248" width="18" height="6" rx="2" fill="#16c60c" />
+<rect x="356" y="248" width="18" height="6" rx="2" fill="#f9f1a5" />
+<rect x="382" y="248" width="18" height="6" rx="2" fill="#3b78ff" />
+<rect x="408" y="248" width="18" height="6" rx="2" fill="#b4009e" />
+<rect x="434" y="248" width="18" height="6" rx="2" fill="#61d6d6" />
+</g>
+<g transform="translate(1080 782)">
+<rect x="0" y="0" width="480" height="280" rx="8" fill="#191E25" stroke="#343E4C" stroke-width="1"/>
+<text x="16" y="28" fill="#E6EDF3" font-size="18" font-weight="600">기본 블랙</text>
+<text x="462" y="28" fill="#A8B5C4" font-size="12" text-anchor="end">어둡게</text>
+<path d="M1 44h478v228a7 7 0 0 1-7 7H8a7 7 0 0 1-7-7Z" fill="#101010"/>
+<text x="18" y="76" fill="#d0d0d0" font-size="15" class="mono">dev@build-01:~$ ls</text>
+<text x="18" y="104" fill="#d0d0d0" font-size="15" class="mono" xml:space="preserve"><tspan fill="#82aaff">app/     scripts/</tspan>     <tspan fill="#ef7070">release.tgz</tspan></text>
+<text x="18" y="132" fill="#d0d0d0" font-size="15" class="mono">$ ./health-check</text>
+<text x="18" y="160" fill="#d0d0d0" font-size="15" class="mono" xml:space="preserve"><tspan fill="#90cf90">[INFO] </tspan> service ready</text>
+<text x="18" y="188" fill="#d0d0d0" font-size="15" class="mono" xml:space="preserve"><tspan fill="#ded082">[WARN] </tspan> disk usage 82%</text>
+<text x="18" y="216" fill="#d0d0d0" font-size="15" class="mono" xml:space="preserve"><tspan fill="#ef7070">[ERROR]</tspan> request timed out</text>
+<text x="18" y="245" fill="#d0d0d0" font-size="15" class="mono">dev@build-01:~$</text>
+<rect x="156" y="232" width="9" height="17" rx="0" fill="#d0d0d0" />
+<rect x="278" y="248" width="18" height="6" rx="2" fill="#d0d0d0" />
+<rect x="304" y="248" width="18" height="6" rx="2" fill="#ef7070" />
+<rect x="330" y="248" width="18" height="6" rx="2" fill="#90cf90" />
+<rect x="356" y="248" width="18" height="6" rx="2" fill="#ded082" />
+<rect x="382" y="248" width="18" height="6" rx="2" fill="#82aaff" />
+<rect x="408" y="248" width="18" height="6" rx="2" fill="#c792ea" />
+<rect x="434" y="248" width="18" height="6" rx="2" fill="#80d4d4" />
+</g>
+<g transform="translate(40 1092)">
+<rect x="0" y="0" width="480" height="280" rx="8" fill="#191E25" stroke="#343E4C" stroke-width="1"/>
+<text x="16" y="28" fill="#E6EDF3" font-size="18" font-weight="600">Catppuccin Latte</text>
+<text x="462" y="28" fill="#A8B5C4" font-size="12" text-anchor="end">밝게</text>
+<path d="M1 44h478v228a7 7 0 0 1-7 7H8a7 7 0 0 1-7-7Z" fill="#eff1f5"/>
+<text x="18" y="76" fill="#4c4f69" font-size="15" class="mono">dev@build-01:~$ ls</text>
+<text x="18" y="104" fill="#4c4f69" font-size="15" class="mono" xml:space="preserve"><tspan fill="#1e66f5">app/     scripts/</tspan>     <tspan fill="#d20f39">release.tgz</tspan></text>
+<text x="18" y="132" fill="#4c4f69" font-size="15" class="mono">$ ./health-check</text>
+<text x="18" y="160" fill="#4c4f69" font-size="15" class="mono" xml:space="preserve"><tspan fill="#40a02b">[INFO] </tspan> service ready</text>
+<text x="18" y="188" fill="#4c4f69" font-size="15" class="mono" xml:space="preserve"><tspan fill="#df8e1d">[WARN] </tspan> disk usage 82%</text>
+<text x="18" y="216" fill="#4c4f69" font-size="15" class="mono" xml:space="preserve"><tspan fill="#d20f39">[ERROR]</tspan> request timed out</text>
+<text x="18" y="245" fill="#4c4f69" font-size="15" class="mono">dev@build-01:~$</text>
+<rect x="156" y="232" width="9" height="17" rx="0" fill="#4c4f69" />
+<rect x="278" y="248" width="18" height="6" rx="2" fill="#4c4f69" />
+<rect x="304" y="248" width="18" height="6" rx="2" fill="#d20f39" />
+<rect x="330" y="248" width="18" height="6" rx="2" fill="#40a02b" />
+<rect x="356" y="248" width="18" height="6" rx="2" fill="#df8e1d" />
+<rect x="382" y="248" width="18" height="6" rx="2" fill="#1e66f5" />
+<rect x="408" y="248" width="18" height="6" rx="2" fill="#8839ef" />
+<rect x="434" y="248" width="18" height="6" rx="2" fill="#179299" />
+</g>
+<g transform="translate(560 1092)">
+<rect x="0" y="0" width="480" height="280" rx="8" fill="#191E25" stroke="#343E4C" stroke-width="1"/>
+<text x="16" y="28" fill="#E6EDF3" font-size="18" font-weight="600">Gruvbox Light</text>
+<text x="462" y="28" fill="#A8B5C4" font-size="12" text-anchor="end">밝게</text>
+<path d="M1 44h478v228a7 7 0 0 1-7 7H8a7 7 0 0 1-7-7Z" fill="#fbf1c7"/>
+<text x="18" y="76" fill="#3c3836" font-size="15" class="mono">dev@build-01:~$ ls</text>
+<text x="18" y="104" fill="#3c3836" font-size="15" class="mono" xml:space="preserve"><tspan fill="#076678">app/     scripts/</tspan>     <tspan fill="#9d0006">release.tgz</tspan></text>
+<text x="18" y="132" fill="#3c3836" font-size="15" class="mono">$ ./health-check</text>
+<text x="18" y="160" fill="#3c3836" font-size="15" class="mono" xml:space="preserve"><tspan fill="#79740e">[INFO] </tspan> service ready</text>
+<text x="18" y="188" fill="#3c3836" font-size="15" class="mono" xml:space="preserve"><tspan fill="#b57614">[WARN] </tspan> disk usage 82%</text>
+<text x="18" y="216" fill="#3c3836" font-size="15" class="mono" xml:space="preserve"><tspan fill="#9d0006">[ERROR]</tspan> request timed out</text>
+<text x="18" y="245" fill="#3c3836" font-size="15" class="mono">dev@build-01:~$</text>
+<rect x="156" y="232" width="9" height="17" rx="0" fill="#3c3836" />
+<rect x="278" y="248" width="18" height="6" rx="2" fill="#3c3836" />
+<rect x="304" y="248" width="18" height="6" rx="2" fill="#9d0006" />
+<rect x="330" y="248" width="18" height="6" rx="2" fill="#79740e" />
+<rect x="356" y="248" width="18" height="6" rx="2" fill="#b57614" />
+<rect x="382" y="248" width="18" height="6" rx="2" fill="#076678" />
+<rect x="408" y="248" width="18" height="6" rx="2" fill="#8f3f71" />
+<rect x="434" y="248" width="18" height="6" rx="2" fill="#427b58" />
+</g>
+<g transform="translate(1080 1092)">
+<rect x="0" y="0" width="480" height="280" rx="8" fill="#191E25" stroke="#343E4C" stroke-width="1"/>
+<text x="16" y="28" fill="#E6EDF3" font-size="18" font-weight="600">Solarized Light</text>
+<text x="462" y="28" fill="#A8B5C4" font-size="12" text-anchor="end">밝게</text>
+<path d="M1 44h478v228a7 7 0 0 1-7 7H8a7 7 0 0 1-7-7Z" fill="#fdf6e3"/>
+<text x="18" y="76" fill="#657b83" font-size="15" class="mono">dev@build-01:~$ ls</text>
+<text x="18" y="104" fill="#657b83" font-size="15" class="mono" xml:space="preserve"><tspan fill="#268bd2">app/     scripts/</tspan>     <tspan fill="#dc322f">release.tgz</tspan></text>
+<text x="18" y="132" fill="#657b83" font-size="15" class="mono">$ ./health-check</text>
+<text x="18" y="160" fill="#657b83" font-size="15" class="mono" xml:space="preserve"><tspan fill="#859900">[INFO] </tspan> service ready</text>
+<text x="18" y="188" fill="#657b83" font-size="15" class="mono" xml:space="preserve"><tspan fill="#b58900">[WARN] </tspan> disk usage 82%</text>
+<text x="18" y="216" fill="#657b83" font-size="15" class="mono" xml:space="preserve"><tspan fill="#dc322f">[ERROR]</tspan> request timed out</text>
+<text x="18" y="245" fill="#657b83" font-size="15" class="mono">dev@build-01:~$</text>
+<rect x="156" y="232" width="9" height="17" rx="0" fill="#657b83" />
+<rect x="278" y="248" width="18" height="6" rx="2" fill="#657b83" />
+<rect x="304" y="248" width="18" height="6" rx="2" fill="#dc322f" />
+<rect x="330" y="248" width="18" height="6" rx="2" fill="#859900" />
+<rect x="356" y="248" width="18" height="6" rx="2" fill="#b58900" />
+<rect x="382" y="248" width="18" height="6" rx="2" fill="#268bd2" />
+<rect x="408" y="248" width="18" height="6" rx="2" fill="#d33682" />
+<rect x="434" y="248" width="18" height="6" rx="2" fill="#2aa198" />
+</g>
+<text x="40" y="1460" fill="#E6EDF3" font-size="20" font-weight="600">02   출력 강조 4종</text>
+<text x="295" y="1460" fill="#A8B5C4" font-size="15" >v0.2  ·  One Dark + 무색 원문에 적용한 비교  ·  테마와 독립적으로 선택</text>
+<g transform="translate(40 1490)">
+<rect x="0" y="0" width="744" height="244" rx="8" fill="#191E25" stroke="#343E4C"/>
+<text x="18" y="31" fill="#E6EDF3" font-size="18" font-weight="600">기본 출력</text>
+<text x="18" y="55" fill="#A8B5C4" font-size="14" >추가 강조 없이 원문과 서버 색상을 표시</text>
+<rect x="16" y="74" width="712" height="154" rx="6" fill="#282C34" />
+<text x="32" y="104" fill="#ABB2BF" font-size="16" class="mono" xml:space="preserve">12:03:01 <tspan fill="#ABB2BF">INFO </tspan> Connected <tspan fill="#ABB2BF">192.0.2.21:22</tspan></text>
+<text x="32" y="136" fill="#ABB2BF" font-size="16" class="mono" xml:space="preserve">12:03:02 <tspan fill="#ABB2BF">WARN </tspan> Retry in 5s</text>
+<text x="32" y="168" fill="#ABB2BF" font-size="16" class="mono" xml:space="preserve">12:03:03 <tspan fill="#ABB2BF">ERROR</tspan> Request timed out</text>
+<text x="32" y="207" fill="#ABB2BF" font-size="16" class="mono" xml:space="preserve">url: <tspan fill="#ABB2BF">https://example.com/health</tspan></text>
+</g>
+<g transform="translate(816 1490)">
+<rect x="0" y="0" width="744" height="244" rx="8" fill="#191E25" stroke="#343E4C"/>
+<text x="18" y="31" fill="#E6EDF3" font-size="18" font-weight="600">로그 표식 강조</text>
+<text x="18" y="55" fill="#A8B5C4" font-size="14" >INFO · WARN · ERROR 같은 표식만 강조</text>
+<rect x="16" y="74" width="712" height="154" rx="6" fill="#282C34" />
+<text x="32" y="104" fill="#ABB2BF" font-size="16" class="mono" xml:space="preserve">12:03:01 <tspan fill="#98C379">INFO </tspan> Connected <tspan fill="#ABB2BF">192.0.2.21:22</tspan></text>
+<text x="32" y="136" fill="#ABB2BF" font-size="16" class="mono" xml:space="preserve">12:03:02 <tspan fill="#E5C07B">WARN </tspan> Retry in 5s</text>
+<text x="32" y="168" fill="#ABB2BF" font-size="16" class="mono" xml:space="preserve">12:03:03 <tspan fill="#E06C75">ERROR</tspan> Request timed out</text>
+<text x="32" y="207" fill="#ABB2BF" font-size="16" class="mono" xml:space="preserve">url: <tspan fill="#ABB2BF">https://example.com/health</tspan></text>
+</g>
+<g transform="translate(40 1754)">
+<rect x="0" y="0" width="744" height="244" rx="8" fill="#191E25" stroke="#343E4C"/>
+<text x="18" y="31" fill="#E6EDF3" font-size="18" font-weight="600">로그 행 강조</text>
+<text x="18" y="55" fill="#A8B5C4" font-size="14" >Grep Console 방식 참고 · 경고와 오류 행을 구분</text>
+<rect x="16" y="74" width="712" height="154" rx="6" fill="#282C34" />
+<rect x="17" y="112" width="710" height="27" rx="0" fill="#E5C07B" fill-opacity=".13"/>
+<rect x="17" y="144" width="710" height="27" rx="0" fill="#E06C75" fill-opacity=".16"/>
+<text x="32" y="104" fill="#ABB2BF" font-size="16" class="mono" xml:space="preserve">12:03:01 <tspan fill="#98C379">INFO </tspan> Connected <tspan fill="#ABB2BF">192.0.2.21:22</tspan></text>
+<text x="32" y="136" fill="#ABB2BF" font-size="16" class="mono" xml:space="preserve">12:03:02 <tspan fill="#E5C07B">WARN </tspan> Retry in 5s</text>
+<text x="32" y="168" fill="#ABB2BF" font-size="16" class="mono" xml:space="preserve">12:03:03 <tspan fill="#E06C75">ERROR</tspan> Request timed out</text>
+<text x="32" y="207" fill="#ABB2BF" font-size="16" class="mono" xml:space="preserve">url: <tspan fill="#ABB2BF">https://example.com/health</tspan></text>
+</g>
+<g transform="translate(816 1754)">
+<rect x="0" y="0" width="744" height="244" rx="8" fill="#191E25" stroke="#343E4C"/>
+<text x="18" y="31" fill="#E6EDF3" font-size="18" font-weight="600">주소 강조</text>
+<text x="18" y="55" fill="#A8B5C4" font-size="14" >IP 주소 · 포트 · URL을 빠르게 구분</text>
+<rect x="16" y="74" width="712" height="154" rx="6" fill="#282C34" />
+<text x="32" y="104" fill="#ABB2BF" font-size="16" class="mono" xml:space="preserve">12:03:01 <tspan fill="#ABB2BF">INFO </tspan> Connected <tspan fill="#61AFEF">192.0.2.21:22</tspan></text>
+<text x="32" y="136" fill="#ABB2BF" font-size="16" class="mono" xml:space="preserve">12:03:02 <tspan fill="#ABB2BF">WARN </tspan> Retry in 5s</text>
+<text x="32" y="168" fill="#ABB2BF" font-size="16" class="mono" xml:space="preserve">12:03:03 <tspan fill="#ABB2BF">ERROR</tspan> Request timed out</text>
+<text x="32" y="207" fill="#ABB2BF" font-size="16" class="mono" xml:space="preserve">url: <tspan fill="#56B6C2">https://example.com/health</tspan></text>
+</g>
+<text x="40" y="2062" fill="#E6EDF3" font-size="17" >색상 테마와 로그 강조를 조합합니다.  예: One Dark + 로그 행 강조 / Nord + 주소 강조</text>
+<text x="40" y="2096" fill="#A8B5C4" font-size="14" >대표 팔레트를 사용한 정적 시안입니다. 원본 출처·매핑 기준·검증 범위는 docs/plan.md에 기록합니다.</text>
+<text x="1560" y="2096" fill="#65DDB7" font-size="14" text-anchor="end">구현 승인 대기</text>
+</svg>

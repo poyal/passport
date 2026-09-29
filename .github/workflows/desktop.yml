@@ -1,0 +1,53 @@
+name: Desktop verification
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-2025
+            target: win
+            arch: x64
+          - os: windows-11-arm
+            target: win
+            arch: arm64
+          - os: macos-15
+            target: mac
+            arch: arm64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm run build
+      - run: npx playwright test
+      - run: npx electron-builder --${{ matrix.target }} --${{ matrix.arch }} --publish never
+      - if: matrix.target == 'mac'
+        run: node scripts/packaged-smoke.mjs release/mac-arm64/Passport.app/Contents/MacOS/Passport
+      - if: matrix.target == 'win' && matrix.arch == 'x64'
+        run: node scripts/packaged-smoke.mjs release/win-unpacked/Passport.exe
+      - if: matrix.target == 'win' && matrix.arch == 'arm64'
+        run: node scripts/packaged-smoke.mjs release/win-arm64-unpacked/Passport.exe
+      - uses: actions/upload-artifact@v4
+        with:
+          name: passport-${{ matrix.target }}-${{ matrix.arch }}
+          path: |
+            release/*.dmg
+            release/*.exe
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-results-${{ matrix.target }}-${{ matrix.arch }}
+          path: test-results/

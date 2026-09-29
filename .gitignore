@@ -1,0 +1,12 @@
+node_modules/
+dist/
+release/
+test-results/
+test-results-stress/
+playwright-report/
+.DS_Store
+.idea/
+*.log
+.env
+coverage/
+build/icon.png

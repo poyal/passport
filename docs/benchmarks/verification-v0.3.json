@@ -1,0 +1,98 @@
+{
+  "date": "2026-09-29",
+  "appVersion": "0.3.0",
+  "platform": "darwin",
+  "arch": "arm64",
+  "electron": "44.4.5",
+  "nativePtyShutdown": {
+    "active": 3,
+    "closed": 3,
+    "reopened": 3,
+    "sessionsPerRun": 4,
+    "expectedExitCode": 0,
+    "expectedSignal": null,
+    "result": "9 passed"
+  },
+  "unitIntegration": {
+    "passed": 44,
+    "skipped": 2,
+    "ftpFtpsIncluded": true,
+    "includes": [
+      "native PTY input and resize",
+      "stale PTY exit callback after reopen",
+      "forced termination of SIGHUP-ignoring shell",
+      "closed PTY exit awaited during shutdown"
+    ]
+  },
+  "gui": {
+    "passed": 13,
+    "stressRunSeparately": true,
+    "nativeExitCodeChecked": true,
+    "uniqueScenariosPassed": 13,
+    "fileLayoutFollowup": {
+      "passed": 4,
+      "sizes": [
+        "1024x680",
+        "1440x900"
+      ],
+      "filesPerPanel": 100,
+      "queueStates": [
+        "expanded",
+        "collapsed"
+      ],
+      "independentScroll": true,
+      "bottomContextMenu": true
+    },
+    "finalLayoutAndThemeRunPassed": 10,
+    "delayedWorkspaceOwnershipEventMs": 250,
+    "newTabStaysActive": true
+  },
+  "fileStress": {
+    "bytes": 4294967296,
+    "smallFiles": 10000,
+    "memoryGrowthLimitMiB": 512,
+    "result": "passed",
+    "testSeconds": 15.11
+  },
+  "package": {
+    "artifact": "Passport-0.3.0-mac-arm64.dmg",
+    "sha256": "32d3a54712328930a91beeab29d635f235619dd536cf9a2018fa40db34a91d46",
+    "codesignVerifyDeepStrict": "passed",
+    "signing": "ad-hoc",
+    "notarized": false,
+    "sizeBytes": 153260889
+  },
+  "limitations": [
+    "Windows x64/ARM64 actual installation and execution not tested on this machine"
+  ],
+  "terminalStress": {
+    "durationMs": 600002,
+    "version": "0.3.0",
+    "highlight": "log + addresses",
+    "panes": 16,
+    "hostCount": 500,
+    "bytesPerSession": [
+      60835840,
+      60835840,
+      60835840,
+      60835840,
+      60835840,
+      60835840,
+      60835840,
+      60835840,
+      60835840,
+      60835840,
+      60835840,
+      60835840,
+      60835840,
+      60835840,
+      60835840,
+      60835840
+    ],
+    "inputLoopbackP95Ms": 15,
+    "peakWorkingSetMiB": 1147,
+    "lastWorkingSetMiB": 1131,
+    "note": "Loopback IPC/SSH response includes local network delay. Windows/Intel Mac not measured. A later CSS-only correction removes the black legacy viewport backdrop; its GUI/theme regression passed separately.",
+    "shutdownExitCode": 0
+  }
+}
