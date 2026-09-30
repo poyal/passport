@@ -1,0 +1,48 @@
+{
+  "version": "1.0.2",
+  "releaseURL": "https://github.com/poyal/passport/releases/tag/v1.0.2",
+  "sourceCommit": "f3488ad6eda5a51c7f66391c10f4fa30e263a6ab",
+  "workflowRun": 36694934034,
+  "workflowURL": "https://github.com/poyal/passport/actions/runs/36694934034",
+  "workflowConclusion": "success",
+  "publishedAt": "2026-09-30T09:21:17Z",
+  "draft": false,
+  "prerelease": false,
+  "latestStableReleaseVerified": true,
+  "assets": [
+    {
+      "name": "Passport-1.0.2-mac-arm64.dmg",
+      "bytes": 154617128,
+      "digest": "sha256:fe66cb02a0c24a3290d52b2c472b6c2a8fb64c4c3cd488913190870d7f36a77e",
+      "downloadURL": "https://github.com/poyal/passport/releases/download/v1.0.2/Passport-1.0.2-mac-arm64.dmg"
+    },
+    {
+      "name": "SHA256SUMS.txt",
+      "bytes": 95,
+      "digest": "sha256:73f6da3dca9bbba563cf172860c6d5e0cd253288d9fcf477413e15a8926b6940",
+      "downloadURL": "https://github.com/poyal/passport/releases/download/v1.0.2/SHA256SUMS.txt"
+    }
+  ],
+  "downloadedArtifactSha256": "fe66cb02a0c24a3290d52b2c472b6c2a8fb64c4c3cd488913190870d7f36a77e",
+  "githubDigestAndChecksumsMatch": true,
+  "publicDmgVerify": "passed",
+  "publicAppCodesignVerify": "passed",
+  "publishedArtifactStartupCheck": {
+    "startupUpdateCheck": "passed",
+    "manualChecks": 0,
+    "source": "public GitHub Releases",
+    "runtime": {
+      "packaged": true,
+      "version": "1.0.2"
+    },
+    "state": {
+      "currentVersion": "1.0.2",
+      "latestVersion": "1.0.2",
+      "status": "current",
+      "installerAvailable": true,
+      "checkedAt": 1790760283914,
+      "message": "최신 버전을 사용하고 있습니다."
+    },
+    "shutdownExitCode": 0
+  }
+}

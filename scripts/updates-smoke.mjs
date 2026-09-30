@@ -50,9 +50,10 @@ try {
     .click();
   await expect(page.locator(".update-result")).toContainText(state.message);
   await page.locator(".update-card").scrollIntoViewIfNeeded();
-  await fs.mkdir("release/recheck-updates-v1.0.1", { recursive: true });
+  const screenshotDirectory = `release/recheck-updates-v${runtime.version}`;
+  await fs.mkdir(screenshotDirectory, { recursive: true });
   await page.screenshot({
-    path: "release/recheck-updates-v1.0.1/packaged-startup.png",
+    path: path.join(screenshotDirectory, "packaged-startup.png"),
   });
   await closeCleanly(application);
   application = undefined;

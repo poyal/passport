@@ -15,7 +15,11 @@
 
 SHA-256: `a44abcbb68f3ecb2fb333cd01034dfba74eaadd212b5489328da30db8b634b58`.
 
-[검증 요약](benchmarks/verification-v1.0.2.json) · [1.0.2 변경 안내](releases/v1.0.2.md). 이 설치본은 로컬 빌드이며 GitHub Release에는 아직 게시하지 않았다. Windows 설치·실행, Docker 매트릭스, 4GiB 파일 전송과 장시간 터미널 부하는 이번에 다시 측정하지 않았다.
+[검증 요약](benchmarks/verification-v1.0.2.json) · [1.0.2 변경 안내](releases/v1.0.2.md). 위 설치본과 해시는 로컬 빌드용이다. Windows 설치·실행, Docker 매트릭스, 4GiB 파일 전송과 장시간 터미널 부하는 이번에 다시 측정하지 않았다.
+
+**공개 배포 완료:** [GitHub Release v1.0.2](https://github.com/poyal/passport/releases/tag/v1.0.2). 검증된 `f3488ad` 커밋의 태그 배포 작업이 단위·통합, 전체 GUI, DMG 생성과 실제 패키지 검사를 통과했다. 공개 DMG를 직접 내려받아 GitHub 자산 digest·`SHA256SUMS.txt` 일치, 디스크 이미지 무결성과 앱 서명 무결성을 확인했다. 공개 설치본의 임시 프로필에서 앱 시작 시 실제 GitHub 최신 버전 확인과 About 표시·정상 종료 코드 0도 확인했다. 수동 업데이트 확인을 호출하지 않았으며 기존 사용자 데이터는 사용하지 않았다.
+
+공개 DMG: 154,617,128바이트 · SHA-256 `fe66cb02a0c24a3290d52b2c472b6c2a8fb64c4c3cd488913190870d7f36a77e`. 로컬 DMG와 GitHub runner의 DMG는 별도 빌드다. [게시 검증 결과](benchmarks/github-release-v1.0.2.json) · [배포 작업](https://github.com/poyal/passport/actions/runs/36694934034).
 
 ## 1.0.1 GitHub 새 버전 확인 추가 — 2026-09-30
 

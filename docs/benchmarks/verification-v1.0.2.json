@@ -6,7 +6,11 @@
     "arch": "arm64",
     "electron": "44.4.5"
   },
-  "unitAndIntegration": { "passed": 94, "skipped": 2, "ftpAndFtps": "passed" },
+  "unitAndIntegration": {
+    "passed": 94,
+    "skipped": 2,
+    "ftpAndFtps": "passed"
+  },
   "gui": {
     "uniqueScenariosPassed": 36,
     "skipped": 2,
@@ -48,7 +52,9 @@
     "path": "release/Passport-1.0.2-mac-arm64.dmg",
     "bytes": 153305368,
     "sha256": "a44abcbb68f3ecb2fb333cd01034dfba74eaadd212b5489328da30db8b634b58",
-    "publicReleasePublished": false
+    "publicReleasePublished": true,
+    "publicReleaseURL": "https://github.com/poyal/passport/releases/tag/v1.0.2",
+    "publicArtifactSha256": "fe66cb02a0c24a3290d52b2c472b6c2a8fb64c4c3cd488913190870d7f36a77e"
   },
   "limitations": [
     "Windows installation and runtime not verified in this pass",
