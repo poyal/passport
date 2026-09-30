@@ -61,6 +61,15 @@ try {
   });
   page.setDefaultTimeout(15000);
   await page.waitForSelector(".hosts-view");
+  const { version } = JSON.parse(
+    await fs.readFile(path.join(root, "package.json"), "utf8"),
+  );
+  expect(
+    await page.evaluate(async () => {
+      const boot = await window.passport.call("bootstrap", undefined);
+      return boot.appVersion;
+    }),
+  ).toBe(version);
   const groups = ["개발", "스테이징", "프로덕션"].map((name) => ({
     id: randomUUID(),
     name,
@@ -91,6 +100,7 @@ try {
             : ["운영"],
       favorite: i === 0 || i === 4,
       icon: ["alpine", "centos", "redhat", "rocky", "ubuntu", "windows"][i],
+      iconPinned: true,
       startPath: i === 1 ? "/archive" : "/releases",
       appearance: { theme: ["mocha", "nord", "tokyo-night"][i % 3] },
     }),
@@ -211,17 +221,15 @@ try {
       "",
     ],
     [
-      blue("WORKER / JOB QUEUE"),
+      blue("WORKER / RELEASE FILES"),
+      "$ ls -l",
+      "drwxr-xr-x 2 me me 4096 Sep 30 09:41 config",
+      "drwxr-xr-x 2 me me 4096 Sep 30 09:41 logs",
+      "-rwxr-xr-x 1 me me  128 Sep 30 09:41 deploy.sh",
+      "-rw-r--r-- 1 me me  256 Sep 30 09:41 app-config.json",
+      "lrwxrwxrwx 1 me me    7 Sep 30 09:41 current -> releases",
       "",
-      "$ ./worker --status",
-      "",
-      `${mint("✓")} scheduler     running`,
-      `${mint("✓")} notifications running`,
-      `${mint("✓")} cleanup       idle`,
-      "",
-      "Completed  128   Pending  0",
-      "",
-      "tester@worker:~$ ",
+      "tester@worker:~/releases$ ",
     ],
     [
       blue("STAGING / WEB"),
@@ -302,6 +310,18 @@ try {
     .click({ button: "right" });
   await expect(page.getByRole("menu")).toBeVisible();
   await capture("files.png");
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "설정", exact: true }).click();
+  await page
+    .locator(".settings-sidebar")
+    .getByRole("button", { name: "외형", exact: true })
+    .click();
+  await page.getByRole("tab", { name: "테마", exact: true }).click();
+  await expect(page.locator(".settings-content .theme-item")).toHaveCount(12);
+  await expect(page.locator(".settings-sidebar .sidebar-foot")).toHaveText(
+    `Passport ${version}`,
+  );
+  await capture("settings.png");
 } finally {
   try {
     if (app) await closeCleanly(app);

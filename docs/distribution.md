@@ -6,7 +6,7 @@
 
 ## 현재 상태
 
-2026-09-30 기준 버전은 1.0.0이다. Apple Silicon Mac용 테스트 DMG를 생성하고 실제 패키지 실행을 확인했다. Windows x64·ARM64는 빌드 스크립트와 수동 CI를 준비했으나 실제 설치·실행 확인이 남아 있다. [GitHub Release v1.0.0](https://github.com/poyal/passport/releases/tag/v1.0.0)에 Mac DMG와 SHA256SUMS를 게시했다.
+2026-09-30 기준 버전은 1.0.0이다. Apple Silicon Mac용 DMG를 생성하고 실제 패키지 실행을 확인했다. Windows x64·ARM64는 빌드 스크립트와 수동 CI를 준비했으나 실제 설치·실행 확인이 남아 있다. [GitHub Release v1.0.0](https://github.com/poyal/passport/releases/tag/v1.0.0)에 Mac DMG와 SHA256SUMS를 게시했다.
 
 Mac 설치본은 ad-hoc 서명이며 Developer ID 서명·Apple 공증을 포함하지 않는다. `codesign` 무결성 검사 통과는 Apple 공증이나 Gatekeeper의 실행 허용을 뜻하지 않는다. 현재 결과와 DMG 해시는 [검증 기록](verification.md)에 보관한다.
 
@@ -22,7 +22,7 @@ Mac 설치본은 ad-hoc 서명이며 Developer ID 서명·Apple 공증을 포함
 
 파일 이름의 버전은 `package.json`을 따른다. `npm run pack`은 설치 프로그램 없이 현재 환경의 앱 폴더를 만든다. `release/`와 `dist/`는 생성물이며 저장소에 커밋하지 않는다. README의 다운로드 링크는 실제 게시된 설치 파일이 있을 때 추가한다.
 
-Mac 최소 버전 목표는 14, 현재 실측은 macOS 27이다. Windows 대상은 Windows 11 x64·ARM64이며 각각의 설치 및 실행 검증을 구분한다. Intel Mac과 Rosetta 의존 Mac 패키지는 만들지 않는다.
+Mac 최소 버전 목표는 14이며 macOS 27 로컬 환경과 macOS 15 GitHub Actions에서 앱 실행을 확인했다. Windows 대상은 Windows 11 x64·ARM64이며 각각의 설치 및 실행 검증을 구분한다. Intel Mac과 Rosetta 의존 Mac 패키지는 만들지 않는다.
 
 ## 아이콘과 오픈소스 고지
 
@@ -59,7 +59,7 @@ Docker 매트릭스와 장시간 부하, 별도 Python 환경을 요구하는 FT
 
 [Publish Mac release](../.github/workflows/release.yml)은 `v1.0.0` 태그 push에서 실행한다. ARM64 Mac runner에서 버전·기본 검사·GUI·DMG·패키지 실행과 구형 SSH/파일 색상을 확인하고 모든 단계가 통과하면 GitHub Release에 DMG와 `SHA256SUMS.txt`를 게시한다. 게시 권한은 해당 작업의 저장소 contents로 한정한다. [GitHub ARM64 runner 공식 안내](https://docs.github.com/en/actions/reference/runners/github-hosted-runners).
 
-2026-09-30 실행이 성공했고 실제 다운로드와 GitHub 자산 digest·SHA256SUMS 일치를 확인했다. [게시 결과](benchmarks/github-release-v1.0.0.json). 로컬 DMG와 runner에서 만든 DMG는 별도 빌드이므로 각각의 해시를 사용한다. 원격 기본 브랜치 갱신은 자동 승인 검토에서 거절되어 `v1.0.0` 태그만 게시했다. 배포 소스는 해당 태그를 기준으로 한다.
+2026-09-30 실행이 성공했고 실제 다운로드와 GitHub 자산 digest·SHA256SUMS 일치를 확인했다. [게시 결과](benchmarks/github-release-v1.0.0.json). 로컬 DMG와 runner에서 만든 DMG는 별도 빌드이므로 각각의 해시를 사용한다. 배포 소스는 `v1.0.0` 태그를 기준으로 하며 이후 문서 갱신은 `main`에 반영한다.
 
 ## 배포 갱신 순서
 
