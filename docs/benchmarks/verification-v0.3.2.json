@@ -1,0 +1,104 @@
+{
+  "date": "2026-09-30T01:07:29Z",
+  "version": "0.3.2",
+  "platform": "macOS 27 / arm64",
+  "fixes": [
+    {
+      "issue": "SSH negotiation fails against SHA-1-only servers",
+      "resolution": "Opt-in legacySSH appends group14-sha1, group-exchange-sha1 and group1-sha1 to the default list for this host's SSH, SFTP and tunnels. Modern algorithms remain preferred."
+    },
+    {
+      "issue": "Electron/BoringSSL cannot resolve the named modp2 group",
+      "resolution": "Version-checked, idempotent ssh2 1.17.0 patch constructs the identical RFC 2409 section 6.2 prime explicitly, without modifying global crypto APIs or enabling group1 by default."
+    },
+    {
+      "issue": "User wants to suppress first-contact fingerprint dialogs",
+      "resolution": "Settings -> credentials -> confirmNewHostKeys can be disabled. First keys are automatically registered; changed keys remain blocked. Default is still confirmation."
+    },
+    {
+      "issue": "Keychain prompts during saved credential access",
+      "resolution": "Added login keychain password guidance. Existing ad-hoc builds have different cdhash-based designated requirements, so updates can re-prompt. Keychain entries were not read, deleted or modified."
+    },
+    {
+      "issue": "Hardcoded displayed application version",
+      "resolution": "Bootstrap carries app.getVersion() for the status bar and settings."
+    }
+  ],
+  "checks": {
+    "typecheck": "passed",
+    "build": "passed",
+    "prettier": "passed",
+    "gitDiffCheck": "passed",
+    "unitIntegration": {
+      "passed": 58,
+      "optionalSkipped": 2,
+      "durationSeconds": 6.62
+    },
+    "electronGUI": {
+      "passed": 20,
+      "optionalStressSkipped": 1,
+      "durationSeconds": 27.5,
+      "scope": "Full GUI before the final version-display-only change. Six usability scenarios passed after that change; the final packaged legacy GUI test covers the displayed version and new SSH/host-key behavior."
+    },
+    "finalUsabilityGUI": {
+      "passed": 6
+    },
+    "dockerSSH": {
+      "passed": 8,
+      "result": "docker-ssh-v0.3.2.json",
+      "durationSeconds": 34.27,
+      "scope": "Alpine, Ubuntu, Debian, Rocky, CentOS Stream 9, CentOS 7, and two CentOS 7/OpenSSH 7.4 instances restricted to group1-sha1 or GEX-sha1 with ssh-rsa/aes128-ctr/hmac-sha1.",
+      "checks": [
+        "password",
+        "encrypted Ed25519 authentication",
+        "wrong password rejection",
+        "changed host key rejection",
+        "sh/bash/zsh",
+        "UTF-8",
+        "PTY resize 91x37",
+        "environment",
+        "1 MiB SFTP transfer SHA-256",
+        "remote-to-remote SFTP",
+        "chmod 0640",
+        "local/remote/SOCKS5 forwarding",
+        "fragmented SOCKS handshake",
+        "UDP rejection",
+        "default-policy refusal of legacy-only servers"
+      ],
+      "containersRemaining": 0
+    },
+    "packagedLegacyGUI": {
+      "passed": 1,
+      "durationSeconds": 7,
+      "checks": [
+        "default mode refuses SHA-1-only server",
+        "saved per-host legacy setting",
+        "Electron group1 negotiation",
+        "terminal UTF-8 input",
+        "SFTP",
+        "no first-key dialog with confirmation disabled",
+        "settings preserved on renderer reload",
+        "actual version in footer",
+        "clean shutdown"
+      ]
+    },
+    "packagedSmoke": {
+      "passed": true,
+      "result": "packaged-smoke-v0.3.2.json"
+    },
+    "artifact": {
+      "path": "release/v0.3.2/Passport-0.3.2-mac-arm64.dmg",
+      "sha256": "bd3eb339ad3f979ed5bea310d8460b86ec106f62159156341fa5e55920b0bc7e",
+      "signature": "ad-hoc; codesign --verify --deep --strict passed",
+      "payloadMatchesBuild": true,
+      "patchedSSH2Matches": true
+    }
+  },
+  "limitations": [
+    "The user-specified CentOS 5.11 SSH endpoint timed out during a no-authentication handshake probe; its actual algorithm offer and authenticated connection could not be verified.",
+    "Legacy algorithm interoperability was verified with real OpenSSH 7.4 on CentOS 7, not actual CentOS 5/6 operating systems.",
+    "Native Keychain approval and permission persistence require user interaction; GUI fixtures do not access the user's keychain.",
+    "The previous 0.3.1 ten-minute stress and 4 GiB transfer results were not repeated for 0.3.2.",
+    "Windows and macOS 14 execution remain unverified."
+  ]
+}

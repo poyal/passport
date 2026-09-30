@@ -17,7 +17,7 @@ import {
 import type { Secret, ImportPreview } from "../shared/model";
 import { api, uuid } from "./api";
 import { useApp } from "./context";
-import { Modal, IconButton } from "./components";
+import { Modal, IconButton, SettingsTabs } from "./components";
 import {
   TunnelSettings,
   LogSettings,
@@ -120,7 +120,12 @@ export function Settings() {
     [preview, setPreview] = useState<ImportPreview | null>(null),
     [conflict, setConflict] = useState<"skip" | "overwrite">("skip"),
     [backups, setBackups] = useState<string[]>([]),
-    [busy, setBusy] = useState(false);
+    [busy, setBusy] = useState(false),
+    [appearanceTab, setAppearanceTab] = useState<
+      "app" | "terminal" | "themes" | "custom"
+    >("app"),
+    [authTab, setAuthTab] = useState<"profiles" | "keys">("profiles"),
+    [dataTab, setDataTab] = useState<"export" | "import" | "backup">("export");
   const loadBackups = () =>
     void api.call("backup.list", undefined).then(setBackups).catch(app.notify);
   const chooseSection = (s: string) => {
@@ -153,7 +158,7 @@ export function Settings() {
             {s.label}
           </button>
         ))}
-        <div className="sidebar-foot">Passport 0.3.1</div>
+        <div className="sidebar-foot">Passport {app.boot.appVersion}</div>
       </aside>
       <div className="settings-content">
         {section === "groups" && <GroupSettings />}
@@ -168,44 +173,66 @@ export function Settings() {
                 <p>앱의 분위기와 터미널의 색상을 각각 조절하세요.</p>
               </div>
             </div>
-            <div className="settings-columns">
-              <section className="settings-card">
-                <h3>앱 외형</h3>
-                <div className="segmented">
-                  {(["system", "dark", "light"] as const).map((m) => (
-                    <button
-                      key={m}
-                      className={
-                        app.document.settings.colorMode === m ? "selected" : ""
-                      }
-                      onClick={() =>
-                        void app.update((d) => ({
-                          ...d,
-                          settings: { ...d.settings, colorMode: m },
-                        }))
-                      }
-                    >
-                      {{ system: "시스템", dark: "다크", light: "라이트" }[m]}
-                    </button>
-                  ))}
-                </div>
-                <p className="hint">언어는 한국어로 제공됩니다.</p>
-                <div className="sample-terminal">
-                  <span className="mint">passport</span>{" "}
-                  <span className="muted">~</span>
-                  <br />$ ssh your-server
-                  <br />
-                  <span className="muted">연결하고, 나누고, 옮기세요.</span>
-                  <br />
-                  <span className="cursor-block" />
-                </div>
-              </section>
-              <section className="settings-card">
-                <h3>터미널 기본 설정</h3>
-                <AppearancePanel />
-                <CustomThemes />
-              </section>
-            </div>
+            <SettingsTabs
+              label="외형 설정"
+              value={appearanceTab}
+              onChange={setAppearanceTab}
+              items={[
+                { id: "app", label: "앱 외형" },
+                { id: "terminal", label: "터미널 설정" },
+                { id: "themes", label: "테마" },
+                { id: "custom", label: "사용자 테마" },
+              ]}
+            >
+              {appearanceTab === "app" && (
+                <section className="settings-card app-appearance-card">
+                  <h3>앱 외형</h3>
+                  <div className="segmented">
+                    {(["system", "dark", "light"] as const).map((m) => (
+                      <button
+                        key={m}
+                        className={
+                          app.document.settings.colorMode === m
+                            ? "selected"
+                            : ""
+                        }
+                        onClick={() =>
+                          void app.update((d) => ({
+                            ...d,
+                            settings: { ...d.settings, colorMode: m },
+                          }))
+                        }
+                      >
+                        {{ system: "시스템", dark: "다크", light: "라이트" }[m]}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="hint">언어는 한국어로 제공됩니다.</p>
+                  <div className="sample-terminal">
+                    <span className="mint">passport</span>{" "}
+                    <span className="muted">~</span>
+                    <br />$ ssh your-server
+                    <br />
+                    <span className="muted">연결하고, 나누고, 옮기세요.</span>
+                    <br />
+                    <span className="cursor-block" />
+                  </div>
+                </section>
+              )}
+              {appearanceTab === "terminal" && (
+                <section className="settings-card">
+                  <h3>터미널 기본 설정</h3>
+                  <AppearancePanel section="terminal" />
+                </section>
+              )}
+              {appearanceTab === "themes" && (
+                <section className="settings-card">
+                  <h3>터미널 테마</h3>
+                  <AppearancePanel section="themes" />
+                </section>
+              )}
+              {appearanceTab === "custom" && <CustomThemes />}
+            </SettingsTabs>
           </>
         )}
         {section === "auth" && (
@@ -231,66 +258,111 @@ export function Settings() {
                 프로필 등록
               </button>
             </div>
-            <div className="info-banner">
-              <Shield size={18} />
-              비밀번호와 개인 키는 OS 암호화 저장소로 보호합니다. 저장하거나
-              사용할 때 운영체제가 접근 허용을 요청할 수 있습니다.
-            </div>
-            {app.boot.profiles.map((p) => (
-              <div className="profile-row" key={p.id}>
-                <KeyRound size={18} />
-                <div>
-                  <strong>{p.name}</strong>
-                  <small>
-                    {p.username ? `${p.username} · ` : "계정 공통 · "}
-                    {p.type === "key" ? "SSH 개인 키" : "비밀번호"} ·{" "}
-                    {
-                      app.document.hosts.filter(
-                        (h) => h.authId === p.id || h.sftpAuthId === p.id,
-                      ).length
-                    }
-                    개 호스트
-                    {!p.hasSecret ? " · 인증 정보를 다시 입력해야 합니다." : ""}
-                  </small>
+            <SettingsTabs
+              label="인증 설정"
+              value={authTab}
+              onChange={setAuthTab}
+              items={[
+                { id: "profiles", label: "인증 프로필" },
+                { id: "keys", label: "SSH 호스트 키" },
+              ]}
+            >
+              {authTab === "profiles" && (
+                <div className="settings-stack">
+                  <div className="info-banner">
+                    <Shield size={18} />
+                    <span>
+                      비밀번호와 개인 키는 OS 암호화 저장소로 보호합니다.
+                      저장하거나 사용할 때 운영체제가 접근 허용을 요청할 수
+                      있습니다.
+                      {app.boot.platform === "darwin" &&
+                        " ‘Passport Safe Storage’ 요청에는 Mac의 로그인 키체인 암호를 입력하세요. 신뢰하는 설치본에 ‘항상 허용’을 선택하면 이후 요청을 줄일 수 있습니다."}
+                    </span>
+                  </div>
+                  {app.boot.profiles.map((p) => (
+                    <div className="profile-row" key={p.id}>
+                      <KeyRound size={18} />
+                      <div>
+                        <strong>{p.name}</strong>
+                        <small>
+                          {p.username ? `${p.username} · ` : "계정 공통 · "}
+                          {p.type === "key" ? "SSH 개인 키" : "비밀번호"} ·{" "}
+                          {
+                            app.document.hosts.filter(
+                              (h) => h.authId === p.id || h.sftpAuthId === p.id,
+                            ).length
+                          }
+                          개 호스트
+                          {!p.hasSecret
+                            ? " · 인증 정보를 다시 입력해야 합니다."
+                            : ""}
+                        </small>
+                      </div>
+                      <button
+                        onClick={() =>
+                          setProfile({
+                            id: p.id,
+                            name: p.name,
+                            username: p.username || "",
+                            secret: { ...blankSecret(), type: p.type },
+                          })
+                        }
+                      >
+                        정보 교체
+                      </button>
+                      <IconButton
+                        label="인증 프로필 삭제"
+                        onClick={() =>
+                          void (async () => {
+                            if (
+                              await app.confirm(
+                                "인증 프로필 삭제",
+                                `${p.name}을 삭제할까요?`,
+                              )
+                            ) {
+                              await api.call("auth.delete", { id: p.id });
+                              await app.refresh();
+                            }
+                          })().catch(app.notify)
+                        }
+                      >
+                        <Trash2 size={16} />
+                      </IconButton>
+                    </div>
+                  ))}
+                  {!app.boot.profiles.length && (
+                    <p className="hint">
+                      등록된 인증 프로필이 없습니다. 저장 없이 연결할 때마다
+                      입력할 수도 있습니다.
+                    </p>
+                  )}
                 </div>
-                <button
-                  onClick={() =>
-                    setProfile({
-                      id: p.id,
-                      name: p.name,
-                      username: p.username || "",
-                      secret: { ...blankSecret(), type: p.type },
-                    })
-                  }
-                >
-                  정보 교체
-                </button>
-                <IconButton
-                  label="인증 프로필 삭제"
-                  onClick={() =>
-                    void (async () => {
-                      if (
-                        await app.confirm(
-                          "인증 프로필 삭제",
-                          `${p.name}을 삭제할까요?`,
-                        )
-                      ) {
-                        await api.call("auth.delete", { id: p.id });
-                        await app.refresh();
-                      }
-                    })().catch(app.notify)
-                  }
-                >
-                  <Trash2 size={16} />
-                </IconButton>
-              </div>
-            ))}
-            {!app.boot.profiles.length && (
-              <p className="hint">
-                등록된 인증 프로필이 없습니다. 저장 없이 연결할 때마다 입력할
-                수도 있습니다.
-              </p>
-            )}
+              )}
+              {authTab === "keys" && (
+                <section className="settings-card">
+                  <h3>SSH 호스트 키</h3>
+                  <label className="check-label">
+                    <input
+                      type="checkbox"
+                      checked={app.document.settings.confirmNewHostKeys}
+                      onChange={(e) => {
+                        const confirmNewHostKeys = e.target.checked;
+                        void app.update((d) => ({
+                          ...d,
+                          settings: { ...d.settings, confirmNewHostKeys },
+                        }));
+                      }}
+                    />
+                    첫 연결 지문 확인창 표시
+                  </label>
+                  <p className="hint">
+                    끄면 처음 받은 서버 지문을 확인창 없이 자동 등록합니다. 첫
+                    연결 대상이 올바른 서버인지 직접 확인하세요. 등록된 지문이
+                    바뀌면 설정과 관계없이 연결을 차단합니다.
+                  </p>
+                </section>
+              )}
+            </SettingsTabs>
           </>
         )}
         {section === "data" && (
@@ -304,148 +376,168 @@ export function Settings() {
                 </p>
               </div>
             </div>
-            <div className="settings-columns">
-              <section className="settings-card">
-                <h3>
-                  <Download size={18} />
-                  파일 내보내기
-                </h3>
-                <p>호스트, 그룹, 스니펫, 작업 배치와 설정을 저장합니다.</p>
-                <label className="check-label">
-                  <input
-                    type="checkbox"
-                    checked={includeSecrets}
-                    onChange={(e) => setIncludeSecrets(e.target.checked)}
-                  />
-                  비밀번호와 개인 키 포함
-                </label>
-                {includeSecrets && (
-                  <label>
-                    내보내기 암호
+            <SettingsTabs
+              label="데이터 관리"
+              value={dataTab}
+              onChange={(tab) => {
+                setDataTab(tab);
+                if (tab === "backup") loadBackups();
+              }}
+              items={[
+                { id: "export", label: "내보내기" },
+                { id: "import", label: "가져오기" },
+                { id: "backup", label: "자동 백업" },
+              ]}
+            >
+              {dataTab === "export" && (
+                <section className="settings-card">
+                  <h3>
+                    <Download size={18} />
+                    파일 내보내기
+                  </h3>
+                  <p>호스트, 그룹, 스니펫, 작업 배치와 설정을 저장합니다.</p>
+                  <label className="check-label">
                     <input
-                      type="password"
-                      minLength={10}
-                      autoComplete="new-password"
-                      placeholder="10자 이상"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      type="checkbox"
+                      checked={includeSecrets}
+                      onChange={(e) => setIncludeSecrets(e.target.checked)}
                     />
-                    <small className="hint">
-                      파일에는 암호를 저장하지 않습니다.
-                    </small>
+                    비밀번호와 개인 키 포함
                   </label>
-                )}
-                <button
-                  disabled={busy || (includeSecrets && password.length < 10)}
-                  onClick={() =>
-                    void (async () => {
-                      setBusy(true);
-                      try {
-                        const saved = await api.call("data.export", {
-                          password: includeSecrets ? password : undefined,
-                        });
-                        if (saved) {
-                          setPassword("");
-                          app.notify("내보내기를 완료했습니다.");
-                        }
-                      } catch (e) {
-                        app.notify(e);
-                      } finally {
-                        setBusy(false);
-                      }
-                    })()
-                  }
-                >
-                  <Download size={15} />
-                  내보내기
-                </button>
-              </section>
-              <section className="settings-card">
-                <h3>
-                  <Upload size={18} />
-                  파일 가져오기
-                </h3>
-                <label>
-                  파일 종류
-                  <select
-                    value={kind}
-                    onChange={(e) => setKind(e.target.value as typeof kind)}
-                  >
-                    <option value="passport">Passport 설정 파일</option>
-                    <option value="ssh">SSH config</option>
-                    <option value="snippets">Passport 스니펫 파일</option>
-                  </select>
-                </label>
-                {kind === "passport" && (
-                  <label>
-                    파일 암호
-                    <input
-                      type="password"
-                      autoComplete="off"
-                      placeholder="암호화된 파일만 입력"
-                      value={importPassword}
-                      onChange={(e) => setImportPassword(e.target.value)}
-                    />
-                  </label>
-                )}
-                <button
-                  disabled={busy}
-                  onClick={() =>
-                    void (async () => {
-                      setBusy(true);
-                      try {
-                        const result = await api.call("data.preview", {
-                          kind,
-                          password: importPassword || undefined,
-                        });
-                        if (result) {
-                          setPreview(result);
-                          setImportPassword("");
-                        }
-                      } catch (e) {
-                        app.notify(e);
-                      } finally {
-                        setBusy(false);
-                      }
-                    })()
-                  }
-                >
-                  <FolderOpen size={15} />
-                  파일 선택 · 미리보기
-                </button>
-                <p className="hint">
-                  가져오기는 서버에 연결하거나 명령을 실행하지 않습니다.
-                </p>
-              </section>
-            </div>
-            <section className="settings-card backups">
-              <h3>
-                <Archive size={18} />
-                자동 로컬 백업
-              </h3>
-              <p>
-                하루 한 번 저장하며 최근 7개를 보관합니다. 인증 정보는 이
-                기기에서만 복원할 수 있습니다.
-              </p>
-              {backups.map((name) => (
-                <div className="row backup-row" key={name}>
-                  <span>{name.slice(0, 10)}</span>
+                  {includeSecrets && (
+                    <label>
+                      내보내기 암호
+                      <input
+                        type="password"
+                        aria-label="내보내기 암호"
+                        minLength={10}
+                        autoComplete="new-password"
+                        placeholder="10자 이상"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                      />
+                      <small className="hint">
+                        파일에는 암호를 저장하지 않습니다.
+                      </small>
+                    </label>
+                  )}
                   <button
+                    disabled={busy || (includeSecrets && password.length < 10)}
                     onClick={() =>
-                      void api
-                        .call("backup.preview", { name })
-                        .then(setPreview)
-                        .catch(app.notify)
+                      void (async () => {
+                        setBusy(true);
+                        try {
+                          const saved = await api.call("data.export", {
+                            password: includeSecrets ? password : undefined,
+                          });
+                          if (saved) {
+                            setPassword("");
+                            app.notify("내보내기를 완료했습니다.");
+                          }
+                        } catch (e) {
+                          app.notify(e);
+                        } finally {
+                          setBusy(false);
+                        }
+                      })()
                     }
                   >
-                    복원 미리보기
+                    <Download size={15} />
+                    내보내기
                   </button>
-                </div>
-              ))}
-              {!backups.length && (
-                <p className="hint">저장된 백업이 없습니다.</p>
+                </section>
               )}
-            </section>
+              {dataTab === "import" && (
+                <section className="settings-card">
+                  <h3>
+                    <Upload size={18} />
+                    파일 가져오기
+                  </h3>
+                  <label>
+                    파일 종류
+                    <select
+                      aria-label="파일 종류"
+                      value={kind}
+                      onChange={(e) => setKind(e.target.value as typeof kind)}
+                    >
+                      <option value="passport">Passport 설정 파일</option>
+                      <option value="ssh">SSH config</option>
+                      <option value="snippets">Passport 스니펫 파일</option>
+                    </select>
+                  </label>
+                  {kind === "passport" && (
+                    <label>
+                      파일 암호
+                      <input
+                        type="password"
+                        autoComplete="off"
+                        placeholder="암호화된 파일만 입력"
+                        value={importPassword}
+                        onChange={(e) => setImportPassword(e.target.value)}
+                      />
+                    </label>
+                  )}
+                  <button
+                    disabled={busy}
+                    onClick={() =>
+                      void (async () => {
+                        setBusy(true);
+                        try {
+                          const result = await api.call("data.preview", {
+                            kind,
+                            password: importPassword || undefined,
+                          });
+                          if (result) {
+                            setPreview(result);
+                            setImportPassword("");
+                          }
+                        } catch (e) {
+                          app.notify(e);
+                        } finally {
+                          setBusy(false);
+                        }
+                      })()
+                    }
+                  >
+                    <FolderOpen size={15} />
+                    파일 선택 · 미리보기
+                  </button>
+                  <p className="hint">
+                    가져오기는 서버에 연결하거나 명령을 실행하지 않습니다.
+                  </p>
+                </section>
+              )}
+              {dataTab === "backup" && (
+                <section className="settings-card backups">
+                  <h3>
+                    <Archive size={18} />
+                    자동 로컬 백업
+                  </h3>
+                  <p>
+                    하루 한 번 저장하며 최근 7개를 보관합니다. 인증 정보는 이
+                    기기에서만 복원할 수 있습니다.
+                  </p>
+                  {backups.map((name) => (
+                    <div className="row backup-row" key={name}>
+                      <span>{name.slice(0, 10)}</span>
+                      <button
+                        onClick={() =>
+                          void api
+                            .call("backup.preview", { name })
+                            .then(setPreview)
+                            .catch(app.notify)
+                        }
+                      >
+                        복원 미리보기
+                      </button>
+                    </div>
+                  ))}
+                  {!backups.length && (
+                    <p className="hint">저장된 백업이 없습니다.</p>
+                  )}
+                </section>
+              )}
+            </SettingsTabs>
           </>
         )}
         {section === "shortcuts" && (

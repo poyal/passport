@@ -1,12 +1,51 @@
 export type Highlight = {
   start: number;
   end: number;
-  kind: "trace" | "info" | "warn" | "error" | "address";
+  kind:
+    | "trace"
+    | "info"
+    | "warn"
+    | "error"
+    | "address"
+    | "directory"
+    | "executable"
+    | "symlink";
 };
+// Only classify long listings with permissions and metadata. A filename or
+// extension alone cannot establish whether a file is executable or a directory.
+const listing =
+  /^\s*([bcdlps-][r-][w-][xSs-][r-][w-][xSs-][r-][w-][xTt-][.+@]?)\s+\d+\s+\S+\s+\S+\s+\d+\s+(?:\S+\s+\d{1,2}\s+(?:\d{1,2}:\d{2}|\d{4})|\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:\s+[+-]\d{4})?)\s+(.+?)\s*$/;
+export function findFileHighlight(text: string): Highlight | undefined {
+  const match = listing.exec(text);
+  if (!match) return;
+  const permissions = match[1];
+  const kind =
+    permissions[0] === "d"
+      ? "directory"
+      : permissions[0] === "l"
+        ? "symlink"
+        : permissions[0] === "-" &&
+            [3, 6, 9].some((i) => /[xst]/.test(permissions[i]))
+          ? "executable"
+          : undefined;
+  if (!kind) return;
+  const name = match[2];
+  const nameStart =
+    match[0].length -
+    (match[0].length - match[0].trimEnd().length) -
+    name.length;
+  const arrow = kind === "symlink" ? name.indexOf(" -> ") : -1;
+  return {
+    start: nameStart,
+    end: nameStart + (arrow < 0 ? name.length : arrow),
+    kind,
+  };
+}
 export function findHighlights(
   text: string,
   mode: "none" | "log" | "line" | "address",
   addresses = false,
+  files = false,
 ): Highlight[] {
   const result: Highlight[] = [];
   if (mode === "log" || mode === "line")
@@ -83,5 +122,15 @@ export function findHighlights(
       } catch {}
     }
   }
-  return result.slice(0, 100);
+  const file = files ? findFileHighlight(text) : undefined;
+  return (
+    file
+      ? [
+          file,
+          ...result.filter(
+            (token) => token.end <= file.start || token.start >= file.end,
+          ),
+        ]
+      : result
+  ).slice(0, 100);
 }

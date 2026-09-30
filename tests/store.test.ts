@@ -70,6 +70,28 @@ it("does not store secrets without operating system encryption", async () => {
     store.vault.isEncryptionAvailable = old;
   }
 });
+it("makes old generic Linux imports automatic and keeps manually selected icons", async () => {
+  const store = await setup();
+  const hosts = [
+    { icon: "linux", name: "CentOS 5.3" },
+    { icon: "linux", iconPinned: true, name: "CentOS 5.3" },
+    { icon: "ubuntu", name: "CentOS 5.3" },
+  ].map((h) =>
+    hostSchema.parse({
+      id: randomUUID(),
+      address: "localhost",
+      username: "tester",
+      ...h,
+    }),
+  );
+  store.save({ ...store.read(), hosts });
+  expect(store.read().hosts.map((h) => h.icon)).toEqual([
+    "auto",
+    "linux",
+    "ubuntu",
+  ]);
+  expect(store.read().hosts[1].iconPinned).toBe(true);
+});
 it("updates imported profile metadata while preserving compatible secrets only", async () => {
   const store = await setup();
   const id = randomUUID();

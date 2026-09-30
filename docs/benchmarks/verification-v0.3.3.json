@@ -1,0 +1,105 @@
+{
+  "date": "2026-09-30T03:04:28.581Z",
+  "version": "0.3.3",
+  "platform": "macOS 27 / arm64",
+  "changes": [
+    "Always append SHA-1 group14, group-exchange and group1 to modern SSH defaults for SSH, SFTP and tunnels.",
+    "Remove the host algorithm option and discard obsolete legacySSH fields while parsing saved/imported hosts.",
+    "Preserve modern-algorithm preference, password authentication checks and changed-host-key rejection."
+  ],
+  "checks": {
+    "build": "passed",
+    "typecheck": "passed",
+    "unitIntegration": {
+      "passed": 58,
+      "initialPass": 56,
+      "initialSkipped": 4,
+      "ftpSupplementPassed": 2,
+      "initialSeconds": 7.92,
+      "ftpSupplementSeconds": 2.74,
+      "remainingOptional": [
+        "Docker matrix executed separately",
+        "4 GiB transfer stress not repeated"
+      ]
+    },
+    "electronGUI": {
+      "passed": 20,
+      "optionalStressSkipped": 1,
+      "seconds": 30.7
+    },
+    "dockerOpenSSH": {
+      "configurations": 8,
+      "seconds": 39.49,
+      "result": "docker-ssh-v0.3.3.json",
+      "testContainersRemaining": 0
+    },
+    "realCentOS53": {
+      "result": "centos53-negotiation-v0.3.3.json",
+      "keyExchange": "diffie-hellman-group14-sha1",
+      "authentication": "Not attempted; host key rejected in diagnostic"
+    },
+    "packagedLegacyGUI": {
+      "passed": 1,
+      "seconds": 6.6
+    },
+    "packagedSmoke": {
+      "result": "packaged-smoke-v0.3.3.json",
+      "packagedSmoke": "passed",
+      "localPTY": "passed",
+      "shutdown": "passed",
+      "exitCode": 0,
+      "appVersion": "0.3.3",
+      "arch": "arm64",
+      "platform": "darwin",
+      "hosts": 0,
+      "fonts": 247,
+      "version": 1,
+      "nodeAvailable": false
+    },
+    "packagedPayload": {
+      "version": "0.3.3",
+      "archive": "release/mac-arm64/Passport.app/Contents/Resources/app.asar",
+      "checks": [
+        {
+          "file": "dist/main/index.cjs",
+          "match": true
+        },
+        {
+          "file": "dist/preload/index.cjs",
+          "match": true
+        },
+        {
+          "file": "dist/renderer/index.html",
+          "match": true
+        },
+        {
+          "file": "dist/renderer/assets/index-BBwF5y4M.js",
+          "match": true
+        },
+        {
+          "file": "dist/renderer/assets/index-DgEgoQHz.css",
+          "match": true
+        },
+        {
+          "file": "node_modules/ssh2/lib/protocol/kex.js",
+          "match": true
+        }
+      ]
+    },
+    "codesign": "Ad-hoc; deep/strict verification passed",
+    "prettier": "passed",
+    "gitDiffCheck": "passed"
+  },
+  "installer": {
+    "path": "release/Passport-0.3.3-mac-arm64.dmg",
+    "bytes": 153295344,
+    "sha256": "de4676592676f79807e6cca84e74b9b8c201b4cb751e942db062afc0a4b1d12a"
+  },
+  "tradeoff": "Weak legacy key exchange is available for every endpoint. Modern algorithms remain first. This increases compatibility and lowers the minimum accepted security level.",
+  "limits": [
+    "Real CentOS 5.3 validation covers key exchange only, not login, PTY, SFTP or forwarding on that production server.",
+    "Production credentials, known host keys and installed /Applications/Passport.app were not modified.",
+    "Windows client binaries and ten-minute/4 GiB stress were not tested for this release.",
+    "The host-key replacement screen remains a design prototype."
+  ]
+}

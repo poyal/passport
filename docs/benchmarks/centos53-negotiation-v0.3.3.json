@@ -1,0 +1,15 @@
+{
+  "version": "0.3.3",
+  "electron": "44.4.5",
+  "openssl": "0.0.0",
+  "operatingSystem": "CentOS 5.3",
+  "publicNegotiation": [
+    "Remote ident: 'SSH-2.0-OpenSSH_4.3'",
+    "Handshake: KEX algorithm: diffie-hellman-group14-sha1"
+  ],
+  "hostKeyVerificationReached": true,
+  "userAuthentication": "Not attempted: diagnostic rejects host key",
+  "savedTrustChanged": false,
+  "obsoleteLegacyFlag": false,
+  "outcome": "Key exchange passed using current connectSSH without a host option"
+}

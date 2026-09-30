@@ -68,7 +68,7 @@ export class Store {
     chmodSync(path.join(directory, "passport.sqlite"), 0o600);
   }
   read(): PassportDocument {
-    return documentSchema.parse(
+    const document = documentSchema.parse(
       JSON.parse(
         (
           this.db.prepare("SELECT value FROM metadata WHERE id=1").get() as {
@@ -77,6 +77,11 @@ export class Store {
         ).value,
       ),
     );
+    // Older imports assigned a generic Linux icon without recording a user choice.
+    // New manual selections are pinned, including a deliberately chosen Linux icon.
+    for (const host of document.hosts)
+      if (host.icon === "linux" && !host.iconPinned) host.icon = "auto";
+    return document;
   }
   save(document: PassportDocument): PassportDocument {
     const valid = documentSchema.parse(document);

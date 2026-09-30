@@ -1,11 +1,23 @@
 import { detectRemoteOS } from "./remote-os";
-import { Client, type ClientChannel } from "ssh2";
+import { Client, type ClientChannel, type Algorithms } from "ssh2";
 import { createHash } from "node:crypto";
 import { StringDecoder } from "node:string_decoder";
 import type { AppEvent, Host, Secret } from "../shared/model";
 import type { Store } from "./store";
 
 export type TrustPrompt = (host: Host, fingerprint: string) => Promise<boolean>;
+const sshAlgorithms: Algorithms = {
+  kex: {
+    // Keep modern algorithms first while allowing legacy-only servers.
+    append: [
+      "diffie-hellman-group14-sha1",
+      "diffie-hellman-group-exchange-sha1",
+      "diffie-hellman-group1-sha1",
+    ],
+    prepend: [],
+    remove: [],
+  },
+};
 export function connectSSH(
   host: Host,
   secret: Secret,
@@ -30,8 +42,14 @@ export function connectSSH(
       resolve(client);
     });
     client.on("error", (error) => {
-      if (!ready)
-        reject(new Error(rejection || `SSH 연결 실패: ${error.message}`));
+      if (!ready) {
+        const message = /no matching key exchange algorithm/i.test(
+          error.message,
+        )
+          ? "서버와 공통 키 교환 방식이 없습니다. 구형 방식까지 지원하지만 서버가 제공하는 방식과 일치하지 않습니다. 서버의 SSH 설정을 확인하거나 업데이트하세요."
+          : error.message;
+        reject(new Error(rejection || `SSH 연결 실패: ${message}`));
+      }
     });
     client.once("close", () => {
       ended = true;
@@ -45,6 +63,7 @@ export function connectSSH(
       readyTimeout: 15000,
       keepaliveInterval: 30000,
       keepaliveCountMax: 3,
+      algorithms: sshAlgorithms,
       ...(secret.type === "key"
         ? {
             privateKey: secret.privateKey,
@@ -59,6 +78,11 @@ export function connectSSH(
           if (known !== fingerprint)
             rejection = "호스트 키가 변경되었습니다. 연결을 차단했습니다.";
           callback(known === fingerprint);
+          return;
+        }
+        if (!store.read().settings.confirmNewHostKeys) {
+          store.trust(host.address, host.port, fingerprint);
+          callback(true);
           return;
         }
         void confirm(host, fingerprint)

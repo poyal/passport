@@ -32,7 +32,7 @@ export function highlightTerminal(
     const a = appearance();
     if (
       !a ||
-      (a.highlight === "none" && !a.highlightAddresses) ||
+      (a.highlight === "none" && !a.highlightAddresses && !a.highlightFiles) ||
       term.buffer.active.type === "alternate"
     ) {
       clear();
@@ -57,7 +57,14 @@ export function highlightTerminal(
     ) {
       const line = buffer.getLine(y);
       if (!line) continue;
-      let text = "";
+      // Most output has no highlighted spans. Avoid allocating cell maps for it.
+      const tokens = findHighlights(
+        line.translateToString(false),
+        a.highlight,
+        a.highlightAddresses,
+        a.highlightFiles,
+      );
+      if (!tokens.length) continue;
       const columns: number[] = [],
         foreground: boolean[] = [],
         background: boolean[] = [];
@@ -68,9 +75,7 @@ export function highlightTerminal(
         if (cell.getWidth() === 0) continue;
         const value = cell.getChars() || " ";
         for (let n = 0; n < value.length; n++) columns.push(x);
-        text += value;
       }
-      const tokens = findHighlights(text, a.highlight, a.highlightAddresses);
       const paints: Paint[] = [];
       const ranges = (
         left: number,
@@ -109,11 +114,21 @@ export function highlightTerminal(
           warn: palette.yellow,
           error: palette.red,
           address: palette.cyan,
+          directory: palette.blue,
+          executable: palette.green,
+          symlink: palette.cyan,
         }[token.kind];
         ranges(
           columns[token.start] ?? 0,
           columns[token.end] ??
-            Math.min(line.length, (columns[token.end - 1] ?? 0) + 1),
+            Math.min(
+              line.length,
+              (columns[token.end - 1] ?? 0) +
+                Math.max(
+                  1,
+                  line.getCell(columns[token.end - 1] ?? 0)?.getWidth() ?? 1,
+                ),
+            ),
           foreground,
           color,
         );

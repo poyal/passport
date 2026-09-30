@@ -1,0 +1,149 @@
+{
+  "version": "0.3.1",
+  "date": "2026-09-30",
+  "platform": "darwin",
+  "arch": "arm64",
+  "os": "macOS 27.0",
+  "node": "25.6.0",
+  "electron": "44.4.5",
+  "baseCommit": "381063adf37ea3a00be25447e7172dee68070660",
+  "sourceFix": "Preserve unsaved host fields while merging background document updates; save preserves new OS and path metadata; switching hosts replaces the draft.",
+  "build": {
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "prettier": "passed",
+    "gitDiffCheck": "passed",
+    "dependencyTree": "passed",
+    "markdownLocalLinks": {
+      "checkedFiles": 15,
+      "missing": 0
+    },
+    "warnings": [
+      "Renderer bundle is approximately 854 kB before gzip; Vite chunk size warning.",
+      "package.json author metadata is absent; packaging succeeds."
+    ]
+  },
+  "unitIntegration": {
+    "regularPassed": 54,
+    "regularOptionalSkipped": 2,
+    "ftpFtpsIncluded": true,
+    "finalDurationSeconds": 5.16,
+    "largeFileStress": {
+      "passed": true,
+      "fileBytes": 4294967296,
+      "sha256Matched": true,
+      "smallFiles": 10000,
+      "rssGrowthLimitMiB": 512,
+      "durationSeconds": 14.44,
+      "scope": "Local adapters; sampled memory-growth assertion and representative small-file contents."
+    },
+    "dockerSSH": {
+      "passed": true,
+      "osCount": 6,
+      "aggregateTestsPassed": 1,
+      "results": "docker-ssh.json",
+      "testContainersRemaining": 0
+    },
+    "uniquePassedIncludingOptional": 56
+  },
+  "gui": {
+    "regularPassed": 19,
+    "regularOptionalSkipped": 1,
+    "uniquePassedIncludingStress": 20,
+    "shutdownRepeat": {
+      "passed": 9,
+      "modes": ["active", "closed", "reopened"],
+      "repeatsPerMode": 3,
+      "exitCode": 0,
+      "signal": null
+    },
+    "screenshots": 38,
+    "hostDraftRegression": {
+      "beforeFix": "failed; edited name was replaced by saved name",
+      "afterFix": "passed; draft survives metadata update, saves merged metadata, and switches to another host"
+    },
+    "terminalStress": {
+      "passed": true,
+      "results": "terminal-stress-v0.3.1-recheck-20260930.json",
+      "durationMs": 600002,
+      "panes": 16,
+      "hostCount": 500,
+      "inputLoopbackP95Ms": 15,
+      "peakWorkingSetMiB": 1157,
+      "lastWorkingSetMiB": 1110,
+      "loadedBeforeHostDraftFix": true
+    }
+  },
+  "securityAudit": {
+    "userApprovedMetadataTransmission": true,
+    "registry": "https://registry.npmjs.org",
+    "dependencyCount": 435,
+    "reportedVulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    }
+  },
+  "crashInvestigation": {
+    "initialSandboxRun": {
+      "unitIntegrationFailed": 7,
+      "unitIntegrationPassed": 47,
+      "guiStartupCrashes": [
+        {
+          "pid": 38471,
+          "parentPid": 38470
+        },
+        {
+          "pid": 38477,
+          "parentPid": 38473
+        },
+        {
+          "pid": 38481,
+          "parentPid": 38479
+        }
+      ],
+      "time": "2026-09-30 09:20:02–09:20:03 +0900",
+      "stack": "HIServices _RegisterApplication -> AppKit NSApplication initialization",
+      "parentsMatchedOwnPlaywrightWorkers": true
+    },
+    "normalEnvironmentRerun": "passed",
+    "newMainProcessCrashReportsAfterNormalRerun": 0,
+    "preflight": "Localhost bind checked before Vitest or Playwright starts Electron; sandbox EPERM fails immediately without launching Electron.",
+    "inference": "Restricted test launch caused these startup aborts; the crash reports alone do not diagnose arbitrary end-user launches."
+  },
+  "package": {
+    "artifact": "release/recheck-20260930/Passport-0.3.1-mac-arm64.dmg",
+    "sha256": "fbfd966fff3d28ce8306ddcb08cde8f1516a036ea978961f7c1cba04586a125d",
+    "signature": "ad-hoc; codesign deep strict verification passed",
+    "notarized": false,
+    "bundlesMatchFinalBuild": true,
+    "comparedFiles": [
+      "dist/main/index.cjs",
+      "dist/preload/index.cjs",
+      "dist/renderer/index.html",
+      "dist/renderer/assets/index-p3XJLtIr.js"
+    ],
+    "smoke": {
+      "packagedSmoke": "passed",
+      "localPTY": "passed",
+      "shutdown": "passed",
+      "exitCode": 0,
+      "appVersion": "0.3.1",
+      "arch": "arm64",
+      "platform": "darwin",
+      "hosts": 0,
+      "fonts": 247,
+      "version": 1,
+      "nodeAvailable": false
+    },
+    "previousArtifactPreserved": true
+  },
+  "limitations": [
+    "Windows x64/ARM64 installation and runtime not tested.",
+    "macOS 14 not tested; current runtime OS is macOS 27.",
+    "Physical IME, mouse dragging, real Keychain/DPAPI protection flows, and WAN failure/large transfers remain outside the isolated automatic tests."
+  ]
+}

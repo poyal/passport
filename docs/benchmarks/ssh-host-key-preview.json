@@ -1,0 +1,18 @@
+{
+  "date": "2026-09-30",
+  "artifact": "design/ssh-host-key-preview.html",
+  "runtime": "Local Chromium via Playwright",
+  "scenarios": [
+    "changed key: guarded replacement",
+    "new asset: name and explicit verification required",
+    "cancel via Escape",
+    "first registration",
+    "additional key algorithm preserves previous key",
+    "logs and help",
+    "reset clears selection",
+    "390px viewport without overflow"
+  ],
+  "externalRequests": 0,
+  "pageErrors": 0,
+  "scope": "Interactive design prototype only; no SSH or database writes"
+}

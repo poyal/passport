@@ -664,7 +664,7 @@ export function App() {
                 {jobs.filter((j) => j.state === "running").length}개 전송 중
               </span>
             )}
-            <span>Passport 0.3.1</span>
+            <span>Passport {boot.appVersion}</span>
           </div>
         </footer>
         <Tooltips />

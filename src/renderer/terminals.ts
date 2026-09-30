@@ -198,15 +198,22 @@ export function attachTerminal(
   applyAppearance(id, appearance);
   entry.resize?.disconnect();
   const fit = () => {
-    if (container.clientWidth > 50 && container.clientHeight > 50) {
+    if (
+      terminals.get(id) === entry &&
+      entry.element.parentElement === container &&
+      container.isConnected &&
+      container.clientWidth > 50 &&
+      container.clientHeight > 50
+    ) {
       entry.fit.fit();
     }
   };
   entry.resize = new ResizeObserver(fit);
   const observer = entry.resize;
   observer.observe(container);
-  requestAnimationFrame(fit);
+  const frame = requestAnimationFrame(fit);
   return () => {
+    cancelAnimationFrame(frame);
     observer.disconnect();
     if (entry.element.parentElement === container) entry.element.remove();
   };

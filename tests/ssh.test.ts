@@ -4,11 +4,12 @@ import os from "node:os";
 import path from "node:path";
 import { randomBytes, randomUUID } from "node:crypto";
 import { sshFixture } from "./fixtures/ssh-server";
-import { hostSchema, type Secret } from "../src/shared/model";
+import { emptyDocument, hostSchema, type Secret } from "../src/shared/model";
 import { connectSSH, Sessions } from "../src/main/ssh";
 import { Files, LocalAdapter } from "../src/main/files";
 import { Transfers } from "../src/main/transfers";
 import type { Store } from "../src/main/store";
+import type { Algorithms } from "ssh2";
 const cleanups: (() => Promise<void>)[] = [];
 afterEach(async () => {
   for (const clean of cleanups.splice(0).reverse()) await clean();
@@ -32,10 +33,10 @@ it("authenticates with a passphrase-protected PEM key and rejects a wrong passph
     ),
   ).rejects.toThrow();
 });
-async function setup() {
+async function setup(algorithms?: Algorithms) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "passport-ssh-"));
   cleanups.push(() => fs.rm(root, { recursive: true, force: true }));
-  const server = await sshFixture(root);
+  const server = await sshFixture(root, algorithms);
   cleanups.push(() => server.close());
   const host = hostSchema.parse({
     id: randomUUID(),
@@ -45,12 +46,14 @@ async function setup() {
     username: "tester",
   });
   const known = new Map<string, string>();
+  const document = emptyDocument();
+  document.hosts = [host];
   const store = {
     fingerprint: (address: string, port: number) =>
       known.get(`${address}:${port}`),
     trust: (address: string, port: number, fingerprint: string) =>
       known.set(`${address}:${port}`, fingerprint),
-    read: () => ({ hosts: [host] }),
+    read: () => document,
   } as unknown as Store;
   const secret: Secret = {
     type: "password",
@@ -58,8 +61,46 @@ async function setup() {
     privateKey: "",
     passphrase: "",
   };
-  return { root, server, host, store, secret, known };
+  return { root, server, host, store, secret, known, document };
 }
+it.each(["diffie-hellman-group14-sha1", "diffie-hellman-group1-sha1"] as const)(
+  "automatically supports %s and retains authentication and fingerprint checks",
+  async (kex) => {
+    const { host, store, secret, known, server } = await setup({
+      kex: [kex],
+      serverHostKey: ["ssh-rsa"],
+      cipher: ["aes128-ctr"],
+      hmac: ["hmac-sha1"],
+    });
+    // Hosts saved by 0.3.2 can still contain the old disabled flag.
+    const saved = hostSchema.parse({ ...host, legacySSH: false });
+    expect(saved).not.toHaveProperty("legacySSH");
+    const client = await connectSSH(saved, secret, store, async () => true);
+    expect(server.negotiated.at(-1)?.kex).toBe(kex);
+    expect(known.size).toBe(1);
+    client.end();
+    await expect(
+      connectSSH(
+        saved,
+        { ...secret, password: "incorrect" },
+        store,
+        async () => true,
+      ),
+    ).rejects.toThrow(/authentication/i);
+    known.set(`${host.address}:${host.port}`, "SHA256:wrong");
+    await expect(
+      connectSSH(saved, secret, store, async () => true),
+    ).rejects.toThrow("키가 변경");
+  },
+);
+it("prefers modern key exchange when the server offers both modern and legacy algorithms", async () => {
+  const { host, store, secret, server } = await setup({
+    kex: ["diffie-hellman-group1-sha1", "curve25519-sha256"],
+  });
+  const client = await connectSSH(host, secret, store, async () => true);
+  expect(server.negotiated.at(-1)?.kex).toBe("curve25519-sha256");
+  client.end();
+});
 it("confirms a first fingerprint and blocks changed keys", async () => {
   const { host, store, secret, known } = await setup();
   let confirmations = 0;
@@ -74,6 +115,24 @@ it("confirms a first fingerprint and blocks changed keys", async () => {
   await expect(
     connectSSH(host, secret, store, async () => true),
   ).rejects.toThrow("키가 변경");
+});
+it("automatically registers only the first key when confirmation is disabled and still blocks changed keys", async () => {
+  const { host, store, secret, known, document } = await setup();
+  document.settings.confirmNewHostKeys = false;
+  const confirm = async () => {
+    throw new Error("The confirmation dialog must not open");
+  };
+  const first = await connectSSH(host, secret, store, confirm);
+  first.end();
+  expect(known.size).toBe(1);
+  document.settings.confirmNewHostKeys = true;
+  const second = await connectSSH(host, secret, store, confirm);
+  second.end();
+  document.settings.confirmNewHostKeys = false;
+  known.set(`${host.address}:${host.port}`, "SHA256:wrong");
+  await expect(connectSSH(host, secret, store, confirm)).rejects.toThrow(
+    "키가 변경",
+  );
 });
 it("opens an interactive SSH terminal and routes output and input", async () => {
   const { host, store, secret, server } = await setup();

@@ -263,8 +263,67 @@ test("profile account connects, paste is immediate and literal, automatic logs c
   await page.getByRole("button", { name: "알림 닫기" }).click();
 });
 
-test("all main screens fit light and dark themes at desktop and minimum window sizes", async ({}, info) => {
+test("all main screens and settings tabs fit light and dark themes at wide, desktop, and minimum window sizes", async ({}, info) => {
+  test.setTimeout(120000);
+  await page.evaluate(
+    async ({ authId, hostId }) => {
+      for (const [id, name] of [
+        [crypto.randomUUID(), "서버 운영 인증"],
+        [crypto.randomUUID(), "개인 키 인증"],
+      ])
+        await window.passport.call("auth.save", {
+          id,
+          name,
+          username: "tester",
+          secret: {
+            type: "password",
+            password: "test-only-password",
+            privateKey: "",
+            passphrase: "",
+          },
+        });
+      const { document } = await window.passport.call("bootstrap", undefined);
+      document.tunnels = [
+        {
+          id: crypto.randomUUID(),
+          name: "개발 데이터베이스",
+          hostId,
+          kind: "local",
+          bindAddress: "127.0.0.1",
+          bindPort: 15432,
+          targetAddress: "127.0.0.1",
+          targetPort: 5432,
+        },
+        {
+          id: crypto.randomUUID(),
+          name: "테스트 SOCKS 프록시",
+          hostId,
+          kind: "dynamic",
+          bindAddress: "127.0.0.1",
+          bindPort: 1080,
+          targetAddress: "127.0.0.1",
+          targetPort: 80,
+        },
+      ];
+      await window.passport.call("save", document);
+    },
+    { authId, hostId: hosts[0].id },
+  );
+  await page.getByRole("button", { name: "설정", exact: true }).click();
+  await page
+    .locator(".settings-sidebar")
+    .getByRole("button", { name: "외형", exact: true })
+    .click();
+  await page.getByRole("tab", { name: "사용자 테마", exact: true }).click();
+  await page
+    .getByRole("button", { name: "현재 테마에서 만들기", exact: true })
+    .click();
+  await page
+    .getByLabel("테마 이름", { exact: true })
+    .fill("작업용 사용자 테마");
+  await page.getByRole("button", { name: "테마 저장", exact: true }).click();
   for (const [width, height] of [
+    [1920, 1080],
     [1440, 900],
     [1024, 680],
   ]) {
@@ -306,20 +365,58 @@ test("all main screens fit light and dark themes at desktop and minimum window s
           .locator(".settings-sidebar")
           .getByRole("button", { name: section, exact: true })
           .click();
-        await page.locator(".settings-content").evaluate((el) => {
-          el.scrollTop = 0;
-        });
-        await page.mouse.move(800, 20);
-        await page.screenshot({
-          animations: "disabled",
-          path: info.outputPath(`${section}-${mode}-${width}.png`),
-        });
-        expect(
-          await page
+        const subtabs = await page
+          .locator('.settings-tab-list [role="tab"]')
+          .all();
+        const views = subtabs.length ? subtabs : [undefined];
+        for (const tab of views) {
+          if (tab) await tab.click();
+          const title = tab ? `${section}-${await tab.innerText()}` : section;
+          await page.locator(".settings-content").evaluate((el) => {
+            el.scrollTop = 0;
+          });
+          await page.mouse.move(800, 20);
+          await page.screenshot({
+            animations: "disabled",
+            path: info.outputPath(`${title}-${mode}-${width}.png`),
+          });
+          const geometry = await page
             .locator(".settings-content")
-            .evaluate((el) => el.scrollWidth <= el.clientWidth + 1),
-          section,
-        ).toBe(true);
+            .evaluate((el) => {
+              const content = el.getBoundingClientRect();
+              const cards = [
+                ...el.querySelectorAll<HTMLElement>(
+                  ".settings-card, .profile-row, .log-layout",
+                ),
+              ];
+              return {
+                noOverflow: el.scrollWidth <= el.clientWidth + 1,
+                cardsFit: cards.every((card) => {
+                  const r = card.getBoundingClientRect();
+                  return r.left >= content.left && r.right <= content.right + 1;
+                }),
+                formFits: [
+                  ...el.querySelectorAll<HTMLElement>(
+                    "label, button, input, select",
+                  ),
+                ].every((field) => field.scrollWidth <= field.clientWidth + 2),
+                fillsWidth: cards.length
+                  ? Math.max(
+                      ...cards.map(
+                        (card) => card.getBoundingClientRect().width,
+                      ),
+                    ) /
+                    (el.clientWidth -
+                      parseFloat(getComputedStyle(el).paddingLeft) -
+                      parseFloat(getComputedStyle(el).paddingRight))
+                  : 1,
+              };
+            });
+          expect(geometry.noOverflow, title).toBe(true);
+          expect(geometry.cardsFit, title).toBe(true);
+          expect(geometry.formFits, title).toBe(true);
+          expect(geometry.fillsWidth, title).toBeGreaterThan(0.95);
+        }
       }
       expect(
         await page.evaluate(
@@ -332,6 +429,7 @@ test("all main screens fit light and dark themes at desktop and minimum window s
     .locator(".settings-sidebar")
     .getByRole("button", { name: "세션 로그", exact: true })
     .click();
+  await page.getByRole("tab", { name: "기록·보관 설정", exact: true }).click();
   await page.getByLabel("보관 일수", { exact: true }).fill("7");
   await page.getByLabel("보관 일수", { exact: true }).press("Tab");
   await expect
@@ -376,5 +474,106 @@ test("direct passwords become reusable protected profiles instead of host metada
     .getByRole("button", { name: /직접 입력/ })
     .click();
   await expect(page.getByLabel("비밀번호", { exact: true })).toHaveValue("");
+  expect(errors).toEqual([]);
+});
+
+test("background host metadata updates preserve unsaved host edits", async () => {
+  await page.getByRole("button", { name: "호스트", exact: true }).click();
+  await page.locator(".host-row").filter({ hasText: "예제 서버 01" }).click();
+  await expect(page.getByLabel("이름", { exact: true })).toHaveValue(
+    "예제 서버 01",
+  );
+  await page.getByLabel("이름", { exact: true }).fill("저장 전 수정한 이름");
+  await page.evaluate(async () => {
+    const { document } = await window.passport.call("bootstrap", undefined);
+    const host = document.hosts.find((h) => h.name === "예제 서버 01")!;
+    host.lastConnected = Date.now();
+    host.detectedOS = "Ubuntu 24.04 LTS";
+    host.startPath = "/background-path";
+    await window.passport.call("save", document);
+  });
+  await expect(page.getByLabel("이름", { exact: true })).toHaveValue(
+    "저장 전 수정한 이름",
+  );
+  await page.getByRole("button", { name: "호스트 저장", exact: true }).click();
+  await expect
+    .poll(async () => {
+      const { document } = await page.evaluate(() =>
+        window.passport.call("bootstrap", undefined),
+      );
+      const host = document.hosts.find((h) => h.name === "저장 전 수정한 이름");
+      return (
+        host && { name: host.name, os: host.detectedOS, path: host.startPath }
+      );
+    })
+    .toEqual({
+      name: "저장 전 수정한 이름",
+      os: "Ubuntu 24.04 LTS",
+      path: "/background-path",
+    });
+  await page.locator(".host-row").filter({ hasText: "예제 서버 02" }).click();
+  await expect(page.getByLabel("이름", { exact: true })).toHaveValue(
+    "예제 서버 02",
+  );
+});
+
+test("settings tabs preserve drafts and keyboard navigation; manual icons override detection", async ({}, info) => {
+  await page.getByRole("button", { name: "설정", exact: true }).click();
+  await page
+    .locator(".settings-sidebar")
+    .getByRole("button", { name: "내보내기와 백업", exact: true })
+    .click();
+  await page.getByRole("tab", { name: "내보내기", exact: true }).click();
+  await page.getByLabel("비밀번호와 개인 키 포함").check();
+  await page
+    .getByLabel("내보내기 암호", { exact: true })
+    .fill("test-only-draft-password");
+  await page.getByRole("tab", { name: "가져오기", exact: true }).click();
+  await page.getByLabel("파일 종류", { exact: true }).selectOption("ssh");
+  await page.getByRole("tab", { name: "내보내기", exact: true }).click();
+  await expect(page.getByLabel("내보내기 암호", { exact: true })).toHaveValue(
+    "test-only-draft-password",
+  );
+  await page.getByRole("tab", { name: "내보내기", exact: true }).press("End");
+  await expect(
+    page.getByRole("tab", { name: "자동 백업", exact: true }),
+  ).toHaveAttribute("aria-selected", "true");
+  await expect(
+    page.getByRole("tabpanel", { name: "자동 백업", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("tab", { name: "자동 백업", exact: true })
+    .press("ArrowLeft");
+  await expect(page.getByLabel("파일 종류", { exact: true })).toHaveValue(
+    "ssh",
+  );
+  await page.getByRole("button", { name: "호스트", exact: true }).click();
+  await page.evaluate(async (id) => {
+    const { document } = await window.passport.call("bootstrap", undefined);
+    const host = document.hosts.find((h) => h.id === id)!;
+    host.name = "[AG] CentOS 5.3";
+    host.icon = "linux";
+    host.iconPinned = false;
+    await window.passport.call("save", document);
+  }, hosts[1].id);
+  const row = page.locator(".host-row").filter({ hasText: "[AG] CentOS 5.3" });
+  await expect(row.locator(".host-icon")).toHaveClass(/centos/);
+  await row.click();
+  await expect(page.getByLabel("아이콘", { exact: true })).toHaveValue("auto");
+  await page.getByLabel("아이콘", { exact: true }).selectOption("linux");
+  await page.getByRole("button", { name: "호스트 저장", exact: true }).click();
+  await expect(row.locator(".host-icon")).toHaveClass(/linux/);
+  await page.evaluate(async (id) => {
+    const { document } = await window.passport.call("bootstrap", undefined);
+    document.hosts.find((h) => h.id === id)!.detectedOS =
+      "Microsoft Windows Server 2022";
+    await window.passport.call("save", document);
+  }, hosts[1].id);
+  await expect(row.locator(".host-icon")).toHaveClass(/linux/);
+  await page.getByLabel("아이콘", { exact: true }).selectOption("auto");
+  await page.getByRole("button", { name: "호스트 저장", exact: true }).click();
+  await expect(row.locator(".host-icon")).toHaveClass(/windows/);
+  await page.reload();
+  await expect(row.locator(".host-icon")).toHaveClass(/windows/);
   expect(errors).toEqual([]);
 });

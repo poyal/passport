@@ -13,6 +13,7 @@ export const appearanceFields = {
   cursorBlink: z.boolean(),
   highlight: z.enum(["none", "log", "line", "address"]),
   highlightAddresses: z.boolean(),
+  highlightFiles: z.boolean(),
 };
 export const appearanceOverridesSchema = z.object(appearanceFields).partial();
 export const appearanceSchema = z.object({
@@ -26,6 +27,7 @@ export const appearanceSchema = z.object({
   cursorBlink: z.boolean().default(false),
   highlight: appearanceFields.highlight.default("none"),
   highlightAddresses: z.boolean().default(false),
+  highlightFiles: z.boolean().default(true),
 });
 export const tunnelSchema = z.object({
   id: idSchema,
@@ -119,6 +121,7 @@ export const hostSchema = z.object({
     ])
     .default("auto"),
   detectedOS: short.optional(),
+  iconPinned: z.boolean().default(false),
   authId: idSchema.nullable().default(null),
   startPath: z
     .string()
@@ -213,6 +216,7 @@ export type Workspace = z.infer<typeof workspaceSchema>;
 export const settingsSchema = z.object({
   appearance: appearanceSchema.default(() => appearanceSchema.parse({})),
   colorMode: z.enum(["system", "dark", "light"]).default("system"),
+  confirmNewHostKeys: z.boolean().default(true),
   customThemes: z.array(customThemeSchema).max(100).default([]),
   shortcuts: z
     .record(
@@ -340,6 +344,7 @@ export type AuthProfile = {
 };
 export type Bootstrap = {
   document: PassportDocument;
+  appVersion: string;
   profiles: AuthProfile[];
   platform: string;
   home: string;

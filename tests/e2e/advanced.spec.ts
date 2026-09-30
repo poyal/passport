@@ -174,6 +174,12 @@ test("broadcast uses physical keys only, explicit execution records history, log
 });
 
 test("moves a live split workspace to another native window and back with scrollback intact", async () => {
+  if (
+    !(await page
+      .getByRole("button", { name: "연결을 유지하며 이동", exact: true })
+      .isVisible())
+  )
+    await page.getByRole("button", { name: "운영 도구", exact: true }).click();
   server.shells[0].write("\r\nBUFFER_BEFORE_WINDOW_MOVE\r\n");
   await expect(
     page.locator(`[data-pane-id="${paneA}"] .xterm-rows`),
@@ -193,6 +199,11 @@ test("moves a live split workspace to another native window and back with scroll
   ).toContainText("BUFFER_BEFORE_WINDOW_MOVE");
   expect(server.shells.length).toBe(2);
   await expect(page.locator(".workspace-tab")).toHaveCount(0);
+  // A delayed layout update from the source window must be harmless after ownership moves.
+  await page.evaluate(async (id) => {
+    await window.passport.call("session.resize", { id, cols: 77, rows: 17 });
+    await window.passport.call("session.ack", { id, bytes: 1 });
+  }, paneA);
   await expect(
     page.evaluate(
       (id) =>
@@ -265,6 +276,7 @@ test("opens and keeps a local tab active when ownership events arrive after the 
 
 test("saves custom colors and shortcuts and applies highlights without changing terminal text", async () => {
   await page.getByRole("button", { name: "설정", exact: true }).click();
+  await page.getByRole("tab", { name: "사용자 테마", exact: true }).click();
   await page
     .getByRole("button", { name: "현재 테마에서 만들기", exact: true })
     .click();

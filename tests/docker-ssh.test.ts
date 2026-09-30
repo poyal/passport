@@ -15,7 +15,13 @@ it.skipIf(!manifest)(
   "real OpenSSH across Docker operating systems",
   async () => {
     const config = JSON.parse(await fs.readFile(manifest!, "utf8")) as {
-      hosts: { name: string; image: string; port: number; container: string }[];
+      hosts: {
+        name: string;
+        image: string;
+        port: number;
+        container: string;
+        legacyKex?: string;
+      }[];
       password: string;
       privateKey: string;
       passphrase: string;
@@ -230,6 +236,7 @@ it.skipIf(!manifest)(
             socksUDPRejected: true,
             chmod: "0640",
             osRelease,
+            legacyKex: entry.legacyKex,
           });
         } finally {
           files.closeAll();

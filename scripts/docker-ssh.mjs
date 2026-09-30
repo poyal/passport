@@ -10,6 +10,8 @@ const matrix = [
   ["rocky", "rockylinux:9"],
   ["centos", "quay.io/centos/centos:stream9"],
   ["centos7", "centos:7"],
+  ["centos7-group1", "centos:7", "diffie-hellman-group1-sha1"],
+  ["centos7-gex-sha1", "centos:7", "diffie-hellman-group-exchange-sha1"],
 ];
 const directory = await fs.mkdtemp(path.join(os.tmpdir(), "passport-docker-"));
 const containers = [];
@@ -48,7 +50,7 @@ try {
     { mode: 0o600 },
   );
   const hosts = [];
-  for (const [id, base] of matrix) {
+  for (const [id, base, legacyKex] of matrix) {
     const image = `passport-ssh-test:${id}`,
       name = `passport-ssh-${id}-${process.pid}`;
     console.log(`\n[Passport SSH] ${id}: ${base}`);
@@ -71,6 +73,7 @@ try {
       "io.passport.test=ssh",
       "--env-file",
       envFile,
+      ...(legacyKex ? ["-e", `PASSPORT_TEST_LEGACY_KEX=${legacyKex}`] : []),
       "-p",
       "127.0.0.1::22",
       image,
@@ -84,6 +87,7 @@ try {
       image: base,
       port: Number(binding.split(":").at(-1)),
       container: name,
+      legacyKex,
     });
   }
   const manifest = path.join(directory, "manifest.json");

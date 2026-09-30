@@ -194,6 +194,7 @@ const confirm: TrustPrompt = async (host, fingerprint) => {
 };
 const bootstrap = (caller = window!): Bootstrap => ({
   document: store.read(),
+  appVersion: app.getVersion(),
   profiles: store.profiles(),
   platform: process.platform,
   home: os.homedir(),
@@ -436,6 +437,13 @@ async function call<K extends Call>(
 ): Promise<unknown> {
   // Every channel is validated before dispatch; operation-specific types are narrowed here.
   const i = input as any;
+  // Layout/output callbacks may already be queued when a pane is removed or moved.
+  // Drop stale housekeeping without allowing the previous window to affect its new owner.
+  if (
+    (name === "session.resize" || name === "session.ack") &&
+    ownerOf(i.id) !== caller.id
+  )
+    return;
   if (
     [
       "session.close",

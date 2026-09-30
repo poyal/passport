@@ -11,7 +11,13 @@ import {
 } from "lucide-react";
 import { useApp } from "./context";
 import { api, uuid } from "./api";
-import { Modal, IconButton, NumberField, Empty } from "./components";
+import {
+  Modal,
+  IconButton,
+  NumberField,
+  Empty,
+  SettingsTabs,
+} from "./components";
 import { panes } from "../shared/layout";
 import {
   effectiveHost,
@@ -820,81 +826,85 @@ export function TunnelSettings() {
           description="새 규칙을 추가해 SSH 서버를 통한 포트 연결을 설정하세요."
         />
       )}
-      {app.document.tunnels.map((rule) => (
-        <section className="settings-card" key={rule.id}>
-          <div className="row">
-            <strong>{rule.name}</strong>
-            <span className="pill">
-              {
-                (
-                  {
-                    starting: "연결 중",
-                    running: "실행 중",
-                    stopped: "중지",
-                    error: "오류",
-                  } as const
-                )[states[rule.id]?.status || "stopped"]
-              }
-            </span>
-          </div>
-          <p>
-            {rule.kind === "local"
-              ? "로컬"
-              : rule.kind === "remote"
-                ? "원격"
-                : "SOCKS5"}{" "}
-            · {rule.bindAddress}:{rule.bindPort}
-            {rule.kind !== "dynamic"
-              ? ` → ${rule.targetAddress}:${rule.targetPort}`
-              : ""}
-          </p>
-          {states[rule.id]?.message && (
-            <p className="error-text">{states[rule.id].message}</p>
-          )}
-          <div className="row">
-            <button
-              onClick={() => void start(rule).catch(app.notify)}
-              disabled={["running", "starting"].includes(
-                states[rule.id]?.status,
-              )}
-            >
-              시작
-            </button>
-            <button
-              onClick={() =>
-                void api.call("tunnel.stop", { id: rule.id }).catch(app.notify)
-              }
-            >
-              중지
-            </button>
-            <button
-              disabled={["running", "starting"].includes(
-                states[rule.id]?.status,
-              )}
-              onClick={() => setDraft(rule)}
-            >
-              편집
-            </button>
-            <button
-              className="danger"
-              onClick={() =>
-                void app
-                  .confirm("터널 삭제", `${rule.name} 규칙을 삭제할까요?`)
-                  .then(
-                    (ok) =>
-                      ok &&
-                      app.update((d) => ({
-                        ...d,
-                        tunnels: d.tunnels.filter((t) => t.id !== rule.id),
-                      })),
-                  )
-              }
-            >
-              삭제
-            </button>
-          </div>
-        </section>
-      ))}
+      <div className="settings-stack">
+        {app.document.tunnels.map((rule) => (
+          <section className="settings-card" key={rule.id}>
+            <div className="row">
+              <strong>{rule.name}</strong>
+              <span className="pill">
+                {
+                  (
+                    {
+                      starting: "연결 중",
+                      running: "실행 중",
+                      stopped: "중지",
+                      error: "오류",
+                    } as const
+                  )[states[rule.id]?.status || "stopped"]
+                }
+              </span>
+            </div>
+            <p>
+              {rule.kind === "local"
+                ? "로컬"
+                : rule.kind === "remote"
+                  ? "원격"
+                  : "SOCKS5"}{" "}
+              · {rule.bindAddress}:{rule.bindPort}
+              {rule.kind !== "dynamic"
+                ? ` → ${rule.targetAddress}:${rule.targetPort}`
+                : ""}
+            </p>
+            {states[rule.id]?.message && (
+              <p className="error-text">{states[rule.id].message}</p>
+            )}
+            <div className="row">
+              <button
+                onClick={() => void start(rule).catch(app.notify)}
+                disabled={["running", "starting"].includes(
+                  states[rule.id]?.status,
+                )}
+              >
+                시작
+              </button>
+              <button
+                onClick={() =>
+                  void api
+                    .call("tunnel.stop", { id: rule.id })
+                    .catch(app.notify)
+                }
+              >
+                중지
+              </button>
+              <button
+                disabled={["running", "starting"].includes(
+                  states[rule.id]?.status,
+                )}
+                onClick={() => setDraft(rule)}
+              >
+                편집
+              </button>
+              <button
+                className="danger"
+                onClick={() =>
+                  void app
+                    .confirm("터널 삭제", `${rule.name} 규칙을 삭제할까요?`)
+                    .then(
+                      (ok) =>
+                        ok &&
+                        app.update((d) => ({
+                          ...d,
+                          tunnels: d.tunnels.filter((t) => t.id !== rule.id),
+                        })),
+                    )
+                }
+              >
+                삭제
+              </button>
+            </div>
+          </section>
+        ))}
+      </div>
       {draft && (
         <Modal title="포트 포워딩 규칙" onClose={() => setDraft(null)}>
           <label>
@@ -1009,6 +1019,7 @@ export function LogSettings() {
     [items, setItems] = useState<LogFile[]>([]),
     [selected, setSelected] = useState(""),
     [query, setQuery] = useState(""),
+    [tab, setTab] = useState<"browse" | "retention">("browse"),
     [content, setContent] = useState({
       text: "",
       offset: 0,
@@ -1035,176 +1046,191 @@ export function LogSettings() {
         </div>
         <button onClick={refresh}>새로고침</button>
       </div>
-      <section className="settings-card">
-        <label className="check-label">
-          <input
-            type="checkbox"
-            checked={app.document.settings.autoLog}
-            onChange={(e) =>
-              void app.update((d) => ({
-                ...d,
-                settings: { ...d.settings, autoLog: e.target.checked },
-              }))
-            }
-          />
-          접속한 터미널 자동 기록
-        </label>
-        <p className="hint">
-          인증에 입력한 비밀번호와 개인 키는 기록하지 않습니다. 터미널에 출력된
-          내용은 저장되며 기간 또는 용량을 초과한 오래된 로그부터 삭제합니다.
-        </p>
+      <SettingsTabs
+        label="세션 로그 설정"
+        value={tab}
+        onChange={setTab}
+        items={[
+          { id: "browse", label: "로그 조회" },
+          { id: "retention", label: "기록·보관 설정" },
+        ]}
+      >
+        {tab === "retention" && (
+          <section className="settings-card">
+            <label className="check-label">
+              <input
+                type="checkbox"
+                checked={app.document.settings.autoLog}
+                onChange={(e) =>
+                  void app.update((d) => ({
+                    ...d,
+                    settings: { ...d.settings, autoLog: e.target.checked },
+                  }))
+                }
+              />
+              접속한 터미널 자동 기록
+            </label>
+            <p className="hint">
+              인증에 입력한 비밀번호와 개인 키는 기록하지 않습니다. 터미널에
+              출력된 내용은 저장되며 기간 또는 용량을 초과한 오래된 로그부터
+              삭제합니다.
+            </p>
 
-        <div className="form-row">
-          <label>
-            보관 일수
-            <NumberField
-              min={1}
-              max={30}
-              value={app.document.settings.logRetentionDays}
-              onChange={(value) =>
-                void app.update((d) => ({
-                  ...d,
-                  settings: {
-                    ...d.settings,
-                    logRetentionDays: value,
-                  },
-                }))
-              }
-            />
-          </label>
-          <label>
-            전체 용량 · MiB
-            <NumberField
-              min={10}
-              max={1024}
-              value={app.document.settings.logLimitMiB}
-              onChange={(value) =>
-                void app.update((d) => ({
-                  ...d,
-                  settings: {
-                    ...d.settings,
-                    logLimitMiB: value,
-                  },
-                }))
-              }
-            />
-          </label>
-        </div>
-      </section>
-      <div className={`log-layout ${items.length ? "" : "is-empty"}`}>
-        <div className="log-list">
-          {items.map((log) => (
-            <button
-              key={log.id}
-              className={log.id === selected ? "active" : ""}
-              onClick={() => {
-                setSelected(log.id);
-                read(log.id);
-              }}
-            >
-              <strong>{log.name}</strong>
-              <small>
-                {new Date(log.started).toLocaleString("ko-KR")} ·{" "}
-                {Math.round(log.bytes / 1024)} KiB{" "}
-                {log.recording ? "· 기록 중" : ""}
-              </small>
-            </button>
-          ))}
-        </div>
-        <section className="settings-card log-reader">
-          {current ? (
-            <>
-              <div className="row">
-                <input
-                  aria-label="로그 검색"
-                  placeholder="로그에서 찾기"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
+            <div className="form-row">
+              <label>
+                보관 일수
+                <NumberField
+                  min={1}
+                  max={30}
+                  value={app.document.settings.logRetentionDays}
+                  onChange={(value) =>
+                    void app.update((d) => ({
+                      ...d,
+                      settings: {
+                        ...d.settings,
+                        logRetentionDays: value,
+                      },
+                    }))
+                  }
                 />
-                <button onClick={() => read(selected)}>검색</button>
-                <button onClick={() => read(selected, content.next)}>
-                  다음
-                </button>
-              </div>
-              <pre>{content.text || "표시할 내용이 없습니다."}</pre>
-              <div className="row">
-                <button
-                  onClick={() =>
-                    void app
-                      .ask("북마크 이름", "현재 로그 위치를 저장합니다.")
-                      .then(
-                        (label) =>
-                          label &&
-                          api
-                            .call("logs.bookmark", {
-                              id: selected,
-                              offset: content.offset,
-                              label,
-                            })
-                            .then(refresh),
-                      )
-                      .catch(app.notify)
+              </label>
+              <label>
+                전체 용량 · MiB
+                <NumberField
+                  min={10}
+                  max={1024}
+                  value={app.document.settings.logLimitMiB}
+                  onChange={(value) =>
+                    void app.update((d) => ({
+                      ...d,
+                      settings: {
+                        ...d.settings,
+                        logLimitMiB: value,
+                      },
+                    }))
                   }
-                >
-                  북마크
-                </button>
+                />
+              </label>
+            </div>
+          </section>
+        )}
+        {tab === "browse" && (
+          <div className={`log-layout ${items.length ? "" : "is-empty"}`}>
+            <div className="log-list">
+              {items.map((log) => (
                 <button
-                  onClick={() =>
-                    void api
-                      .call("logs.export", { id: selected })
-                      .catch(app.notify)
-                  }
-                >
-                  내보내기
-                </button>
-                <button
-                  className="danger"
-                  onClick={() =>
-                    void app
-                      .confirm(
-                        "로그 삭제",
-                        `${current.name} 기록을 삭제할까요?`,
-                      )
-                      .then((ok) => {
-                        if (ok)
-                          return api
-                            .call("logs.delete", { id: selected })
-                            .then(() => {
-                              setSelected("");
-                              refresh();
-                            });
-                      })
-                      .catch(app.notify)
-                  }
-                >
-                  삭제
-                </button>
-              </div>
-              {current.bookmarks.map((b, i) => (
-                <button
-                  key={i}
-                  className="text-button"
+                  key={log.id}
+                  className={log.id === selected ? "active" : ""}
                   onClick={() => {
-                    setQuery("");
-                    void api
-                      .call("logs.read", { id: selected, offset: b.offset })
-                      .then(setContent)
-                      .catch(app.notify);
+                    setSelected(log.id);
+                    read(log.id);
                   }}
                 >
-                  {b.label}
+                  <strong>{log.name}</strong>
+                  <small>
+                    {new Date(log.started).toLocaleString("ko-KR")} ·{" "}
+                    {Math.round(log.bytes / 1024)} KiB{" "}
+                    {log.recording ? "· 기록 중" : ""}
+                  </small>
                 </button>
               ))}
-            </>
-          ) : (
-            <p className="hint">
-              {items.length
-                ? "왼쪽에서 기록을 선택하세요."
-                : "아직 기록이 없습니다. 터미널에 접속하면 자동으로 기록을 시작합니다."}
-            </p>
-          )}
-        </section>
-      </div>
+            </div>
+            <section className="settings-card log-reader">
+              {current ? (
+                <>
+                  <div className="row">
+                    <input
+                      aria-label="로그 검색"
+                      placeholder="로그에서 찾기"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                    />
+                    <button onClick={() => read(selected)}>검색</button>
+                    <button onClick={() => read(selected, content.next)}>
+                      다음
+                    </button>
+                  </div>
+                  <pre>{content.text || "표시할 내용이 없습니다."}</pre>
+                  <div className="row">
+                    <button
+                      onClick={() =>
+                        void app
+                          .ask("북마크 이름", "현재 로그 위치를 저장합니다.")
+                          .then(
+                            (label) =>
+                              label &&
+                              api
+                                .call("logs.bookmark", {
+                                  id: selected,
+                                  offset: content.offset,
+                                  label,
+                                })
+                                .then(refresh),
+                          )
+                          .catch(app.notify)
+                      }
+                    >
+                      북마크
+                    </button>
+                    <button
+                      onClick={() =>
+                        void api
+                          .call("logs.export", { id: selected })
+                          .catch(app.notify)
+                      }
+                    >
+                      내보내기
+                    </button>
+                    <button
+                      className="danger"
+                      onClick={() =>
+                        void app
+                          .confirm(
+                            "로그 삭제",
+                            `${current.name} 기록을 삭제할까요?`,
+                          )
+                          .then((ok) => {
+                            if (ok)
+                              return api
+                                .call("logs.delete", { id: selected })
+                                .then(() => {
+                                  setSelected("");
+                                  refresh();
+                                });
+                          })
+                          .catch(app.notify)
+                      }
+                    >
+                      삭제
+                    </button>
+                  </div>
+                  {current.bookmarks.map((b, i) => (
+                    <button
+                      key={i}
+                      className="text-button"
+                      onClick={() => {
+                        setQuery("");
+                        void api
+                          .call("logs.read", { id: selected, offset: b.offset })
+                          .then(setContent)
+                          .catch(app.notify);
+                      }}
+                    >
+                      {b.label}
+                    </button>
+                  ))}
+                </>
+              ) : (
+                <p className="hint">
+                  {items.length
+                    ? "왼쪽에서 기록을 선택하세요."
+                    : "아직 기록이 없습니다. 터미널에 접속하면 자동으로 기록을 시작합니다."}
+                </p>
+              )}
+            </section>
+          </div>
+        )}
+      </SettingsTabs>
     </>
   );
 }
@@ -1246,65 +1272,69 @@ export function CustomThemes() {
           JSON 가져오기
         </button>
       </div>
-      {app.document.settings.customThemes.map((t) => (
-        <div className="profile-row" key={t.id}>
-          <span>{t.name}</span>
-          <button onClick={() => setDraft(t)}>색상 편집</button>
-          <button
-            onClick={() =>
-              void api.call("theme.export", { id: t.id }).catch(app.notify)
-            }
-          >
-            내보내기
-          </button>
-          <button
-            className="danger"
-            onClick={() =>
-              void app.confirm("테마 삭제", `${t.name}을 삭제할까요?`).then(
-                (ok) =>
-                  ok &&
-                  app.update((d) => ({
-                    ...d,
-                    settings: {
-                      ...d.settings,
-                      customThemes: d.settings.customThemes.filter(
-                        (x) => x.id !== t.id,
+      <div className="settings-stack custom-theme-list">
+        {app.document.settings.customThemes.map((t) => (
+          <div className="profile-row" key={t.id}>
+            <div>
+              <strong>{t.name}</strong>
+            </div>
+            <button onClick={() => setDraft(t)}>색상 편집</button>
+            <button
+              onClick={() =>
+                void api.call("theme.export", { id: t.id }).catch(app.notify)
+              }
+            >
+              내보내기
+            </button>
+            <button
+              className="danger"
+              onClick={() =>
+                void app.confirm("테마 삭제", `${t.name}을 삭제할까요?`).then(
+                  (ok) =>
+                    ok &&
+                    app.update((d) => ({
+                      ...d,
+                      settings: {
+                        ...d.settings,
+                        customThemes: d.settings.customThemes.filter(
+                          (x) => x.id !== t.id,
+                        ),
+                        appearance:
+                          d.settings.appearance.theme === t.id
+                            ? { ...d.settings.appearance, theme: "mocha" }
+                            : d.settings.appearance,
+                      },
+                      hosts: d.hosts.map((h) =>
+                        h.appearance.theme === t.id
+                          ? {
+                              ...h,
+                              appearance: { ...h.appearance, theme: undefined },
+                            }
+                          : h,
                       ),
-                      appearance:
-                        d.settings.appearance.theme === t.id
-                          ? { ...d.settings.appearance, theme: "mocha" }
-                          : d.settings.appearance,
-                    },
-                    hosts: d.hosts.map((h) =>
-                      h.appearance.theme === t.id
-                        ? {
-                            ...h,
-                            appearance: { ...h.appearance, theme: undefined },
-                          }
-                        : h,
-                    ),
-                    groups: d.groups.map((g) =>
-                      g.defaults.appearance?.theme === t.id
-                        ? {
-                            ...g,
-                            defaults: {
-                              ...g.defaults,
-                              appearance: {
-                                ...g.defaults.appearance,
-                                theme: undefined,
+                      groups: d.groups.map((g) =>
+                        g.defaults.appearance?.theme === t.id
+                          ? {
+                              ...g,
+                              defaults: {
+                                ...g.defaults,
+                                appearance: {
+                                  ...g.defaults.appearance,
+                                  theme: undefined,
+                                },
                               },
-                            },
-                          }
-                        : g,
-                    ),
-                  })),
-              )
-            }
-          >
-            삭제
-          </button>
-        </div>
-      ))}
+                            }
+                          : g,
+                      ),
+                    })),
+                )
+              }
+            >
+              삭제
+            </button>
+          </div>
+        ))}
+      </div>
       {draft && (
         <Modal title="사용자 테마 색상" onClose={() => setDraft(null)}>
           <label>
@@ -1399,22 +1429,24 @@ export function ShortcutSettings() {
         Mod는 Mac의 ⌘, Windows의 Ctrl입니다. Platform은 Mac의 ⌘, Windows의
         Ctrl+Shift입니다. 예: Mod+Shift+T
       </p>
-      {Object.entries({
-        copy: "복사",
-        paste: "붙여넣기",
-        search: "출력 검색",
-        nextPane: "다음 패널",
-        previousPane: "이전 패널",
-        newTab: "새 탭",
-      }).map(([id, label]) => (
-        <label key={id}>
-          {label}
-          <input
-            value={draft[id as keyof typeof draft]}
-            onChange={(e) => setDraft({ ...draft, [id]: e.target.value })}
-          />
-        </label>
-      ))}
+      <div className="settings-form-grid">
+        {Object.entries({
+          copy: "복사",
+          paste: "붙여넣기",
+          search: "출력 검색",
+          nextPane: "다음 패널",
+          previousPane: "이전 패널",
+          newTab: "새 탭",
+        }).map(([id, label]) => (
+          <label key={id}>
+            {label}
+            <input
+              value={draft[id as keyof typeof draft]}
+              onChange={(e) => setDraft({ ...draft, [id]: e.target.value })}
+            />
+          </label>
+        ))}
+      </div>
       {error && <p className="error-text">{error}</p>}
       <button
         className="primary"

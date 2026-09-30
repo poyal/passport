@@ -1,0 +1,14 @@
+{
+  "date": "2026-09-30T00:35:38.300196+00:00",
+  "packagedSmoke": "passed",
+  "localPTY": "passed",
+  "shutdown": "passed",
+  "exitCode": 0,
+  "appVersion": "0.3.1",
+  "arch": "arm64",
+  "platform": "darwin",
+  "hosts": 0,
+  "fonts": 247,
+  "version": 1,
+  "nodeAvailable": false
+}

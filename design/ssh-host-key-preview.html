@@ -1,0 +1,949 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <title>Passport · SSH 호스트 키 변경 화면 시안</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #171b20;
+        --panel: #20262d;
+        --surface: #242b33;
+        --border: #35404b;
+        --text: #e1e7ee;
+        --muted: #98a6b6;
+        --accent: #80ddc5;
+        --red: #ff989e;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #101419;
+        color: var(--text);
+        font:
+          14px/1.6 -apple-system,
+          BlinkMacSystemFont,
+          "Apple SD Gothic Neo",
+          sans-serif;
+      }
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+      button,
+      select {
+        cursor: pointer;
+      }
+      button {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface);
+        color: var(--text);
+        padding: 9px 16px;
+      }
+      button:hover:not(:disabled) {
+        border-color: var(--accent);
+      }
+      button:disabled {
+        cursor: default;
+        opacity: 0.42;
+      }
+      button.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #102e26;
+        font-weight: 700;
+      }
+      button.small {
+        padding: 4px 9px;
+        font-size: 12px;
+      }
+      :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 4px;
+      }
+      input[type="radio"],
+      input[type="checkbox"] {
+        accent-color: var(--accent);
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      .preview-tools {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        max-width: 1400px;
+        margin: auto;
+        padding: 14px 28px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .preview-tools strong {
+        color: var(--text);
+        font-weight: 600;
+      }
+      .preview-tools select {
+        color: var(--text);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 5px 10px;
+        margin-left: 8px;
+      }
+      .window {
+        max-width: 1400px;
+        margin: 0 auto 24px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        overflow: hidden;
+      }
+      .titlebar {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        height: 56px;
+        padding: 0 22px;
+        border-bottom: 1px solid var(--border);
+        background: #1e242b;
+      }
+      .traffic {
+        display: flex;
+        gap: 7px;
+      }
+      .traffic i {
+        height: 11px;
+        width: 11px;
+        border-radius: 50%;
+        background: #46515d;
+      }
+      .brand {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        font-weight: 650;
+        letter-spacing: -0.2px;
+      }
+      .brand img {
+        width: 25px;
+        height: 25px;
+      }
+      .tab {
+        margin-left: 18px;
+        align-self: stretch;
+        display: flex;
+        align-items: center;
+        gap: 22px;
+        padding: 0 18px;
+        background: var(--bg);
+        border-top: 2px solid var(--accent);
+        font-size: 13px;
+      }
+      .tab span {
+        color: var(--muted);
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 205px minmax(0, 1fr);
+      }
+      .sidebar {
+        border-right: 1px solid var(--border);
+        padding: 24px 14px;
+        background: #1b2027;
+      }
+      .sidebar .label {
+        color: var(--muted);
+        font-size: 11px;
+        letter-spacing: 0.8px;
+        padding: 0 10px;
+        margin-bottom: 15px;
+      }
+      .nav-item {
+        padding: 9px 10px;
+        margin-bottom: 3px;
+        font-size: 13px;
+        color: var(--muted);
+        border-radius: 7px;
+      }
+      .nav-item.selected {
+        color: var(--accent);
+        background: #263a37;
+      }
+      .nav-item.indent {
+        padding-left: 23px;
+      }
+      main {
+        width: 100%;
+        max-width: 960px;
+        margin: auto;
+        padding: 32px 44px 34px;
+      }
+      .host-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 25px;
+      }
+      .host-icon {
+        width: 43px;
+        height: 43px;
+        display: grid;
+        place-items: center;
+        color: var(--accent);
+        border: 1px solid #42685e;
+        background: #263a37;
+        border-radius: 11px;
+        font:
+          20px Menlo,
+          monospace;
+      }
+      .host-header strong {
+        display: block;
+        font-size: 16px;
+      }
+      .host-header small {
+        display: block;
+        color: var(--muted);
+        font-family: Menlo, monospace;
+        font-size: 11px;
+      }
+      .host-header button {
+        margin-left: auto;
+      }
+      .steps {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        margin: 0 0 27px;
+        padding: 0;
+        list-style: none;
+      }
+      .steps li {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #8792a1;
+        font-size: 12px;
+      }
+      .steps li:not(:last-child)::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+        margin-right: 12px;
+      }
+      .steps .dot {
+        display: grid;
+        place-items: center;
+        width: 24px;
+        height: 24px;
+        flex-shrink: 0;
+        border: 1px solid var(--border);
+        border-radius: 50%;
+        font-size: 11px;
+      }
+      .steps .done {
+        color: var(--accent);
+      }
+      .steps .done .dot {
+        background: #263a37;
+        border-color: #42685e;
+      }
+      .steps .current {
+        color: var(--red);
+      }
+      .steps .current .dot {
+        background: #392b32;
+        border-color: #755056;
+      }
+      .notice {
+        display: flex;
+        gap: 13px;
+        margin-bottom: 23px;
+      }
+      .notice-icon {
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        margin-top: 3px;
+        flex-shrink: 0;
+        border: 1px solid #755056;
+        border-radius: 50%;
+        color: var(--red);
+      }
+      h1 {
+        font-size: 23px;
+        line-height: 1.35;
+        letter-spacing: -0.6px;
+        margin: 0 0 8px;
+        font-weight: 650;
+      }
+      .notice p {
+        color: var(--muted);
+        margin: 0;
+        font-size: 13px;
+      }
+      .keys {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 21px;
+      }
+      .key-card {
+        padding: 14px 16px;
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        background: #1c2229;
+        min-width: 0;
+      }
+      .key-card.new {
+        border-color: #755056;
+        background: #282329;
+      }
+      .key-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+      .key-heading span {
+        font-size: 11px;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        padding: 0 6px;
+        color: var(--muted);
+      }
+      .key-card code {
+        display: block;
+        font:
+          11px/1.9 Menlo,
+          monospace;
+        overflow-wrap: anywhere;
+        color: #cdd8e5;
+        user-select: all;
+      }
+      .key-footer {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 10px;
+      }
+      fieldset {
+        padding: 0;
+        margin: 0;
+        border: 0;
+        min-width: 0;
+      }
+      legend {
+        padding: 0;
+        margin-bottom: 10px;
+        font-weight: 600;
+        font-size: 13px;
+      }
+      .choices {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .choice {
+        display: flex;
+        gap: 10px;
+        padding: 15px;
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        background: var(--panel);
+        cursor: pointer;
+      }
+      .choice:hover {
+        border-color: #5c7d74;
+      }
+      .choice:has(input:checked) {
+        border-color: var(--accent);
+        background: #243530;
+      }
+      .choice input {
+        margin: 3px 0 0;
+      }
+      .choice strong {
+        display: block;
+        font-size: 14px;
+        margin-bottom: 4px;
+      }
+      .choice small {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.7;
+        white-space: pre-line;
+      }
+      .new-asset {
+        padding: 16px;
+        border: 1px solid #42685e;
+        border-radius: 9px;
+        margin-top: 12px;
+        background: #1e2b29;
+      }
+      .new-asset label {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 6px;
+      }
+      .new-asset input {
+        width: 100%;
+        color: var(--text);
+        border: 1px solid #42685e;
+        border-radius: 6px;
+        background: var(--bg);
+        padding: 8px 11px;
+      }
+      .new-asset p {
+        color: var(--muted);
+        font-size: 12px;
+        margin: 8px 0 0;
+      }
+      .verification {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        margin: 21px 0 4px;
+        font-size: 13px;
+        cursor: pointer;
+      }
+      .verification input {
+        margin: 4px 0 0;
+      }
+      .help {
+        color: var(--muted);
+        font-size: 12px;
+        margin: 0 0 18px 26px;
+      }
+      .help a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      .actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        justify-content: flex-end;
+        padding-top: 16px;
+        border-top: 1px solid var(--border);
+      }
+      .actions small {
+        color: var(--muted);
+        font-size: 11px;
+        margin-right: auto;
+      }
+      details {
+        margin-top: 18px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      summary {
+        cursor: pointer;
+        color: #c4ced9;
+      }
+      .logs pre {
+        white-space: pre-wrap;
+        font:
+          11px/1.8 Menlo,
+          monospace;
+        padding: 12px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+      }
+      .result {
+        margin-top: 18px;
+        padding: 16px;
+        border: 1px solid #42685e;
+        border-radius: 9px;
+        background: #22332d;
+      }
+      .result strong {
+        color: var(--accent);
+      }
+      .result p {
+        color: var(--text);
+        font-size: 13px;
+        margin: 6px 0 13px;
+      }
+      .statusbar {
+        display: flex;
+        justify-content: space-between;
+        padding: 7px 18px;
+        border-top: 1px solid var(--border);
+        color: var(--muted);
+        background: #1c2229;
+        font-size: 10px;
+      }
+      .preview-note {
+        color: var(--muted);
+        font-size: 12px;
+        max-width: 1400px;
+        margin: -10px auto 20px;
+        padding: 0 28px;
+      }
+      .toast {
+        min-height: 18px;
+      }
+      @media (max-width: 960px) {
+        .sidebar {
+          display: none;
+        }
+        .layout {
+          grid-template-columns: 1fr;
+        }
+        main {
+          padding: 26px;
+        }
+        .window {
+          border-radius: 0;
+          border-left: 0;
+          border-right: 0;
+        }
+      }
+      @media (max-width: 580px) {
+        .preview-tools {
+          align-items: flex-start;
+          flex-direction: column;
+          gap: 8px;
+          padding: 12px 18px;
+        }
+        main {
+          padding: 22px 18px;
+        }
+        .titlebar {
+          padding: 0 15px;
+          gap: 12px;
+        }
+        .tab {
+          padding: 0 10px;
+          margin-left: 0;
+        }
+        .keys,
+        .choices {
+          grid-template-columns: 1fr;
+        }
+        .steps li {
+          gap: 4px;
+          font-size: 10px;
+        }
+        .steps li:not(:last-child)::after {
+          margin-right: 5px;
+        }
+        h1 {
+          font-size: 20px;
+        }
+        .host-header button {
+          font-size: 11px;
+          padding: 7px;
+        }
+        .actions {
+          flex-wrap: wrap;
+        }
+        .actions small {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="preview-tools">
+      <div>
+        <strong>Passport / SSH 연결</strong>
+        <span>· 연결 화면 인터랙션 시안</span>
+      </div>
+      <label
+        >상황
+        <select id="scenario">
+          <option value="changed">기존 키 변경</option>
+          <option value="first">첫 연결</option>
+          <option value="algorithm">다른 종류의 키</option>
+        </select></label
+      >
+    </div>
+    <div class="window">
+      <header class="titlebar">
+        <div class="traffic" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div class="brand">
+          <img src="icons/04-passport-terminal-v2.png" alt="" />Passport
+        </div>
+        <div class="tab">AG · Linux 운영 <span>×</span></div>
+      </header>
+      <div class="layout">
+        <aside class="sidebar" aria-label="시안 자산 목록">
+          <div class="label">워크스페이스</div>
+          <div class="nav-item">▦ &nbsp; 전체 자산</div>
+          <div class="nav-item">▾ &nbsp; AG 운영</div>
+          <div class="nav-item selected indent">› &nbsp; Linux 운영</div>
+          <div class="nav-item indent">&nbsp; &nbsp; 파일 서버</div>
+          <div class="nav-item" style="margin-top: 28px">
+            ↗ &nbsp; 파일 전송
+          </div>
+          <div class="nav-item">⇄ &nbsp; 터널</div>
+          <div class="nav-item">◷ &nbsp; 세션 로그</div>
+        </aside>
+        <main>
+          <div class="host-header">
+            <div class="host-icon" aria-hidden="true">&gt;_</div>
+            <div>
+              <strong id="host-title">[AG] Linux 운영</strong
+              ><small>SSH · 192.0.2.40:22</small>
+            </div>
+            <button id="show-logs" type="button">연결 로그</button>
+          </div>
+          <ol class="steps" aria-label="연결 단계">
+            <li class="done"><span class="dot">✓</span>서버 연결</li>
+            <li class="current" aria-current="step">
+              <span class="dot">!</span>호스트 키
+            </li>
+            <li><span class="dot">3</span>사용자 인증</li>
+            <li><span class="dot">4</span>터미널</li>
+          </ol>
+          <section class="notice" aria-labelledby="heading">
+            <div class="notice-icon" aria-hidden="true">!</div>
+            <div>
+              <h1 id="heading">저장된 서버 지문과 다릅니다</h1>
+              <p id="explanation">
+                OS 재설치나 서버 교체로 키가 달라질 수 있습니다.<br />새 지문을
+                확인한 뒤 이 주소의 자산을 어떻게 관리할지 선택하세요.
+              </p>
+            </div>
+          </section>
+          <div class="keys">
+            <section
+              class="key-card"
+              id="previous-key"
+              aria-label="이전에 저장한 키"
+            >
+              <div class="key-heading">
+                <strong>이전에 저장한 키</strong
+                ><span id="previous-algorithm">ED25519</span>
+              </div>
+              <code id="old-fingerprint"
+                >SHA256:nH73YXn1GhHnHlGIyjrkpENOSAMMTnbM8b2sY90yoG4</code
+              >
+              <div class="key-footer">
+                <span>마지막 확인 · 2026.09.29 18:42</span
+                ><button
+                  class="small"
+                  type="button"
+                  data-copy="old-fingerprint"
+                >
+                  복사
+                </button>
+              </div>
+            </section>
+            <section class="key-card new" aria-label="지금 받은 키">
+              <div class="key-heading">
+                <strong>지금 받은 키</strong
+                ><span id="new-algorithm">ED25519</span>
+              </div>
+              <code id="new-fingerprint"
+                >SHA256:UAV4VNcRtfskWJVU6TKTCYOvjHX3kEQf57GphxzgrgQ</code
+              >
+              <div class="key-footer">
+                <span>이번 연결에서 받은 지문</span
+                ><button
+                  class="small"
+                  type="button"
+                  data-copy="new-fingerprint"
+                >
+                  복사
+                </button>
+              </div>
+            </section>
+          </div>
+          <fieldset>
+            <legend id="choice-heading">
+              이 주소의 서버가 어떤 자산인지 선택하세요
+            </legend>
+            <div class="choices">
+              <label class="choice" id="replace-choice">
+                <input type="radio" name="resolution" value="replace" />
+                <span
+                  ><strong id="replace-label">기존 자산의 키 교체</strong
+                  ><small id="replace-description"
+                    >같은 서버를 재설치했거나 키를 재발급한 경우.<br />자산
+                    이름·설정·이력을 유지합니다.</small
+                  ></span
+                >
+              </label>
+              <label class="choice" id="new-choice">
+                <input type="radio" name="resolution" value="new" />
+                <span
+                  ><strong>신규 자산으로 등록</strong
+                  ><small
+                    >이 주소를 다른 서버가 사용하는 경우.<br />새 자산으로
+                    기록하고 이전 이력은 보존합니다.</small
+                  ></span
+                >
+              </label>
+            </div>
+          </fieldset>
+          <section class="new-asset" id="new-fields" hidden>
+            <label for="asset-name">새 자산 이름</label>
+            <input
+              id="asset-name"
+              type="text"
+              maxlength="120"
+              placeholder="예: [AG] Linux 신규 서버"
+              autocomplete="off"
+            />
+            <p>
+              이전 자산은 이력으로 보관합니다. 새 자산의 인증 정보를 다음
+              단계에서 선택하며, 자동 실행 명령과 터널은 이어받지 않습니다.
+            </p>
+          </section>
+          <label class="verification"
+            ><input id="verified" type="checkbox" /><span
+              >서버 콘솔 또는 관리자에게 새 지문을 확인했습니다.</span
+            ></label
+          >
+          <p class="help">
+            비교할 지문은 위의 ‘지금 받은 키’입니다.
+            <a href="#fingerprint-help" id="help-link">확인 방법</a>
+          </p>
+          <div class="actions">
+            <small>사용자 인증을 시작하기 전입니다.</small>
+            <button id="cancel" type="button">연결 취소</button>
+            <button id="continue" class="primary" type="button" disabled>
+              선택 후 계속
+            </button>
+          </div>
+          <section class="result" id="result" aria-live="polite" hidden>
+            <strong id="result-title"></strong>
+            <p id="result-text"></p>
+            <button type="button" id="restart">시안 다시 보기</button>
+          </section>
+          <details id="fingerprint-help">
+            <summary>서버 지문을 확인하는 방법</summary>
+            <p>
+              서버 콘솔에서 호스트 공개키 지문을 확인하거나, 관리자에게 다른
+              경로로 전달받은 지문과 비교합니다. 서버의 키 종류도 함께
+              확인하세요.
+            </p>
+            <p>
+              지문 변경만으로 서버가 교체됐다고 단정할 수 없습니다. 예상하지
+              못한 변경이라면 연결을 취소하고 확인하세요.
+            </p>
+          </details>
+          <details class="logs" id="logs">
+            <summary>연결 단계 자세히 보기</summary>
+            <pre id="log-text"></pre>
+          </details>
+          <div id="copy-status" class="toast" role="status"></div>
+        </main>
+      </div>
+      <footer class="statusbar">
+        <span>SSH 연결 · 호스트 키 확인 대기</span
+        ><span>Passport · 디자인 시안</span>
+      </footer>
+    </div>
+    <p class="preview-note">
+      시안 전용 · 예시 자산과 지문입니다. 선택 결과만 보여주며, 서버 연결이나
+      자산·키 저장은 수행하지 않습니다.
+    </p>
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const radios = [...document.querySelectorAll('input[name="resolution"]')];
+      const selected = () => radios.find((input) => input.checked)?.value;
+      const text = (id, value) => {
+        $(id).textContent = value;
+      };
+      let completed = false;
+      function sync() {
+        const choice = selected();
+        const scenario = $("scenario").value;
+        $("new-fields").hidden = choice !== "new" || completed;
+        $("continue").disabled =
+          completed ||
+          !choice ||
+          !$("verified").checked ||
+          (choice === "new" && !$("asset-name").value.trim());
+        text(
+          "continue",
+          choice === "new"
+            ? "신규 등록 · 인증 선택"
+            : choice === "replace"
+              ? scenario === "algorithm"
+                ? "키 추가 · 연결"
+                : scenario === "first"
+                  ? "등록 · 연결"
+                  : "키 교체 · 연결"
+              : "선택 후 계속",
+        );
+      }
+      function reset() {
+        completed = false;
+        const scenario = $("scenario").value;
+        radios.forEach((input) => {
+          input.checked = false;
+          input.disabled = false;
+        });
+        $("verified").checked = false;
+        $("verified").disabled = false;
+        $("asset-name").value = "";
+        $("result").hidden = true;
+        $("cancel").disabled = false;
+        $("previous-key").hidden = scenario === "first";
+        $("new-choice").hidden = scenario !== "changed";
+        $("logs").open = false;
+        $("fingerprint-help").open = false;
+        text("copy-status", "");
+        text("host-title", "[AG] Linux 운영");
+        text(
+          "previous-algorithm",
+          scenario === "algorithm" ? "RSA" : "ED25519",
+        );
+        text("new-algorithm", scenario === "algorithm" ? "ECDSA" : "ED25519");
+        text(
+          "heading",
+          scenario === "first"
+            ? "이 서버에 처음 연결합니다"
+            : scenario === "algorithm"
+              ? "다른 종류의 호스트 키를 받았습니다"
+              : "저장된 서버 지문과 다릅니다",
+        );
+        text(
+          "explanation",
+          scenario === "first"
+            ? "이 주소에 저장된 호스트 키가 없습니다. 서버 지문을 확인하고 등록하세요."
+            : scenario === "algorithm"
+              ? "저장된 RSA 키 대신 ECDSA 키를 받았습니다. 같은 서버가 여러 종류의 키를 가질 수 있습니다. 새 키를 별도로 확인하세요."
+              : "OS 재설치나 서버 교체로 키가 달라질 수 있습니다. 새 지문을 확인한 뒤 이 주소의 자산을 어떻게 관리할지 선택하세요.",
+        );
+        text(
+          "choice-heading",
+          scenario === "changed"
+            ? "이 주소의 서버가 어떤 자산인지 선택하세요"
+            : "새 지문을 확인한 뒤 진행하세요",
+        );
+        text(
+          "replace-label",
+          scenario === "first"
+            ? "이 자산의 첫 키 등록"
+            : scenario === "algorithm"
+              ? "기존 자산에 키 추가"
+              : "기존 자산의 키 교체",
+        );
+        text(
+          "replace-description",
+          scenario === "first"
+            ? "확인한 지문을 이 자산에 저장합니다."
+            : scenario === "algorithm"
+              ? "확인한 ECDSA 키를 추가합니다. 이전 RSA 키와 자산 이력을 유지합니다."
+              : "같은 서버의 재설치 또는 키 재발급.\n자산 이름·설정·이력을 유지합니다.",
+        );
+        text(
+          "log-text",
+          `✓ TCP 연결 완료 · 192.0.2.40:22\n✓ SSH 키 교환 완료\n! ${scenario === "first" ? "첫 호스트 키 등록 대기" : scenario === "algorithm" ? "ECDSA 호스트 키 추가 확인 대기" : "ED25519 호스트 키 변경 확인 대기"}\n○ 사용자 인증 대기\n○ 터미널 대기`,
+        );
+        sync();
+      }
+      radios.forEach((input) =>
+        input.addEventListener("change", () => {
+          sync();
+          if (selected() === "new") $("asset-name").focus();
+        }),
+      );
+      $("verified").addEventListener("change", sync);
+      $("asset-name").addEventListener("input", sync);
+      $("scenario").addEventListener("change", reset);
+      $("restart").addEventListener("click", reset);
+      $("help-link").addEventListener("click", (event) => {
+        event.preventDefault();
+        $("fingerprint-help").open = true;
+        $("fingerprint-help").scrollIntoView({
+          block: "nearest",
+          behavior: "smooth",
+        });
+      });
+      $("show-logs").addEventListener("click", () => {
+        $("logs").open = !$("logs").open;
+        if ($("logs").open)
+          $("logs").scrollIntoView({ block: "nearest", behavior: "smooth" });
+      });
+      function finish(title, description) {
+        completed = true;
+        text("result-title", title);
+        text("result-text", description);
+        $("result").hidden = false;
+        $("cancel").disabled = true;
+        radios.forEach((input) => {
+          input.disabled = true;
+        });
+        $("verified").disabled = true;
+        sync();
+        $("result").scrollIntoView({ block: "nearest", behavior: "smooth" });
+        $("restart").focus({ preventScroll: true });
+      }
+      $("continue").addEventListener("click", () => {
+        if ($("continue").disabled) return;
+        const scenario = $("scenario").value;
+        if (selected() === "new")
+          finish(
+            "시안 결과: 신규 자산의 인증 선택으로 진행",
+            `‘${$("asset-name").value.trim()}’을 새 자산으로 등록하는 흐름입니다. 이전 자산과 로그는 이력으로 남고, 인증 프로필은 다음 화면에서 선택합니다.`,
+          );
+        else
+          finish(
+            "시안 결과: 사용자 인증 단계로 진행",
+            scenario === "algorithm"
+              ? "확인한 ECDSA 키를 추가하고 기존 RSA 키를 유지하는 흐름입니다. 자산 이름·설정·이력은 유지합니다."
+              : scenario === "first"
+                ? "확인한 첫 지문을 등록한 뒤 사용자 인증으로 진행하는 흐름입니다."
+                : "확인한 키로 교체하고 이전 키와 변경 시각을 이력에 남기는 흐름입니다. 자산 이름·설정·인증·세션 이력은 유지합니다.",
+          );
+      });
+      $("cancel").addEventListener("click", () =>
+        finish(
+          "시안 결과: 연결 취소",
+          "자산과 저장된 키를 변경하지 않고 연결을 종료하는 흐름입니다.",
+        ),
+      );
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !completed) $("cancel").click();
+      });
+      document.querySelectorAll("[data-copy]").forEach((button) =>
+        button.addEventListener("click", async () => {
+          try {
+            await navigator.clipboard.writeText(
+              $(button.dataset.copy).textContent,
+            );
+            text("copy-status", "지문을 복사했습니다.");
+          } catch {
+            const range = document.createRange();
+            range.selectNodeContents($(button.dataset.copy));
+            const selection = getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            text(
+              "copy-status",
+              "지문을 선택했습니다. ⌘C 또는 Ctrl+C로 복사하세요.",
+            );
+          }
+        }),
+      );
+      reset();
+    </script>
+  </body>
+</html>

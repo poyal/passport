@@ -22,6 +22,8 @@ npm start
 
 `postinstall`에서 Electron용 네이티브 의존성을 준비한다. better-sqlite3와 node-pty는 Electron ABI에 맞아야 하므로 일반 Node.js용으로 임의 재빌드한 바이너리와 섞지 않는다.
 
+`scripts/patch-ssh2.mjs`는 ssh2 1.17.0의 DH group1 구현에서 Electron/BoringSSL이 제공하지 않는 이름 기반 `modp2` 대신 RFC 2409 §6.2의 동일한 소수를 명시적으로 지정한다. 설치·빌드·단위 시험에서 멱등적으로 적용하며 의존성 버전이나 패치 대상이 달라지면 중단한다. Passport는 현대 기본 협상 목록 뒤에 SHA-1 group14·GEX·group1을 항상 추가한다. 호스트별 옵션은 없으며 이전 `legacySSH` 필드는 파싱 과정에서 제외한다. 전역 `crypto` API를 변경하지 않는다.
+
 ## 소스 구조
 
 | 경로            | 역할                                                          |
@@ -52,7 +54,7 @@ $env:PASSPORT_DATA_DIR = Join-Path $env:TEMP 'passport-development'
 npm run dev
 ```
 
-현재 SQLite 스키마는 2다. v0.1 데이터는 자동 승격하며, 승격된 DB를 v0.1에서 다시 쓰는 것을 차단한다. 기존 버전을 비교할 때는 프로필 복사본을 사용한다. 기기 간 데이터 이동은 앱의 내보내기·가져오기 흐름으로 검증한다.
+현재 SQLite 스키마는 3이다. v0.1·v0.3.0 데이터는 자동 승격하며, 승격된 DB를 구버전에서 다시 쓰는 것을 차단한다. 기존 버전을 비교할 때는 프로필 복사본을 사용한다. 기기 간 데이터 이동은 앱의 내보내기·가져오기 흐름으로 검증한다.
 
 ## 기본 검사
 
@@ -61,7 +63,7 @@ npm run check
 npm run test:e2e
 ```
 
-`check`는 타입과 단위·통합 검사를, `test:e2e`는 빌드 후 Electron GUI 검사를 실행한다. 네이티브 모듈이 포함된 시험은 `scripts/test.mjs`가 실행 환경을 맞추므로 직접 일반 Node.js에서 Vitest를 실행하지 않는다. GUI 시험에는 데스크톱 세션이 필요하다.
+`check`는 타입과 단위·통합 검사를, `test:e2e`는 빌드 후 Electron GUI 검사를 실행한다. 네이티브 모듈이 포함된 시험은 `scripts/test.mjs`가 실행 환경을 맞추므로 직접 일반 Node.js에서 Vitest를 실행하지 않는다. GUI 시험에는 데스크톱 세션이 필요하다. 시험은 localhost 서버 사용 가능 여부를 먼저 확인한다. 로컬 네트워크나 macOS 앱 등록을 제한하는 실행 샌드박스에서는 실행 권한을 허용한 뒤 검사해야 한다.
 
 종료 회귀 시험만 반복하려면:
 
@@ -91,14 +93,17 @@ npm run test:ssh:docker
 
 실행 중인 로컬 Docker 엔진, 이미지 저장 공간, 인터넷 연결이 필요하다. macOS ARM64를 기준으로 `linux/arm64`의 Alpine·Ubuntu·Debian·Rocky·CentOS 서버를 실행한다. SSH 포트는 `127.0.0.1`의 임시 포트에 바인딩하고 실행 시 생성한 비밀번호와 키를 사용한다. 해당 실행의 컨테이너만 정리하며 기존 컨테이너·볼륨을 제거하지 않는다.
 
-검증 범위와 배포판별 결과는 [최신 검증 기록](verification.md)을 따른다. 결과 파일은 `docs/benchmarks/docker-ssh.json`이다.
+검증 범위와 배포판별 결과는 [최신 검증 기록](verification.md)을 따른다. 결과 파일은 `docs/benchmarks/docker-ssh.json`이다. CentOS 7 시험 서버 두 개를 추가로 group1·SHA-1 GEX 전용으로 실행해 별도 설정 없이 구형 서버의 비밀번호·키·PTY·SFTP·터널 연결을 확인한다. 이 구성은 실제 CentOS 5/6 운영체제 시험과 구분한다.
 
 ## 대용량·지속 출력 시험
 
 ```sh
 PASSPORT_STRESS=1 node scripts/test.mjs tests/stress.test.ts
 PASSPORT_UI_STRESS=1 npx playwright test tests/e2e/stress.spec.ts
+npm run test:terminal:large
 ```
+
+`test:terminal:large`는 한 터미널에 16·64·256·1024MiB를 단계별로 보내고 별도로 64KiB 긴 행 8MiB를 처리한다. UTF-8 한글·ANSI 색상·IP/URL·로그 강조, 자동 기록(보관 한도 64MiB)을 켠 상태에서 끝 표식의 실제 화면 표시, 입력 왕복 P95, 프레임 지연, 전체 앱 작업 집합을 측정한다. 데이터는 64KiB 버퍼를 재사용하고 SSH backpressure를 따른다. 누적 출력량이며 xterm 스크롤백은 최근 10,000행이다. 1GiB 원문 전체를 메모리에 보관한다는 뜻이 아니다. 결과는 시험 출력 폴더의 `terminal-large-text.json`에 남긴다.
 
 파일 시험은 4GiB 파일과 작은 파일 10,000개를 만들어 복사하므로 충분한 임시 저장 공간이 필요하다. UI 시험은 500개 호스트·16개 터미널에 10분간 출력을 보낸다. 평소 검사에서 생략되는 선택 시험이므로 실행 여부를 결과에 구분해 적는다. 로컬 시험 수치를 WAN 전송 속도나 실제 키 입력부터 화면까지의 지연으로 해석하지 않는다.
 

@@ -1,0 +1,168 @@
+{
+  "date": "2026-09-30T04:43:55.894148+00:00",
+  "version": "0.3.4",
+  "platform": "macOS 27 / arm64",
+  "changes": [
+    "Responsive settings tabs for appearance, credentials, import/export/backups and logs; draft state and keyboard navigation preserved.",
+    "Automatic distribution icons inferred from asset names and detected OS; explicit user icon choices take precedence.",
+    "Ignore stale resize/ack callbacks after window moves; retain ownership checks for input, close and commands.",
+    "Theme-aware colors on permission-based directory/executable/symlink names, preserving server ANSI and terminal text."
+  ],
+  "checks": {
+    "build": "passed",
+    "typecheck": "passed",
+    "unitIntegration": {
+      "passed": 80,
+      "skipped": 2,
+      "seconds": 7.01,
+      "optionalSkipped": [
+        "Docker matrix not repeated: SSH code unchanged from v0.3.3",
+        "4 GiB transfer stress not repeated"
+      ]
+    },
+    "electronGUI": {
+      "uniquePassed": 22,
+      "fullRunPassed": 21,
+      "fullRunFailed": 1,
+      "fullRunSeconds": 46.9,
+      "failure": "Test expected 13 themes after an unwanted temporary classic-black preset was removed; updated expected count to 12.",
+      "correctedAppFilePassed": 4,
+      "correctedAppFileSeconds": 7.5,
+      "optionalSkipped": [
+        "16-pane ten-minute stress",
+        "large text executed separately"
+      ]
+    },
+    "visualReview": {
+      "settingsScreenshots": 96,
+      "fileColorScreenshots": 13,
+      "overviewImages": 4,
+      "appThemes": [
+        "light",
+        "dark"
+      ],
+      "windowSizes": [
+        [
+          1920,
+          1080
+        ],
+        [
+          1440,
+          900
+        ],
+        [
+          1024,
+          680
+        ]
+      ],
+      "settingsSections": 7,
+      "presetPalettes": 12,
+      "customPalettes": 1,
+      "gallery": "release/recheck-ui-v0.3.4/index.html",
+      "reviewed": "All settings overview images and all terminal palette images visually inspected; overflow and bounds assertions passed."
+    },
+    "prettier": "passed",
+    "gitDiffCheck": "passed",
+    "largeTerminalText": {
+      "passed": true,
+      "seconds": 484,
+      "result": "terminal-large-text-v0.3.4.json",
+      "stages": [
+        {
+          "inputMiB": 16,
+          "shape": "UTF-8 Korean, ANSI colors, IP/URL and log lines",
+          "sentBytes": 16777216,
+          "observedBytes": 16777293,
+          "durationMs": 6005,
+          "throughputMiBps": 2.66,
+          "inputSamples": 3,
+          "inputLoopbackP95Ms": 2084.7,
+          "inputLoopbackMaxMs": 2084.7,
+          "frameP95Ms": 33.4,
+          "frameMaxMs": 34.4,
+          "peakWorkingSetMiB": 936,
+          "lastWorkingSetMiB": 929,
+          "tailRendered": true,
+          "connected": true
+        },
+        {
+          "inputMiB": 64,
+          "shape": "UTF-8 Korean, ANSI colors, IP/URL and log lines",
+          "sentBytes": 67108864,
+          "observedBytes": 67109094,
+          "durationMs": 22637,
+          "throughputMiBps": 2.83,
+          "inputSamples": 11,
+          "inputLoopbackP95Ms": 2078.3,
+          "inputLoopbackMaxMs": 2078.3,
+          "frameP95Ms": 33.4,
+          "frameMaxMs": 34.3,
+          "peakWorkingSetMiB": 958,
+          "lastWorkingSetMiB": 955,
+          "tailRendered": true,
+          "connected": true
+        },
+        {
+          "inputMiB": 256,
+          "shape": "UTF-8 Korean, ANSI colors, IP/URL and log lines",
+          "sentBytes": 268435456,
+          "observedBytes": 268436326,
+          "durationMs": 90162,
+          "throughputMiBps": 2.84,
+          "inputSamples": 43,
+          "inputLoopbackP95Ms": 1935.8,
+          "inputLoopbackMaxMs": 2107,
+          "frameP95Ms": 33.4,
+          "frameMaxMs": 66.8,
+          "peakWorkingSetMiB": 1014,
+          "lastWorkingSetMiB": 1014,
+          "tailRendered": true,
+          "connected": true
+        },
+        {
+          "inputMiB": 1024,
+          "shape": "UTF-8 Korean, ANSI colors, IP/URL and log lines",
+          "sentBytes": 1073741824,
+          "observedBytes": 1073745325,
+          "durationMs": 362403,
+          "throughputMiBps": 2.83,
+          "inputSamples": 171,
+          "inputLoopbackP95Ms": 1965.2,
+          "inputLoopbackMaxMs": 2087.5,
+          "frameP95Ms": 33.4,
+          "frameMaxMs": 34.4,
+          "peakWorkingSetMiB": 1051,
+          "lastWorkingSetMiB": 1037,
+          "tailRendered": true,
+          "connected": true
+        },
+        {
+          "inputMiB": 8,
+          "shape": "64 KiB ASCII lines",
+          "sentBytes": 8388608,
+          "observedBytes": 8388666,
+          "durationMs": 2605,
+          "throughputMiBps": 3.07,
+          "inputSamples": 2,
+          "inputLoopbackP95Ms": 1797.1,
+          "inputLoopbackMaxMs": 1797.1,
+          "frameP95Ms": 17.6,
+          "frameMaxMs": 17.8,
+          "peakWorkingSetMiB": 1056,
+          "lastWorkingSetMiB": 1055,
+          "tailRendered": true,
+          "connected": true
+        }
+      ],
+      "scope": "Cumulative streamed output, not full in-memory retention. Only this Mac and loopback SSH measured."
+    }
+  },
+  "limits": [
+    "One Apple Silicon Mac and test-only local servers; Windows client not tested.",
+    "Production user data, credentials, known host keys and installed /Applications app were not modified.",
+    "Only complete permission-based long listings are inferred; name-only lists are not classified.",
+    "The host-key replacement/new-asset screen remains a prototype."
+  ],
+  "releaseVersion": "1.0.0",
+  "versionNote": "Application behavior tested as candidate 0.3.4; release metadata promoted to 1.0.0 without runtime source changes."
+}

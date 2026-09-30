@@ -179,6 +179,46 @@ test("host CRUD, live SSH, split session preservation, themes, and persistence",
   await page.reload();
   await expect(page.locator(".host-row")).toHaveCount(1);
   await expect(page.locator(".workspace-tab")).toHaveCount(1);
+  const saved = await page.evaluate(() =>
+    window.passport.call("bootstrap", undefined),
+  );
+  await closeCleanly(application);
+  application = await electron.launch({
+    args: ["."],
+    env: { ...process.env, PASSPORT_DATA_DIR: path.join(directory, "data") },
+  });
+  page = await application.firstWindow();
+  page.on("pageerror", (error) => errors.push(error.message));
+  await expect(page.locator(".workspace-tab")).toHaveCount(1);
+  const restored = await page.evaluate(() =>
+    window.passport.call("bootstrap", undefined),
+  );
+  expect(restored.document.workspaces).toEqual(saved.document.workspaces);
+  expect(restored.workspaceOwners[restored.document.workspaces[0].id]).toBe(
+    restored.windowId,
+  );
+  expect(restored.sessionStates).toEqual([]);
+  await page.locator(".workspace-tab>button").first().click();
+  await expect(page.locator(".view:not([hidden]) .pill").first()).toHaveText(
+    "0 / 2 연결",
+  );
+  await page.evaluate(
+    async ({ id, hostId }) =>
+      window.passport.call("session.connect", {
+        id,
+        hostId,
+        secret: {
+          type: "password",
+          password: "test-only-password",
+          privateKey: "",
+          passphrase: "",
+        },
+      }),
+    { id: original!, hostId: restored.document.hosts[0].id },
+  );
+  await expect(page.locator(".view:not([hidden]) .pill").first()).toHaveText(
+    "1 / 2 연결",
+  );
   expect(errors).toEqual([]);
 });
 test("independent file panels, context menus, local copy and queue", async () => {

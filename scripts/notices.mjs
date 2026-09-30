@@ -61,5 +61,5 @@ await writeFile(
   "dist/licenses/DEPENDENCIES.md",
   "# 포함된 라이브러리\n\n각 저작권과 라이선스 원문은 같은 폴더에 보관합니다. Electron 자체의 LICENSE와 Chromium 고지는 설치본에 함께 배포됩니다.\n\n| 라이브러리 | 버전 | 라이선스 |\n| --- | --- | --- |\n" +
     rows.sort().join("\n") +
-    "\n",
+    "\n\nssh2 1.17.0의 DH group1 구현은 Electron/BoringSSL 호환을 위해 RFC 2409 §6.2의 동일한 소수를 명시적으로 지정하도록 수정했습니다. Passport는 현대 키 교환을 우선하며 SHA-1 group14·GEX·group1을 기본 목록 뒤에 추가해 구형 서버를 지원합니다. 패치는 scripts/patch-ssh2.mjs에서 관리합니다.\n",
 );

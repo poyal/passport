@@ -1,0 +1,36 @@
+{
+  "version": "1.0.0",
+  "archive": "release/mac-arm64/Passport.app/Contents/Resources/app.asar",
+  "checks": [
+    {
+      "file": "dist/main/index.cjs",
+      "sha256": "323f0690190dda137cc301f3ad05dfdbce8d82781567faec4466c0b9685e7281",
+      "match": true
+    },
+    {
+      "file": "dist/preload/index.cjs",
+      "sha256": "d59ef1ed3ed17ea12a40249a21e39f1fca6b3e1f9581697a48ca6761632e006e",
+      "match": true
+    },
+    {
+      "file": "dist/renderer/index.html",
+      "sha256": "1305e6ae30124e97a8d6d4d84265f68b41e893c2b9b8fb311f50c8bf08cb058f",
+      "match": true
+    },
+    {
+      "file": "dist/renderer/assets/index-B4I8HLDo.js",
+      "sha256": "2a31439c712704664beede62e6b60f72f7ccd039b7538ca77b5950da1b0a510d",
+      "match": true
+    },
+    {
+      "file": "dist/renderer/assets/index-Bosh2aBM.css",
+      "sha256": "6180e47e5e8972cb6e01671d38bc2898c83442c683c5e824e371285cd508aed6",
+      "match": true
+    },
+    {
+      "file": "node_modules/ssh2/lib/protocol/kex.js",
+      "sha256": "d89452df5d0685d80c6291c199cc13b0032f7f005274eb9f6e354acbd87af8fd",
+      "match": true
+    }
+  ]
+}

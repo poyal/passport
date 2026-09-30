@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, useEffect, useRef, type FormEvent } from "react";
 import {
   Server,
   Plus,
@@ -24,6 +24,7 @@ import { useApp } from "./context";
 import { api, uuid } from "./api";
 import { Empty, IconButton } from "./components";
 import { HostIcon, hostIconNames } from "./HostIcon";
+import { hostOS } from "../shared/host-os";
 import { themes } from "../shared/themes";
 import { panes, removeNode } from "../shared/layout";
 
@@ -41,11 +42,24 @@ export function Hosts() {
     [choosingAuth, setChoosingAuth] = useState(false),
     [password, setPassword] = useState(""),
     [saving, setSaving] = useState(false);
+  const savedHost = useRef<Host | null>(null);
   useEffect(() => {
     setPassword("");
   }, [selected]);
   useEffect(() => {
-    if (selected) setDraft(doc.hosts.find((h) => h.id === selected) ?? null);
+    const next = doc.hosts.find((h) => h.id === selected) ?? null;
+    const previous = savedHost.current;
+    savedHost.current = next;
+    if (!selected) return;
+    setDraft((current) => {
+      if (!next || current?.id !== next.id || previous?.id !== next.id)
+        return next;
+      const merged = { ...next };
+      for (const field of Object.keys(current) as (keyof Host)[])
+        if (JSON.stringify(current[field]) !== JSON.stringify(previous[field]))
+          Object.assign(merged, { [field]: current[field] });
+      return merged;
+    });
   }, [selected, doc.hosts]);
   const groupPath = (id: string | null): string => {
     const g = doc.groups.find((x) => x.id === id);
@@ -553,6 +567,8 @@ export function Hosts() {
                   <small className="hint" id="host-password-help">
                     입력한 비밀번호는 호스트 저장 시 암호화된 인증 프로필로
                     보관합니다.
+                    {app.boot.platform === "darwin" &&
+                      " macOS 키체인 요청에는 Mac의 로그인 키체인 암호를 입력하세요."}
                   </small>
                 </>
               )}
@@ -603,9 +619,14 @@ export function Hosts() {
             <label>
               아이콘
               <select
+                aria-label="아이콘"
                 value={draft.icon}
                 onChange={(e) =>
-                  setDraft({ ...draft, icon: e.target.value as Host["icon"] })
+                  setDraft({
+                    ...draft,
+                    icon: e.target.value as Host["icon"],
+                    iconPinned: e.target.value !== "auto",
+                  })
                 }
               >
                 {Object.entries(hostIconNames).map(([value, label]) => (
@@ -616,9 +637,11 @@ export function Hosts() {
               </select>
             </label>
             <small className="hint">
-              {draft.detectedOS
-                ? `감지된 운영체제: ${draft.detectedOS}`
-                : "SSH 연결 후 운영체제에 맞는 아이콘을 표시합니다."}
+              {hostOS(draft).source === "inferred"
+                ? hostOS(draft).label
+                : draft.detectedOS
+                  ? `감지된 운영체제: ${draft.detectedOS}`
+                  : "이름에서 OS를 추정하고 SSH 연결 후 실제 운영체제를 확인합니다."}
             </small>
             <HostExtras host={draft} onChange={setDraft} />
             <label>

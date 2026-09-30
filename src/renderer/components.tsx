@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 export function IconButton({
@@ -28,6 +28,67 @@ export function IconButton({
     >
       {children}
     </button>
+  );
+}
+export function SettingsTabs<T extends string>({
+  label,
+  value,
+  onChange,
+  items,
+  children,
+}: {
+  label: string;
+  value: T;
+  onChange: (value: T) => void;
+  items: { id: T; label: string }[];
+  children: ReactNode;
+}) {
+  const id = useId();
+  return (
+    <div className="settings-tabs">
+      <div className="settings-tab-list" role="tablist" aria-label={label}>
+        {items.map((item, index) => (
+          <button
+            type="button"
+            role="tab"
+            key={item.id}
+            id={`${id}-${item.id}`}
+            aria-controls={`${id}-panel`}
+            aria-selected={value === item.id}
+            tabIndex={value === item.id ? 0 : -1}
+            onClick={() => onChange(item.id)}
+            onKeyDown={(event) => {
+              const next =
+                event.key === "ArrowRight"
+                  ? (index + 1) % items.length
+                  : event.key === "ArrowLeft"
+                    ? (index + items.length - 1) % items.length
+                    : event.key === "Home"
+                      ? 0
+                      : event.key === "End"
+                        ? items.length - 1
+                        : undefined;
+              if (next === undefined) return;
+              event.preventDefault();
+              onChange(items[next].id);
+              event.currentTarget.parentElement
+                ?.querySelectorAll<HTMLButtonElement>("button")
+                [next]?.focus();
+            }}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+      <div
+        role="tabpanel"
+        id={`${id}-panel`}
+        aria-labelledby={`${id}-${value}`}
+        className="settings-tab-panel"
+      >
+        {children}
+      </div>
+    </div>
   );
 }
 export function Modal({

@@ -1,11 +1,11 @@
-import ssh2, { type ServerChannel } from "ssh2";
+import ssh2, { type Algorithms, type ServerChannel } from "ssh2";
 const { Server, utils } = ssh2;
 import { generateKeyPairSync } from "node:crypto";
 import fs from "node:fs/promises";
 import type { Stats } from "node:fs";
 import path from "node:path";
 import type { AddressInfo } from "node:net";
-export async function sshFixture(root: string) {
+export async function sshFixture(root: string, algorithms?: Algorithms) {
   root = await fs.realpath(root);
   const { privateKey } = generateKeyPairSync("rsa", {
     modulusLength: 2048,
@@ -25,11 +25,14 @@ export async function sshFixture(root: string) {
   const authKey = utils.parseKey(encryptedKey, "test-key-passphrase");
   if (authKey instanceof Error || Array.isArray(authKey))
     throw new Error("key fixture");
+  const negotiated: import("ssh2").NegotiatedAlgorithms[] = [];
   const clients = new Set<import("ssh2").Connection>(),
     input: string[] = [],
     shells: ServerChannel[] = [];
-  const server = new Server({ hostKeys: [privateKey] }, (client) => {
+  const config = { hostKeys: [privateKey], algorithms };
+  const server = new Server(config, (client) => {
     clients.add(client);
+    client.on("handshake", (algorithms) => negotiated.push(algorithms));
     client.on("error", () => {});
     client.on("close", () => clients.delete(client));
     client.on("authentication", (ctx) => {
@@ -252,6 +255,7 @@ export async function sshFixture(root: string) {
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   return {
     port: (server.address() as AddressInfo).port,
+    negotiated,
     input,
     shells,
     privateKey,

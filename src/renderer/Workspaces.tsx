@@ -967,7 +967,13 @@ function Snippets({ workspace }: { workspace: Workspace }) {
     </>
   );
 }
-export function AppearancePanel({ workspace }: { workspace?: Workspace }) {
+export function AppearancePanel({
+  workspace,
+  section = "all",
+}: {
+  workspace?: Workspace;
+  section?: "all" | "terminal" | "themes";
+}) {
   const app = useApp(),
     [scope, setScope] = useState<"global" | "host" | "session">(
       workspace ? "session" : "global",
@@ -1023,152 +1029,174 @@ export function AppearancePanel({ workspace }: { workspace?: Workspace }) {
           </select>
         </label>
       )}
-      <label>
-        글꼴
-        <input
-          list="terminal-fonts"
-          value={appearance.font}
-          onChange={(e) => change({ font: e.target.value || "JetBrains Mono" })}
-        />
-        <datalist id="terminal-fonts">
-          {[
-            ...new Set([
-              "JetBrains Mono",
-              "Menlo",
-              "Monaco",
-              "Consolas",
-              "Cascadia Mono",
-              "Courier New",
-              ...app.boot.fonts,
-            ]),
-          ].map((f) => (
-            <option key={f} value={f} />
-          ))}
-        </datalist>
-      </label>
-      <label>
-        글자 크기 <span>{appearance.fontSize}px</span>
-        <input
-          aria-label="글자 크기"
-          type="range"
-          min="8"
-          max="36"
-          value={appearance.fontSize}
-          onChange={(e) => change({ fontSize: Number(e.target.value) })}
-        />
-      </label>
-      <label>
-        줄 간격
-        <NumberField
-          step="0.1"
-          min="1"
-          max="2"
-          value={appearance.lineHeight}
-          onChange={(value) => change({ lineHeight: value })}
-        />
-      </label>
-      <label>
-        자간
-        <NumberField
-          step="0.1"
-          min="-1"
-          max="5"
-          value={appearance.letterSpacing}
-          onChange={(value) => change({ letterSpacing: value })}
-        />
-      </label>
-      <label>
-        글자 굵기
-        <select
-          value={appearance.fontWeight}
-          onChange={(e) =>
-            change({ fontWeight: e.target.value as Appearance["fontWeight"] })
-          }
-        >
-          <option value="normal">보통</option>
-          <option value="bold">굵게</option>
-        </select>
-      </label>
-      <label>
-        커서 모양
-        <select
-          value={appearance.cursorStyle}
-          onChange={(e) =>
-            change({ cursorStyle: e.target.value as Appearance["cursorStyle"] })
-          }
-        >
-          <option value="block">블록</option>
-          <option value="bar">막대</option>
-          <option value="underline">밑줄</option>
-        </select>
-      </label>
-      <label className="check-label">
-        <input
-          type="checkbox"
-          checked={appearance.cursorBlink}
-          onChange={(e) => change({ cursorBlink: e.target.checked })}
-        />
-        커서 깜빡임
-      </label>
-      <label>
-        출력 강조
-        <select
-          aria-label="출력 강조"
-          value={appearance.highlight}
-          onChange={(e) =>
-            change({ highlight: e.target.value as Appearance["highlight"] })
-          }
-        >
-          <option value="none">기본 출력</option>
-          <option value="log">로그 표식 강조</option>
-          <option value="line">로그 행 강조</option>
-          <option value="address">주소 강조</option>
-        </select>
-      </label>
-      <label className="check-label">
-        <input
-          type="checkbox"
-          checked={appearance.highlightAddresses}
-          onChange={(e) => change({ highlightAddresses: e.target.checked })}
-        />
-        IP · URL 함께 강조
-      </label>
-      <div className="section-line" />
-      <h4>
-        테마{" "}
-        <span className="muted">
-          {12 + app.document.settings.customThemes.length}
-        </span>
-      </h4>
-      <div className="theme-list">
-        {[
-          ...themes,
-          ...app.document.settings.customThemes.map((t) =>
-            getTheme(t.id, app.document.settings.customThemes),
-          ),
-        ].map((t) => (
-          <button
-            key={t.id}
-            className={`theme-item ${appearance.theme === t.id ? "selected" : ""}`}
-            onClick={() => change({ theme: t.id })}
-          >
-            <span
-              className="theme-preview"
-              style={{ background: t.theme.background }}
+      {section !== "themes" && (
+        <div className="appearance-fields">
+          <label>
+            글꼴
+            <input
+              list="terminal-fonts"
+              value={appearance.font}
+              onChange={(e) =>
+                change({ font: e.target.value || "JetBrains Mono" })
+              }
+            />
+            <datalist id="terminal-fonts">
+              {[
+                ...new Set([
+                  "JetBrains Mono",
+                  "Menlo",
+                  "Monaco",
+                  "Consolas",
+                  "Cascadia Mono",
+                  "Courier New",
+                  ...app.boot.fonts,
+                ]),
+              ].map((f) => (
+                <option key={f} value={f} />
+              ))}
+            </datalist>
+          </label>
+          <label>
+            글자 크기 <span>{appearance.fontSize}px</span>
+            <input
+              aria-label="글자 크기"
+              type="range"
+              min="8"
+              max="36"
+              value={appearance.fontSize}
+              onChange={(e) => change({ fontSize: Number(e.target.value) })}
+            />
+          </label>
+          <label>
+            줄 간격
+            <NumberField
+              step="0.1"
+              min="1"
+              max="2"
+              value={appearance.lineHeight}
+              onChange={(value) => change({ lineHeight: value })}
+            />
+          </label>
+          <label>
+            자간
+            <NumberField
+              step="0.1"
+              min="-1"
+              max="5"
+              value={appearance.letterSpacing}
+              onChange={(value) => change({ letterSpacing: value })}
+            />
+          </label>
+          <label>
+            글자 굵기
+            <select
+              value={appearance.fontWeight}
+              onChange={(e) =>
+                change({
+                  fontWeight: e.target.value as Appearance["fontWeight"],
+                })
+              }
             >
-              <i style={{ background: t.theme.foreground }} />
-              <i style={{ background: t.theme.green }} />
-              <i style={{ background: t.theme.blue }} />
-              <i style={{ background: t.theme.magenta }} />
+              <option value="normal">보통</option>
+              <option value="bold">굵게</option>
+            </select>
+          </label>
+          <label>
+            커서 모양
+            <select
+              value={appearance.cursorStyle}
+              onChange={(e) =>
+                change({
+                  cursorStyle: e.target.value as Appearance["cursorStyle"],
+                })
+              }
+            >
+              <option value="block">블록</option>
+              <option value="bar">막대</option>
+              <option value="underline">밑줄</option>
+            </select>
+          </label>
+          <label className="check-label">
+            <input
+              type="checkbox"
+              checked={appearance.cursorBlink}
+              onChange={(e) => change({ cursorBlink: e.target.checked })}
+            />
+            커서 깜빡임
+          </label>
+          <label>
+            출력 강조
+            <select
+              aria-label="출력 강조"
+              value={appearance.highlight}
+              onChange={(e) =>
+                change({ highlight: e.target.value as Appearance["highlight"] })
+              }
+            >
+              <option value="none">기본 출력</option>
+              <option value="log">로그 표식 강조</option>
+              <option value="line">로그 행 강조</option>
+              <option value="address">주소 강조</option>
+            </select>
+          </label>
+          <label className="check-label">
+            <input
+              type="checkbox"
+              checked={appearance.highlightAddresses}
+              onChange={(e) => change({ highlightAddresses: e.target.checked })}
+            />
+            IP · URL 함께 강조
+          </label>
+          <label className="check-label">
+            <input
+              type="checkbox"
+              checked={appearance.highlightFiles}
+              onChange={(e) => change({ highlightFiles: e.target.checked })}
+            />
+            파일·폴더 색상 구분
+          </label>
+        </div>
+      )}
+      {section !== "terminal" && (
+        <>
+          {section === "all" && <div className="section-line" />}
+          <h4>
+            테마{" "}
+            <span className="muted">
+              {themes.length + app.document.settings.customThemes.length}
             </span>
-            <span>{t.name}</span>
-            {appearance.theme === t.id && <Check size={14} />}
-          </button>
-        ))}
-      </div>
-      <p className="hint">
-        테마는 화면 색상에 적용됩니다. 서버의 셸 설정은 변경하지 않습니다.
-      </p>
+          </h4>
+          <div className="theme-list">
+            {[
+              ...themes,
+              ...app.document.settings.customThemes.map((t) =>
+                getTheme(t.id, app.document.settings.customThemes),
+              ),
+            ].map((t) => (
+              <button
+                key={t.id}
+                className={`theme-item ${appearance.theme === t.id ? "selected" : ""}`}
+                onClick={() => change({ theme: t.id })}
+              >
+                <span
+                  className="theme-preview"
+                  style={{ background: t.theme.background }}
+                >
+                  <i style={{ background: t.theme.foreground }} />
+                  <i style={{ background: t.theme.green }} />
+                  <i style={{ background: t.theme.blue }} />
+                  <i style={{ background: t.theme.magenta }} />
+                </span>
+                <span>{t.name}</span>
+                {appearance.theme === t.id && <Check size={14} />}
+              </button>
+            ))}
+          </div>
+          <p className="hint">
+            테마는 화면 색상에 적용됩니다. 서버의 셸 설정은 변경하지 않습니다.
+          </p>
+        </>
+      )}
     </div>
   );
 }

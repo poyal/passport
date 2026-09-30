@@ -2,6 +2,7 @@ import { build } from "esbuild";
 import { build as viteBuild } from "vite";
 import { mkdir, copyFile } from "node:fs/promises";
 import "./notices.mjs";
+import "./patch-ssh2.mjs";
 await mkdir("build", { recursive: true });
 await copyFile("design/icons/04-passport-terminal-v2.png", "build/icon.png");
 await build({

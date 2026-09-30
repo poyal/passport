@@ -1,0 +1,191 @@
+{
+  "date": "2026-09-30T01:01:04.785Z",
+  "results": [
+    {
+      "os": "alpine",
+      "image": "alpine:3.22",
+      "status": "passed",
+      "password": true,
+      "encryptedEd25519": true,
+      "wrongPasswordRejected": true,
+      "changedHostKeyRejected": true,
+      "shells": ["sh", "bash", "zsh"],
+      "ptyResize": "37x91",
+      "environment": true,
+      "utf8": true,
+      "sftpBytes": 1048576,
+      "sftpRemoteToRemote": true,
+      "forwarding": [
+        "local",
+        "remote",
+        "SOCKS5 IPv4/domain fragmented handshake"
+      ],
+      "socksUDPRejected": true,
+      "chmod": "0640",
+      "osRelease": "NAME=\"Alpine Linux\"\nID=alpine\nVERSION_ID=3.22.6\nPRETTY_NAME=\"Alpine Linux v3.22\"\nHOME_URL=\"https://alpinelinux.org/\"\nBUG_REPORT_URL=\"https://gitlab.alpinelinux.org/alpine/aports/-/issues\"\n"
+    },
+    {
+      "os": "ubuntu",
+      "image": "ubuntu:24.04",
+      "status": "passed",
+      "password": true,
+      "encryptedEd25519": true,
+      "wrongPasswordRejected": true,
+      "changedHostKeyRejected": true,
+      "shells": ["sh", "bash", "zsh"],
+      "ptyResize": "37x91",
+      "environment": true,
+      "utf8": true,
+      "sftpBytes": 1048576,
+      "sftpRemoteToRemote": true,
+      "forwarding": [
+        "local",
+        "remote",
+        "SOCKS5 IPv4/domain fragmented handshake"
+      ],
+      "socksUDPRejected": true,
+      "chmod": "0640",
+      "osRelease": "PRETTY_NAME=\"Ubuntu 24.04.4 LTS\"\nNAME=\"Ubuntu\"\nVERSION_ID=\"24.04\"\nVERSION=\"24.04.4 LTS (Noble Numbat)\"\nVERSION_CODENAME=noble\nID=ubuntu\nID_LIKE=debian\nHOME_URL=\"https://www.ubuntu.com/\"\nSUPPORT_URL=\"https://help.ubuntu.com/\"\nBUG_REPORT_URL=\"https://bugs.launchpad.net/ubuntu/\"\nPRIVACY_POLICY_URL=\"https://www.ubuntu.com/legal/terms-and-policies/privacy-policy\"\nUBUNTU_CODENAME=noble\nLOGO=ubuntu-logo\n"
+    },
+    {
+      "os": "debian",
+      "image": "debian:12",
+      "status": "passed",
+      "password": true,
+      "encryptedEd25519": true,
+      "wrongPasswordRejected": true,
+      "changedHostKeyRejected": true,
+      "shells": ["sh", "bash", "zsh"],
+      "ptyResize": "37x91",
+      "environment": true,
+      "utf8": true,
+      "sftpBytes": 1048576,
+      "sftpRemoteToRemote": true,
+      "forwarding": [
+        "local",
+        "remote",
+        "SOCKS5 IPv4/domain fragmented handshake"
+      ],
+      "socksUDPRejected": true,
+      "chmod": "0640",
+      "osRelease": "PRETTY_NAME=\"Debian GNU/Linux 12 (bookworm)\"\nNAME=\"Debian GNU/Linux\"\nVERSION_ID=\"12\"\nVERSION=\"12 (bookworm)\"\nVERSION_CODENAME=bookworm\nID=debian\nHOME_URL=\"https://www.debian.org/\"\nSUPPORT_URL=\"https://www.debian.org/support\"\nBUG_REPORT_URL=\"https://bugs.debian.org/\"\n"
+    },
+    {
+      "os": "rocky",
+      "image": "rockylinux:9",
+      "status": "passed",
+      "password": true,
+      "encryptedEd25519": true,
+      "wrongPasswordRejected": true,
+      "changedHostKeyRejected": true,
+      "shells": ["sh", "bash", "zsh"],
+      "ptyResize": "37x91",
+      "environment": true,
+      "utf8": true,
+      "sftpBytes": 1048576,
+      "sftpRemoteToRemote": true,
+      "forwarding": [
+        "local",
+        "remote",
+        "SOCKS5 IPv4/domain fragmented handshake"
+      ],
+      "socksUDPRejected": true,
+      "chmod": "0640",
+      "osRelease": "NAME=\"Rocky Linux\"\nVERSION=\"9.3 (Blue Onyx)\"\nID=\"rocky\"\nID_LIKE=\"rhel centos fedora\"\nVERSION_ID=\"9.3\"\nPLATFORM_ID=\"platform:el9\"\nPRETTY_NAME=\"Rocky Linux 9.3 (Blue Onyx)\"\nANSI_COLOR=\"0;32\"\nLOGO=\"fedora-logo-icon\"\nCPE_NAME=\"cpe:/o:rocky:rocky:9::baseos\"\nHOME_URL=\"https://rockylinux.org/\"\nBUG_REPORT_URL=\"https://bugs.rockylinux.org/\"\nSUPPORT_END=\"2032-05-31\"\nROCKY_SUPPORT_PRODUCT=\"Rocky-Linux-9\"\nROCKY_SUPPORT_PRODUCT_VERSION=\"9.3\"\nREDHAT_SUPPORT_PRODUCT=\"Rocky Linux\"\nREDHAT_SUPPORT_PRODUCT_VERSION=\"9.3\"\n"
+    },
+    {
+      "os": "centos",
+      "image": "quay.io/centos/centos:stream9",
+      "status": "passed",
+      "password": true,
+      "encryptedEd25519": true,
+      "wrongPasswordRejected": true,
+      "changedHostKeyRejected": true,
+      "shells": ["sh", "bash", "zsh"],
+      "ptyResize": "37x91",
+      "environment": true,
+      "utf8": true,
+      "sftpBytes": 1048576,
+      "sftpRemoteToRemote": true,
+      "forwarding": [
+        "local",
+        "remote",
+        "SOCKS5 IPv4/domain fragmented handshake"
+      ],
+      "socksUDPRejected": true,
+      "chmod": "0640",
+      "osRelease": "NAME=\"CentOS Stream\"\nVERSION=\"9\"\nID=\"centos\"\nID_LIKE=\"rhel fedora\"\nVERSION_ID=\"9\"\nPLATFORM_ID=\"platform:el9\"\nPRETTY_NAME=\"CentOS Stream 9\"\nANSI_COLOR=\"0;31\"\nLOGO=\"fedora-logo-icon\"\nCPE_NAME=\"cpe:/o:centos:centos:9\"\nHOME_URL=\"https://centos.org/\"\nBUG_REPORT_URL=\"https://issues.redhat.com/\"\nREDHAT_SUPPORT_PRODUCT=\"Red Hat Enterprise Linux 9\"\nREDHAT_SUPPORT_PRODUCT_VERSION=\"CentOS Stream\"\n"
+    },
+    {
+      "os": "centos7",
+      "image": "centos:7",
+      "status": "passed",
+      "password": true,
+      "encryptedEd25519": true,
+      "wrongPasswordRejected": true,
+      "changedHostKeyRejected": true,
+      "shells": ["sh", "bash", "zsh"],
+      "ptyResize": "37x91",
+      "environment": true,
+      "utf8": true,
+      "sftpBytes": 1048576,
+      "sftpRemoteToRemote": true,
+      "forwarding": [
+        "local",
+        "remote",
+        "SOCKS5 IPv4/domain fragmented handshake"
+      ],
+      "socksUDPRejected": true,
+      "chmod": "0640",
+      "osRelease": "NAME=\"CentOS Linux\"\nVERSION=\"7 (AltArch)\"\nID=\"centos\"\nID_LIKE=\"rhel fedora\"\nVERSION_ID=\"7\"\nPRETTY_NAME=\"CentOS Linux 7 (AltArch)\"\nANSI_COLOR=\"0;31\"\nCPE_NAME=\"cpe:/o:centos:centos:7:server\"\nHOME_URL=\"https://www.centos.org/\"\nBUG_REPORT_URL=\"https://bugs.centos.org/\"\n\nCENTOS_MANTISBT_PROJECT=\"CentOS-7\"\nCENTOS_MANTISBT_PROJECT_VERSION=\"7\"\nREDHAT_SUPPORT_PRODUCT=\"centos\"\nREDHAT_SUPPORT_PRODUCT_VERSION=\"7\"\n\n"
+    },
+    {
+      "os": "centos7-group1",
+      "image": "centos:7",
+      "status": "passed",
+      "password": true,
+      "encryptedEd25519": true,
+      "wrongPasswordRejected": true,
+      "changedHostKeyRejected": true,
+      "shells": ["sh", "bash", "zsh"],
+      "ptyResize": "37x91",
+      "environment": true,
+      "utf8": true,
+      "sftpBytes": 1048576,
+      "sftpRemoteToRemote": true,
+      "forwarding": [
+        "local",
+        "remote",
+        "SOCKS5 IPv4/domain fragmented handshake"
+      ],
+      "socksUDPRejected": true,
+      "chmod": "0640",
+      "osRelease": "NAME=\"CentOS Linux\"\nVERSION=\"7 (AltArch)\"\nID=\"centos\"\nID_LIKE=\"rhel fedora\"\nVERSION_ID=\"7\"\nPRETTY_NAME=\"CentOS Linux 7 (AltArch)\"\nANSI_COLOR=\"0;31\"\nCPE_NAME=\"cpe:/o:centos:centos:7:server\"\nHOME_URL=\"https://www.centos.org/\"\nBUG_REPORT_URL=\"https://bugs.centos.org/\"\n\nCENTOS_MANTISBT_PROJECT=\"CentOS-7\"\nCENTOS_MANTISBT_PROJECT_VERSION=\"7\"\nREDHAT_SUPPORT_PRODUCT=\"centos\"\nREDHAT_SUPPORT_PRODUCT_VERSION=\"7\"\n\n",
+      "legacyKex": "diffie-hellman-group1-sha1"
+    },
+    {
+      "os": "centos7-gex-sha1",
+      "image": "centos:7",
+      "status": "passed",
+      "password": true,
+      "encryptedEd25519": true,
+      "wrongPasswordRejected": true,
+      "changedHostKeyRejected": true,
+      "shells": ["sh", "bash", "zsh"],
+      "ptyResize": "37x91",
+      "environment": true,
+      "utf8": true,
+      "sftpBytes": 1048576,
+      "sftpRemoteToRemote": true,
+      "forwarding": [
+        "local",
+        "remote",
+        "SOCKS5 IPv4/domain fragmented handshake"
+      ],
+      "socksUDPRejected": true,
+      "chmod": "0640",
+      "osRelease": "NAME=\"CentOS Linux\"\nVERSION=\"7 (AltArch)\"\nID=\"centos\"\nID_LIKE=\"rhel fedora\"\nVERSION_ID=\"7\"\nPRETTY_NAME=\"CentOS Linux 7 (AltArch)\"\nANSI_COLOR=\"0;31\"\nCPE_NAME=\"cpe:/o:centos:centos:7:server\"\nHOME_URL=\"https://www.centos.org/\"\nBUG_REPORT_URL=\"https://bugs.centos.org/\"\n\nCENTOS_MANTISBT_PROJECT=\"CentOS-7\"\nCENTOS_MANTISBT_PROJECT_VERSION=\"7\"\nREDHAT_SUPPORT_PRODUCT=\"centos\"\nREDHAT_SUPPORT_PRODUCT_VERSION=\"7\"\n\n",
+      "legacyKex": "diffie-hellman-group-exchange-sha1"
+    }
+  ]
+}

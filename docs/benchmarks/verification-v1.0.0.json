@@ -1,0 +1,230 @@
+{
+  "date": "2026-09-30T04:43:55.894148+00:00",
+  "version": "1.0.0",
+  "platform": "macOS 27 / arm64",
+  "changes": [
+    "Responsive settings tabs for appearance, credentials, import/export/backups and logs; draft state and keyboard navigation preserved.",
+    "Automatic distribution icons inferred from asset names and detected OS; explicit user icon choices take precedence.",
+    "Ignore stale resize/ack callbacks after window moves; retain ownership checks for input, close and commands.",
+    "Theme-aware colors on permission-based directory/executable/symlink names, preserving server ANSI and terminal text."
+  ],
+  "checks": {
+    "build": "passed",
+    "typecheck": "passed",
+    "unitIntegration": {
+      "passed": 80,
+      "skipped": 2,
+      "seconds": 7.01,
+      "optionalSkipped": [
+        "Docker matrix not repeated: SSH code unchanged from v0.3.3",
+        "4 GiB transfer stress not repeated"
+      ]
+    },
+    "electronGUI": {
+      "uniquePassed": 22,
+      "fullRunPassed": 21,
+      "fullRunFailed": 1,
+      "fullRunSeconds": 46.9,
+      "failure": "Test expected 13 themes after an unwanted temporary classic-black preset was removed; updated expected count to 12.",
+      "correctedAppFilePassed": 4,
+      "correctedAppFileSeconds": 7.5,
+      "optionalSkipped": [
+        "16-pane ten-minute stress",
+        "large text executed separately"
+      ]
+    },
+    "visualReview": {
+      "settingsScreenshots": 96,
+      "fileColorScreenshots": 13,
+      "overviewImages": 4,
+      "appThemes": [
+        "light",
+        "dark"
+      ],
+      "windowSizes": [
+        [
+          1920,
+          1080
+        ],
+        [
+          1440,
+          900
+        ],
+        [
+          1024,
+          680
+        ]
+      ],
+      "settingsSections": 7,
+      "presetPalettes": 12,
+      "customPalettes": 1,
+      "gallery": "release/recheck-ui-v0.3.4/index.html",
+      "reviewed": "All settings overview images and all terminal palette images visually inspected; overflow and bounds assertions passed."
+    },
+    "prettier": "passed",
+    "gitDiffCheck": "passed",
+    "largeTerminalText": {
+      "passed": true,
+      "seconds": 484,
+      "result": "terminal-large-text-v0.3.4.json",
+      "stages": [
+        {
+          "inputMiB": 16,
+          "shape": "UTF-8 Korean, ANSI colors, IP/URL and log lines",
+          "sentBytes": 16777216,
+          "observedBytes": 16777293,
+          "durationMs": 6005,
+          "throughputMiBps": 2.66,
+          "inputSamples": 3,
+          "inputLoopbackP95Ms": 2084.7,
+          "inputLoopbackMaxMs": 2084.7,
+          "frameP95Ms": 33.4,
+          "frameMaxMs": 34.4,
+          "peakWorkingSetMiB": 936,
+          "lastWorkingSetMiB": 929,
+          "tailRendered": true,
+          "connected": true
+        },
+        {
+          "inputMiB": 64,
+          "shape": "UTF-8 Korean, ANSI colors, IP/URL and log lines",
+          "sentBytes": 67108864,
+          "observedBytes": 67109094,
+          "durationMs": 22637,
+          "throughputMiBps": 2.83,
+          "inputSamples": 11,
+          "inputLoopbackP95Ms": 2078.3,
+          "inputLoopbackMaxMs": 2078.3,
+          "frameP95Ms": 33.4,
+          "frameMaxMs": 34.3,
+          "peakWorkingSetMiB": 958,
+          "lastWorkingSetMiB": 955,
+          "tailRendered": true,
+          "connected": true
+        },
+        {
+          "inputMiB": 256,
+          "shape": "UTF-8 Korean, ANSI colors, IP/URL and log lines",
+          "sentBytes": 268435456,
+          "observedBytes": 268436326,
+          "durationMs": 90162,
+          "throughputMiBps": 2.84,
+          "inputSamples": 43,
+          "inputLoopbackP95Ms": 1935.8,
+          "inputLoopbackMaxMs": 2107,
+          "frameP95Ms": 33.4,
+          "frameMaxMs": 66.8,
+          "peakWorkingSetMiB": 1014,
+          "lastWorkingSetMiB": 1014,
+          "tailRendered": true,
+          "connected": true
+        },
+        {
+          "inputMiB": 1024,
+          "shape": "UTF-8 Korean, ANSI colors, IP/URL and log lines",
+          "sentBytes": 1073741824,
+          "observedBytes": 1073745325,
+          "durationMs": 362403,
+          "throughputMiBps": 2.83,
+          "inputSamples": 171,
+          "inputLoopbackP95Ms": 1965.2,
+          "inputLoopbackMaxMs": 2087.5,
+          "frameP95Ms": 33.4,
+          "frameMaxMs": 34.4,
+          "peakWorkingSetMiB": 1051,
+          "lastWorkingSetMiB": 1037,
+          "tailRendered": true,
+          "connected": true
+        },
+        {
+          "inputMiB": 8,
+          "shape": "64 KiB ASCII lines",
+          "sentBytes": 8388608,
+          "observedBytes": 8388666,
+          "durationMs": 2605,
+          "throughputMiBps": 3.07,
+          "inputSamples": 2,
+          "inputLoopbackP95Ms": 1797.1,
+          "inputLoopbackMaxMs": 1797.1,
+          "frameP95Ms": 17.6,
+          "frameMaxMs": 17.8,
+          "peakWorkingSetMiB": 1056,
+          "lastWorkingSetMiB": 1055,
+          "tailRendered": true,
+          "connected": true
+        }
+      ],
+      "scope": "Cumulative streamed output, not full in-memory retention. Only this Mac and loopback SSH measured."
+    },
+    "packagedGUI": {
+      "passed": 2,
+      "seconds": 8.9,
+      "scope": "Legacy SSH/SFTP, host-key settings, real app version, all theme file colors and preserved ANSI/input"
+    },
+    "packagedSmoke": {
+      "packagedSmoke": "passed",
+      "localPTY": "passed",
+      "shutdown": "passed",
+      "exitCode": 0,
+      "appVersion": "1.0.0",
+      "arch": "arm64",
+      "platform": "darwin",
+      "hosts": 0,
+      "fonts": 247,
+      "version": 1,
+      "nodeAvailable": false
+    },
+    "packagedPayload": {
+      "version": "1.0.0",
+      "archive": "release/mac-arm64/Passport.app/Contents/Resources/app.asar",
+      "checks": [
+        {
+          "file": "dist/main/index.cjs",
+          "sha256": "323f0690190dda137cc301f3ad05dfdbce8d82781567faec4466c0b9685e7281",
+          "match": true
+        },
+        {
+          "file": "dist/preload/index.cjs",
+          "sha256": "d59ef1ed3ed17ea12a40249a21e39f1fca6b3e1f9581697a48ca6761632e006e",
+          "match": true
+        },
+        {
+          "file": "dist/renderer/index.html",
+          "sha256": "1305e6ae30124e97a8d6d4d84265f68b41e893c2b9b8fb311f50c8bf08cb058f",
+          "match": true
+        },
+        {
+          "file": "dist/renderer/assets/index-B4I8HLDo.js",
+          "sha256": "2a31439c712704664beede62e6b60f72f7ccd039b7538ca77b5950da1b0a510d",
+          "match": true
+        },
+        {
+          "file": "dist/renderer/assets/index-Bosh2aBM.css",
+          "sha256": "6180e47e5e8972cb6e01671d38bc2898c83442c683c5e824e371285cd508aed6",
+          "match": true
+        },
+        {
+          "file": "node_modules/ssh2/lib/protocol/kex.js",
+          "sha256": "d89452df5d0685d80c6291c199cc13b0032f7f005274eb9f6e354acbd87af8fd",
+          "match": true
+        }
+      ]
+    },
+    "codesign": "Ad-hoc; deep/strict verification passed"
+  },
+  "limits": [
+    "One Apple Silicon Mac and test-only local servers; Windows client not tested.",
+    "Production user data, credentials, known host keys and installed /Applications app were not modified.",
+    "Only complete permission-based long listings are inferred; name-only lists are not classified.",
+    "The host-key replacement/new-asset screen remains a prototype."
+  ],
+  "releaseVersion": "1.0.0",
+  "versionNote": "Application behavior tested as candidate 0.3.4; release metadata promoted to 1.0.0 without runtime source changes.",
+  "candidateVersion": "0.3.4",
+  "installer": {
+    "path": "release/Passport-1.0.0-mac-arm64.dmg",
+    "bytes": 153297652,
+    "sha256": "9fd8d595bfa6e339211fea4a529a96f04d7cb10e195410075e2e411f50a949ec",
+    "origin": "Local build; GitHub runner build will have its own checksum"
+  }
+}

@@ -1,6 +1,6 @@
 {
   "name": "passport",
-  "version": "0.3.1",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "description": "개인용 SSH 및 파일 전송 데스크톱 앱",
@@ -12,13 +12,14 @@
     "test": "node scripts/test.mjs",
     "test:e2e": "npm run build && playwright test",
     "check": "tsc --noEmit && node scripts/test.mjs",
-    "postinstall": "electron-builder install-app-deps",
+    "postinstall": "node scripts/patch-ssh2.mjs && electron-builder install-app-deps",
     "pack": "npm run build && electron-builder --dir",
     "dist:mac": "npm run build && electron-builder --mac dmg --arm64",
     "dist:win": "npm run build && electron-builder --win nsis --x64",
     "format": "prettier --write src tests scripts *.config.ts",
     "dist:win:arm64": "npm run build && electron-builder --win nsis --arm64",
-    "test:ssh:docker": "node scripts/docker-ssh.mjs"
+    "test:ssh:docker": "node scripts/docker-ssh.mjs",
+    "test:terminal:large": "npm run build && PASSPORT_TEXT_BENCH=1 playwright test tests/e2e/throughput.spec.ts"
   },
   "build": {
     "appId": "io.passport.desktop",

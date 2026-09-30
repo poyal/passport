@@ -1,0 +1,13 @@
+{
+  "packagedSmoke": "passed",
+  "localPTY": "passed",
+  "shutdown": "passed",
+  "exitCode": 0,
+  "appVersion": "0.3.3",
+  "arch": "arm64",
+  "platform": "darwin",
+  "hosts": 0,
+  "fonts": 247,
+  "version": 1,
+  "nodeAvailable": false
+}

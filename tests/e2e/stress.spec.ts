@@ -22,6 +22,7 @@ test("16 visible terminals process 100 KiB/s each for ten minutes", async () => 
   });
   let timer: ReturnType<typeof setInterval> | undefined;
   try {
+    const version = await app.evaluate(({ app }) => app.getVersion());
     await app.evaluate(({ dialog }) => {
       dialog.showMessageBox = async () => ({
         response: 1,
@@ -179,7 +180,7 @@ test("16 visible terminals process 100 KiB/s each for ten minutes", async () => 
       p95 = sorted[Math.floor(sorted.length * 0.95)];
     const result = {
       durationMs: Date.now() - start,
-      version: "0.3.0",
+      version,
       highlight: "log + addresses",
       panes: 16,
       hostCount: 500,
