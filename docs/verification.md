@@ -1,18 +1,34 @@
 # Passport 검증 기록
 
+## 1.0.2 Windows x64 추가 공개 배포 — 2026-09-30
+
+[기존 v1.0.2 릴리즈](https://github.com/poyal/passport/releases/tag/v1.0.2)에 Windows 11 x64 설치본을 추가했다. Windows 빌드 소스는 [28f538d](https://github.com/poyal/passport/commit/28f538db7459546dd4c8a9ed0db151e7d345dc68)이며 Mac 배포 태그는 옮기지 않았다. 기존 Mac DMG의 154,617,128바이트 크기와 SHA-256 `fe66cb02a0c24a3290d52b2c472b6c2a8fb64c4c3cd488913190870d7f36a77e`를 보존하고 `SHA256SUMS.txt`에 Windows 체크섬을 추가했다.
+
+[Windows 배포 작업](https://github.com/poyal/passport/actions/runs/36726585671)은 Windows x64 네이티브 의존성 설치, 타입·단위·SSH/SFTP·실제 FTP/FTPS 검사, 프로덕션·NSIS 빌드, 현재 사용자 설치 범위와 일반 패키지 GUI 전체 검증을 통과했다. Docker 매트릭스와 장시간 부하는 원격 작업에서 재실행하지 않았으며 아래 로컬 전체 검증 결과를 따른다.
+
+첫 [CI 실행](https://github.com/poyal/passport/actions/runs/36724587871)은 새로 컴파일된 node-pty 모듈 옆에 ConPTY DLL이 없어 실제 PTY 검사 2개가 실패했다. 로컬의 사전 빌드 모듈에는 DLL이 있어 이전 전체 검사에서는 발생하지 않았다. 네이티브 재컴파일 후와 `afterPack`에 DLL·OpenConsole 배치를 추가하고 해당 경로의 실제 셸 출력·종료를 확인한 뒤 CI 전체를 다시 통과했다.
+
+공개 Windows 파일: [Passport-1.0.2-win-x64.exe](https://github.com/poyal/passport/releases/download/v1.0.2/Passport-1.0.2-win-x64.exe) · **117,836,419바이트**.
+
+SHA-256: `55d35acfd60f389a607a6a5a99111d529d0b889c3e4de0d5b1a39e7d991661f5`.
+
+공개 EXE를 직접 다운로드해 크기·실제 SHA-256·GitHub 자산 digest·합본 체크섬 일치를 확인했다. EXE에서 앱을 추출하고 별도 임시 프로필에서 실제 로컬 PTY 출력, 렌더러 Node 접근 차단과 종료 코드 0을 확인했다. 공개 업데이트 응답도 대체하지 않고 시작 시 한 번 조회해 설치 1.0.2·최신 1.0.2·`installerAvailable: true`, About 표시와 정상 종료를 확인했다. 이 다운로드 검증은 기존 설치와 사용자 제거 등록을 변경하지 않는다.
+
+Windows EXE는 Authenticode 서명이 없다. Windows ARM64, 물리 한글 IME·배율 변경과 기존 설치본의 덮어쓰기 업그레이드는 이번 공개 검증에 포함하지 않는다. 아래 로컬 QA EXE는 별도 빌드이므로 해시·크기를 공개 설치 파일과 구분한다. [공개 게시·다운로드·실행 기록](benchmarks/github-release-windows-v1.0.2.json).
+
 ## Windows x64 전체 검증·Docker SSH/SFTP — 2026-09-30
 
 Windows 11 x64(10.0.26200), Node.js 24.14.0, Electron 44.4.5에서 현재 사용자 전용 1.0.2 패키지를 검증했다. Docker 서버는 `linux/amd64`이며, 이전 점검에서 생략했던 Docker 매트릭스·4GiB 파일·10분 지속 출력·1GiB 터미널 출력을 모두 실행했다.
 
-| 검사 | 최종 결과 |
-| --- | --- |
-| 타입·프로덕션 빌드 | 통과. 패키지 `dist/` 65개 파일이 현재 빌드와 일치 |
-| 단위·SSH/SFTP/FTP/FTPS·파일 부하 | 101개 통과. 별도 Docker 통합 1개를 포함해 **102개 통과**. Windows에 적용되지 않는 POSIX SIGKILL 검사 1개 제외 |
-| GUI | 소스 일반 GUI 38개와 실제 패키지 일반 GUI 38개 통과. Docker 데스크톱 검사 1개·터미널 부하 2개를 포함해 **패키지 GUI 41개 통과** |
-| Docker OpenSSH | Alpine 3.22, Ubuntu 24.04, Debian 12, Rocky 9, CentOS Stream 9, CentOS 7, CentOS 7 group1·SHA-1 GEX 전용 **8개 구성 통과** |
-| 4GiB·작은 파일 1만 개 | 4GiB 원본·복사본 SHA-256 일치, 10,000개 전체 내용 확인. 22.5초, 전송 프로세스 RSS 증가 422MiB |
-| 16개 터미널·10분 | 각 100KiB/s, 500개 호스트, 로그·주소 강조. 목표 공급량 99.98%, 입력 왕복 P95 **24.1ms**, 앱 전체 작업 집합 최대 **971MiB** |
-| 한 터미널 1GiB 연속 출력 | 실제 끝 표식·연결 유지. **2.14MiB/s**, 입력 왕복 P95 **2,647.2ms**, 앱 전체 작업 집합 최대 **761MiB** |
+| 검사                             | 최종 결과                                                                                                                       |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| 타입·프로덕션 빌드               | 통과. 패키지 `dist/` 65개 파일이 현재 빌드와 일치                                                                               |
+| 단위·SSH/SFTP/FTP/FTPS·파일 부하 | 101개 통과. 별도 Docker 통합 1개를 포함해 **102개 통과**. Windows에 적용되지 않는 POSIX SIGKILL 검사 1개 제외                   |
+| GUI                              | 소스 일반 GUI 38개와 실제 패키지 일반 GUI 38개 통과. Docker 데스크톱 검사 1개·터미널 부하 2개를 포함해 **패키지 GUI 41개 통과** |
+| Docker OpenSSH                   | Alpine 3.22, Ubuntu 24.04, Debian 12, Rocky 9, CentOS Stream 9, CentOS 7, CentOS 7 group1·SHA-1 GEX 전용 **8개 구성 통과**      |
+| 4GiB·작은 파일 1만 개            | 4GiB 원본·복사본 SHA-256 일치, 10,000개 전체 내용 확인. 22.5초, 전송 프로세스 RSS 증가 422MiB                                   |
+| 16개 터미널·10분                 | 각 100KiB/s, 500개 호스트, 로그·주소 강조. 목표 공급량 99.98%, 입력 왕복 P95 **24.1ms**, 앱 전체 작업 집합 최대 **971MiB**      |
+| 한 터미널 1GiB 연속 출력         | 실제 끝 표식·연결 유지. **2.14MiB/s**, 입력 왕복 P95 **2,647.2ms**, 앱 전체 작업 집합 최대 **761MiB**                           |
 
 각 Docker 구성에서 비밀번호·암호화된 Ed25519 키 인증, 잘못된 비밀번호·변경된 호스트 키 거절, sh/bash/zsh의 한글 출력, PTY 입력·크기·환경 변수, 로컬·원격·SOCKS5 터널과 UDP 요청 거절을 확인했다.
 

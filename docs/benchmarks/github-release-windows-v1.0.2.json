@@ -1,0 +1,96 @@
+{
+  "version": "1.0.2",
+  "releaseURL": "https://github.com/poyal/passport/releases/tag/v1.0.2",
+  "sourceCommit": "28f538db7459546dd4c8a9ed0db151e7d345dc68",
+  "workflowRun": 36726585671,
+  "workflowURL": "https://github.com/poyal/passport/actions/runs/36726585671",
+  "workflowConclusion": "success",
+  "verifiedAt": "2026-09-30T14:22:02.858Z",
+  "windowsPublishedAt": "2026-09-30T14:17:30Z",
+  "latestStableReleaseVerified": true,
+  "existingMacAssetPreserved": true,
+  "macArtifact": {
+    "name": "Passport-1.0.2-mac-arm64.dmg",
+    "bytes": 154617128,
+    "digest": "sha256:fe66cb02a0c24a3290d52b2c472b6c2a8fb64c4c3cd488913190870d7f36a77e"
+  },
+  "windowsArtifact": {
+    "name": "Passport-1.0.2-win-x64.exe",
+    "bytes": 117836419,
+    "sha256": "55d35acfd60f389a607a6a5a99111d529d0b889c3e4de0d5b1a39e7d991661f5",
+    "downloadURL": "https://github.com/poyal/passport/releases/download/v1.0.2/Passport-1.0.2-win-x64.exe",
+    "authenticodeSigned": false,
+    "authenticodeStatus": "NotSigned"
+  },
+  "checksumAsset": {
+    "name": "SHA256SUMS.txt",
+    "digest": "sha256:658016d6a4541e3422e2094e054250f3b9b5a5572d2bc94ec1354aa48a472f44",
+    "entries": [
+      "fe66cb02a0c24a3290d52b2c472b6c2a8fb64c4c3cd488913190870d7f36a77e  Passport-1.0.2-mac-arm64.dmg",
+      "55d35acfd60f389a607a6a5a99111d529d0b889c3e4de0d5b1a39e7d991661f5  Passport-1.0.2-win-x64.exe"
+    ]
+  },
+  "publicDownloadVerified": true,
+  "githubDigestAndChecksumsMatch": true,
+  "remoteVerificationSteps": [
+    "Set up job",
+    "Run actions/checkout@v4",
+    "Run actions/setup-node@v4",
+    "Run actions/setup-python@v5",
+    "Prepare FTP and FTPS fixtures",
+    "Install dependencies and prepare native ConPTY",
+    "Run npm run check",
+    "Run npm run build",
+    "Run npx electron-builder --win nsis --x64 --publish never",
+    "Verify current-user installer",
+    "Verify packaged Windows app",
+    "Add Windows installer to the existing release",
+    "Run actions/upload-artifact@v4",
+    "Post Run actions/setup-python@v5",
+    "Post Run actions/setup-node@v4",
+    "Post Run actions/checkout@v4",
+    "Complete job"
+  ],
+  "initialCiFailure": {
+    "workflowRun": 36724587871,
+    "reason": "ConPTY DLL missing beside the recompiled node-pty module",
+    "fixCommit": "28f538db7459546dd4c8a9ed0db151e7d345dc68",
+    "nativeRebuiltLayoutRegression": "passed",
+    "packagedAfterPackLocalPtyAndExit": "passed"
+  },
+  "fullLocalDockerAndStressRecord": "docs/benchmarks/verification-windows-full-v1.0.2.json",
+  "note": "The public EXE is a separate CI build from the earlier local QA installer. Full Docker and long stress checks were performed locally; the release CI runs the regular protocol and packaged GUI checks.",
+  "publicInstallerPayloadExtracted": true,
+  "publishedArtifactPackagedSmoke": {
+    "packagedSmoke": "passed",
+    "localPTY": "passed",
+    "shutdown": "passed",
+    "exitCode": 0,
+    "appVersion": "1.0.2",
+    "arch": "x64",
+    "platform": "win32",
+    "hosts": 0,
+    "fonts": 96,
+    "version": 1,
+    "nodeAvailable": false
+  },
+  "publishedArtifactStartupCheck": {
+    "startupUpdateCheck": "passed",
+    "manualChecks": 0,
+    "source": "public GitHub Releases",
+    "runtime": {
+      "packaged": true,
+      "version": "1.0.2"
+    },
+    "state": {
+      "currentVersion": "1.0.2",
+      "latestVersion": "1.0.2",
+      "status": "current",
+      "installerAvailable": true,
+      "checkedAt": 1790778223333,
+      "message": "최신 버전을 사용하고 있습니다."
+    },
+    "shutdownExitCode": 0
+  },
+  "installerRegistryModifiedDuringPublicDownloadVerification": false
+}

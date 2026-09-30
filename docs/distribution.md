@@ -6,7 +6,7 @@
 
 ## 현재 상태
 
-공개 버전과 준비 중인 버전은 [릴리즈 목록](releases/README.md)에서 확인한다. Apple Silicon Mac용 DMG와 SHA256SUMS를 GitHub Release에 게시한다. Windows x64는 로컬 EXE 생성·실제 설치·PTY·DPAPI·정상 종료·제거, Docker SSH/SFTP 8개 구성과 대용량·지속 출력 검사를 확인했으며 공개 게시 전이다. Windows ARM64의 실제 설치·실행은 아직 확인하지 않았다. 상세 범위와 최신 설치 파일 해시는 [Windows 전체 검증 기록](verification.md#windows-x64-전체-검증docker-sshsftp--2026-09-30)을 따른다.
+공개 버전과 준비 중인 버전은 [릴리즈 목록](releases/README.md)에서 확인한다. Apple Silicon Mac용 DMG와 Windows x64 EXE를 GitHub Release에 게시하며 `SHA256SUMS.txt`에 두 플랫폼의 체크섬을 제공한다. Windows x64는 로컬 실제 설치·PTY·DPAPI·종료·제거, Docker SSH/SFTP 8개 구성과 대용량·지속 출력 검사에 이어 원격 Windows 빌드·검증을 완료했다. Windows ARM64의 실제 설치·실행은 아직 확인하지 않았다. 공개 파일 해시와 로컬 전체 시험 범위는 [검증 기록](verification.md)을 따른다.
 
 Mac 설치본은 ad-hoc 서명이며 Developer ID 서명·Apple 공증을 포함하지 않는다. `codesign` 무결성 검사 통과는 Apple 공증이나 Gatekeeper의 실행 허용을 뜻하지 않는다. 현재 결과와 DMG 해시는 [검증 기록](verification.md)에 보관한다.
 
@@ -23,6 +23,8 @@ Mac 설치본은 ad-hoc 서명이며 Developer ID 서명·Apple 공증을 포함
 파일 이름의 버전은 `package.json`을 따른다. `npm run pack`은 설치 프로그램 없이 현재 환경의 앱 폴더를 만든다. `release/`와 `dist/`는 생성물이며 저장소에 커밋하지 않는다. README는 최신 공개 릴리즈 링크를 유지하고 버전별 링크는 릴리즈 목록에 추가한다.
 
 Mac 최소 버전 목표는 14이며 macOS 27 로컬 환경과 macOS 15 GitHub Actions에서 앱 실행을 확인했다. Windows 대상은 Windows 11 x64·ARM64이며 각각의 설치 및 실행 검증을 구분한다. Intel Mac과 Rosetta 의존 Mac 패키지는 만들지 않는다.
+
+Windows의 `npm ci`는 네이티브 재컴파일 후 [ConPTY 배치 스크립트](../scripts/prepare-node-pty.mjs)로 DLL·OpenConsole을 실제 네이티브 모듈 옆에 복사한다. 패키징의 [afterPack](../scripts/after-pack.mjs)에서도 다시 배치한다. electron-builder 재컴파일이 node-pty의 원래 postinstall 복사 결과를 지워도 패키지에 필요한 파일을 포함하도록 한다.
 
 Windows NSIS 설치본은 [설치 스크립트](../build/installer.nsh)에서 현재 사용자 전용으로 고정한다. 사용자 범위 선택 화면을 생략하고 설치 폴더 선택은 유지한다. 관리자 권한 상승과 `/allusers` 재정의를 허용하지 않는다. 생성된 설치본의 첫 화면과 명령줄 재정의를 검사하려면 다음을 실행한다. 검사 결과 JSON은 설치본과 같은 폴더에 저장된다.
 
@@ -81,7 +83,9 @@ Docker 매트릭스와 장시간 부하, 별도 Python 환경을 요구하는 FT
 
 [Publish Mac release](../.github/workflows/release.yml)은 `v*.*.*` 태그 push에서 실행한다. 태그와 `package.json`의 버전이 같아야 하고 `docs/releases/v<버전>.md`가 있어야 한다. ARM64 Mac runner에서 기본 검사·GUI·DMG·패키지 실행과 구형 SSH/파일 색상을 확인하고 모든 단계가 통과하면 해당 버전의 GitHub Release에 DMG와 `SHA256SUMS.txt`를 게시한다. 게시 권한은 해당 작업의 저장소 contents로 한정한다. [GitHub ARM64 runner 공식 안내](https://docs.github.com/en/actions/reference/runners/github-hosted-runners).
 
-공개 배포 검증과 설치 파일 해시는 [검증 기록](verification.md)과 버전별 `docs/benchmarks/github-release-v<버전>.json`에 보관한다. 로컬 DMG와 runner에서 만든 DMG는 별도 빌드이므로 각각의 해시를 사용한다. 배포 소스는 해당 버전 태그를 기준으로 하며 게시 후 문서 갱신은 `main`에 반영한다.
+[Publish Windows release](../.github/workflows/release-windows.yml)은 수동 실행하거나 `main`에서 해당 워크플로 파일을 변경해 푸시할 때 실행한다. Windows x64 runner에서 Python FTP/FTPS fixture를 준비하고 `npm ci`·기본 검사·EXE 빌드·현재 사용자 설치 범위·실제 패키지 GUI를 검증한다. 통과하면 [게시 스크립트](../scripts/publish-windows-release.mjs)가 `package.json`과 같은 버전의 기존 정식 릴리즈에 EXE를 추가한다. 기존 Mac DMG와 체크섬을 검증·보존하고 합본 체크섬·Windows 소스 커밋을 게시한 뒤 공개 EXE를 다시 다운로드해 해시를 확인한다. 다른 바이트의 같은 이름 EXE가 이미 있거나 릴리즈가 불변 상태면 게시를 중단한다.
+
+공개 배포 검증과 설치 파일 해시는 [검증 기록](verification.md)과 버전별 `docs/benchmarks/github-release-*.json`에 보관한다. 로컬 파일과 runner에서 만든 파일은 별도 빌드이므로 각각의 해시를 사용한다. Mac 배포 소스는 해당 버전 태그이며 Windows 추가 게시 소스는 해당 `main` 빌드 커밋이다. Windows 게시 때문에 기존 Mac 태그를 옮기지 않고 게시 후 문서를 `main`에 반영한다.
 
 ## 배포 갱신 순서
 
