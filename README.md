@@ -22,13 +22,13 @@
 
 ## 설치
 
-**현재 Apple Silicon Mac용 1.0.0 테스트 설치본이 준비되어 있습니다.** Windows용 EXE는 준비 중이며, 공개 다운로드 페이지는 아직 제공하지 않습니다. 전달받은 설치 파일을 사용해 주세요.
+**Apple Silicon Mac용 1.0.0을 [GitHub Releases](https://github.com/poyal/passport/releases/tag/v1.0.0)에 게시했습니다.** [DMG 다운로드](https://github.com/poyal/passport/releases/download/v1.0.0/Passport-1.0.0-mac-arm64.dmg)와 [SHA-256 확인 파일](https://github.com/poyal/passport/releases/download/v1.0.0/SHA256SUMS.txt)을 제공합니다. Windows용 EXE는 준비 중입니다.
 
-| 내 컴퓨터                     | 설치 파일                      | 제공 상태          |
-| ----------------------------- | ------------------------------ | ------------------ |
-| Mac · Apple Silicon(M 시리즈) | `Passport-1.0.0-mac-arm64.dmg` | 테스트 설치본 제공 |
-| Windows · Intel / AMD(x64)    | `.exe` 설치 프로그램           | 준비 중            |
-| Windows · ARM64               | ARM64용 `.exe` 설치 프로그램   | 준비 중            |
+| 내 컴퓨터                     | 설치 파일                      | 제공 상태           |
+| ----------------------------- | ------------------------------ | ------------------- |
+| Mac · Apple Silicon(M 시리즈) | `Passport-1.0.0-mac-arm64.dmg` | GitHub Release 제공 |
+| Windows · Intel / AMD(x64)    | `.exe` 설치 프로그램           | 준비 중             |
+| Windows · ARM64               | ARM64용 `.exe` 설치 프로그램   | 준비 중             |
 
 ### Mac
 

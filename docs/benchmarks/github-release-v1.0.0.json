@@ -1,0 +1,21 @@
+{
+  "version": "v1.0.0",
+  "releaseURL": "https://github.com/poyal/passport/releases/tag/v1.0.0",
+  "publishedAt": "2026-09-30T05:03:34Z",
+  "draft": false,
+  "prerelease": false,
+  "workflowURL": "https://github.com/poyal/passport/actions/runs/36671390704",
+  "workflowConclusion": "success",
+  "sourceCommit": "bc06d83d8d1158b9e69bc7d5e347d4cf8f697edc",
+  "installer": {
+    "name": "Passport-1.0.0-mac-arm64.dmg",
+    "bytes": 154618392,
+    "sha256": "06b29870ae4ecca6d8599a151aa05f0fcb3978442ca46a5f6e89ddbd9fb7a99e",
+    "githubDigest": "sha256:06b29870ae4ecca6d8599a151aa05f0fcb3978442ca46a5f6e89ddbd9fb7a99e",
+    "downloadURL": "https://github.com/poyal/passport/releases/download/v1.0.0/Passport-1.0.0-mac-arm64.dmg",
+    "downloadStatus": 206,
+    "contentType": "application/octet-stream"
+  },
+  "checksumVerified": true,
+  "origin": "GitHub Actions arm64 Mac build; separate from local DMG"
+}

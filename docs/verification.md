@@ -25,6 +25,8 @@
 
 로컬 DMG는 `release/Passport-1.0.0-mac-arm64.dmg`다. SHA-256: `9fd8d595bfa6e339211fea4a529a96f04d7cb10e195410075e2e411f50a949ec`. GitHub Actions에서 만드는 배포 DMG는 별도 빌드이며 함께 게시되는 SHA256SUMS를 사용한다.
 
+[GitHub Release v1.0.0](https://github.com/poyal/passport/releases/tag/v1.0.0) 게시 완료. [GitHub Actions](https://github.com/poyal/passport/actions/runs/36671390704)의 기본 검사·전체 GUI·DMG·패키지 실행·설치본 구형 SSH/색상 검증이 모두 성공했다. 배포 DMG는 154,618,392바이트이며 실제 다운로드가 HTTP 206을 반환하고 게시 SHA256SUMS와 GitHub 자산 digest가 일치했다. SHA-256: `06b29870ae4ecca6d8599a151aa05f0fcb3978442ca46a5f6e89ddbd9fb7a99e`. [게시 증거](benchmarks/github-release-v1.0.0.json).
+
 ## 0.3.3 구형 SSH 자동 호환·옵션 제거 — 2026-09-30
 
 사용자 요청에 따라 SHA-1 group14·GEX·group1을 모든 SSH·SFTP·터널 연결에서 현대 기본 목록 뒤에 추가한다. 호스트의 **SSH 알고리즘** 옵션과 `legacySSH` 필드를 제거했다. 이전 데이터의 `legacySSH: false`도 파싱 시 제외하므로 호스트를 다시 저장하지 않아도 자동 호환이 적용된다. 현대 방식과 구형 방식을 모두 제공하는 시험 서버에서는 `curve25519-sha256`이 선택됐다. 잘못된 비밀번호와 변경된 지문은 계속 거절한다.
