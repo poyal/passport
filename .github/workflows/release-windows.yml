@@ -35,7 +35,8 @@ jobs:
           python -m pip install -r tests/fixtures/requirements.txt
           "FTP_TEST_PYTHON=$((Get-Command python).Source)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           'C:\Program Files\Git\usr\bin' | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
-      - run: npm ci
+      - name: Install dependencies and prepare native ConPTY
+        run: npm ci
       - run: npm run check
       - run: npm run build
       - run: npx electron-builder --win nsis --x64 --publish never

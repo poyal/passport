@@ -17,7 +17,7 @@
     "test": "node scripts/test.mjs",
     "test:e2e": "npm run build && playwright test",
     "check": "tsc --noEmit && node scripts/test.mjs",
-    "postinstall": "node scripts/patch-ssh2.mjs && electron-builder install-app-deps",
+    "postinstall": "node scripts/patch-ssh2.mjs && electron-builder install-app-deps && node scripts/prepare-node-pty.mjs",
     "pack": "npm run build && electron-builder --dir",
     "dist:mac": "npm run build && electron-builder --mac dmg --arm64",
     "dist:win": "npm run build && electron-builder --win nsis --x64",
@@ -45,6 +45,7 @@
       "node_modules/node-pty/**"
     ],
     "npmRebuild": true,
+    "afterPack": "scripts/after-pack.mjs",
     "mac": {
       "target": "dmg",
       "category": "public.app-category.developer-tools",
