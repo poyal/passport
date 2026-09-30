@@ -6,7 +6,7 @@
 
 ## 현재 상태
 
-공개 버전과 준비 중인 버전은 [릴리즈 목록](releases/README.md)에서 확인한다. Apple Silicon Mac용 DMG와 SHA256SUMS를 GitHub Release에 게시한다. Windows x64·ARM64는 빌드 스크립트와 수동 CI를 준비했으나 실제 설치·실행 확인이 남아 있다.
+공개 버전과 준비 중인 버전은 [릴리즈 목록](releases/README.md)에서 확인한다. Apple Silicon Mac용 DMG와 SHA256SUMS를 GitHub Release에 게시한다. Windows x64는 로컬 EXE 생성·실제 설치·PTY·DPAPI·정상 종료·제거, Docker SSH/SFTP 8개 구성과 대용량·지속 출력 검사를 확인했으며 공개 게시 전이다. Windows ARM64의 실제 설치·실행은 아직 확인하지 않았다. 상세 범위와 최신 설치 파일 해시는 [Windows 전체 검증 기록](verification.md#windows-x64-전체-검증docker-sshsftp--2026-09-30)을 따른다.
 
 Mac 설치본은 ad-hoc 서명이며 Developer ID 서명·Apple 공증을 포함하지 않는다. `codesign` 무결성 검사 통과는 Apple 공증이나 Gatekeeper의 실행 허용을 뜻하지 않는다. 현재 결과와 DMG 해시는 [검증 기록](verification.md)에 보관한다.
 
@@ -23,6 +23,12 @@ Mac 설치본은 ad-hoc 서명이며 Developer ID 서명·Apple 공증을 포함
 파일 이름의 버전은 `package.json`을 따른다. `npm run pack`은 설치 프로그램 없이 현재 환경의 앱 폴더를 만든다. `release/`와 `dist/`는 생성물이며 저장소에 커밋하지 않는다. README는 최신 공개 릴리즈 링크를 유지하고 버전별 링크는 릴리즈 목록에 추가한다.
 
 Mac 최소 버전 목표는 14이며 macOS 27 로컬 환경과 macOS 15 GitHub Actions에서 앱 실행을 확인했다. Windows 대상은 Windows 11 x64·ARM64이며 각각의 설치 및 실행 검증을 구분한다. Intel Mac과 Rosetta 의존 Mac 패키지는 만들지 않는다.
+
+Windows NSIS 설치본은 [설치 스크립트](../build/installer.nsh)에서 현재 사용자 전용으로 고정한다. 사용자 범위 선택 화면을 생략하고 설치 폴더 선택은 유지한다. 관리자 권한 상승과 `/allusers` 재정의를 허용하지 않는다. 생성된 설치본의 첫 화면과 명령줄 재정의를 검사하려면 다음을 실행한다. 검사 결과 JSON은 설치본과 같은 폴더에 저장된다.
+
+```powershell
+./scripts/windows-installer-smoke.ps1 -InstallerPath release/Passport-1.0.2-win-x64.exe
+```
 
 ## 아이콘과 오픈소스 고지
 
@@ -49,6 +55,16 @@ node scripts/packaged-smoke.mjs release/win-arm64-unpacked/Passport.exe
 
 검사는 별도 임시 프로필에서 초기 화면, 렌더러 Node 접근 차단, 실제 로컬 PTY 명령, 정상 종료를 확인한다. 이 검사와 별도로 DMG의 Applications 이동, EXE 설치·제거, 한글 IME, 배율, 파일 대화상자, Keychain/DPAPI를 해당 OS에서 확인해야 한다. 패키지 내부 앱의 실행 성공을 설치 프로그램 검증으로 대신하지 않는다.
 
+Windows 패키지 GUI와 실제 DPAPI 저장·재시작 후 접속을 검사하려면:
+
+```powershell
+$env:PASSPORT_DISABLE_UPDATE_CHECK = '1'
+$env:PASSPORT_E2E_EXECUTABLE = (Resolve-Path 'release/win-unpacked/Passport.exe').Path
+npx playwright test
+```
+
+ARM64에서는 실행 경로를 `release/win-arm64-unpacked/Passport.exe`로 바꾼다. DPAPI 시험은 `safeStorage`를 대체하지 않고 임시 프로필의 SQLite 암호문과 재시작 후 실제 SSH 비밀번호 인증을 확인한다.
+
 시작 시 업데이트 확인을 실제 공개 GitHub 응답으로 검사하려면 다음을 실행한다. 별도 임시 프로필을 사용하며 수동 확인을 호출하지 않고 시작 시 확인 결과·About 표시·정상 종료를 검사한다. 인터넷 연결이 필요하다.
 
 ```sh
@@ -57,7 +73,7 @@ node scripts/updates-smoke.mjs release/mac-arm64/Passport.app/Contents/MacOS/Pas
 
 ## 수동 CI
 
-[Desktop verification](../.github/workflows/desktop.yml)은 `workflow_dispatch`로만 실행한다. Windows x64, Windows ARM64, Mac ARM64 작업에서 검사·GUI·패키징·패키지 실행 확인을 수행하고 설치 파일을 Actions artifact로 보관한다. `--publish never`를 사용하므로 공개 Release를 게시하지 않는다.
+[Desktop verification](../.github/workflows/desktop.yml)은 `workflow_dispatch`로만 실행한다. Windows x64, Windows ARM64, Mac ARM64 작업에서 검사·GUI·패키징·패키지 실행 확인을 수행하고 설치 파일을 Actions artifact로 보관한다. Windows는 현재 사용자 설치 범위·보호 파일이 있는 드라이브 루트 목록·패키지 GUI·실제 DPAPI·네이티브 PTY 종료까지 추가로 확인한다. `--publish never`를 사용하므로 공개 Release를 게시하지 않는다.
 
 Docker 매트릭스와 장시간 부하, 별도 Python 환경을 요구하는 FTP/FTPS 검사는 기본 CI만으로 모두 수행되지 않는다. [개발 안내](development.md)의 명령으로 따로 실행하고 건너뛴 시험을 기록한다. 실제 CI 실행 여부는 검증 기록에 남긴다.
 

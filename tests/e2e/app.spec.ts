@@ -19,7 +19,8 @@ test.beforeAll(async () => {
   await fs.mkdir(path.join(directory, "remote"));
   server = await sshFixture(path.join(directory, "remote"));
   application = await electron.launch({
-    args: ["."],
+    executablePath: process.env.PASSPORT_E2E_EXECUTABLE,
+    args: process.env.PASSPORT_E2E_EXECUTABLE ? [] : ["."],
     env: { ...process.env, PASSPORT_DATA_DIR: path.join(directory, "data") },
     timeout: 30000,
   });
@@ -184,7 +185,8 @@ test("host CRUD, live SSH, split session preservation, themes, and persistence",
   );
   await closeCleanly(application);
   application = await electron.launch({
-    args: ["."],
+    executablePath: process.env.PASSPORT_E2E_EXECUTABLE,
+    args: process.env.PASSPORT_E2E_EXECUTABLE ? [] : ["."],
     env: { ...process.env, PASSPORT_DATA_DIR: path.join(directory, "data") },
   });
   page = await application.firstWindow();

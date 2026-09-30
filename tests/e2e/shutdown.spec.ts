@@ -11,7 +11,8 @@ for (const mode of ["active", "closed", "reopened"] as const) {
       path.join(os.tmpdir(), "passport-quit-"),
     );
     const application = await electron.launch({
-      args: ["."],
+      executablePath: process.env.PASSPORT_E2E_EXECUTABLE,
+      args: process.env.PASSPORT_E2E_EXECUTABLE ? [] : ["."],
       env: { ...process.env, PASSPORT_DATA_DIR: directory },
     });
     try {

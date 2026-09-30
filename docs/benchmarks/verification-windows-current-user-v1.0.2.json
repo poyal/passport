@@ -1,0 +1,44 @@
+{
+  "date": "2026-09-30",
+  "baseCommit": "8eb8e44",
+  "version": "1.0.2",
+  "platform": "win32",
+  "arch": "x64",
+  "os": "Windows 11 10.0.26200",
+  "node": "24.14.0",
+  "electron": "44.4.5",
+  "artifact": {
+    "path": "release/current-user/Passport-1.0.2-win-x64.exe",
+    "bytes": 115649103,
+    "sha256": "26703222762d1db26b8534de9a1b88022ce9fc3e5700be62076c171d5e47fb98",
+    "authenticodeSigned": false,
+    "published": false
+  },
+  "checks": {
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "unitAndProtocolIntegration": { "passed": 100, "skipped": 3 },
+    "installer": {
+      "currentUserOnly": true,
+      "directoryChooserFirst": true,
+      "installScopeSelectionRemoved": true,
+      "allUsersOverrideRejected": true,
+      "rejectedExitCode": 2
+    },
+    "packagedSmoke": "passed",
+    "packagedGui": {
+      "passed": 5,
+      "scenarios": [
+        "Windows drive root around protected files",
+        "Real DPAPI credentials and SSH authentication after restart",
+        "Shutdown with four active native PTYs",
+        "Shutdown with four closed native PTYs",
+        "Shutdown with four reopened native PTYs"
+      ]
+    },
+    "protectedEntryBrowseRegression": "passed",
+    "strictTransferEnumerationRegression": "passed"
+  },
+  "notRun": ["Remote CI", "Upgrade over an existing installation", "Windows ARM64"],
+  "previousAudit": "verification-windows-x64-v1.0.2.json"
+}

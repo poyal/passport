@@ -1,0 +1,169 @@
+{
+  "date": "2026-09-30T13:00:07.465Z",
+  "clientPlatform": "win32",
+  "clientArch": "x64",
+  "executable": "C:\\Users\\ttt45\\Workspace\\personal\\passport\\release\\current-user\\win-unpacked\\Passport.exe",
+  "dockerPlatform": "linux/amd64",
+  "results": [
+    {
+      "server": "alpine",
+      "peer": "ubuntu",
+      "status": "passed",
+      "passwordTerminal": true,
+      "encryptedKeyTerminal": true,
+      "sftpBytes": 2097152,
+      "roundtripSHA256": "8a49883f20feb51bc66c55993d55e5b90e73acf4b333bfcdc77f84ecc270a2fa",
+      "crossServerRoundtrip": true,
+      "recursiveUTF8AndEmptyFiles": true,
+      "conflicts": [
+        "skip",
+        "rename",
+        "overwrite"
+      ],
+      "chmod": "0640",
+      "remoteRenameAndDelete": true,
+      "largeRoundtripBytes": 0,
+      "cancelAndCleanup": false
+    },
+    {
+      "server": "ubuntu",
+      "peer": "debian",
+      "status": "passed",
+      "passwordTerminal": true,
+      "encryptedKeyTerminal": true,
+      "sftpBytes": 2097152,
+      "roundtripSHA256": "3b7c34ac2e2a7e930978cf08baa46cf18b2671aeabba17a57563fb53e7ad59b7",
+      "crossServerRoundtrip": true,
+      "recursiveUTF8AndEmptyFiles": true,
+      "conflicts": [
+        "skip",
+        "rename",
+        "overwrite"
+      ],
+      "chmod": "0640",
+      "remoteRenameAndDelete": true,
+      "largeRoundtripBytes": 134217728,
+      "cancelAndCleanup": true
+    },
+    {
+      "server": "debian",
+      "peer": "rocky",
+      "status": "passed",
+      "passwordTerminal": true,
+      "encryptedKeyTerminal": true,
+      "sftpBytes": 2097152,
+      "roundtripSHA256": "fc114d4a95bc829c733a5e2190b531f20db107337b1d2f1dd3586f5c522b9bda",
+      "crossServerRoundtrip": true,
+      "recursiveUTF8AndEmptyFiles": true,
+      "conflicts": [
+        "skip",
+        "rename",
+        "overwrite"
+      ],
+      "chmod": "0640",
+      "remoteRenameAndDelete": true,
+      "largeRoundtripBytes": 0,
+      "cancelAndCleanup": false
+    },
+    {
+      "server": "rocky",
+      "peer": "centos",
+      "status": "passed",
+      "passwordTerminal": true,
+      "encryptedKeyTerminal": true,
+      "sftpBytes": 2097152,
+      "roundtripSHA256": "05eeca2e9dfe41139a7d93afd8ea8d023ba7876d654ab5f75aa206b4a5ebecfa",
+      "crossServerRoundtrip": true,
+      "recursiveUTF8AndEmptyFiles": true,
+      "conflicts": [
+        "skip",
+        "rename",
+        "overwrite"
+      ],
+      "chmod": "0640",
+      "remoteRenameAndDelete": true,
+      "largeRoundtripBytes": 0,
+      "cancelAndCleanup": false
+    },
+    {
+      "server": "centos",
+      "peer": "centos7",
+      "status": "passed",
+      "passwordTerminal": true,
+      "encryptedKeyTerminal": true,
+      "sftpBytes": 2097152,
+      "roundtripSHA256": "4f1c5f355ed26c9e7995e6ca876c4af9a658be30af0df4efb94b2c79a81b9c76",
+      "crossServerRoundtrip": true,
+      "recursiveUTF8AndEmptyFiles": true,
+      "conflicts": [
+        "skip",
+        "rename",
+        "overwrite"
+      ],
+      "chmod": "0640",
+      "remoteRenameAndDelete": true,
+      "largeRoundtripBytes": 0,
+      "cancelAndCleanup": false
+    },
+    {
+      "server": "centos7",
+      "peer": "centos7-group1",
+      "status": "passed",
+      "passwordTerminal": true,
+      "encryptedKeyTerminal": true,
+      "sftpBytes": 2097152,
+      "roundtripSHA256": "c6c756b60b72223ea906c4e9a565da500af5ec2bbc7ef27ce2d2ed3aea28a1c9",
+      "crossServerRoundtrip": true,
+      "recursiveUTF8AndEmptyFiles": true,
+      "conflicts": [
+        "skip",
+        "rename",
+        "overwrite"
+      ],
+      "chmod": "0640",
+      "remoteRenameAndDelete": true,
+      "largeRoundtripBytes": 0,
+      "cancelAndCleanup": false
+    },
+    {
+      "server": "centos7-group1",
+      "peer": "centos7-gex-sha1",
+      "status": "passed",
+      "passwordTerminal": true,
+      "encryptedKeyTerminal": true,
+      "sftpBytes": 2097152,
+      "roundtripSHA256": "da0a7de7f10a636f4a7fc7b7ffbe5578e0b5beefb5aeabe5862747d809493177",
+      "crossServerRoundtrip": true,
+      "recursiveUTF8AndEmptyFiles": true,
+      "conflicts": [
+        "skip",
+        "rename",
+        "overwrite"
+      ],
+      "chmod": "0640",
+      "remoteRenameAndDelete": true,
+      "largeRoundtripBytes": 0,
+      "cancelAndCleanup": false
+    },
+    {
+      "server": "centos7-gex-sha1",
+      "peer": "alpine",
+      "status": "passed",
+      "passwordTerminal": true,
+      "encryptedKeyTerminal": true,
+      "sftpBytes": 2097152,
+      "roundtripSHA256": "4b59d3450d56dd41b805715bb6dbc3c5859a8602aae8a8d5648326f2f233f3e3",
+      "crossServerRoundtrip": true,
+      "recursiveUTF8AndEmptyFiles": true,
+      "conflicts": [
+        "skip",
+        "rename",
+        "overwrite"
+      ],
+      "chmod": "0640",
+      "remoteRenameAndDelete": true,
+      "largeRoundtripBytes": 0,
+      "cancelAndCleanup": false
+    }
+  ]
+}

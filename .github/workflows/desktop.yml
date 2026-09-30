@@ -33,12 +33,24 @@ jobs:
       - run: npm run build
       - run: npx playwright test
       - run: npx electron-builder --${{ matrix.target }} --${{ matrix.arch }} --publish never
+      - name: Verify Windows current-user installer scope
+        if: matrix.target == 'win'
+        shell: pwsh
+        run: |
+          $version = node -p "require('./package.json').version"
+          ./scripts/windows-installer-smoke.ps1 -InstallerPath "release/Passport-$version-win-${{ matrix.arch }}.exe"
       - if: matrix.target == 'mac'
         run: node scripts/packaged-smoke.mjs release/mac-arm64/Passport.app/Contents/MacOS/Passport
       - if: matrix.target == 'win' && matrix.arch == 'x64'
         run: node scripts/packaged-smoke.mjs release/win-unpacked/Passport.exe
       - if: matrix.target == 'win' && matrix.arch == 'arm64'
         run: node scripts/packaged-smoke.mjs release/win-arm64-unpacked/Passport.exe
+      - name: Verify Windows packaged GUI and native PTY shutdown
+        if: matrix.target == 'win'
+        env:
+          PASSPORT_DISABLE_UPDATE_CHECK: "1"
+          PASSPORT_E2E_EXECUTABLE: ${{ github.workspace }}/release/win${{ matrix.arch == 'arm64' && '-arm64' || '' }}-unpacked/Passport.exe
+        run: npx playwright test
       - uses: actions/upload-artifact@v4
         with:
           name: passport-${{ matrix.target }}-${{ matrix.arch }}

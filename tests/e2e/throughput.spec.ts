@@ -111,7 +111,11 @@ test("large terminal text remains interactive and bounded through 1 GiB", async 
       };
       state.frame = requestAnimationFrame(tick);
     }, id);
-    const version = await app.evaluate(({ app }) => app.getVersion());
+    const { version, platform, arch } = await app.evaluate(({ app }) => ({
+      version: app.getVersion(),
+      platform: process.platform,
+      arch: process.arch,
+    }));
     const line = Buffer.from(
       "2026-09-30 INFO 한글 대용량 출력 192.0.2.10 https://example.test \x1b[32mOK\x1b[0m 0123456789abcdefghijklmnopqrstuvwxyz\r\n",
     );
@@ -273,14 +277,14 @@ test("large terminal text remains interactive and bounded through 1 GiB", async 
         JSON.stringify(
           {
             version,
-            platform: "macOS arm64",
+            platform: `${platform} ${arch}`,
             terminalCount: 1,
             scrollbackLines: 10000,
             logLimitMiB: 64,
             highlight: "log + addresses",
             stages: results,
             limits:
-              "Cumulative streamed output, not full in-memory retention. Only this Mac and loopback SSH measured.",
+              "Cumulative streamed output, not full in-memory retention. Only this machine and loopback SSH measured.",
           },
           null,
           2,

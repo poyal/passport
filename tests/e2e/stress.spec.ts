@@ -6,7 +6,7 @@ import { randomUUID } from "node:crypto";
 import { sshFixture } from "../fixtures/ssh-server";
 import { closeCleanly } from "../fixtures/electron-exit";
 import { emptyDocument, hostSchema, type Layout } from "../../src/shared/model";
-test("16 visible terminals process 100 KiB/s each for ten minutes", async () => {
+test("16 visible terminals process 100 KiB/s each for ten minutes", async ({}, info) => {
   test.skip(
     process.env.PASSPORT_UI_STRESS !== "1",
     "Run explicitly with PASSPORT_UI_STRESS=1.",
@@ -17,7 +17,8 @@ test("16 visible terminals process 100 KiB/s each for ten minutes", async () => 
   );
   const server = await sshFixture(directory);
   const app = await electron.launch({
-    args: ["."],
+    executablePath: process.env.PASSPORT_E2E_EXECUTABLE,
+    args: process.env.PASSPORT_E2E_EXECUTABLE ? [] : ["."],
     env: { ...process.env, PASSPORT_DATA_DIR: path.join(directory, "data") },
   });
   let timer: ReturnType<typeof setInterval> | undefined;
@@ -117,20 +118,29 @@ test("16 visible terminals process 100 KiB/s each for ten minutes", async () => 
     );
     for (let p = 0; p < chunk.length; p += line.length) line.copy(chunk, p);
     const blocked = new Set<number>(),
-      counts = Array(16).fill(0);
+      counts = Array(16).fill(0),
+      pauses = Array(16).fill(0);
+    const start = Date.now();
+    let timerTicks = 0;
     timer = setInterval(() => {
+      timerTicks++;
+      // Schedule by elapsed time so late Windows timer callbacks do not lower the requested rate.
+      const target = Math.floor((Date.now() - start) / 100) * chunk.length;
       server.shells.forEach((shell, i) => {
         if (blocked.has(i)) return;
-        counts[i] += chunk.length;
-        if (!shell.write(chunk)) {
-          blocked.add(i);
-          shell.once("drain", () => blocked.delete(i));
+        while (counts[i] + chunk.length <= target) {
+          counts[i] += chunk.length;
+          if (!shell.write(chunk)) {
+            pauses[i]++;
+            blocked.add(i);
+            shell.once("drain", () => blocked.delete(i));
+            break;
+          }
         }
       });
     }, 100);
     const samples: number[] = [],
       memory: number[] = [];
-    const start = Date.now();
     for (let i = 0; i < 600; i++) {
       const delay = await page.evaluate(
         async ({ id, marker }) =>
@@ -181,23 +191,28 @@ test("16 visible terminals process 100 KiB/s each for ten minutes", async () => 
     const result = {
       durationMs: Date.now() - start,
       version,
+      platform: process.platform,
+      arch: process.arch,
       highlight: "log + addresses",
       panes: 16,
       hostCount: 500,
       bytesPerSession: counts,
+      targetBytesPerSession: 600 * 100 * 1024,
+      timerTicks,
+      backpressurePauses: pauses,
       inputLoopbackP95Ms: p95,
       peakWorkingSetMiB: Math.round(Math.max(...memory) / 1024),
       lastWorkingSetMiB: Math.round(memory.at(-1)! / 1024),
-      note: "Loopback IPC/SSH response includes local network delay. Windows/Intel Mac not measured.",
+      note: "Loopback IPC/SSH response includes local network delay on the recorded client platform.",
     };
-    await fs.mkdir("test-results", { recursive: true });
+    await fs.mkdir(info.outputDir, { recursive: true });
     await fs.writeFile(
-      "test-results/terminal-stress.json",
+      info.outputPath("terminal-stress.json"),
       JSON.stringify(result, null, 2),
     );
     expect(p95).toBeLessThan(100);
     expect(Math.min(...counts)).toBeGreaterThan(600 * 100 * 1024 * 0.95);
-    await page.screenshot({ path: "test-results/terminal-stress.png" });
+    await page.screenshot({ path: info.outputPath("terminal-stress.png") });
   } finally {
     if (timer) clearInterval(timer);
     try {

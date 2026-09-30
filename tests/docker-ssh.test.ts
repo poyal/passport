@@ -15,6 +15,7 @@ it.skipIf(!manifest)(
   "real OpenSSH across Docker operating systems",
   async () => {
     const config = JSON.parse(await fs.readFile(manifest!, "utf8")) as {
+      dockerPlatform: string;
       hosts: {
         name: string;
         image: string;
@@ -38,6 +39,27 @@ it.skipIf(!manifest)(
     };
     const store = new Store(root, vault),
       results: unknown[] = [];
+    const resultsPath =
+      process.env.PASSPORT_DOCKER_RESULTS || "docs/benchmarks/docker-ssh.json";
+    const progress: { server: string; stage: string; elapsedMs: number }[] = [];
+    const writeResults = async () => {
+      await fs.mkdir(path.dirname(resultsPath), { recursive: true });
+      await fs.writeFile(
+        resultsPath,
+        JSON.stringify(
+          {
+            date: new Date().toISOString(),
+            clientPlatform: process.platform,
+            clientArch: process.arch,
+            dockerPlatform: config.dockerPlatform,
+            results,
+            progress,
+          },
+          null,
+          2,
+        ),
+      );
+    };
     const password: Secret = {
       type: "password",
       password: config.password,
@@ -52,6 +74,16 @@ it.skipIf(!manifest)(
     };
     try {
       for (const entry of config.hosts) {
+        const started = Date.now();
+        const mark = async (stage: string) => {
+          progress.push({
+            server: entry.name,
+            stage,
+            elapsedMs: Date.now() - started,
+          });
+          await writeResults();
+        };
+        await mark("starting");
         const host = hostSchema.parse({
           id: randomUUID(),
           name: entry.name,
@@ -84,6 +116,7 @@ it.skipIf(!manifest)(
             }),
           );
         const osRelease = await exec("cat /etc/os-release");
+        await mark("password-connected");
         expect(osRelease).toContain("ID=");
         for (const shell of ["sh", "bash", "zsh"])
           expect(
@@ -95,6 +128,7 @@ it.skipIf(!manifest)(
         });
         try {
           await probeTunnels(store, host, key, client);
+          await mark("tunnels-passed");
         } finally {
           client.end();
         }
@@ -111,6 +145,7 @@ it.skipIf(!manifest)(
         await expect(
           connectSSH(changed, password, store, async () => true),
         ).rejects.toThrow("키가 변경");
+        await mark("rejections-passed");
         const outputs: string[] = [];
         const id = randomUUID();
         let sessions: Sessions;
@@ -144,6 +179,7 @@ it.skipIf(!manifest)(
         expect(output).toContain("environment-ok");
         expect(output).toContain("터미널 입력 정상");
         sessions.closeAll();
+        await mark("pty-passed");
         const files = new Files(store, async () => true),
           local = new LocalAdapter();
         files.adapters.set(local.endpoint.id, local);
@@ -237,17 +273,15 @@ it.skipIf(!manifest)(
             chmod: "0640",
             osRelease,
             legacyKex: entry.legacyKex,
+            durationMs: Date.now() - started,
           });
+          await mark("passed");
         } finally {
           files.closeAll();
         }
       }
     } finally {
-      await fs.mkdir("docs/benchmarks", { recursive: true });
-      await fs.writeFile(
-        "docs/benchmarks/docker-ssh.json",
-        JSON.stringify({ date: new Date().toISOString(), results }, null, 2),
-      );
+      await writeResults();
       store.close();
       await fs.rm(root, { recursive: true, force: true });
     }

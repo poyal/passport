@@ -13,6 +13,10 @@ import { closeCleanly } from "../fixtures/electron-exit";
 let application: ElectronApplication, page: Page, directory: string;
 const errors: string[] = [];
 let currentVersion: string, nextVersion: string;
+const installerName = (version: string) =>
+  process.platform === "win32"
+    ? `Passport-${version}-win-${process.arch}.exe`
+    : `Passport-${version}-mac-arm64.dmg`;
 
 test.beforeEach(async () => {
   errors.length = 0;
@@ -54,7 +58,7 @@ async function mockRelease(
   offline = false,
 ) {
   await application.evaluate(
-    ({ net, shell }, { version, asset, delay, offline }) => {
+    ({ net, shell }, { version, name, asset, delay, offline }) => {
       const state = globalThis as unknown as {
         updateRequests: number;
         updateURLs: string[];
@@ -78,7 +82,6 @@ async function mockRelease(
         };
         if (delay) await new Promise((resolve) => setTimeout(resolve, delay));
         if (offline) throw new Error("net::ERR_INTERNET_DISCONNECTED");
-        const name = `Passport-${version}-mac-arm64.dmg`;
         return Response.json({
           tag_name: `v${version}`,
           draft: false,
@@ -96,7 +99,7 @@ async function mockRelease(
         });
       };
     },
-    { version, asset, delay, offline },
+    { version, name: installerName(version), asset, delay, offline },
   );
 }
 
@@ -162,7 +165,7 @@ test("About checks updates, directs downloads to the correct installer, and show
   expect(
     await application.evaluate(() => (globalThis as any).updateURLs),
   ).toEqual([
-    `https://github.com/poyal/passport/releases/download/v${nextVersion}/Passport-${nextVersion}-mac-arm64.dmg`,
+    `https://github.com/poyal/passport/releases/download/v${nextVersion}/${installerName(nextVersion)}`,
     `https://github.com/poyal/passport/releases/tag/v${nextVersion}`,
   ]);
   await page.getByRole("button", { name: "호스트", exact: true }).click();

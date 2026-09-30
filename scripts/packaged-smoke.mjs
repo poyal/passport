@@ -61,7 +61,7 @@ try {
   await page.locator(".view:not([hidden]) .xterm-helper-textarea").focus();
   await page.keyboard.type(
     runtime.platform === "win32"
-      ? "echo PACKAGED_PTY_OK"
+      ? "echo ('PACKAGED_' + 'PTY_OK')"
       : "printf 'PACKAGED_%s\\n' PTY_OK",
   );
   await page.keyboard.press("Enter");

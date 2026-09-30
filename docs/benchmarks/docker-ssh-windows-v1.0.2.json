@@ -1,0 +1,476 @@
+{
+  "date": "2026-09-30T12:59:39.510Z",
+  "clientPlatform": "win32",
+  "clientArch": "x64",
+  "dockerPlatform": "linux/amd64",
+  "results": [
+    {
+      "os": "alpine",
+      "image": "alpine:3.22",
+      "status": "passed",
+      "password": true,
+      "encryptedEd25519": true,
+      "wrongPasswordRejected": true,
+      "changedHostKeyRejected": true,
+      "shells": [
+        "sh",
+        "bash",
+        "zsh"
+      ],
+      "ptyResize": "37x91",
+      "environment": true,
+      "utf8": true,
+      "sftpBytes": 1048576,
+      "sftpRemoteToRemote": true,
+      "forwarding": [
+        "local",
+        "remote",
+        "SOCKS5 IPv4/domain fragmented handshake"
+      ],
+      "socksUDPRejected": true,
+      "chmod": "0640",
+      "osRelease": "NAME=\"Alpine Linux\"\nID=alpine\nVERSION_ID=3.22.6\nPRETTY_NAME=\"Alpine Linux v3.22\"\nHOME_URL=\"https://alpinelinux.org/\"\nBUG_REPORT_URL=\"https://gitlab.alpinelinux.org/alpine/aports/-/issues\"\n",
+      "durationMs": 1857
+    },
+    {
+      "os": "ubuntu",
+      "image": "ubuntu:24.04",
+      "status": "passed",
+      "password": true,
+      "encryptedEd25519": true,
+      "wrongPasswordRejected": true,
+      "changedHostKeyRejected": true,
+      "shells": [
+        "sh",
+        "bash",
+        "zsh"
+      ],
+      "ptyResize": "37x91",
+      "environment": true,
+      "utf8": true,
+      "sftpBytes": 1048576,
+      "sftpRemoteToRemote": true,
+      "forwarding": [
+        "local",
+        "remote",
+        "SOCKS5 IPv4/domain fragmented handshake"
+      ],
+      "socksUDPRejected": true,
+      "chmod": "0640",
+      "osRelease": "PRETTY_NAME=\"Ubuntu 24.04.5 LTS\"\nNAME=\"Ubuntu\"\nVERSION_ID=\"24.04\"\nVERSION=\"24.04.5 LTS (Noble Numbat)\"\nVERSION_CODENAME=noble\nID=ubuntu\nID_LIKE=debian\nHOME_URL=\"https://www.ubuntu.com/\"\nSUPPORT_URL=\"https://help.ubuntu.com/\"\nBUG_REPORT_URL=\"https://bugs.launchpad.net/ubuntu/\"\nPRIVACY_POLICY_URL=\"https://www.ubuntu.com/legal/terms-and-policies/privacy-policy\"\nUBUNTU_CODENAME=noble\nLOGO=ubuntu-logo\n",
+      "durationMs": 1827
+    },
+    {
+      "os": "debian",
+      "image": "debian:12",
+      "status": "passed",
+      "password": true,
+      "encryptedEd25519": true,
+      "wrongPasswordRejected": true,
+      "changedHostKeyRejected": true,
+      "shells": [
+        "sh",
+        "bash",
+        "zsh"
+      ],
+      "ptyResize": "37x91",
+      "environment": true,
+      "utf8": true,
+      "sftpBytes": 1048576,
+      "sftpRemoteToRemote": true,
+      "forwarding": [
+        "local",
+        "remote",
+        "SOCKS5 IPv4/domain fragmented handshake"
+      ],
+      "socksUDPRejected": true,
+      "chmod": "0640",
+      "osRelease": "PRETTY_NAME=\"Debian GNU/Linux 12 (bookworm)\"\nNAME=\"Debian GNU/Linux\"\nVERSION_ID=\"12\"\nVERSION=\"12 (bookworm)\"\nVERSION_CODENAME=bookworm\nID=debian\nHOME_URL=\"https://www.debian.org/\"\nSUPPORT_URL=\"https://www.debian.org/support\"\nBUG_REPORT_URL=\"https://bugs.debian.org/\"\n",
+      "durationMs": 1901
+    },
+    {
+      "os": "rocky",
+      "image": "rockylinux:9",
+      "status": "passed",
+      "password": true,
+      "encryptedEd25519": true,
+      "wrongPasswordRejected": true,
+      "changedHostKeyRejected": true,
+      "shells": [
+        "sh",
+        "bash",
+        "zsh"
+      ],
+      "ptyResize": "37x91",
+      "environment": true,
+      "utf8": true,
+      "sftpBytes": 1048576,
+      "sftpRemoteToRemote": true,
+      "forwarding": [
+        "local",
+        "remote",
+        "SOCKS5 IPv4/domain fragmented handshake"
+      ],
+      "socksUDPRejected": true,
+      "chmod": "0640",
+      "osRelease": "NAME=\"Rocky Linux\"\nVERSION=\"9.3 (Blue Onyx)\"\nID=\"rocky\"\nID_LIKE=\"rhel centos fedora\"\nVERSION_ID=\"9.3\"\nPLATFORM_ID=\"platform:el9\"\nPRETTY_NAME=\"Rocky Linux 9.3 (Blue Onyx)\"\nANSI_COLOR=\"0;32\"\nLOGO=\"fedora-logo-icon\"\nCPE_NAME=\"cpe:/o:rocky:rocky:9::baseos\"\nHOME_URL=\"https://rockylinux.org/\"\nBUG_REPORT_URL=\"https://bugs.rockylinux.org/\"\nSUPPORT_END=\"2032-05-31\"\nROCKY_SUPPORT_PRODUCT=\"Rocky-Linux-9\"\nROCKY_SUPPORT_PRODUCT_VERSION=\"9.3\"\nREDHAT_SUPPORT_PRODUCT=\"Rocky Linux\"\nREDHAT_SUPPORT_PRODUCT_VERSION=\"9.3\"\n",
+      "durationMs": 1856
+    },
+    {
+      "os": "centos",
+      "image": "quay.io/centos/centos:stream9",
+      "status": "passed",
+      "password": true,
+      "encryptedEd25519": true,
+      "wrongPasswordRejected": true,
+      "changedHostKeyRejected": true,
+      "shells": [
+        "sh",
+        "bash",
+        "zsh"
+      ],
+      "ptyResize": "37x91",
+      "environment": true,
+      "utf8": true,
+      "sftpBytes": 1048576,
+      "sftpRemoteToRemote": true,
+      "forwarding": [
+        "local",
+        "remote",
+        "SOCKS5 IPv4/domain fragmented handshake"
+      ],
+      "socksUDPRejected": true,
+      "chmod": "0640",
+      "osRelease": "NAME=\"CentOS Stream\"\nVERSION=\"9\"\nID=\"centos\"\nID_LIKE=\"rhel fedora\"\nVERSION_ID=\"9\"\nPLATFORM_ID=\"platform:el9\"\nPRETTY_NAME=\"CentOS Stream 9\"\nANSI_COLOR=\"0;31\"\nLOGO=\"fedora-logo-icon\"\nCPE_NAME=\"cpe:/o:centos:centos:9\"\nHOME_URL=\"https://centos.org/\"\nBUG_REPORT_URL=\"https://issues.redhat.com/\"\nREDHAT_SUPPORT_PRODUCT=\"Red Hat Enterprise Linux 9\"\nREDHAT_SUPPORT_PRODUCT_VERSION=\"CentOS Stream\"\n",
+      "durationMs": 1836
+    },
+    {
+      "os": "centos7",
+      "image": "centos:7",
+      "status": "passed",
+      "password": true,
+      "encryptedEd25519": true,
+      "wrongPasswordRejected": true,
+      "changedHostKeyRejected": true,
+      "shells": [
+        "sh",
+        "bash",
+        "zsh"
+      ],
+      "ptyResize": "37x91",
+      "environment": true,
+      "utf8": true,
+      "sftpBytes": 1048576,
+      "sftpRemoteToRemote": true,
+      "forwarding": [
+        "local",
+        "remote",
+        "SOCKS5 IPv4/domain fragmented handshake"
+      ],
+      "socksUDPRejected": true,
+      "chmod": "0640",
+      "osRelease": "NAME=\"CentOS Linux\"\nVERSION=\"7 (Core)\"\nID=\"centos\"\nID_LIKE=\"rhel fedora\"\nVERSION_ID=\"7\"\nPRETTY_NAME=\"CentOS Linux 7 (Core)\"\nANSI_COLOR=\"0;31\"\nCPE_NAME=\"cpe:/o:centos:centos:7\"\nHOME_URL=\"https://www.centos.org/\"\nBUG_REPORT_URL=\"https://bugs.centos.org/\"\n\nCENTOS_MANTISBT_PROJECT=\"CentOS-7\"\nCENTOS_MANTISBT_PROJECT_VERSION=\"7\"\nREDHAT_SUPPORT_PRODUCT=\"centos\"\nREDHAT_SUPPORT_PRODUCT_VERSION=\"7\"\n\n",
+      "durationMs": 1716
+    },
+    {
+      "os": "centos7-group1",
+      "image": "centos:7",
+      "status": "passed",
+      "password": true,
+      "encryptedEd25519": true,
+      "wrongPasswordRejected": true,
+      "changedHostKeyRejected": true,
+      "shells": [
+        "sh",
+        "bash",
+        "zsh"
+      ],
+      "ptyResize": "37x91",
+      "environment": true,
+      "utf8": true,
+      "sftpBytes": 1048576,
+      "sftpRemoteToRemote": true,
+      "forwarding": [
+        "local",
+        "remote",
+        "SOCKS5 IPv4/domain fragmented handshake"
+      ],
+      "socksUDPRejected": true,
+      "chmod": "0640",
+      "osRelease": "NAME=\"CentOS Linux\"\nVERSION=\"7 (Core)\"\nID=\"centos\"\nID_LIKE=\"rhel fedora\"\nVERSION_ID=\"7\"\nPRETTY_NAME=\"CentOS Linux 7 (Core)\"\nANSI_COLOR=\"0;31\"\nCPE_NAME=\"cpe:/o:centos:centos:7\"\nHOME_URL=\"https://www.centos.org/\"\nBUG_REPORT_URL=\"https://bugs.centos.org/\"\n\nCENTOS_MANTISBT_PROJECT=\"CentOS-7\"\nCENTOS_MANTISBT_PROJECT_VERSION=\"7\"\nREDHAT_SUPPORT_PRODUCT=\"centos\"\nREDHAT_SUPPORT_PRODUCT_VERSION=\"7\"\n\n",
+      "legacyKex": "diffie-hellman-group1-sha1",
+      "durationMs": 2097
+    },
+    {
+      "os": "centos7-gex-sha1",
+      "image": "centos:7",
+      "status": "passed",
+      "password": true,
+      "encryptedEd25519": true,
+      "wrongPasswordRejected": true,
+      "changedHostKeyRejected": true,
+      "shells": [
+        "sh",
+        "bash",
+        "zsh"
+      ],
+      "ptyResize": "37x91",
+      "environment": true,
+      "utf8": true,
+      "sftpBytes": 1048576,
+      "sftpRemoteToRemote": true,
+      "forwarding": [
+        "local",
+        "remote",
+        "SOCKS5 IPv4/domain fragmented handshake"
+      ],
+      "socksUDPRejected": true,
+      "chmod": "0640",
+      "osRelease": "NAME=\"CentOS Linux\"\nVERSION=\"7 (Core)\"\nID=\"centos\"\nID_LIKE=\"rhel fedora\"\nVERSION_ID=\"7\"\nPRETTY_NAME=\"CentOS Linux 7 (Core)\"\nANSI_COLOR=\"0;31\"\nCPE_NAME=\"cpe:/o:centos:centos:7\"\nHOME_URL=\"https://www.centos.org/\"\nBUG_REPORT_URL=\"https://bugs.centos.org/\"\n\nCENTOS_MANTISBT_PROJECT=\"CentOS-7\"\nCENTOS_MANTISBT_PROJECT_VERSION=\"7\"\nREDHAT_SUPPORT_PRODUCT=\"centos\"\nREDHAT_SUPPORT_PRODUCT_VERSION=\"7\"\n\n",
+      "legacyKex": "diffie-hellman-group-exchange-sha1",
+      "durationMs": 10922
+    }
+  ],
+  "progress": [
+    {
+      "server": "alpine",
+      "stage": "starting",
+      "elapsedMs": 0
+    },
+    {
+      "server": "alpine",
+      "stage": "password-connected",
+      "elapsedMs": 40
+    },
+    {
+      "server": "alpine",
+      "stage": "tunnels-passed",
+      "elapsedMs": 1306
+    },
+    {
+      "server": "alpine",
+      "stage": "rejections-passed",
+      "elapsedMs": 1340
+    },
+    {
+      "server": "alpine",
+      "stage": "pty-passed",
+      "elapsedMs": 1469
+    },
+    {
+      "server": "alpine",
+      "stage": "passed",
+      "elapsedMs": 1857
+    },
+    {
+      "server": "ubuntu",
+      "stage": "starting",
+      "elapsedMs": 0
+    },
+    {
+      "server": "ubuntu",
+      "stage": "password-connected",
+      "elapsedMs": 41
+    },
+    {
+      "server": "ubuntu",
+      "stage": "tunnels-passed",
+      "elapsedMs": 1239
+    },
+    {
+      "server": "ubuntu",
+      "stage": "rejections-passed",
+      "elapsedMs": 1289
+    },
+    {
+      "server": "ubuntu",
+      "stage": "pty-passed",
+      "elapsedMs": 1425
+    },
+    {
+      "server": "ubuntu",
+      "stage": "passed",
+      "elapsedMs": 1827
+    },
+    {
+      "server": "debian",
+      "stage": "starting",
+      "elapsedMs": 0
+    },
+    {
+      "server": "debian",
+      "stage": "password-connected",
+      "elapsedMs": 52
+    },
+    {
+      "server": "debian",
+      "stage": "tunnels-passed",
+      "elapsedMs": 1286
+    },
+    {
+      "server": "debian",
+      "stage": "rejections-passed",
+      "elapsedMs": 1332
+    },
+    {
+      "server": "debian",
+      "stage": "pty-passed",
+      "elapsedMs": 1482
+    },
+    {
+      "server": "debian",
+      "stage": "passed",
+      "elapsedMs": 1901
+    },
+    {
+      "server": "rocky",
+      "stage": "starting",
+      "elapsedMs": 0
+    },
+    {
+      "server": "rocky",
+      "stage": "password-connected",
+      "elapsedMs": 62
+    },
+    {
+      "server": "rocky",
+      "stage": "tunnels-passed",
+      "elapsedMs": 1333
+    },
+    {
+      "server": "rocky",
+      "stage": "rejections-passed",
+      "elapsedMs": 1363
+    },
+    {
+      "server": "rocky",
+      "stage": "pty-passed",
+      "elapsedMs": 1497
+    },
+    {
+      "server": "rocky",
+      "stage": "passed",
+      "elapsedMs": 1856
+    },
+    {
+      "server": "centos",
+      "stage": "starting",
+      "elapsedMs": 0
+    },
+    {
+      "server": "centos",
+      "stage": "password-connected",
+      "elapsedMs": 63
+    },
+    {
+      "server": "centos",
+      "stage": "tunnels-passed",
+      "elapsedMs": 1329
+    },
+    {
+      "server": "centos",
+      "stage": "rejections-passed",
+      "elapsedMs": 1359
+    },
+    {
+      "server": "centos",
+      "stage": "pty-passed",
+      "elapsedMs": 1478
+    },
+    {
+      "server": "centos",
+      "stage": "passed",
+      "elapsedMs": 1836
+    },
+    {
+      "server": "centos7",
+      "stage": "starting",
+      "elapsedMs": 0
+    },
+    {
+      "server": "centos7",
+      "stage": "password-connected",
+      "elapsedMs": 41
+    },
+    {
+      "server": "centos7",
+      "stage": "tunnels-passed",
+      "elapsedMs": 1235
+    },
+    {
+      "server": "centos7",
+      "stage": "rejections-passed",
+      "elapsedMs": 1265
+    },
+    {
+      "server": "centos7",
+      "stage": "pty-passed",
+      "elapsedMs": 1386
+    },
+    {
+      "server": "centos7",
+      "stage": "passed",
+      "elapsedMs": 1716
+    },
+    {
+      "server": "centos7-group1",
+      "stage": "starting",
+      "elapsedMs": 0
+    },
+    {
+      "server": "centos7-group1",
+      "stage": "password-connected",
+      "elapsedMs": 75
+    },
+    {
+      "server": "centos7-group1",
+      "stage": "tunnels-passed",
+      "elapsedMs": 1402
+    },
+    {
+      "server": "centos7-group1",
+      "stage": "rejections-passed",
+      "elapsedMs": 1504
+    },
+    {
+      "server": "centos7-group1",
+      "stage": "pty-passed",
+      "elapsedMs": 1661
+    },
+    {
+      "server": "centos7-group1",
+      "stage": "passed",
+      "elapsedMs": 2097
+    },
+    {
+      "server": "centos7-gex-sha1",
+      "stage": "starting",
+      "elapsedMs": 0
+    },
+    {
+      "server": "centos7-gex-sha1",
+      "stage": "password-connected",
+      "elapsedMs": 916
+    },
+    {
+      "server": "centos7-gex-sha1",
+      "stage": "tunnels-passed",
+      "elapsedMs": 5776
+    },
+    {
+      "server": "centos7-gex-sha1",
+      "stage": "rejections-passed",
+      "elapsedMs": 7586
+    },
+    {
+      "server": "centos7-gex-sha1",
+      "stage": "pty-passed",
+      "elapsedMs": 8683
+    },
+    {
+      "server": "centos7-gex-sha1",
+      "stage": "passed",
+      "elapsedMs": 10922
+    }
+  ]
+}

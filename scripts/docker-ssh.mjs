@@ -15,6 +15,8 @@ const matrix = [
 ];
 const directory = await fs.mkdtemp(path.join(os.tmpdir(), "passport-docker-"));
 const containers = [];
+const resultsPath =
+  process.env.PASSPORT_DOCKER_RESULTS || "docs/benchmarks/docker-ssh.json";
 function run(command, args, options = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, { stdio: "inherit", ...options });
@@ -26,6 +28,25 @@ function run(command, args, options = {}) {
 }
 try {
   execFileSync("docker", ["info"], { stdio: "ignore", timeout: 15000 });
+  if (!process.env.PASSPORT_E2E_EXECUTABLE)
+    await run(process.execPath, ["scripts/build.mjs"]);
+  const architecture = execFileSync(
+    "docker",
+    ["info", "--format", "{{.Architecture}}"],
+    {
+      encoding: "utf8",
+      timeout: 15000,
+    },
+  ).trim();
+  const dockerArch = {
+    x86_64: "amd64",
+    amd64: "amd64",
+    aarch64: "arm64",
+    arm64: "arm64",
+  }[architecture];
+  if (!dockerArch)
+    throw new Error(`Unsupported Docker architecture: ${architecture}`);
+  const dockerPlatform = `linux/${dockerArch}`;
   execFileSync("ssh-keygen", [
     "-t",
     "ed25519",
@@ -57,7 +78,7 @@ try {
     await run("docker", [
       "build",
       "--platform",
-      "linux/arm64",
+      dockerPlatform,
       "--build-arg",
       `BASE_IMAGE=${base}`,
       "-t",
@@ -94,6 +115,7 @@ try {
   await fs.writeFile(
     manifest,
     JSON.stringify({
+      dockerPlatform,
       hosts,
       password,
       privateKey,
@@ -104,7 +126,30 @@ try {
   await run(
     process.execPath,
     ["scripts/test.mjs", "tests/docker-ssh.test.ts"],
-    { env: { ...process.env, PASSPORT_DOCKER_MANIFEST: manifest } },
+    {
+      env: {
+        ...process.env,
+        PASSPORT_DOCKER_MANIFEST: manifest,
+        PASSPORT_DOCKER_RESULTS: resultsPath,
+      },
+    },
+  );
+  await run(
+    process.execPath,
+    [
+      "node_modules/@playwright/test/cli.js",
+      "test",
+      "tests/e2e/docker-ssh.spec.ts",
+      "--output=" +
+        (process.env.PASSPORT_DOCKER_OUTPUT || "test-results/docker-ssh"),
+    ],
+    {
+      env: {
+        ...process.env,
+        PASSPORT_DOCKER_MANIFEST: manifest,
+        PASSPORT_DISABLE_UPDATE_CHECK: "1",
+      },
+    },
   );
 } finally {
   for (const name of containers) {

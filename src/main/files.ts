@@ -18,7 +18,7 @@ export interface FileAdapter {
   normalize(p: string): string;
   join(p: string, name: string): string;
   parent(p: string): string;
-  list(p: string): Promise<FileEntry[]>;
+  list(p: string, options?: { skipUnreadable?: boolean }): Promise<FileEntry[]>;
   stat(p: string): Promise<FileEntry | null>;
   realpath(p: string): Promise<string>;
   mkdir(p: string): Promise<void>;
@@ -49,7 +49,7 @@ export class LocalAdapter implements FileAdapter {
   parent(p: string) {
     return path.dirname(p);
   }
-  async list(p: string) {
+  async list(p: string, options?: { skipUnreadable?: boolean }) {
     const names = await fsp.readdir(p);
     const result: FileEntry[] = [];
     for (const name of names) {
@@ -64,7 +64,13 @@ export class LocalAdapter implements FileAdapter {
           mode: s.mode,
         });
       } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+        // Browsing may omit protected entries; recursive transfers remain strict.
+        const code = (error as NodeJS.ErrnoException).code;
+        if (
+          code !== "ENOENT" &&
+          !(options?.skipUnreadable && ["EACCES", "EPERM"].includes(code ?? ""))
+        )
+          throw error;
       }
     }
     return result;
@@ -433,7 +439,10 @@ export class Files {
     return this.locks.with([id], async () => {
       const a = this.get(id),
         normalized = a.normalize(p);
-      return { path: normalized, entries: await a.list(normalized) };
+      return {
+        path: normalized,
+        entries: await a.list(normalized, { skipUnreadable: true }),
+      };
     });
   }
   async action(

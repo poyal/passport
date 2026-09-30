@@ -1,0 +1,86 @@
+{
+  "version": "1.0.2",
+  "date": "2026-09-30",
+  "source": {
+    "baseCommit": "8eb8e44",
+    "includesUncommittedWindowsFixes": true,
+    "publicReleasePublished": false
+  },
+  "environment": {
+    "platform": "Windows 11",
+    "osRelease": "10.0.26200",
+    "arch": "x64",
+    "node": "24.14.0",
+    "electron": "44.4.5",
+    "nativeDependencies": "Bundled Node-API prebuilds; npm lifecycle scripts and electron-builder native rebuild skipped",
+    "pythonFixture": "3.13.7"
+  },
+  "typecheck": "passed",
+  "build": "passed",
+  "unitAndIntegration": {
+    "passed": 93,
+    "skipped": 3,
+    "ftpAndFtps": "passed",
+    "skippedScenarios": [
+      "Docker SSH matrix",
+      "large-file stress",
+      "POSIX SIGHUP shutdown"
+    ]
+  },
+  "gui": {
+    "sourcePassed": 37,
+    "sourceSkipped": 2,
+    "sourceFailed": 0,
+    "packagedPassed": 20,
+    "packagedNativePTYShutdownScenarios": 3,
+    "packagedDPAPI": "passed"
+  },
+  "packaged": {
+    "distFilesChecked": 65,
+    "sourcePayloadMatches": true,
+    "executableMachine": "AMD64",
+    "localPTYActualCommandOutput": "passed",
+    "rendererNodeAccessBlocked": true,
+    "fontsAvailable": 96,
+    "shutdownExitCode": 0
+  },
+  "dpapi": {
+    "mockedSafeStorage": false,
+    "sqliteContainsEncryptedCredential": true,
+    "reconnectAfterRestartUsingStoredPassword": "passed",
+    "installedApp": "passed"
+  },
+  "nsis": {
+    "installMode": "Silent per-user; isolated directory in workspace release folder; no existing Passport installation",
+    "installExitCode": 0,
+    "installedPayloadMatches": true,
+    "installedLocalPTY": "passed",
+    "uninstallExitCode": 0,
+    "installedExecutableRemoved": true,
+    "userUninstallRegistrationRemoved": true
+  },
+  "publicStartupUpdateCheck": {
+    "passed": true,
+    "manualChecks": 0,
+    "latestVersion": "1.0.2",
+    "status": "current",
+    "installerAvailable": false,
+    "publicReleaseAssets": ["Passport-1.0.2-mac-arm64.dmg", "SHA256SUMS.txt"]
+  },
+  "artifact": {
+    "path": "release/Passport-1.0.2-win-x64.exe",
+    "bytes": 115686452,
+    "sha256": "3edafc0c619d9af83d6fe006e3015e3f9349704863484f8187859d519ba55251",
+    "authenticode": "NotSigned",
+    "published": false
+  },
+  "limitations": [
+    "Windows ARM64 runtime and installer not verified",
+    "Default native source rebuild path not verified without Python and Visual Studio build tools",
+    "Physical Korean IME composition, display scaling changes and native file dialogs not manually verified",
+    "Upgrade over an existing installed version not tested",
+    "Docker, 4 GiB transfer, ten-minute terminal stress and 1 GiB terminal text not run",
+    "Updated remote CI workflow not dispatched",
+    "Windows executable is unsigned and has not been published"
+  ]
+}

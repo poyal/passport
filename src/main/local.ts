@@ -107,6 +107,9 @@ export class LocalSessions {
         rows: 30,
         cwd,
         env,
+        // Use the bundled ConPTY on Windows 11. The system ConPTY shutdown
+        // forks a console-list helper that can race with the shell's exit.
+        useConptyDll: process.platform === "win32",
       },
     );
     let resolveExit!: () => void;
@@ -189,7 +192,8 @@ export class LocalSessions {
       // Drain paused PTYs so node-pty can deliver its exit notification.
       s.pty.resume();
       s.pty.kill();
-      if (s.alive)
+      // Windows node-pty terminates the process itself and rejects POSIX signals.
+      if (s.alive && process.platform !== "win32")
         s.killTimer = setTimeout(() => {
           if (s.alive) s.pty.kill("SIGKILL");
         }, 1000);

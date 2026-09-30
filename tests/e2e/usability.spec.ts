@@ -29,7 +29,8 @@ test.beforeAll(async () => {
   );
   server = await sshFixture(path.join(directory, "remote"));
   application = await electron.launch({
-    args: ["."],
+    executablePath: process.env.PASSPORT_E2E_EXECUTABLE,
+    args: process.env.PASSPORT_E2E_EXECUTABLE ? [] : ["."],
     env: { ...process.env, PASSPORT_DATA_DIR: path.join(directory, "data") },
   });
   page = await application.firstWindow();

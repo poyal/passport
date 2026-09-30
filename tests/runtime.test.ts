@@ -76,7 +76,7 @@ it("ignores stale exit callbacks after reopening a local pane and drains closed 
     local.input(
       "same",
       process.platform === "win32"
-        ? "echo REOPEN_READY\r"
+        ? "echo ('REOPEN_' + 'READY')\r"
         : "printf 'REOPEN_%s\\n' READY\r",
     );
     await expect
@@ -145,7 +145,7 @@ it("runs a native local PTY, accepts input and resize, and closes its process", 
     local.input(
       "local",
       process.platform === "win32"
-        ? "echo PASSPORT_PTY_OK\r"
+        ? "echo ('PASSPORT_' + 'PTY_OK')\r"
         : "stty size; printf 'PASSPORT_%s\\n' 'PTY_OK'\r",
     );
     for (

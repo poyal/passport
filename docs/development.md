@@ -22,6 +22,20 @@ npm start
 
 `postinstall`에서 Electron용 네이티브 의존성을 준비한다. better-sqlite3와 node-pty는 Electron ABI에 맞아야 하므로 일반 Node.js용으로 임의 재빌드한 바이너리와 섞지 않는다.
 
+Windows에서 Python·Visual Studio 빌드 도구 없이 **현재 고정된 의존성의 포함 바이너리**를 점검한 절차는 다음과 같다. better-sqlite3 13.0.3과 node-pty 1.1.0의 Windows x64 Node-API 바이너리를 사용하며 소스 재빌드 검증과 구분한다. 의존성을 변경하면 패키지 PTY·SQLite·DPAPI 검사를 다시 수행한다.
+
+```powershell
+npm ci --ignore-scripts
+node node_modules/electron/install.js
+node scripts/patch-ssh2.mjs
+npm run check
+npm run build
+npx electron-builder --win nsis --x64 --publish never '--config.npmRebuild=false'
+node scripts/packaged-smoke.mjs release/win-unpacked/Passport.exe
+```
+
+`--ignore-scripts`는 의존성 설치 훅을 생략하므로 일반 설치와 같은 절차로 취급하지 않는다. 이 점검에서는 Electron 다운로드와 SSH 패치를 직접 실행하고 패키지의 네이티브 기능까지 확인했다. 기본 `npm ci`·`dist:win` 경로에는 앞서 안내한 컴파일 도구를 준비한다.
+
 `scripts/patch-ssh2.mjs`는 ssh2 1.17.0의 DH group1 구현에서 Electron/BoringSSL이 제공하지 않는 이름 기반 `modp2` 대신 RFC 2409 §6.2의 동일한 소수를 명시적으로 지정한다. 설치·빌드·단위 시험에서 멱등적으로 적용하며 의존성 버전이나 패치 대상이 달라지면 중단한다. Passport는 현대 기본 협상 목록 뒤에 SHA-1 group14·GEX·group1을 항상 추가한다. 호스트별 옵션은 없으며 이전 `legacySSH` 필드는 파싱 과정에서 제외한다. 전역 `crypto` API를 변경하지 않는다.
 
 ## 소스 구조
@@ -91,9 +105,21 @@ FTP_TEST_PYTHON=/tmp/passport-test-venv/bin/python npm run check
 npm run test:ssh:docker
 ```
 
-실행 중인 로컬 Docker 엔진, 이미지 저장 공간, 인터넷 연결이 필요하다. macOS ARM64를 기준으로 `linux/arm64`의 Alpine·Ubuntu·Debian·Rocky·CentOS 서버를 실행한다. SSH 포트는 `127.0.0.1`의 임시 포트에 바인딩하고 실행 시 생성한 비밀번호와 키를 사용한다. 해당 실행의 컨테이너만 정리하며 기존 컨테이너·볼륨을 제거하지 않는다.
+실행 중인 로컬 Docker 엔진, 이미지 저장 공간, 인터넷 연결이 필요하다. Docker 엔진의 아키텍처에 따라 `linux/amd64` 또는 `linux/arm64`의 Alpine·Ubuntu·Debian·Rocky·CentOS 서버를 실행한다. SSH 포트는 `127.0.0.1`의 임시 포트에 바인딩하고 실행 시 생성한 비밀번호와 키를 사용한다. 해당 실행의 컨테이너만 정리하며 기존 컨테이너·볼륨을 제거하지 않는다. 구형 CentOS 7은 아키텍처별 보관 저장소를 사용하고 역방향 DNS 조회를 꺼 로컬 fixture의 조회 지연을 피한다. Windows 체크아웃의 CRLF도 서버 시작 스크립트에서 정리한다.
 
 검증 범위와 배포판별 결과는 [최신 검증 기록](verification.md)을 따른다. 결과 파일은 `docs/benchmarks/docker-ssh.json`이다. CentOS 7 시험 서버 두 개를 추가로 group1·SHA-1 GEX 전용으로 실행해 별도 설정 없이 구형 서버의 비밀번호·키·PTY·SFTP·터널 연결을 확인한다. 이 구성은 실제 CentOS 5/6 운영체제 시험과 구분한다.
+
+같은 실행에서 실제 Electron 앱의 SSH 터미널과 SFTP 복사 메뉴도 검사한다. 8개 서버 구성 간 왕복 전송, 한글·공백 경로, 재귀 폴더·빈 파일, 충돌 처리, 원격 권한·이름 변경·삭제와 128MiB 왕복·취소 후 정리를 포함한다. `PASSPORT_E2E_EXECUTABLE`이 없으면 소스를 빌드해 실행한다. Windows 패키지를 대상으로 기록을 분리하려면:
+
+```powershell
+$env:PASSPORT_E2E_EXECUTABLE = (Resolve-Path 'release/current-user/win-unpacked/Passport.exe').Path
+$env:PASSPORT_DOCKER_RESULTS = 'docs/benchmarks/docker-ssh-windows-v1.0.2.json'
+$env:PASSPORT_DOCKER_GUI_RESULTS = 'docs/benchmarks/docker-desktop-windows-v1.0.2.json'
+$env:PASSPORT_DOCKER_OUTPUT = 'release/windows-full/docker-gui'
+npm run test:ssh:docker
+```
+
+`PASSPORT_DOCKER_RESULTS`에는 단계별 진행과 프로토콜 검사 결과를, `PASSPORT_DOCKER_GUI_RESULTS`에는 데스크톱 전송 결과를 기록한다. GUI 결과 경로를 생략하면 시험 출력 폴더에 저장한다.
 
 ## 대용량·지속 출력 시험
 
@@ -106,6 +132,21 @@ npm run test:terminal:large
 `test:terminal:large`는 한 터미널에 16·64·256·1024MiB를 단계별로 보내고 별도로 64KiB 긴 행 8MiB를 처리한다. UTF-8 한글·ANSI 색상·IP/URL·로그 강조, 자동 기록(보관 한도 64MiB)을 켠 상태에서 끝 표식의 실제 화면 표시, 입력 왕복 P95, 프레임 지연, 전체 앱 작업 집합을 측정한다. 데이터는 64KiB 버퍼를 재사용하고 SSH backpressure를 따른다. 누적 출력량이며 xterm 스크롤백은 최근 10,000행이다. 1GiB 원문 전체를 메모리에 보관한다는 뜻이 아니다. 결과는 시험 출력 폴더의 `terminal-large-text.json`에 남긴다.
 
 파일 시험은 4GiB 파일과 작은 파일 10,000개를 만들어 복사하므로 충분한 임시 저장 공간이 필요하다. UI 시험은 500개 호스트·16개 터미널에 10분간 출력을 보낸다. 평소 검사에서 생략되는 선택 시험이므로 실행 여부를 결과에 구분해 적는다. 로컬 시험 수치를 WAN 전송 속도나 실제 키 입력부터 화면까지의 지연으로 해석하지 않는다.
+
+Windows PowerShell에서 선택 부하 검사를 실행하려면:
+
+```powershell
+$env:PASSPORT_STRESS = '1'
+$env:PASSPORT_STRESS_RESULTS = 'docs/benchmarks/file-stress-windows-v1.0.2.json'
+node scripts/test.mjs tests/stress.test.ts
+$env:PASSPORT_DISABLE_UPDATE_CHECK = '1'
+$env:PASSPORT_E2E_EXECUTABLE = (Resolve-Path 'release/current-user/win-unpacked/Passport.exe').Path
+$env:PASSPORT_UI_STRESS = '1'
+$env:PASSPORT_TEXT_BENCH = '1'
+npx playwright test tests/e2e/stress.spec.ts tests/e2e/throughput.spec.ts --output=release/windows-full/terminal-load
+```
+
+파일 부하 검사는 4GiB 해시와 작은 파일 10,000개 전체 내용을 확인한다. `PASSPORT_STRESS_RESULTS`를 지정하면 RSS 증가와 소요시간을 별도 JSON으로 보관한다. 터미널 부하 결과도 지정한 시험 출력 폴더에 저장한다.
 
 ## 문서와 설치본
 

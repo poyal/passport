@@ -1,0 +1,13 @@
+{
+  "date": "2026-09-30T12:50:59.979Z",
+  "platform": "win32",
+  "arch": "x64",
+  "stress": "4GiB + 10000 files",
+  "durationMs": 22492,
+  "fileBytes": 4294967296,
+  "sha256": "8479e43911dc45e89f934fe48d01297e16f51d17aa561d4d1c216b1ae0fcddca",
+  "verifiedSmallFiles": 10000,
+  "baselineRSS": 71385088,
+  "peakRSS": 514162688,
+  "growthMiB": 422
+}

@@ -41,7 +41,11 @@ describe("streaming transfers", () => {
     const { dir, a, b, transfers } = await setup();
     const data = randomBytes(1024 * 1024 * 4);
     await fs.writeFile(path.join(dir, "in", "한글 공백.bin"), data);
-    await fs.symlink(path.join(dir, "in"), path.join(dir, "in", "cycle"));
+    await fs.symlink(
+      path.join(dir, "in"),
+      path.join(dir, "in", "cycle"),
+      process.platform === "win32" ? "junction" : "dir",
+    );
     const j = transfers.add({
       source: a.endpoint.id,
       destination: b.endpoint.id,
@@ -104,8 +108,16 @@ describe("streaming transfers", () => {
   it("does not follow a destination symlink", async () => {
     const { dir, a, b, transfers } = await setup();
     await fs.writeFile(path.join(dir, "in", "file"), "new");
-    await fs.writeFile(path.join(dir, "outside"), "keep");
-    await fs.symlink(path.join(dir, "outside"), path.join(dir, "out", "file"));
+    const outside = path.join(dir, "outside");
+    const protectedFile =
+      process.platform === "win32" ? path.join(outside, "keep.txt") : outside;
+    if (process.platform === "win32") await fs.mkdir(outside);
+    await fs.writeFile(protectedFile, "keep");
+    await fs.symlink(
+      outside,
+      path.join(dir, "out", "file"),
+      process.platform === "win32" ? "junction" : "file",
+    );
     const j = transfers.add({
       source: a.endpoint.id,
       destination: b.endpoint.id,
@@ -114,7 +126,7 @@ describe("streaming transfers", () => {
       conflict: "overwrite",
     });
     expect((await completed(transfers, j.id)).state).toBe("error");
-    expect(await fs.readFile(path.join(dir, "outside"), "utf8")).toBe("keep");
+    expect(await fs.readFile(protectedFile, "utf8")).toBe("keep");
   });
   it("cancels in-flight work and removes its temporary file", async () => {
     const { dir, a, b, transfers } = await setup();
