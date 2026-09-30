@@ -185,7 +185,9 @@ export function Settings() {
         ))}
         <div className="sidebar-foot">Passport {app.boot.appVersion}</div>
       </aside>
-      <div className="settings-content">
+      <div
+        className={`settings-content ${section === "logs" ? "settings-logs" : ""}`}
+      >
         {section === "groups" && <GroupSettings />}
         {section === "tunnels" && <TunnelSettings />}
         {section === "logs" && <LogSettings />}
@@ -421,7 +423,10 @@ export function Settings() {
                     <Download size={18} />
                     파일 내보내기
                   </h3>
-                  <p>호스트, 그룹, 스니펫, 작업 배치와 설정을 저장합니다.</p>
+                  <p>
+                    호스트, 그룹, 스니펫, 작업 배치, 스페이스와 설정을
+                    저장합니다.
+                  </p>
                   <label className="check-label">
                     <input
                       type="checkbox"
@@ -832,6 +837,7 @@ export function Settings() {
             </span>
             <span>
               작업 배치 <b>{preview.document.workspaces.length}</b>
+              스페이스 <b>{preview.document.workspaceTemplates.length}</b>
             </span>
           </div>
           <div className="preview-list">

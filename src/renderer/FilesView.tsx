@@ -262,6 +262,7 @@ function FilePanel({
       x: number;
       y: number;
       paths: string[];
+      toolbar: boolean;
     } | null>(null),
     [drop, setDrop] = useState(false),
     [history, setHistory] = useState<string[]>([]),
@@ -270,6 +271,7 @@ function FilePanel({
     generation = useRef(0),
     anchor = useRef(0),
     menuRef = useRef<HTMLDivElement>(null),
+    menuButtonRef = useRef<HTMLButtonElement>(null),
     lastRequest = useRef(0);
   const selected = entries.filter((f) => selection.includes(f.path));
   useEffect(() => {
@@ -359,12 +361,32 @@ function FilePanel({
     if (!menu) return;
     menuRef.current
       ?.querySelector<HTMLButtonElement>("button:not(:disabled)")
-      ?.focus();
+      ?.focus({ preventScroll: true });
     const dismiss = (e: globalThis.MouseEvent) => {
-      if (!menuRef.current?.contains(e.target as Node)) setMenu(null);
+      if (
+        !menuRef.current?.contains(e.target as Node) &&
+        !menuButtonRef.current?.contains(e.target as Node)
+      )
+        setMenu(null);
+    };
+    const close = () => setMenu(null);
+    const scroll = (e: Event) => {
+      // Inputs also emit scroll when their caret moves; only moving file lists
+      // invalidates a menu's position.
+      if (
+        e.target instanceof Element &&
+        e.target.classList.contains("file-table-scroll")
+      )
+        close();
     };
     document.addEventListener("mousedown", dismiss);
-    return () => document.removeEventListener("mousedown", dismiss);
+    document.addEventListener("scroll", scroll, true);
+    window.addEventListener("resize", close);
+    return () => {
+      document.removeEventListener("mousedown", dismiss);
+      document.removeEventListener("scroll", scroll, true);
+      window.removeEventListener("resize", close);
+    };
   }, [menu]);
   const visible = entries
     .filter(
@@ -411,11 +433,12 @@ function FilePanel({
       anchor.current = index;
     }
   };
-  const showMenu = (x: number, y: number, paths: string[]) =>
+  const showMenu = (x: number, y: number, paths: string[], toolbar = false) =>
     setMenu({
       x: Math.max(8, Math.min(x, window.innerWidth - 298)),
       y: Math.max(8, Math.min(y, window.innerHeight - 340)),
       paths,
+      toolbar,
     });
   const operation = async (
     action: "mkdir" | "touch" | "rename" | "delete" | "chmod",
@@ -552,12 +575,19 @@ function FilePanel({
           <RotateCcw size={15} />
         </IconButton>
         <button
+          ref={menuButtonRef}
           className="subtle"
+          aria-haspopup="menu"
+          aria-expanded={!!menu?.toolbar}
           onClick={(e) => {
+            if (menu) {
+              setMenu(null);
+              return;
+            }
             const r = e.currentTarget.getBoundingClientRect();
-            showMenu(r.right - 284, r.bottom, selection);
+            showMenu(r.right - 284, r.bottom, selection, true);
           }}
-          disabled={!endpoint}
+          disabled={!endpoint || busy}
         >
           작업 <MoreHorizontal size={16} />
         </button>
@@ -832,6 +862,8 @@ function FilePanel({
             );
             if (e.key === "Escape") {
               setMenu(null);
+              if (menu.toolbar) menuButtonRef.current?.focus();
+              e.preventDefault();
               e.stopPropagation();
             }
             if (e.key === "ArrowDown" || e.key === "ArrowUp") {

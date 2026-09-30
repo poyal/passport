@@ -11,6 +11,7 @@ import {
   Search,
   Info,
   Download,
+  Layers,
 } from "lucide-react";
 import type {
   Appearance,
@@ -26,6 +27,8 @@ import { api, uuid, message } from "./api";
 import { AppContext } from "./context";
 import { Hosts } from "./Hosts";
 import { FilesView } from "./FilesView";
+import { HostIcon } from "./HostIcon";
+import { WorkspaceTemplates } from "./WorkspaceTemplates";
 import { WorkspaceView, dragMime } from "./Workspaces";
 import { Settings, SecretEditor, blankSecret } from "./Settings";
 import { IconButton, Modal, Tooltips } from "./components";
@@ -244,7 +247,7 @@ export function App() {
       ),
     );
     if (
-      !["hosts", "files", "settings"].includes(active) &&
+      !["hosts", "files", "settings", "workspaceTemplates"].includes(active) &&
       !boot.document.workspaces.some(
         (w) => w.id === active && boot.workspaceOwners[w.id] === boot.windowId,
       )
@@ -540,6 +543,13 @@ export function App() {
               호스트
             </button>
             <button
+              className={`app-tab fixed ${active === "workspaceTemplates" ? "active" : ""}`}
+              onClick={() => setActive("workspaceTemplates")}
+            >
+              <Layers size={15} />
+              스페이스
+            </button>
+            <button
               className={`app-tab fixed ${active === "files" ? "active" : ""}`}
               onClick={() => setActive("files")}
             >
@@ -653,6 +663,9 @@ export function App() {
           <div className="view" hidden={active !== "settings"}>
             <Settings />
           </div>
+          <div className="view" hidden={active !== "workspaceTemplates"}>
+            <WorkspaceTemplates />
+          </div>
           {boot.document.workspaces
             .filter((w) => boot.workspaceOwners[w.id] === boot.windowId)
             .map((w) => (
@@ -703,8 +716,12 @@ export function App() {
           </div>
         )}
         {chooser && (
-          <Modal title="SSH 연결 열기" onClose={() => setChooser(false)}>
-            <div className="row">
+          <Modal
+            title="SSH 연결 열기"
+            className="ssh-chooser-modal"
+            onClose={() => setChooser(false)}
+          >
+            <div className="local-shell-choice">
               <label>
                 로컬 셸
                 <select id="local-shell">
@@ -775,7 +792,7 @@ export function App() {
                 )
                 .map((h) => (
                   <button key={h.id} onClick={() => void openHost(h)}>
-                    <Server size={18} />
+                    <HostIcon host={h} />
                     <div>
                       <strong>{h.name}</strong>
                       <small>

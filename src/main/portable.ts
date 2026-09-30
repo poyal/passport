@@ -7,6 +7,7 @@ import {
 } from "node:crypto";
 import { promisify } from "node:util";
 import { z } from "zod";
+import { cloneWorkspaces } from "../shared/workspace-templates";
 import {
   documentSchema,
   emptyDocument,
@@ -193,6 +194,29 @@ export function mergePortable(
     visit(w.root);
     if (existing >= 0) document.workspaces[existing] = w;
     else document.workspaces.push(w);
+  }
+  for (const item of incoming.document.workspaceTemplates) {
+    const existing = document.workspaceTemplates.findIndex(
+      (t) => t.id === item.id,
+    );
+    if (existing >= 0 && conflict === "skip") continue;
+    const template = {
+      ...item,
+      ...cloneWorkspaces(
+        item.workspaces,
+        item.activeWorkspaceId,
+        item.activePaneId,
+        randomUUID,
+      ),
+    };
+    const remap = (node: (typeof template.workspaces)[number]["root"]) => {
+      if (node.kind === "pane")
+        node.hostId = hostMap.get(node.hostId) ?? node.hostId;
+      else node.children.forEach(remap);
+    };
+    template.workspaces.forEach((w) => remap(w.root));
+    if (existing >= 0) document.workspaceTemplates[existing] = template;
+    else document.workspaceTemplates.push(template);
   }
   const customThemes = structuredClone(document.settings.customThemes);
   merge(customThemes, incoming.document.settings.customThemes);

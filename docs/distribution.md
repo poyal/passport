@@ -6,7 +6,7 @@
 
 ## 현재 상태
 
-2026-09-30 기준 공개 배포는 **1.0.1**이다. Apple Silicon Mac용 DMG를 생성하고 실제 패키지 실행을 확인했다. [GitHub Release v1.0.1](https://github.com/poyal/passport/releases/tag/v1.0.1)에 Mac DMG와 SHA256SUMS를 게시했다. Windows x64·ARM64는 빌드 스크립트와 수동 CI를 준비했으나 실제 설치·실행 확인이 남아 있다.
+공개 버전과 준비 중인 버전은 [릴리즈 목록](releases/README.md)에서 확인한다. Apple Silicon Mac용 DMG와 SHA256SUMS를 GitHub Release에 게시한다. Windows x64·ARM64는 빌드 스크립트와 수동 CI를 준비했으나 실제 설치·실행 확인이 남아 있다.
 
 Mac 설치본은 ad-hoc 서명이며 Developer ID 서명·Apple 공증을 포함하지 않는다. `codesign` 무결성 검사 통과는 Apple 공증이나 Gatekeeper의 실행 허용을 뜻하지 않는다. 현재 결과와 DMG 해시는 [검증 기록](verification.md)에 보관한다.
 
@@ -14,13 +14,13 @@ Mac 설치본은 ad-hoc 서명이며 Developer ID 서명·Apple 공증을 포함
 
 각 대상 OS와 아키텍처의 네이티브 환경에서 `npm ci`와 기본 검사를 먼저 수행한다.
 
-| 대상                | 명령                     | 결과 파일                              |
-| ------------------- | ------------------------ | -------------------------------------- |
-| macOS Apple Silicon | `npm run dist:mac`       | `release/Passport-1.0.1-mac-arm64.dmg` |
-| Windows x64         | `npm run dist:win`       | `release/Passport-1.0.1-win-x64.exe`   |
-| Windows ARM64       | `npm run dist:win:arm64` | `release/Passport-1.0.1-win-arm64.exe` |
+| 대상                | 명령                     | 결과 파일                                  |
+| ------------------- | ------------------------ | ------------------------------------------ |
+| macOS Apple Silicon | `npm run dist:mac`       | `release/Passport-<version>-mac-arm64.dmg` |
+| Windows x64         | `npm run dist:win`       | `release/Passport-<version>-win-x64.exe`   |
+| Windows ARM64       | `npm run dist:win:arm64` | `release/Passport-<version>-win-arm64.exe` |
 
-파일 이름의 버전은 `package.json`을 따른다. `npm run pack`은 설치 프로그램 없이 현재 환경의 앱 폴더를 만든다. `release/`와 `dist/`는 생성물이며 저장소에 커밋하지 않는다. README의 다운로드 링크는 실제 게시된 설치 파일이 있을 때 추가한다.
+파일 이름의 버전은 `package.json`을 따른다. `npm run pack`은 설치 프로그램 없이 현재 환경의 앱 폴더를 만든다. `release/`와 `dist/`는 생성물이며 저장소에 커밋하지 않는다. README는 최신 공개 릴리즈 링크를 유지하고 버전별 링크는 릴리즈 목록에 추가한다.
 
 Mac 최소 버전 목표는 14이며 macOS 27 로컬 환경과 macOS 15 GitHub Actions에서 앱 실행을 확인했다. Windows 대상은 Windows 11 x64·ARM64이며 각각의 설치 및 실행 검증을 구분한다. Intel Mac과 Rosetta 의존 Mac 패키지는 만들지 않는다.
 
@@ -72,7 +72,7 @@ Docker 매트릭스와 장시간 부하, 별도 Python 환경을 요구하는 FT
 1. 대상 OS에서 기본 검사와 패키지·설치 검증을 실행한다.
 2. 빌드 버전, 아키텍처, 서명·공증 여부, SHA-256과 알려진 제한을 검증 기록에 남긴다.
 3. 공개 배포 시 서명·공증과 다운로드 위치를 확정하고 실제 설치 파일을 게시한다.
-4. 게시된 파일과 일치하도록 README의 제공 상태·파일 이름·다운로드 링크와 필요 시 스크린샷을 갱신한다.
+4. [릴리즈 목록](releases/README.md)에 공개 날짜·상태·릴리즈 링크를 갱신한다. GitHub Release 본문은 `docs/releases/v<버전>.md`를 사용한다. README는 설치 방법·기능·지원 플랫폼이 바뀔 때 갱신하며 버전별 날짜와 파일 이름은 넣지 않는다.
 
 Release 자산은 설치 파일과 `SHA256SUMS.txt`만 올린다. GitHub가 태그에서 자동으로 제공하는 **Source code (zip/tar.gz)** 링크는 직접 업로드한 자산이 아니다. [GitHub 릴리즈 공식 안내](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases).
 

@@ -350,6 +350,7 @@ small {
   align-items: center;
   gap: 4px;
   flex: 1;
+  min-width: 0;
   overflow-x: auto;
   scrollbar-width: none;
   height: 44px;
@@ -1126,6 +1127,8 @@ summary {
 .tool-body {
   padding: 18px;
   overflow-y: auto;
+  min-height: 0;
+  overscroll-behavior: contain;
   flex: 1;
 }
 .tool-body > .search-box {
@@ -1561,7 +1564,10 @@ summary {
   border-radius: 8px;
   box-shadow: var(--shadow);
   padding: 6px;
-  overflow: hidden;
+  max-width: calc(100vw - 16px);
+  max-height: calc(100vh - 16px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .context-caption {
   font-size: 10px;
@@ -1614,6 +1620,9 @@ summary {
   padding: 32px clamp(24px, 3vw, 42px);
   overflow-y: auto;
   min-width: 0;
+  min-height: 0;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
   container-type: inline-size;
   container-name: settings;
 }
@@ -1754,6 +1763,7 @@ kbd {
   width: 430px;
   max-height: 90vh;
   overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -1800,6 +1810,8 @@ kbd {
 .connection-chooser {
   max-height: 340px;
   overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
   margin: 15px 0;
 }
 .connection-chooser > button {
@@ -1815,6 +1827,147 @@ kbd {
   flex-direction: column;
   gap: 7px;
   flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.connection-chooser .host-icon {
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  margin: 0;
+}
+.connection-chooser > button {
+  white-space: normal;
+  flex-shrink: 0;
+}
+.connection-chooser > button > svg {
+  flex-shrink: 0;
+}
+.ssh-chooser-modal {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  max-height: calc(100vh - 70px);
+}
+.ssh-chooser-modal > header,
+.ssh-chooser-modal > .local-shell-choice,
+.ssh-chooser-modal > .section-line,
+.ssh-chooser-modal > .search-box,
+.ssh-chooser-modal > .full {
+  flex-shrink: 0;
+}
+.local-shell-choice {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 12px;
+}
+.local-shell-choice > label {
+  margin: 0;
+  min-width: 0;
+}
+.local-shell-choice > button {
+  height: 36px;
+}
+.ssh-chooser-modal .connection-chooser {
+  min-height: 0;
+  flex: 0 1 340px;
+  display: flex;
+  flex-direction: column;
+}
+.workspace-library {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 32px clamp(24px, 3vw, 42px);
+  min-height: 0;
+}
+.workspace-library .page-heading {
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.workspace-library-hint {
+  flex-shrink: 0;
+  margin-top: 0;
+}
+.workspace-template-list {
+  overflow: auto;
+  min-height: 0;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+.workspace-template-row {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: 10px;
+  margin-bottom: 10px;
+  gap: 8px;
+  padding: 8px;
+}
+.workspace-template-open {
+  border: 0;
+  background: transparent;
+  flex: 1;
+  min-width: 0;
+  justify-content: flex-start;
+  gap: 16px;
+  padding: 12px;
+  text-align: left;
+  white-space: normal;
+}
+.workspace-template-name {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  overflow-wrap: anywhere;
+}
+.workspace-template-name small {
+  color: var(--muted);
+}
+.workspace-template-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 4px;
+}
+.template-preview {
+  display: block;
+  height: 36px;
+  width: 48px;
+  flex-shrink: 0;
+}
+.template-preview-split {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  gap: 3px;
+  min-width: 0;
+  min-height: 0;
+}
+.template-preview-pane {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--accent);
+  opacity: 0.7;
+  border-radius: 2px;
+  min-width: 0;
+  min-height: 0;
+}
+@media (max-width: 900px) {
+  .workspace-template-row {
+    flex-wrap: wrap;
+  }
+  .workspace-template-open {
+    flex-basis: 100%;
+  }
+  .workspace-template-actions {
+    margin-left: auto;
+  }
 }
 .connection-chooser > button:hover {
   background: var(--surface);
@@ -2082,8 +2235,10 @@ kbd {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  max-height: 60vh;
+  min-height: 0;
   overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
 }
 .log-list button {
   display: flex;
@@ -2091,12 +2246,21 @@ kbd {
   flex-direction: column;
   white-space: normal;
   text-align: left;
+  flex-shrink: 0;
+  width: 100%;
+  overflow-wrap: anywhere;
+}
+.log-list button.active {
+  border-color: var(--accent);
+  background: var(--selected);
 }
 .log-reader pre {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  max-height: 50vh;
+  min-height: 0;
   overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
   font-family: "JetBrains Mono", monospace;
 }
 .color-grid {
@@ -2528,7 +2692,10 @@ select:disabled {
 }
 .settings-content .log-layout {
   margin-top: 0;
-  grid-template-columns: minmax(180px, 25%) minmax(0, 1fr);
+  grid-template-columns: clamp(200px, 25%, 320px) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  min-height: 0;
+  height: 100%;
 }
 .settings-content .log-layout.is-empty {
   grid-template-columns: minmax(0, 1fr);
@@ -2554,11 +2721,75 @@ select:disabled {
   .app-appearance-card .sample-terminal {
     margin-top: 24px;
   }
-  .settings-content .log-layout {
+}
+/* The log browser fills the remaining window. Only the list and output scroll. */
+.settings-content.settings-logs {
+  overflow: hidden;
+  display: flex;
+}
+.log-settings {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+.log-settings > .page-heading,
+.log-settings .settings-tab-list {
+  flex-shrink: 0;
+}
+.log-settings > .settings-tabs {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.log-settings .settings-tab-panel {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.log-settings.is-browsing .settings-tab-panel {
+  overflow: hidden;
+}
+.log-reader {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+.log-reader > .row,
+.log-reader > .hint {
+  flex-shrink: 0;
+}
+.log-reader pre {
+  flex: 1;
+  margin: 14px 0;
+}
+.log-bookmarks {
+  display: flex;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  gap: 6px;
+  max-height: 72px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.log-bookmarks:empty {
+  display: none;
+}
+@container settings (max-width: 620px) {
+  .settings-content .log-layout:not(.is-empty) {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(80px, 27%) minmax(0, 1fr);
   }
-  .settings-content .log-list {
-    max-height: 180px;
+  .log-reader {
+    padding: 14px;
+  }
+  .log-reader > .hint {
+    font-size: 10px;
+    margin: 6px 0;
   }
 }
 @container settings (max-width: 480px) {

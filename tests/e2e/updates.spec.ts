@@ -12,6 +12,7 @@ import { closeCleanly } from "../fixtures/electron-exit";
 
 let application: ElectronApplication, page: Page, directory: string;
 const errors: string[] = [];
+let currentVersion: string, nextVersion: string;
 
 test.beforeEach(async () => {
   errors.length = 0;
@@ -25,6 +26,9 @@ test.beforeEach(async () => {
       PASSPORT_DISABLE_UPDATE_CHECK: "1",
     },
   });
+  currentVersion = await application.evaluate(({ app }) => app.getVersion());
+  const [major, minor, patch] = currentVersion.split(".").map(Number);
+  nextVersion = `${major}.${minor}.${patch + 1}`;
   page = await application.firstWindow();
   page.on("pageerror", (error) => errors.push(error.message));
   await expect(page.locator(".hosts-view")).toBeVisible();
@@ -97,7 +101,7 @@ async function mockRelease(
 }
 
 test("About checks updates, directs downloads to the correct installer, and shows a persistent About shortcut", async ({}, info) => {
-  await mockRelease("1.0.2", true, 300);
+  await mockRelease(nextVersion, true, 300);
   await page
     .getByRole("button", { name: "업데이트 확인", exact: true })
     .click();
@@ -105,7 +109,7 @@ test("About checks updates, directs downloads to the correct installer, and show
     page.getByRole("button", { name: "확인 중…", exact: true }),
   ).toBeDisabled();
   await expect(page.locator(".update-result")).toContainText(
-    "Passport 1.0.2 업데이트가 있습니다.",
+    `Passport ${nextVersion} 업데이트가 있습니다.`,
   );
   expect(
     await application.evaluate(() => (globalThis as any).updateRequests),
@@ -158,19 +162,21 @@ test("About checks updates, directs downloads to the correct installer, and show
   expect(
     await application.evaluate(() => (globalThis as any).updateURLs),
   ).toEqual([
-    "https://github.com/poyal/passport/releases/download/v1.0.2/Passport-1.0.2-mac-arm64.dmg",
-    "https://github.com/poyal/passport/releases/tag/v1.0.2",
+    `https://github.com/poyal/passport/releases/download/v${nextVersion}/Passport-${nextVersion}-mac-arm64.dmg`,
+    `https://github.com/poyal/passport/releases/tag/v${nextVersion}`,
   ]);
   await page.getByRole("button", { name: "호스트", exact: true }).click();
   await page
-    .getByRole("button", { name: "새 버전 1.0.2", exact: true })
+    .getByRole("button", { name: `새 버전 ${nextVersion}`, exact: true })
     .click();
   await expect(
     page.getByRole("heading", { name: "About Passport", exact: true }),
   ).toBeVisible();
-  await expect(page.locator(".update-result")).toContainText("현재 버전 1.0.1");
   await expect(page.locator(".update-result")).toContainText(
-    "최신 공개 버전 1.0.2",
+    `현재 버전 ${currentVersion}`,
+  );
+  await expect(page.locator(".update-result")).toContainText(
+    `최신 공개 버전 ${nextVersion}`,
   );
   await expect(
     page.evaluate(() =>
@@ -199,7 +205,7 @@ test("an ahead-of-release installation never offers a downgrade", async () => {
 });
 
 test("an offline check stays inside About while the host screen remains usable", async ({}, info) => {
-  await mockRelease("1.0.2", true, 0, true);
+  await mockRelease(nextVersion, true, 0, true);
   await page
     .getByRole("button", { name: "업데이트 확인", exact: true })
     .click();
@@ -220,7 +226,7 @@ test("an offline check stays inside About while the host screen remains usable",
 });
 
 test("a release without an installer offers notes without a broken download button", async () => {
-  await mockRelease("1.0.2", false);
+  await mockRelease(nextVersion, false);
   await page
     .getByRole("button", { name: "업데이트 확인", exact: true })
     .click();
@@ -235,5 +241,5 @@ test("a release without an installer offers notes without a broken download butt
     .click();
   expect(
     await application.evaluate(() => (globalThis as any).updateURLs),
-  ).toEqual(["https://github.com/poyal/passport/releases/tag/v1.0.2"]);
+  ).toEqual([`https://github.com/poyal/passport/releases/tag/v${nextVersion}`]);
 });

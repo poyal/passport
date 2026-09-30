@@ -402,7 +402,10 @@ function preview(
       );
     }
   }
-  for (const workspace of data.document.workspaces)
+  for (const workspace of [
+    ...data.document.workspaces,
+    ...data.document.workspaceTemplates.flatMap((t) => t.workspaces),
+  ])
     for (const pane of panes(workspace.root)) {
       if (!pane.local) continue;
       if (pane.local.cwd) {

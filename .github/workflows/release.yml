@@ -37,7 +37,7 @@ jobs:
         run: |
           codesign --verify --deep --strict release/mac-arm64/Passport.app
           node scripts/packaged-smoke.mjs release/mac-arm64/Passport.app/Contents/MacOS/Passport
-          PASSPORT_E2E_EXECUTABLE="$PWD/release/mac-arm64/Passport.app/Contents/MacOS/Passport" npx playwright test tests/e2e/legacy.spec.ts tests/e2e/file-colors.spec.ts tests/e2e/updates.spec.ts
+          PASSPORT_E2E_EXECUTABLE="$PWD/release/mac-arm64/Passport.app/Contents/MacOS/Passport" npx playwright test tests/e2e/legacy.spec.ts tests/e2e/file-colors.spec.ts tests/e2e/updates.spec.ts tests/e2e/scroll-workspaces.spec.ts
       - name: Publish release and checksums
         env:
           GH_TOKEN: ${{ github.token }}

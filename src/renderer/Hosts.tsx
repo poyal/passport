@@ -27,6 +27,7 @@ import { HostIcon, hostIconNames } from "./HostIcon";
 import { hostOS } from "../shared/host-os";
 import { themes } from "../shared/themes";
 import { panes, removeNode } from "../shared/layout";
+import { templatesWithoutHost } from "../shared/workspace-templates";
 
 export function Hosts() {
   const app = useApp(),
@@ -172,6 +173,7 @@ export function Hosts() {
         ...d,
         hosts: d.hosts.filter((x) => x.id !== h.id),
         tunnels: d.tunnels.filter((t) => t.hostId !== h.id),
+        workspaceTemplates: templatesWithoutHost(d.workspaceTemplates, h.id),
         workspaces: d.workspaces.flatMap((w) => {
           let root: typeof w.root | null = w.root;
           for (const p of panes(w.root))

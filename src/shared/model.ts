@@ -213,6 +213,14 @@ export const workspaceSchema = z.object({
   root: layoutSchema,
 });
 export type Workspace = z.infer<typeof workspaceSchema>;
+export const workspaceTemplateSchema = z.object({
+  id: idSchema,
+  name: short.min(1),
+  workspaces: z.array(workspaceSchema).min(1).max(32),
+  activeWorkspaceId: idSchema,
+  activePaneId: idSchema,
+});
+export type WorkspaceTemplate = z.infer<typeof workspaceTemplateSchema>;
 export const settingsSchema = z.object({
   appearance: appearanceSchema.default(() => appearanceSchema.parse({})),
   colorMode: z.enum(["system", "dark", "light"]).default("system"),
@@ -250,11 +258,18 @@ export const documentSchema = z
     groups: z.array(groupSchema).max(1000),
     snippets: z.array(snippetSchema).max(5000),
     workspaces: z.array(workspaceSchema).max(32),
+    workspaceTemplates: z.array(workspaceTemplateSchema).max(100).default([]),
     settings: settingsSchema,
   })
   .superRefine((d, ctx) => {
     const fail = (message: string) => ctx.addIssue({ code: "custom", message });
-    for (const list of [d.hosts, d.groups, d.snippets, d.workspaces])
+    for (const list of [
+      d.hosts,
+      d.groups,
+      d.snippets,
+      d.workspaces,
+      d.workspaceTemplates,
+    ])
       if (new Set(list.map((x) => x.id)).size !== list.length)
         fail("중복 ID가 있습니다.");
     const groupIds = new Set(d.groups.map((x) => x.id));
@@ -288,28 +303,45 @@ export const documentSchema = z
       d.settings.customThemes.length
     )
       fail("테마 ID가 중복됩니다.");
-    const ids = new Set<string>();
-    let total = 0;
-    const walk = (n: Layout, depth = 0): number => {
-      if (depth > 16) {
-        fail("분할 깊이를 초과했습니다.");
-        return 0;
+    const validateLayouts = (workspaces: Workspace[]) => {
+      const ids = new Set<string>();
+      let total = 0;
+      const walk = (n: Layout, depth = 0): number => {
+        if (depth > 16) {
+          fail("분할 깊이를 초과했습니다.");
+          return 0;
+        }
+        if (ids.has(n.id)) fail("분할 ID가 중복됩니다.");
+        ids.add(n.id);
+        if (n.kind === "pane") {
+          if (!n.local && !hostIds.has(n.hostId))
+            fail("배치의 호스트를 찾을 수 없습니다.");
+          return 1;
+        }
+        return n.children.reduce((a, c) => a + walk(c, depth + 1), 0);
+      };
+      for (const w of workspaces) {
+        if (ids.has(w.id)) fail("작업 탭 ID가 중복됩니다.");
+        ids.add(w.id);
+        const count = walk(w.root);
+        if (count > 16) fail("작업 탭의 최대 분할 수는 16개입니다.");
+        total += count;
       }
-      if (ids.has(n.id)) fail("분할 ID가 중복됩니다.");
-      ids.add(n.id);
-      if (n.kind === "pane") {
-        if (!n.local && !hostIds.has(n.hostId))
-          fail("배치의 호스트를 찾을 수 없습니다.");
-        return 1;
-      }
-      return n.children.reduce((a, c) => a + walk(c, depth + 1), 0);
+      if (total > 32) fail("최대 터미널 수는 32개입니다.");
     };
-    for (const w of d.workspaces) {
-      const count = walk(w.root);
-      if (count > 16) fail("작업 탭의 최대 분할 수는 16개입니다.");
-      total += count;
+    validateLayouts(d.workspaces);
+    for (const template of d.workspaceTemplates) {
+      validateLayouts(template.workspaces);
+      const active = template.workspaces.find(
+        (w) => w.id === template.activeWorkspaceId,
+      );
+      const contains = (node: Layout): boolean =>
+        node.kind === "pane"
+          ? node.id === template.activePaneId
+          : node.children.some(contains);
+      if (!active || !contains(active.root))
+        fail("스페이스의 선택된 터미널을 찾을 수 없습니다.");
     }
-    if (total > 32) fail("최대 터미널 수는 32개입니다.");
   });
 export type PassportDocument = z.infer<typeof documentSchema>;
 export const emptyDocument = (): PassportDocument =>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Plus,
   X,
@@ -1026,17 +1026,42 @@ export function LogSettings() {
       next: 0,
       matches: [] as number[],
     });
+  const readRequest = useRef(0),
+    readerRef = useRef<HTMLPreElement>(null);
   const refresh = () =>
-    void api.call("logs.list", undefined).then(setItems).catch(app.notify);
-  useEffect(refresh, []);
-  const read = (id: string, offset = 0) =>
     void api
-      .call("logs.read", { id, offset, query, plain: true })
-      .then(setContent)
+      .call("logs.list", undefined)
+      .then((next) => {
+        setItems(next);
+        if (selected && !next.some((item) => item.id === selected)) {
+          readRequest.current++;
+          setSelected("");
+        }
+      })
       .catch(app.notify);
+  useEffect(refresh, []);
+  useEffect(
+    () => () => {
+      readRequest.current++;
+    },
+    [],
+  );
+  const read = (id: string, offset = 0, search = query) => {
+    const request = ++readRequest.current;
+    void api
+      .call("logs.read", { id, offset, query: search, plain: true })
+      .then((result) => {
+        if (request !== readRequest.current) return;
+        setContent(result);
+        readerRef.current?.scrollTo(0, 0);
+      })
+      .catch((error) => {
+        if (request === readRequest.current) app.notify(error);
+      });
+  };
   const current = items.find((x) => x.id === selected);
   return (
-    <>
+    <div className={`log-settings ${tab === "browse" ? "is-browsing" : ""}`}>
       <div className="page-heading">
         <div>
           <h1>세션 로그</h1>
@@ -1116,13 +1141,15 @@ export function LogSettings() {
         )}
         {tab === "browse" && (
           <div className={`log-layout ${items.length ? "" : "is-empty"}`}>
-            <div className="log-list">
+            <div className="log-list" aria-label="세션 기록 목록" tabIndex={0}>
               {items.map((log) => (
                 <button
                   key={log.id}
                   className={log.id === selected ? "active" : ""}
+                  aria-pressed={log.id === selected}
                   onClick={() => {
                     setSelected(log.id);
+                    setContent({ text: "", offset: 0, next: 0, matches: [] });
                     read(log.id);
                   }}
                 >
@@ -1144,13 +1171,18 @@ export function LogSettings() {
                       placeholder="로그에서 찾기"
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") read(selected);
+                      }}
                     />
                     <button onClick={() => read(selected)}>검색</button>
                     <button onClick={() => read(selected, content.next)}>
                       다음
                     </button>
                   </div>
-                  <pre>{content.text || "표시할 내용이 없습니다."}</pre>
+                  <pre ref={readerRef} tabIndex={0} aria-label="세션 로그 내용">
+                    {content.text || "표시할 내용이 없습니다."}
+                  </pre>
                   <p className="hint">
                     조회할 때 터미널 제어 코드를 숨깁니다. 화면을 다시 그리는
                     프로그램의 출력은 반복될 수 있으며, 내보내기는 원본 기록을
@@ -1209,25 +1241,20 @@ export function LogSettings() {
                       삭제
                     </button>
                   </div>
-                  {current.bookmarks.map((b, i) => (
-                    <button
-                      key={i}
-                      className="text-button"
-                      onClick={() => {
-                        setQuery("");
-                        void api
-                          .call("logs.read", {
-                            id: selected,
-                            offset: b.offset,
-                            plain: true,
-                          })
-                          .then(setContent)
-                          .catch(app.notify);
-                      }}
-                    >
-                      {b.label}
-                    </button>
-                  ))}
+                  <div className="log-bookmarks">
+                    {current.bookmarks.map((b, i) => (
+                      <button
+                        key={i}
+                        className="text-button"
+                        onClick={() => {
+                          setQuery("");
+                          read(selected, b.offset, "");
+                        }}
+                      >
+                        {b.label}
+                      </button>
+                    ))}
+                  </div>
                 </>
               ) : (
                 <p className="hint">
@@ -1240,7 +1267,7 @@ export function LogSettings() {
           </div>
         )}
       </SettingsTabs>
-    </>
+    </div>
   );
 }
 export function CustomThemes() {
