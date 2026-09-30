@@ -13,6 +13,8 @@
 
 다시 만든 로컬 DMG: `release/Passport-1.0.1-mac-arm64.dmg`, 153,315,070바이트. SHA-256: `f4b0100a1c34e767ea761ed6a61a20c011b5056a37200d994a41071014defc9a`. [최종 요약](benchmarks/verification-v1.0.1.json). 아래 기록의 DMG는 업데이트 확인을 추가하기 전 빌드이며 현재 파일은 이 빌드로 교체했다.
 
+[GitHub Release v1.0.1](https://github.com/poyal/passport/releases/tag/v1.0.1)을 게시했다. [배포 작업](https://github.com/poyal/passport/actions/runs/36685960915)은 기본 검사·전체 GUI·DMG·실제 패키지 확인을 모두 통과했다. 공개 DMG는 runner에서 따로 만든 154,616,004바이트 파일이며 SHA-256은 `8c4943db382f6b9f06fe2e7c823464f84b2bf52c4376ef9c3808d63035f5779e`다. 실제 다운로드 해시·GitHub digest·SHA256SUMS 일치를 확인했다. 다운로드한 공개 DMG를 읽기 전용으로 열고 별도 임시 프로필에서 실행해, 수동 호출 없이 최신 공개 버전 1.0.1을 조회하고 About에 ‘최신 버전을 사용하고 있습니다’를 표시하는 것과 정상 종료를 확인했다. 설치 디스크도 해제했다. [게시·실행 기록](benchmarks/github-release-v1.0.1.json).
+
 ## 1.0.1 내보내기·가져오기·로그·검색·설정 — 2026-09-30
 
 내보내기 암호가 10자 미만이면 필요한 길이와 현재 글자 수를 표시한다. 실제 인증 프로필이 포함된 파일을 내보내고 올바른 암호로 복호화하는 GUI 검증을 통과했다. 가져오기는 파일 선택 후 암호화된 파일에만 암호창을 열며 잘못된 암호 재입력·미리보기·취소 토큰 무효화와 일반 파일의 암호창 생략을 확인했다. 선택한 파일의 암호문은 해당 창에서만 사용할 수 있는 5분 토큰으로 관리한다.
@@ -29,7 +31,7 @@
 - **패키징된 1.0.1 앱의 GUI 7개 통과**: 새 설정·데이터·로그·검색·About, 구형 SSH/SFTP, 모든 테마 파일 색상. 로컬 PTY 실행·렌더러 Node 접근 차단·종료 코드 0도 통과했다.
 - `codesign --verify --deep --strict`와 `hdiutil verify` 통과. 패키지 내부 main·preload·renderer의 SHA-256이 최종 빌드와 일치한다. 실제 버전은 1.0.1이며 Apple 공증은 포함하지 않는다.
 
-로컬 설치본: `release/Passport-1.0.1-mac-arm64.dmg`, 153,317,831바이트. SHA-256: `df6ecfe2c268f47e1366fed2d5286f9fc0354fa74c5a514fa877e2b55566eed3`. [패키지 실행 기록](benchmarks/packaged-smoke-v1.0.1.json), [전체 요약](benchmarks/verification-v1.0.1.json). 공개 GitHub Release는 아직 1.0.0이며 새 설치본을 공개 자산으로 게시하지 않았다.
+업데이트 확인 추가 전의 로컬 설치본: `release/Passport-1.0.1-mac-arm64.dmg`, 153,317,831바이트. SHA-256: `df6ecfe2c268f47e1366fed2d5286f9fc0354fa74c5a514fa877e2b55566eed3`. [당시 패키지 실행 기록](benchmarks/packaged-smoke-v1.0.1.json). 이 단계에서는 공개 버전이 1.0.0이었으며, 이후 업데이트 확인을 추가한 1.0.1을 위 기록대로 게시했다.
 
 ## 1.0.0 설정 재구성·자동 OS 아이콘·파일 색상 — 2026-09-30
 

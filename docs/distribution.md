@@ -6,7 +6,7 @@
 
 ## 현재 상태
 
-2026-09-30 기준 `main`의 수정본은 1.0.1이다. Apple Silicon Mac용 DMG를 생성하고 실제 패키지 실행을 확인했다. 공개 배포는 [GitHub Release v1.0.0](https://github.com/poyal/passport/releases/tag/v1.0.0)의 Mac DMG와 SHA256SUMS이며 1.0.1 설치본은 아직 게시하지 않았다. Windows x64·ARM64는 빌드 스크립트와 수동 CI를 준비했으나 실제 설치·실행 확인이 남아 있다.
+2026-09-30 기준 공개 배포는 **1.0.1**이다. Apple Silicon Mac용 DMG를 생성하고 실제 패키지 실행을 확인했다. [GitHub Release v1.0.1](https://github.com/poyal/passport/releases/tag/v1.0.1)에 Mac DMG와 SHA256SUMS를 게시했다. Windows x64·ARM64는 빌드 스크립트와 수동 CI를 준비했으나 실제 설치·실행 확인이 남아 있다.
 
 Mac 설치본은 ad-hoc 서명이며 Developer ID 서명·Apple 공증을 포함하지 않는다. `codesign` 무결성 검사 통과는 Apple 공증이나 Gatekeeper의 실행 허용을 뜻하지 않는다. 현재 결과와 DMG 해시는 [검증 기록](verification.md)에 보관한다.
 
@@ -65,7 +65,7 @@ Docker 매트릭스와 장시간 부하, 별도 Python 환경을 요구하는 FT
 
 [Publish Mac release](../.github/workflows/release.yml)은 `v*.*.*` 태그 push에서 실행한다. 태그와 `package.json`의 버전이 같아야 하고 `docs/releases/v<버전>.md`가 있어야 한다. ARM64 Mac runner에서 기본 검사·GUI·DMG·패키지 실행과 구형 SSH/파일 색상을 확인하고 모든 단계가 통과하면 해당 버전의 GitHub Release에 DMG와 `SHA256SUMS.txt`를 게시한다. 게시 권한은 해당 작업의 저장소 contents로 한정한다. [GitHub ARM64 runner 공식 안내](https://docs.github.com/en/actions/reference/runners/github-hosted-runners).
 
-2026-09-30 실행이 성공했고 실제 다운로드와 GitHub 자산 digest·SHA256SUMS 일치를 확인했다. [게시 결과](benchmarks/github-release-v1.0.0.json). 로컬 DMG와 runner에서 만든 DMG는 별도 빌드이므로 각각의 해시를 사용한다. 배포 소스는 `v1.0.0` 태그를 기준으로 하며 이후 문서 갱신은 `main`에 반영한다.
+2026-09-30의 [1.0.1 배포 작업](https://github.com/poyal/passport/actions/runs/36685960915)이 성공했고 실제 다운로드와 GitHub 자산 digest·SHA256SUMS 일치를 확인했다. [게시 결과](benchmarks/github-release-v1.0.1.json). 로컬 DMG와 runner에서 만든 DMG는 별도 빌드이므로 각각의 해시를 사용한다. 배포 소스는 `v1.0.1` 태그를 기준으로 하며 이후 문서 갱신은 `main`에 반영한다.
 
 ## 배포 갱신 순서
 

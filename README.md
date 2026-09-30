@@ -22,13 +22,13 @@
 
 ## 설치
 
-**현재 배포 버전은 1.0.0입니다.** Apple Silicon Mac용 설치 파일을 [GitHub Releases](https://github.com/poyal/passport/releases/tag/v1.0.0)에서 받으세요.
+**현재 배포 버전은 1.0.1입니다.** Apple Silicon Mac용 설치 파일을 [GitHub Releases](https://github.com/poyal/passport/releases/tag/v1.0.1)에서 받으세요.
 
-`main`의 수정본은 **1.0.1**입니다. 아래 화면과 사용 안내는 수정본을 기준으로 하며, 변경 내용은 [1.0.1 안내](docs/releases/v1.0.1.md)에 있습니다. 공개 다운로드는 위에 표시한 배포 버전을 확인하세요.
+아래 화면과 사용 안내는 **1.0.1**을 기준으로 합니다. 변경 내용은 [1.0.1 안내](docs/releases/v1.0.1.md)에 있습니다.
 
 | 내 컴퓨터                     | 설치 파일                                                                                                               | 제공 상태 |
 | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------- | --------- |
-| Mac · Apple Silicon(M 시리즈) | [Passport-1.0.0-mac-arm64.dmg](https://github.com/poyal/passport/releases/download/v1.0.0/Passport-1.0.0-mac-arm64.dmg) | 배포 중   |
+| Mac · Apple Silicon(M 시리즈) | [Passport-1.0.1-mac-arm64.dmg](https://github.com/poyal/passport/releases/download/v1.0.1/Passport-1.0.1-mac-arm64.dmg) | 배포 중   |
 | Windows · Intel / AMD(x64)    | `.exe` 설치 프로그램                                                                                                    | 준비 중   |
 | Windows · ARM64               | ARM64용 `.exe` 설치 프로그램                                                                                            | 준비 중   |
 
@@ -65,14 +65,14 @@ macOS 14 이상과 Apple Silicon(M 시리즈)을 대상으로 합니다. Rosetta
 
 ### 다운로드 파일 확인하기
 
-DMG와 [SHA256SUMS.txt](https://github.com/poyal/passport/releases/download/v1.0.0/SHA256SUMS.txt)를 같은 폴더에 저장한 뒤 터미널에서 확인할 수 있습니다. 다운로드 폴더에 저장했다면 다음을 실행하세요.
+DMG와 [SHA256SUMS.txt](https://github.com/poyal/passport/releases/download/v1.0.1/SHA256SUMS.txt)를 같은 폴더에 저장한 뒤 터미널에서 확인할 수 있습니다. 다운로드 폴더에 저장했다면 다음을 실행하세요.
 
 ```sh
 cd ~/Downloads
 shasum -a 256 -c SHA256SUMS.txt
 ```
 
-`Passport-1.0.0-mac-arm64.dmg: OK`가 표시되면 게시된 파일과 일치합니다.
+`Passport-1.0.1-mac-arm64.dmg: OK`가 표시되면 게시된 파일과 일치합니다.
 
 Windows x64·ARM64 설치 파일은 준비 중이며 이번 릴리스에 포함하지 않습니다.
 

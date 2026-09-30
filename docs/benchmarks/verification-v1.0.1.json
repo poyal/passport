@@ -33,7 +33,9 @@
     "path": "release/Passport-1.0.1-mac-arm64.dmg",
     "bytes": 153315070,
     "sha256": "f4b0100a1c34e767ea761ed6a61a20c011b5056a37200d994a41071014defc9a",
-    "publicReleasePublished": false
+    "publicReleasePublished": true,
+    "publicReleaseURL": "https://github.com/poyal/passport/releases/tag/v1.0.1",
+    "publicArtifactSha256": "8c4943db382f6b9f06fe2e7c823464f84b2bf52c4376ef9c3808d63035f5779e"
   },
   "limitations": [
     "Update checking and browser installer handoff supported; in-app replacement and automatic restart are not included",
