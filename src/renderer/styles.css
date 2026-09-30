@@ -857,10 +857,127 @@ summary {
 }
 .terminal-search input {
   flex: 1;
+  min-width: 0;
   border: 0;
   background: transparent;
   padding: 4px;
   font-size: 11px;
+  height: 24px;
+}
+.terminal-search {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 34px;
+  padding: 3px 10px;
+  border-bottom: 1px solid var(--line);
+  z-index: 5;
+}
+.terminal-search .icon-button {
+  width: 24px;
+  height: 24px;
+}
+.search-count {
+  flex-shrink: 0;
+  min-width: 36px;
+  text-align: center;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.xterm-find-result-decoration {
+  outline-width: 2px !important;
+}
+.toggle-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 18px 0;
+  min-width: 0;
+}
+.toggle-field > span {
+  color: var(--muted);
+  font-size: 12px;
+}
+.switch-control {
+  min-height: 34px;
+  justify-content: flex-start;
+  gap: 10px;
+  width: 100%;
+  font-size: 11px;
+  font-weight: 600;
+}
+.switch-control[aria-checked="true"] {
+  color: var(--accent);
+  background: var(--selected);
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+}
+.switch-track {
+  display: inline-flex;
+  align-items: center;
+  width: 30px;
+  height: 18px;
+  padding: 3px;
+  border-radius: 12px;
+  background: var(--muted);
+  flex-shrink: 0;
+}
+.switch-track > span {
+  width: 12px;
+  height: 12px;
+  background: var(--panel);
+  border-radius: 50%;
+}
+.switch-control[aria-checked="true"] .switch-track {
+  background: var(--accent);
+  justify-content: flex-end;
+}
+.about-card dl {
+  display: grid;
+  gap: 16px;
+  margin: 24px 0;
+}
+.about-card dl > div {
+  display: grid;
+  grid-template-columns: 80px minmax(0, 1fr);
+  gap: 16px;
+}
+.about-card dt {
+  color: var(--muted);
+}
+.about-card dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.about-card a {
+  color: var(--accent);
+}
+.about-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr));
+  gap: 12px;
+}
+.about-links a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  text-decoration: none;
+}
+.about-links a:hover {
+  background: var(--hover);
+}
+.about-links a > span {
+  min-width: 0;
+  flex: 1;
+}
+.about-links a > svg {
+  flex-shrink: 0;
+}
+.import-file-name {
+  overflow-wrap: anywhere;
+  font-weight: 600;
 }
 .split-picker select {
   flex: 1;

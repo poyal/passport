@@ -44,11 +44,14 @@ const names: Call[] = [
   "transfer.retry",
   "data.export",
   "data.preview",
+  "data.unlock",
+  "data.cancel",
   "data.apply",
   "backup.list",
   "backup.preview",
   "clipboard.read",
   "clipboard.write",
+  "external.open",
 ];
 const api: PassportAPI = {
   async call<K extends Call>(

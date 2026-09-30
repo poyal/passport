@@ -314,7 +314,7 @@ test("all main screens and settings tabs fit light and dark themes at wide, desk
     .locator(".settings-sidebar")
     .getByRole("button", { name: "외형", exact: true })
     .click();
-  await page.getByRole("tab", { name: "사용자 테마", exact: true }).click();
+  await page.getByRole("tab", { name: "테마", exact: true }).click();
   await page
     .getByRole("button", { name: "현재 테마에서 만들기", exact: true })
     .click();
@@ -360,6 +360,7 @@ test("all main screens and settings tabs fit light and dark themes at wide, desk
         "포트 포워딩",
         "내보내기와 백업",
         "단축키",
+        "About",
       ]) {
         await page
           .locator(".settings-sidebar")

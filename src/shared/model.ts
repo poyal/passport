@@ -438,6 +438,11 @@ export type ImportPreview = {
   warnings: string[];
   kind: "passport" | "ssh" | "snippets";
 };
+export type ImportPasswordRequest = {
+  token: string;
+  name: string;
+  needsPassword: true;
+};
 export type Result<T> = { ok: true; value: T } | { ok: false; error: string };
 
 export interface Calls {
@@ -474,7 +479,7 @@ export interface Calls {
   "logs.list": { input: undefined; output: LogFile[] };
   "logs.record": { input: { id: string; enabled: boolean }; output: void };
   "logs.read": {
-    input: { id: string; query?: string; offset?: number };
+    input: { id: string; query?: string; offset?: number; plain?: boolean };
     output: { text: string; offset: number; next: number; matches: number[] };
   };
   "logs.bookmark": {
@@ -542,8 +547,13 @@ export interface Calls {
   };
   "data.preview": {
     input: { password?: string; kind?: "passport" | "ssh" | "snippets" };
-    output: ImportPreview | null;
+    output: ImportPreview | ImportPasswordRequest | null;
   };
+  "data.unlock": {
+    input: { token: string; password: string };
+    output: ImportPreview;
+  };
+  "data.cancel": { input: { token: string }; output: void };
   "data.apply": {
     input: { token: string; conflict: "skip" | "overwrite" };
     output: Bootstrap;
@@ -552,6 +562,10 @@ export interface Calls {
   "backup.preview": { input: { name: string }; output: ImportPreview };
   "clipboard.read": { input: undefined; output: string };
   "clipboard.write": { input: { text: string }; output: void };
+  "external.open": {
+    input: { target: "github" | "issues" | "releases" | "email" };
+    output: void;
+  };
 }
 export type Call = keyof Calls;
 export interface PassportAPI {

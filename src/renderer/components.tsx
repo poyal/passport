@@ -91,6 +91,35 @@ export function SettingsTabs<T extends string>({
     </div>
   );
 }
+export function ToggleField({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (value: boolean) => void;
+}) {
+  const id = useId();
+  return (
+    <div className="toggle-field">
+      <span id={id}>{label}</span>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        aria-labelledby={id}
+        className="switch-control"
+        onClick={() => onChange(!checked)}
+      >
+        <span className="switch-track" aria-hidden="true">
+          <span />
+        </span>
+        <span aria-hidden="true">{checked ? "ON" : "OFF"}</span>
+      </button>
+    </div>
+  );
+}
 export function Modal({
   title,
   children,

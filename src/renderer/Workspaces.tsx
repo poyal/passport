@@ -16,6 +16,10 @@ import {
   Copy,
   Trash2,
   Check,
+  Wrench,
+  Plug,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import type {
   Appearance,
@@ -39,7 +43,13 @@ import { useApp } from "./context";
 import { api, uuid } from "./api";
 import { attachTerminal, applyAppearance, terminals } from "./terminals";
 import { HostPicker } from "./HostPicker";
-import { IconButton, Modal, Empty, NumberField } from "./components";
+import {
+  IconButton,
+  Modal,
+  Empty,
+  NumberField,
+  ToggleField,
+} from "./components";
 export const dragMime = "application/x-passport-layout";
 type Edge = "left" | "right" | "top" | "bottom";
 const minimum = (n: Layout): [number, number] => {
@@ -66,6 +76,10 @@ function Leaf({
   const container = useRef<HTMLDivElement>(null);
   const [edge, setEdge] = useState<Edge | null>(null),
     [search, setSearch] = useState<string | null>(null),
+    [searchResults, setSearchResults] = useState({
+      resultIndex: -1,
+      resultCount: 0,
+    }),
     [split, setSplit] = useState(false),
     [splitDirection, setSplitDirection] = useState<"horizontal" | "vertical">(
       "horizontal",
@@ -86,6 +100,10 @@ function Leaf({
     ...host.appearance,
     ...app.sessionAppearance[pane.id],
   };
+  const searchPalette = getTheme(
+    appearance.theme,
+    app.document.settings.customThemes,
+  ).theme;
   useEffect(
     () =>
       container.current
@@ -97,6 +115,61 @@ function Leaf({
     applyAppearance(pane.id, appearance);
     configurePane(pane.id, host.backspace);
   }, [pane.id, JSON.stringify(appearance), host.backspace]);
+  useEffect(() => {
+    const addon = terminals.get(pane.id)?.search;
+    const listener = addon?.onDidChangeResults(setSearchResults);
+    return () => {
+      listener?.dispose();
+      addon?.clearDecorations();
+    };
+  }, [pane.id]);
+  const runSearch = (value: string, previous = false, incremental = false) => {
+    const entry = terminals.get(pane.id);
+    if (!entry) return;
+    const palette = searchPalette;
+    const blend = (color: string | undefined, ratio: number) => {
+      const background = palette.background || "#1e1e2e",
+        foreground = color || "#89b4fa";
+      return (
+        "#" +
+        [1, 3, 5]
+          .map((start) =>
+            Math.round(
+              parseInt(background.slice(start, start + 2), 16) * (1 - ratio) +
+                parseInt(foreground.slice(start, start + 2), 16) * ratio,
+            )
+              .toString(16)
+              .padStart(2, "0"),
+          )
+          .join("")
+      );
+    };
+    entry.search[previous ? "findPrevious" : "findNext"](value, {
+      incremental,
+      decorations: {
+        matchBackground: blend(palette.blue, 0.32),
+        matchBorder: palette.blue,
+        matchOverviewRuler: palette.blue || "#89b4fa",
+        activeMatchBackground: blend(palette.blue, 0.62),
+        activeMatchBorder: palette.yellow,
+        activeMatchColorOverviewRuler: palette.yellow || "#f9e2af",
+      },
+    });
+  };
+  const closeSearch = () => {
+    setSearch(null);
+    terminals.get(pane.id)?.search.clearDecorations();
+    terminals.get(pane.id)?.term.clearSelection();
+    setSearchResults({ resultIndex: -1, resultCount: 0 });
+    terminals.get(pane.id)?.term.focus();
+  };
+  useEffect(() => {
+    if (search !== null) {
+      // Refresh all match colors while retaining the currently selected result.
+      terminals.get(pane.id)?.search.clearDecorations();
+      runSearch(search, false, true);
+    }
+  }, [JSON.stringify(searchPalette), search === null]);
   const close = async () => {
     if (
       status === "connected" &&
@@ -263,7 +336,7 @@ function Leaf({
         />
         <IconButton
           label="터미널 검색"
-          onClick={() => setSearch(search === null ? "" : null)}
+          onClick={() => (search === null ? setSearch("") : closeSearch())}
         >
           <Search size={14} />
         </IconButton>
@@ -299,26 +372,43 @@ function Leaf({
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
-              terminals
-                .get(pane.id)
-                ?.search.findNext(e.target.value, { incremental: true });
+              runSearch(e.target.value, false, true);
             }}
             onKeyDown={(e) => {
-              if (e.key === "Enter")
-                terminals
-                  .get(pane.id)
-                  ?.search[e.shiftKey ? "findPrevious" : "findNext"](search);
-              if (e.key === "Escape") setSearch(null);
+              if (e.key === "Enter") {
+                e.preventDefault();
+                runSearch(search, e.shiftKey);
+              }
+              if (e.key === "Escape") {
+                e.preventDefault();
+                e.stopPropagation();
+                closeSearch();
+              }
             }}
             placeholder="출력 검색 · Enter 다음 / Shift+Enter 이전"
           />
+          <span className="search-count" role="status" aria-label="검색 결과">
+            {searchResults.resultIndex < 0 && searchResults.resultCount > 0
+              ? "—"
+              : searchResults.resultIndex + 1}
+            /{searchResults.resultCount}
+            {searchResults.resultCount === 1000 ? "+" : ""}
+          </span>
           <IconButton
-            label="검색 닫기"
-            onClick={() => {
-              setSearch(null);
-              terminals.get(pane.id)?.term.focus();
-            }}
+            label="이전 검색 결과"
+            disabled={!search || !searchResults.resultCount}
+            onClick={() => runSearch(search, true)}
           >
+            <ChevronUp size={15} />
+          </IconButton>
+          <IconButton
+            label="다음 검색 결과"
+            disabled={!search || !searchResults.resultCount}
+            onClick={() => runSearch(search)}
+          >
+            <ChevronDown size={15} />
+          </IconButton>
+          <IconButton label="검색 닫기" onClick={closeSearch}>
             <X size={14} />
           </IconButton>
         </div>
@@ -637,7 +727,8 @@ export function WorkspaceView({ workspace }: { workspace: Workspace }) {
           </span>
         </div>
         <div className="row">
-          <button
+          <IconButton
+            label="배치 연결"
             onClick={() => {
               for (const p of panes(workspace.root))
                 if (
@@ -648,8 +739,8 @@ export function WorkspaceView({ workspace }: { workspace: Workspace }) {
                   void app.connectPane(p.id, p.hostId);
             }}
           >
-            배치 연결
-          </button>
+            <Plug size={17} />
+          </IconButton>
           <IconButton
             label="현재 탭 연결 종료"
             onClick={() =>
@@ -666,26 +757,30 @@ export function WorkspaceView({ workspace }: { workspace: Workspace }) {
           >
             <Unplug size={15} />
           </IconButton>
-          <button
+          <IconButton
+            label="운영 도구"
+            aria-pressed={tool === "operations"}
             className={tool === "operations" ? "active" : ""}
             onClick={() => setTool(tool === "operations" ? null : "operations")}
           >
-            운영 도구
-          </button>
-          <button
+            <Wrench size={17} />
+          </IconButton>
+          <IconButton
+            label="스니펫"
+            aria-pressed={tool === "snippets"}
             className={tool === "snippets" ? "active" : ""}
             onClick={() => setTool(tool === "snippets" ? null : "snippets")}
           >
             <Braces size={15} />
-            스니펫
-          </button>
-          <button
+          </IconButton>
+          <IconButton
+            label="외형"
+            aria-pressed={tool === "appearance"}
             className={tool === "appearance" ? "active" : ""}
             onClick={() => setTool(tool === "appearance" ? null : "appearance")}
           >
             <Palette size={15} />
-            외형
-          </button>
+          </IconButton>
         </div>
       </div>
       <div className="workspace-body">
@@ -1116,14 +1211,11 @@ export function AppearancePanel({
               <option value="underline">밑줄</option>
             </select>
           </label>
-          <label className="check-label">
-            <input
-              type="checkbox"
-              checked={appearance.cursorBlink}
-              onChange={(e) => change({ cursorBlink: e.target.checked })}
-            />
-            커서 깜빡임
-          </label>
+          <ToggleField
+            label="커서 깜빡임"
+            checked={appearance.cursorBlink}
+            onChange={(value) => change({ cursorBlink: value })}
+          />
           <label>
             출력 강조
             <select
@@ -1139,22 +1231,16 @@ export function AppearancePanel({
               <option value="address">주소 강조</option>
             </select>
           </label>
-          <label className="check-label">
-            <input
-              type="checkbox"
-              checked={appearance.highlightAddresses}
-              onChange={(e) => change({ highlightAddresses: e.target.checked })}
-            />
-            IP · URL 함께 강조
-          </label>
-          <label className="check-label">
-            <input
-              type="checkbox"
-              checked={appearance.highlightFiles}
-              onChange={(e) => change({ highlightFiles: e.target.checked })}
-            />
-            파일·폴더 색상 구분
-          </label>
+          <ToggleField
+            label="IP · URL 함께 강조"
+            checked={appearance.highlightAddresses}
+            onChange={(value) => change({ highlightAddresses: value })}
+          />
+          <ToggleField
+            label="파일·폴더 색상 구분"
+            checked={appearance.highlightFiles}
+            onChange={(value) => change({ highlightFiles: value })}
+          />
         </div>
       )}
       {section !== "terminal" && (

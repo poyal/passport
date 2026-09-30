@@ -10,6 +10,7 @@ import {
   protocol,
   net,
   Menu,
+  shell,
 } from "electron";
 import path from "node:path";
 import os from "node:os";
@@ -41,6 +42,7 @@ import { Files } from "./files";
 import { Transfers } from "./transfers";
 import {
   decodePortable,
+  isEncryptedPortable,
   encodePortable,
   mergePortable,
   parseSSHConfig,
@@ -58,6 +60,7 @@ import {
   validateShortcuts,
 } from "../shared/advanced";
 import { panes } from "../shared/layout";
+import { about } from "../shared/about";
 
 app.setName("Passport");
 if (process.env.PASSPORT_DATA_DIR)
@@ -79,6 +82,7 @@ const previews = new Map<
   string,
   { data: Portable; warnings: string[]; kind: ImportPreview["kind"] }
 >();
+const encryptedImports = new Map<string, { text: string; owner: number }>();
 let fonts: string[] = [];
 let locals: LocalSessions, logs: SessionLogs, tunnels: Tunnels;
 const windows = new Map<number, BrowserWindow>();
@@ -256,6 +260,7 @@ const schemas: Record<Call, z.ZodType> = {
     id: idSchema,
     query: z.string().max(512).optional(),
     offset: z.number().int().min(0).optional(),
+    plain: z.boolean().optional(),
   }),
   "logs.bookmark": z.object({
     id: idSchema,
@@ -332,6 +337,11 @@ const schemas: Record<Call, z.ZodType> = {
     password: z.string().max(1024).optional(),
     kind: z.enum(["passport", "ssh", "snippets"]).optional(),
   }),
+  "data.unlock": z.object({
+    token: idSchema,
+    password: z.string().min(1).max(1024),
+  }),
+  "data.cancel": z.object({ token: idSchema }),
   "data.apply": z.object({
     token: idSchema,
     conflict: z.enum(["skip", "overwrite"]),
@@ -342,6 +352,9 @@ const schemas: Record<Call, z.ZodType> = {
   }),
   "clipboard.read": z.undefined(),
   "clipboard.write": z.object({ text: z.string().max(4 * 1024 * 1024) }),
+  "external.open": z.object({
+    target: z.enum(["github", "issues", "releases", "email"]),
+  }),
 };
 function preview(
   data: Portable,
@@ -663,6 +676,11 @@ async function call<K extends Call>(
     case "clipboard.write":
       clipboard.writeText(i.text);
       return;
+    case "external.open":
+      await shell.openExternal(
+        about.links[i.target as keyof typeof about.links],
+      );
+      return;
     case "data.export": {
       const result = await dialog.showSaveDialog(caller, {
         title: "파일 내보내기",
@@ -691,6 +709,8 @@ async function call<K extends Call>(
       return true;
     }
     case "data.preview": {
+      for (const [token, pending] of encryptedImports)
+        if (pending.owner === caller.id) encryptedImports.delete(token);
       const result = await dialog.showOpenDialog(caller, {
         title: "파일 가져오기",
         properties: ["openFile"],
@@ -732,7 +752,36 @@ async function call<K extends Call>(
           "snippets",
         );
       }
+      if (!i.password && isEncryptedPortable(text)) {
+        const token = randomUUID();
+        encryptedImports.set(token, { text, owner: caller.id });
+        setTimeout(() => encryptedImports.delete(token), 5 * 60 * 1000).unref();
+        return {
+          token,
+          name: path.basename(result.filePaths[0]),
+          needsPassword: true,
+        };
+      }
       return preview(await decodePortable(text, i.password));
+    }
+    case "data.unlock": {
+      const pending = encryptedImports.get(i.token);
+      if (!pending || pending.owner !== caller.id)
+        throw new Error(
+          "선택한 파일이 만료되었습니다. 파일을 다시 선택해 주세요.",
+        );
+      const data = await decodePortable(pending.text, i.password);
+      if (encryptedImports.get(i.token) !== pending)
+        throw new Error(
+          "선택한 파일이 만료되었습니다. 파일을 다시 선택해 주세요.",
+        );
+      encryptedImports.delete(i.token);
+      return preview(data);
+    }
+    case "data.cancel": {
+      const pending = encryptedImports.get(i.token);
+      if (pending?.owner === caller.id) encryptedImports.delete(i.token);
+      return;
     }
     case "data.apply": {
       if (moves.size)
@@ -863,7 +912,7 @@ async function call<K extends Call>(
       return;
     }
     case "logs.read":
-      return logs.read(i.id, i.offset, i.query);
+      return logs.read(i.id, i.offset, i.query, i.plain);
     case "logs.bookmark":
       logs.bookmark(i.id, i.offset, i.label);
       return;
@@ -1087,6 +1136,8 @@ async function createWindow() {
     }
   });
   win.on("closed", () => {
+    for (const [token, pending] of encryptedImports)
+      if (pending.owner === win.id) encryptedImports.delete(token);
     releaseConnections();
     windows.delete(win.id);
     window = windows.values().next().value;

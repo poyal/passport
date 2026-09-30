@@ -13,9 +13,19 @@ import {
   FileText,
   Keyboard,
   Check,
+  Info,
+  GitBranch,
+  Mail,
+  Bug,
+  ExternalLink,
 } from "lucide-react";
-import type { Secret, ImportPreview } from "../shared/model";
-import { api, uuid } from "./api";
+import { about } from "../shared/about";
+import type {
+  Secret,
+  ImportPreview,
+  ImportPasswordRequest,
+} from "../shared/model";
+import { api, uuid, message } from "./api";
 import { useApp } from "./context";
 import { Modal, IconButton, SettingsTabs } from "./components";
 import {
@@ -116,14 +126,17 @@ export function Settings() {
     [includeSecrets, setIncludeSecrets] = useState(false),
     [password, setPassword] = useState(""),
     [importPassword, setImportPassword] = useState(""),
+    [encryptedImport, setEncryptedImport] =
+      useState<ImportPasswordRequest | null>(null),
+    [importError, setImportError] = useState(""),
     [kind, setKind] = useState<"passport" | "ssh" | "snippets">("passport"),
     [preview, setPreview] = useState<ImportPreview | null>(null),
     [conflict, setConflict] = useState<"skip" | "overwrite">("skip"),
     [backups, setBackups] = useState<string[]>([]),
     [busy, setBusy] = useState(false),
-    [appearanceTab, setAppearanceTab] = useState<
-      "app" | "terminal" | "themes" | "custom"
-    >("app"),
+    [appearanceTab, setAppearanceTab] = useState<"app" | "terminal" | "themes">(
+      "app",
+    ),
     [authTab, setAuthTab] = useState<"profiles" | "keys">("profiles"),
     [dataTab, setDataTab] = useState<"export" | "import" | "backup">("export");
   const loadBackups = () =>
@@ -131,6 +144,16 @@ export function Settings() {
   const chooseSection = (s: string) => {
     app.openSettings(s);
     if (s === "data") loadBackups();
+  };
+  const cancelEncryptedImport = () => {
+    if (busy) return;
+    if (encryptedImport)
+      void api
+        .call("data.cancel", { token: encryptedImport.token })
+        .catch(app.notify);
+    setEncryptedImport(null);
+    setImportPassword("");
+    setImportError("");
   };
   return (
     <div className="settings-view">
@@ -148,6 +171,7 @@ export function Settings() {
             label: "단축키",
             icon: <Keyboard size={16} />,
           },
+          { id: "about", label: "About", icon: <Info size={16} /> },
         ].map((s) => (
           <button
             key={s.id}
@@ -181,7 +205,6 @@ export function Settings() {
                 { id: "app", label: "앱 외형" },
                 { id: "terminal", label: "터미널 설정" },
                 { id: "themes", label: "테마" },
-                { id: "custom", label: "사용자 테마" },
               ]}
             >
               {appearanceTab === "app" && (
@@ -226,12 +249,14 @@ export function Settings() {
                 </section>
               )}
               {appearanceTab === "themes" && (
-                <section className="settings-card">
-                  <h3>터미널 테마</h3>
-                  <AppearancePanel section="themes" />
-                </section>
+                <div className="settings-stack">
+                  <section className="settings-card">
+                    <h3>터미널 테마</h3>
+                    <AppearancePanel section="themes" />
+                  </section>
+                  <CustomThemes />
+                </div>
               )}
-              {appearanceTab === "custom" && <CustomThemes />}
             </SettingsTabs>
           </>
         )}
@@ -411,12 +436,28 @@ export function Settings() {
                         type="password"
                         aria-label="내보내기 암호"
                         minLength={10}
+                        maxLength={1024}
+                        aria-describedby="export-password-help"
+                        aria-invalid={
+                          password.length > 0 && password.length < 10
+                        }
                         autoComplete="new-password"
                         placeholder="10자 이상"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                       />
-                      <small className="hint">
+                      <small
+                        id="export-password-help"
+                        className={
+                          password.length > 0 && password.length < 10
+                            ? "hint error-text"
+                            : "hint"
+                        }
+                        aria-live="polite"
+                      >
+                        {password.length < 10
+                          ? `10자 이상 입력해야 내보낼 수 있습니다. 현재 ${password.length}자입니다.`
+                          : `현재 ${password.length}자 · 내보내기 가능합니다.`}{" "}
                         파일에는 암호를 저장하지 않습니다.
                       </small>
                     </label>
@@ -465,18 +506,6 @@ export function Settings() {
                       <option value="snippets">Passport 스니펫 파일</option>
                     </select>
                   </label>
-                  {kind === "passport" && (
-                    <label>
-                      파일 암호
-                      <input
-                        type="password"
-                        autoComplete="off"
-                        placeholder="암호화된 파일만 입력"
-                        value={importPassword}
-                        onChange={(e) => setImportPassword(e.target.value)}
-                      />
-                    </label>
-                  )}
                   <button
                     disabled={busy}
                     onClick={() =>
@@ -485,11 +514,13 @@ export function Settings() {
                         try {
                           const result = await api.call("data.preview", {
                             kind,
-                            password: importPassword || undefined,
                           });
                           if (result) {
-                            setPreview(result);
                             setImportPassword("");
+                            setImportError("");
+                            if ("needsPassword" in result)
+                              setEncryptedImport(result);
+                            else setPreview(result);
                           }
                         } catch (e) {
                           app.notify(e);
@@ -503,7 +534,8 @@ export function Settings() {
                     파일 선택 · 미리보기
                   </button>
                   <p className="hint">
-                    가져오기는 서버에 연결하거나 명령을 실행하지 않습니다.
+                    암호화된 파일은 선택한 뒤 암호를 입력합니다. 가져오기는
+                    서버에 연결하거나 명령을 실행하지 않습니다.
                   </p>
                 </section>
               )}
@@ -582,7 +614,156 @@ export function Settings() {
             </div>
           </>
         )}
+        {section === "about" && (
+          <>
+            <div className="page-heading">
+              <div>
+                <div className="eyebrow">연결하고, 나누고, 옮기세요.</div>
+                <h1>About Passport</h1>
+                <p>한국어 SSH 터미널과 파일 전송을 하나의 데스크톱 앱에서.</p>
+              </div>
+            </div>
+            <div className="settings-stack">
+              <section className="settings-card about-card">
+                <h3>
+                  Passport <span className="pill">{app.boot.appVersion}</span>
+                </h3>
+                <dl>
+                  <div>
+                    <dt>제작자</dt>
+                    <dd>{about.creator}</dd>
+                  </div>
+                  <div>
+                    <dt>이메일</dt>
+                    <dd>
+                      <a
+                        href={about.links.email}
+                        onClick={(event) => {
+                          event.preventDefault();
+                          void api
+                            .call("external.open", { target: "email" })
+                            .catch(app.notify);
+                        }}
+                      >
+                        {about.email}
+                      </a>
+                    </dd>
+                  </div>
+                </dl>
+                <div className="about-links">
+                  {(
+                    [
+                      ["github", "GitHub", GitBranch],
+                      ["issues", "버그 신고 · 기능 제안", Bug],
+                      ["releases", "새 버전 다운로드", Download],
+                      ["email", "이메일 문의", Mail],
+                    ] as const
+                  ).map(([target, label, Icon]) => (
+                    <a
+                      key={target}
+                      href={about.links[target]}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        void api
+                          .call("external.open", { target })
+                          .catch(app.notify);
+                      }}
+                    >
+                      <Icon size={18} />
+                      <span>{label}</span>
+                      <ExternalLink size={14} />
+                    </a>
+                  ))}
+                </div>
+              </section>
+              <section className="settings-card">
+                <h3>업데이트와 데이터</h3>
+                <p>
+                  새 설치본으로 앱을 교체해도 이 기기의 호스트·인증·설정은
+                  유지됩니다. 앱을 종료한 뒤 교체하세요. 백업은 설정의
+                  내보내기와 백업에서 만들 수 있습니다.
+                </p>
+                <p className="hint">
+                  탭과 분할 배치는 복원하며 서버 연결은 직접 다시 시작합니다.
+                  자동 업데이트는 제공하지 않습니다.
+                </p>
+              </section>
+            </div>
+          </>
+        )}
       </div>
+      {encryptedImport && (
+        <Modal title="파일 암호 입력" onClose={cancelEncryptedImport}>
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (busy || !importPassword) return;
+              void (async () => {
+                setBusy(true);
+                setImportError("");
+                try {
+                  const result = await api.call("data.unlock", {
+                    token: encryptedImport.token,
+                    password: importPassword,
+                  });
+                  setEncryptedImport(null);
+                  setImportPassword("");
+                  setPreview(result);
+                } catch (error) {
+                  setImportError(message(error));
+                } finally {
+                  setBusy(false);
+                }
+              })();
+            }}
+          >
+            <p className="import-file-name">{encryptedImport.name}</p>
+            <p className="hint">
+              이 파일을 내보낼 때 지정한 암호를 입력하세요.
+            </p>
+            <label>
+              파일 암호
+              <input
+                type="password"
+                autoFocus
+                required
+                maxLength={1024}
+                autoComplete="off"
+                aria-invalid={!!importError}
+                aria-describedby={
+                  importError ? "import-password-error" : undefined
+                }
+                value={importPassword}
+                onChange={(event) => {
+                  setImportPassword(event.target.value);
+                  setImportError("");
+                }}
+              />
+            </label>
+            {importError && (
+              <p id="import-password-error" className="error-text" role="alert">
+                {importError}
+              </p>
+            )}
+            <div className="modal-actions">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={cancelEncryptedImport}
+              >
+                취소
+              </button>
+              <button
+                type="submit"
+                className="primary"
+                disabled={busy || !importPassword}
+              >
+                {busy ? "확인 중…" : "암호 확인 · 미리보기"}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
       {profile && (
         <Modal title="인증 프로필" onClose={() => setProfile(null)}>
           <form

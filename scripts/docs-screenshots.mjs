@@ -322,6 +322,14 @@ try {
     `Passport ${version}`,
   );
   await capture("settings.png");
+  await page
+    .locator(".settings-sidebar")
+    .getByRole("button", { name: "About", exact: true })
+    .click();
+  await expect(page.locator(".about-card")).toContainText(
+    "poyal.work@gmail.com",
+  );
+  await capture("about.png");
 } finally {
   try {
     if (app) await closeCleanly(app);

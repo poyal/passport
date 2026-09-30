@@ -1,9 +1,14 @@
 {
   "name": "passport",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "type": "module",
   "description": "개인용 SSH 및 파일 전송 데스크톱 앱",
+  "author": {
+    "name": "Poyal",
+    "email": "poyal.work@gmail.com",
+    "url": "https://github.com/poyal/passport"
+  },
   "main": "dist/main/index.cjs",
   "scripts": {
     "dev": "node scripts/dev.mjs",

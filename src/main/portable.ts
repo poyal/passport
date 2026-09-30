@@ -46,6 +46,13 @@ const sealedSchema = z.object({
 });
 const derive = async (password: string, salt: Buffer) =>
   (await promisify(scrypt)(password, salt, 32)) as Buffer;
+export function isEncryptedPortable(text: string): boolean {
+  const value = safeJson(text);
+  if ((value as { format?: string } | null)?.format !== "passport-encrypted")
+    return false;
+  sealedSchema.parse(value);
+  return true;
+}
 export async function encodePortable(
   data: Portable,
   password?: string,

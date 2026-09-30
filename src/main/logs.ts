@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
+import { StringDecoder } from "node:string_decoder";
+import { LogTextDecoder } from "./log-text";
 import type { Store } from "./store";
 import type { LogFile } from "../shared/model";
 export class SessionLogs {
@@ -90,7 +92,8 @@ export class SessionLogs {
     if (!row) throw new Error("로그를 찾을 수 없습니다.");
     return row;
   }
-  read(id: string, offset = 0, query = "") {
+  read(id: string, offset = 0, query = "", plain = false) {
+    if (plain) return this.readPlain(id, offset, query);
     const row = this.get(id);
     let cursor = Math.min(offset, row.bytes);
     const buffer = Buffer.alloc(262144),
@@ -117,6 +120,60 @@ export class SessionLogs {
         cursor += Math.max(1, size - Math.min(4096, Buffer.byteLength(query))); // retain search overlap across chunks
       } while (cursor < row.bytes && cursor - offset < 16 * 1024 * 1024);
       return { text: "", offset: cursor, next: cursor, matches };
+    } finally {
+      fs.closeSync(fd);
+    }
+  }
+  private readPlain(id: string, offset: number, query: string) {
+    const row = this.get(id),
+      from = Math.min(offset, row.bytes);
+    const utf8 = new StringDecoder("utf8"),
+      filter = new LogTextDecoder(from, !!query);
+    const buffer = Buffer.alloc(262144),
+      fd = fs.openSync(this.file(id), "r");
+    let cursor = 0,
+      decoded = 0,
+      tail = "",
+      tailOffsets: number[] = [];
+    try {
+      while (cursor < row.bytes && cursor < from + 16 * 1024 * 1024) {
+        const size = fs.readSync(fd, buffer, 0, buffer.length, cursor);
+        if (!size) break;
+        cursor += size;
+        const source = utf8.write(buffer.subarray(0, size));
+        const clean = filter.write(source, decoded);
+        decoded += Buffer.byteLength(source);
+        if (decoded <= from || !clean.text) continue;
+        const text = tail + clean.text;
+        if (!query)
+          return {
+            text,
+            offset: Math.max(from, decoded - Buffer.byteLength(source)),
+            next: decoded,
+            matches: [] as number[],
+          };
+        const offsets = tailOffsets.concat(clean.offsets);
+        const found = text.toLowerCase().indexOf(query.toLowerCase());
+        if (found >= 0)
+          return {
+            text,
+            offset: offsets[0],
+            next: decoded,
+            matches: [offsets[found]],
+          };
+        const overlap = Math.max(
+          0,
+          text.length - Math.max(0, query.length - 1),
+        );
+        tail = text.slice(overlap);
+        tailOffsets = offsets.slice(overlap);
+      }
+      return {
+        text: "",
+        offset: decoded,
+        next: decoded,
+        matches: [] as number[],
+      };
     } finally {
       fs.closeSync(fd);
     }

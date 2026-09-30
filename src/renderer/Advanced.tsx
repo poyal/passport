@@ -1031,7 +1031,7 @@ export function LogSettings() {
   useEffect(refresh, []);
   const read = (id: string, offset = 0) =>
     void api
-      .call("logs.read", { id, offset, query })
+      .call("logs.read", { id, offset, query, plain: true })
       .then(setContent)
       .catch(app.notify);
   const current = items.find((x) => x.id === selected);
@@ -1151,6 +1151,11 @@ export function LogSettings() {
                     </button>
                   </div>
                   <pre>{content.text || "표시할 내용이 없습니다."}</pre>
+                  <p className="hint">
+                    조회할 때 터미널 제어 코드를 숨깁니다. 화면을 다시 그리는
+                    프로그램의 출력은 반복될 수 있으며, 내보내기는 원본 기록을
+                    보존합니다.
+                  </p>
                   <div className="row">
                     <button
                       onClick={() =>
@@ -1211,7 +1216,11 @@ export function LogSettings() {
                       onClick={() => {
                         setQuery("");
                         void api
-                          .call("logs.read", { id: selected, offset: b.offset })
+                          .call("logs.read", {
+                            id: selected,
+                            offset: b.offset,
+                            plain: true,
+                          })
                           .then(setContent)
                           .catch(app.notify);
                       }}

@@ -1,0 +1,42 @@
+{
+  "version": "1.0.1",
+  "date": "2026-09-30",
+  "environment": {
+    "platform": "macOS 27",
+    "arch": "arm64",
+    "electron": "44.4.5"
+  },
+  "unitAndIntegration": { "passed": 82, "skipped": 2, "ftpAndFtps": "passed" },
+  "gui": {
+    "uniqueScenariosPassed": 27,
+    "finalAffectedScenariosPassed": 6,
+    "packagedScenariosPassed": 7
+  },
+  "visualReview": {
+    "settingsScreenshots": 96,
+    "colorModes": ["dark", "light"],
+    "windowSizes": [
+      [1024, 680],
+      [1440, 900],
+      [1920, 1080]
+    ],
+    "contactSheetsReviewed": 6
+  },
+  "packagedSourceHashesMatch": true,
+  "codesignVerify": "passed",
+  "dmgVerify": "passed",
+  "packagedLocalPTY": "passed",
+  "packagedShutdownExitCode": 0,
+  "artifact": {
+    "path": "release/Passport-1.0.1-mac-arm64.dmg",
+    "bytes": 153317831,
+    "sha256": "df6ecfe2c268f47e1366fed2d5286f9fc0354fa74c5a514fa877e2b55566eed3",
+    "publicReleasePublished": false
+  },
+  "limitations": [
+    "Windows installation and runtime not verified in this pass",
+    "Apple Developer ID signing and notarization not included",
+    "Docker, 4 GiB file transfer, 10-minute terminal load and 1 GiB terminal output tests were not rerun",
+    "Log text display filters control codes without replaying terminal screen redraws"
+  ]
+}

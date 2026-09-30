@@ -276,7 +276,7 @@ test("opens and keeps a local tab active when ownership events arrive after the 
 
 test("saves custom colors and shortcuts and applies highlights without changing terminal text", async () => {
   await page.getByRole("button", { name: "설정", exact: true }).click();
-  await page.getByRole("tab", { name: "사용자 테마", exact: true }).click();
+  await page.getByRole("tab", { name: "테마", exact: true }).click();
   await page
     .getByRole("button", { name: "현재 테마에서 만들기", exact: true })
     .click();
