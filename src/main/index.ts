@@ -61,6 +61,7 @@ import {
 } from "../shared/advanced";
 import { panes } from "../shared/layout";
 import { about } from "../shared/about";
+import { UpdateChecker } from "./updates";
 
 app.setName("Passport");
 if (process.env.PASSPORT_DATA_DIR)
@@ -84,6 +85,7 @@ const previews = new Map<
 >();
 const encryptedImports = new Map<string, { text: string; owner: number }>();
 let fonts: string[] = [];
+let updates: UpdateChecker;
 let locals: LocalSessions, logs: SessionLogs, tunnels: Tunnels;
 const windows = new Map<number, BrowserWindow>();
 const owners = new Map<string, number>();
@@ -199,6 +201,7 @@ const confirm: TrustPrompt = async (host, fingerprint) => {
 const bootstrap = (caller = window!): Bootstrap => ({
   document: store.read(),
   appVersion: app.getVersion(),
+  updateState: updates.state,
   profiles: store.profiles(),
   platform: process.platform,
   home: os.homedir(),
@@ -219,6 +222,8 @@ const pathSchema = z
 const idObject = z.object({ id: idSchema });
 const schemas: Record<Call, z.ZodType> = {
   bootstrap: z.undefined(),
+  "updates.check": z.undefined(),
+  "updates.open": z.object({ target: z.enum(["download", "release"]) }),
   save: documentSchema,
   "auth.save": z.object({
     id: idSchema,
@@ -680,6 +685,11 @@ async function call<K extends Call>(
       await shell.openExternal(
         about.links[i.target as keyof typeof about.links],
       );
+      return;
+    case "updates.check":
+      return updates.check();
+    case "updates.open":
+      await shell.openExternal(updates.target(i.target));
       return;
     case "data.export": {
       const result = await dialog.showSaveDialog(caller, {
@@ -1158,6 +1168,13 @@ async function createWindow() {
 void app
   .whenReady()
   .then(async () => {
+    updates = new UpdateChecker({
+      version: app.getVersion(),
+      platform: process.platform,
+      arch: process.arch,
+      fetch: (url, init) => net.fetch(url, init),
+      emit: (state) => emit({ kind: "update", state }),
+    });
     fonts = await getFonts({ disableQuoting: true }).catch(() => []);
     store = new Store(app.getPath("userData"), safeStorage);
     logs = new SessionLogs(store, (message) =>
@@ -1304,6 +1321,9 @@ void app
     }, 60_000);
     logPruneTimer.unref();
     await createWindow();
+    updates.start(
+      app.isPackaged && process.env.PASSPORT_DISABLE_UPDATE_CHECK !== "1",
+    );
     app.on("activate", () => {
       if (!window) void createWindow();
     });
@@ -1328,6 +1348,7 @@ app.on("will-quit", (event) => {
   event.preventDefault();
   if (shutdown) return;
   shutdown = (async () => {
+    updates?.dispose();
     tunnels?.closeAll();
     sessions?.closeAll();
     transfers?.cancelAll();

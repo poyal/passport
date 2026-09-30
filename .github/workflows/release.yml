@@ -2,7 +2,7 @@ name: Publish Mac release
 
 on:
   push:
-    tags: [v1.0.0]
+    tags: ["v*.*.*"]
 
 permissions:
   contents: write
@@ -25,25 +25,30 @@ jobs:
           cache: npm
       - name: Verify release version
         run: |
-          node --input-type=module -e 'import fs from "node:fs"; const version = JSON.parse(fs.readFileSync("package.json")).version; if (process.env.GITHUB_REF_NAME !== `v${version}`) throw new Error("Tag and package version differ"); if (process.arch !== "arm64") throw new Error("An ARM64 runner is required");'
+          node --input-type=module -e 'import fs from "node:fs"; const version = JSON.parse(fs.readFileSync("package.json")).version; if (!/^v\d+\.\d+\.\d+$/.test(process.env.GITHUB_REF_NAME) || process.env.GITHUB_REF_NAME !== `v${version}`) throw new Error("A stable tag matching the package version is required"); if (!fs.existsSync(`docs/releases/v${version}.md`)) throw new Error("Release notes are required"); if (process.arch !== "arm64") throw new Error("An ARM64 runner is required");'
       - run: npm ci
       - run: npm run check
       - run: npm run build
       - run: npx playwright test
       - run: npx electron-builder --mac dmg --arm64 --publish never
       - name: Verify packaged app
+        env:
+          PASSPORT_DISABLE_UPDATE_CHECK: "1"
         run: |
           codesign --verify --deep --strict release/mac-arm64/Passport.app
           node scripts/packaged-smoke.mjs release/mac-arm64/Passport.app/Contents/MacOS/Passport
-          PASSPORT_E2E_EXECUTABLE="$PWD/release/mac-arm64/Passport.app/Contents/MacOS/Passport" npx playwright test tests/e2e/legacy.spec.ts tests/e2e/file-colors.spec.ts
+          PASSPORT_E2E_EXECUTABLE="$PWD/release/mac-arm64/Passport.app/Contents/MacOS/Passport" npx playwright test tests/e2e/legacy.spec.ts tests/e2e/file-colors.spec.ts tests/e2e/updates.spec.ts
       - name: Publish release and checksums
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
+          VERSION=$(node -p 'require("./package.json").version')
+          NOTES="docs/releases/v${VERSION}.md"
+          test -f "$NOTES"
           cd release
-          shasum -a 256 Passport-1.0.0-mac-arm64.dmg > SHA256SUMS.txt
-          gh release create "$GITHUB_REF_NAME" Passport-1.0.0-mac-arm64.dmg SHA256SUMS.txt --verify-tag --title "Passport 1.0.0" --notes-file ../docs/releases/v1.0.0.md --latest
+          shasum -a 256 "Passport-${VERSION}-mac-arm64.dmg" > SHA256SUMS.txt
+          gh release create "$GITHUB_REF_NAME" "Passport-${VERSION}-mac-arm64.dmg" SHA256SUMS.txt --verify-tag --title "Passport ${VERSION}" --notes-file "../$NOTES" --latest
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

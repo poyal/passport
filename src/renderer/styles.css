@@ -979,6 +979,63 @@ summary {
   overflow-wrap: anywhere;
   font-weight: 600;
 }
+.update-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.update-heading h3 {
+  margin: 0;
+}
+.update-heading button {
+  flex-shrink: 0;
+}
+.update-result {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow-wrap: anywhere;
+}
+.update-result.available {
+  border-color: var(--accent);
+  background: var(--selected);
+}
+.update-result.error strong {
+  color: var(--danger);
+}
+.update-versions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  color: var(--muted);
+}
+.update-actions {
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+.app-status .update-notice {
+  padding: 2px 6px;
+  font-size: inherit;
+  color: var(--accent);
+}
+.update-spinning {
+  animation: update-spin 1s linear infinite;
+}
+@keyframes update-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .update-spinning {
+    animation: none;
+  }
+}
 .split-picker select {
   flex: 1;
   font-size: 11px;

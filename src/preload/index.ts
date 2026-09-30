@@ -8,6 +8,8 @@ import type {
 } from "../shared/model";
 const names: Call[] = [
   "bootstrap",
+  "updates.check",
+  "updates.open",
   "save",
   "auth.save",
   "auth.delete",

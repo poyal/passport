@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   Search,
   Info,
+  Download,
 } from "lucide-react";
 import type {
   Appearance,
@@ -83,6 +84,7 @@ export function App() {
     >({}),
     [fatal, setFatal] = useState("");
   const bootRef = useRef(boot),
+    updateRef = useRef<Bootstrap["updateState"] | null>(null),
     queue = useRef<Promise<unknown>>(Promise.resolve()),
     toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined),
     tabHover = useRef<ReturnType<typeof setTimeout> | undefined>(undefined),
@@ -107,6 +109,7 @@ export function App() {
   }, [notify]);
   const refresh = useCallback(async () => {
     const data = await api.call("bootstrap", undefined);
+    if (updateRef.current) data.updateState = updateRef.current;
     bootRef.current = data;
     setBoot(data);
     setStates(Object.fromEntries(data.sessionStates.map((s) => [s.id, s])));
@@ -181,6 +184,13 @@ export function App() {
         );
       } else if (event.kind === "notice") {
         notify(new Error(event.message));
+      } else if (event.kind === "update") {
+        updateRef.current = event.state;
+        if (bootRef.current) {
+          const next = { ...bootRef.current, updateState: event.state };
+          bootRef.current = next;
+          setBoot(next);
+        }
       } else if (event.kind === "tunnel" && event.state.status === "error") {
         notify(new Error(event.state.message || "포트 포워딩에 실패했습니다."));
       } else if (event.kind === "document") {
@@ -665,6 +675,18 @@ export function App() {
               </span>
             )}
             <span>Passport {boot.appVersion}</span>
+            {boot.updateState.status === "available" && (
+              <button
+                type="button"
+                className="update-notice"
+                onClick={() => {
+                  setSettingsSection("about");
+                  setActive("settings");
+                }}
+              >
+                <Download size={12} />새 버전 {boot.updateState.latestVersion}
+              </button>
+            )}
           </div>
         </footer>
         <Tooltips />

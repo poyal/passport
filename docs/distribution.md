@@ -49,6 +49,12 @@ node scripts/packaged-smoke.mjs release/win-arm64-unpacked/Passport.exe
 
 검사는 별도 임시 프로필에서 초기 화면, 렌더러 Node 접근 차단, 실제 로컬 PTY 명령, 정상 종료를 확인한다. 이 검사와 별도로 DMG의 Applications 이동, EXE 설치·제거, 한글 IME, 배율, 파일 대화상자, Keychain/DPAPI를 해당 OS에서 확인해야 한다. 패키지 내부 앱의 실행 성공을 설치 프로그램 검증으로 대신하지 않는다.
 
+시작 시 업데이트 확인을 실제 공개 GitHub 응답으로 검사하려면 다음을 실행한다. 별도 임시 프로필을 사용하며 수동 확인을 호출하지 않고 시작 시 확인 결과·About 표시·정상 종료를 검사한다. 인터넷 연결이 필요하다.
+
+```sh
+node scripts/updates-smoke.mjs release/mac-arm64/Passport.app/Contents/MacOS/Passport
+```
+
 ## 수동 CI
 
 [Desktop verification](../.github/workflows/desktop.yml)은 `workflow_dispatch`로만 실행한다. Windows x64, Windows ARM64, Mac ARM64 작업에서 검사·GUI·패키징·패키지 실행 확인을 수행하고 설치 파일을 Actions artifact로 보관한다. `--publish never`를 사용하므로 공개 Release를 게시하지 않는다.
@@ -57,7 +63,7 @@ Docker 매트릭스와 장시간 부하, 별도 Python 환경을 요구하는 FT
 
 ## GitHub Release 게시
 
-[Publish Mac release](../.github/workflows/release.yml)은 `v1.0.0` 태그 push에서 실행한다. ARM64 Mac runner에서 버전·기본 검사·GUI·DMG·패키지 실행과 구형 SSH/파일 색상을 확인하고 모든 단계가 통과하면 GitHub Release에 DMG와 `SHA256SUMS.txt`를 게시한다. 게시 권한은 해당 작업의 저장소 contents로 한정한다. [GitHub ARM64 runner 공식 안내](https://docs.github.com/en/actions/reference/runners/github-hosted-runners).
+[Publish Mac release](../.github/workflows/release.yml)은 `v*.*.*` 태그 push에서 실행한다. 태그와 `package.json`의 버전이 같아야 하고 `docs/releases/v<버전>.md`가 있어야 한다. ARM64 Mac runner에서 기본 검사·GUI·DMG·패키지 실행과 구형 SSH/파일 색상을 확인하고 모든 단계가 통과하면 해당 버전의 GitHub Release에 DMG와 `SHA256SUMS.txt`를 게시한다. 게시 권한은 해당 작업의 저장소 contents로 한정한다. [GitHub ARM64 runner 공식 안내](https://docs.github.com/en/actions/reference/runners/github-hosted-runners).
 
 2026-09-30 실행이 성공했고 실제 다운로드와 GitHub 자산 digest·SHA256SUMS 일치를 확인했다. [게시 결과](benchmarks/github-release-v1.0.0.json). 로컬 DMG와 runner에서 만든 DMG는 별도 빌드이므로 각각의 해시를 사용한다. 배포 소스는 `v1.0.0` 태그를 기준으로 하며 이후 문서 갱신은 `main`에 반영한다.
 
@@ -70,4 +76,8 @@ Docker 매트릭스와 장시간 부하, 별도 Python 환경을 요구하는 FT
 
 Release 자산은 설치 파일과 `SHA256SUMS.txt`만 올린다. GitHub가 태그에서 자동으로 제공하는 **Source code (zip/tar.gz)** 링크는 직접 업로드한 자산이 아니다. [GitHub 릴리즈 공식 안내](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases).
 
-자동 업데이트 기능은 제공하지 않는다. 같은 기기에서 앱을 종료하고 새 DMG·EXE로 기존 앱을 교체하면 기존 데이터를 유지한다. 설정 내보내기는 선택적인 별도 백업이다. DB 스키마가 바뀌는 버전은 기존 데이터 승격과 이전 버전 재사용 제한도 확인한다.
+1.0.1부터 설치된 앱이 시작할 때 공개 GitHub Releases API의 최신 정식 릴리즈를 한 번 확인한다. About에서도 같은 확인을 실행한다. 메인 프로세스가 버전을 숫자로 비교하고 공개된 설치 파일의 이름·OS·아키텍처·업로드 상태·다운로드 URL을 검증한다. 앱에는 GitHub 인증 토큰을 넣지 않으며 요청에 호스트·인증·설정 데이터를 포함하지 않는다. 동시 요청은 하나로 합치고 완료 후 5초 동안 결과를 재사용한다. 10초 제한·1MiB 응답 제한과 종료 시 요청 취소를 적용한다. 개발 실행에서는 시작 시 자동 조회를 생략하며 수동 확인은 가능하다. 패키지 fixture에서 외부 조회를 생략하려면 `PASSPORT_DISABLE_UPDATE_CHECK=1`을 사용한다.
+
+설치 파일은 사용자가 버튼을 눌렀을 때 기본 브라우저로 다운로드한다. ad-hoc Mac 설치본의 앱 내부 자동 교체는 제공하지 않는다. 향후 `electron-updater`를 도입하려면 Developer ID 서명과 업데이트용 앱 ZIP·버전 메타데이터 게시를 함께 준비해야 한다. [자동 업데이트 공식 문서](https://www.electron.build/v26/docs/features/auto-update/).
+
+같은 기기에서 앱을 종료하고 새 DMG·EXE로 기존 앱을 교체하면 기존 데이터를 유지한다. 설정 내보내기는 선택적인 별도 백업이다. DB 스키마가 바뀌는 버전은 기존 데이터 승격과 이전 버전 재사용 제한도 확인한다.

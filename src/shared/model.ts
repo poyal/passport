@@ -345,6 +345,7 @@ export type AuthProfile = {
 export type Bootstrap = {
   document: PassportDocument;
   appVersion: string;
+  updateState: import("./updates").UpdateState;
   profiles: AuthProfile[];
   platform: string;
   home: string;
@@ -392,6 +393,7 @@ export type TransferJob = {
   cleanup?: string;
 };
 export type AppEvent =
+  | { kind: "update"; state: import("./updates").UpdateState }
   | { kind: "notice"; message: string }
   | { kind: "session"; state: SessionState }
   | { kind: "output"; id: string; data: string; bytes: number }
@@ -447,6 +449,11 @@ export type Result<T> = { ok: true; value: T } | { ok: false; error: string };
 
 export interface Calls {
   bootstrap: { input: undefined; output: Bootstrap };
+  "updates.check": {
+    input: undefined;
+    output: import("./updates").UpdateState;
+  };
+  "updates.open": { input: { target: "download" | "release" }; output: void };
   save: { input: PassportDocument; output: PassportDocument };
   "auth.save": {
     input: { id: string; name: string; username?: string; secret: Secret };

@@ -1,0 +1,18 @@
+{
+  "startupUpdateCheck": "passed",
+  "manualChecks": 0,
+  "source": "public GitHub Releases",
+  "runtime": {
+    "packaged": true,
+    "version": "1.0.1"
+  },
+  "state": {
+    "currentVersion": "1.0.1",
+    "latestVersion": "1.0.0",
+    "status": "current",
+    "installerAvailable": true,
+    "checkedAt": 1790754317437,
+    "message": "현재 설치된 1.0.1은 최신 공개 버전(1.0.0)보다 새 버전입니다."
+  },
+  "shutdownExitCode": 0
+}

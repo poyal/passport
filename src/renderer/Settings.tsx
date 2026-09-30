@@ -36,6 +36,7 @@ import {
 } from "./Advanced";
 import { GroupSettings } from "./GroupSettings";
 import { AppearancePanel } from "./Workspaces";
+import { UpdatesPanel } from "./Updates";
 export const blankSecret = (): Secret => ({
   type: "password",
   password: "",
@@ -676,6 +677,7 @@ export function Settings() {
                   ))}
                 </div>
               </section>
+              <UpdatesPanel />
               <section className="settings-card">
                 <h3>업데이트와 데이터</h3>
                 <p>
@@ -685,7 +687,6 @@ export function Settings() {
                 </p>
                 <p className="hint">
                   탭과 분할 배치는 복원하며 서버 연결은 직접 다시 시작합니다.
-                  자동 업데이트는 제공하지 않습니다.
                 </p>
               </section>
             </div>

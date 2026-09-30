@@ -6,11 +6,12 @@
     "arch": "arm64",
     "electron": "44.4.5"
   },
-  "unitAndIntegration": { "passed": 82, "skipped": 2, "ftpAndFtps": "passed" },
+  "unitAndIntegration": { "passed": 90, "skipped": 2, "ftpAndFtps": "passed" },
   "gui": {
-    "uniqueScenariosPassed": 27,
-    "finalAffectedScenariosPassed": 6,
-    "packagedScenariosPassed": 7
+    "uniqueScenariosPassed": 31,
+    "skipped": 2,
+    "updateScenariosPassed": 4,
+    "packagedScenariosPassed": 11
   },
   "visualReview": {
     "settingsScreenshots": 96,
@@ -20,7 +21,8 @@
       [1440, 900],
       [1920, 1080]
     ],
-    "contactSheetsReviewed": 6
+    "contactSheetsReviewed": 6,
+    "updateScreenshotsReviewed": 5
   },
   "packagedSourceHashesMatch": true,
   "codesignVerify": "passed",
@@ -29,11 +31,12 @@
   "packagedShutdownExitCode": 0,
   "artifact": {
     "path": "release/Passport-1.0.1-mac-arm64.dmg",
-    "bytes": 153317831,
-    "sha256": "df6ecfe2c268f47e1366fed2d5286f9fc0354fa74c5a514fa877e2b55566eed3",
+    "bytes": 153315070,
+    "sha256": "f4b0100a1c34e767ea761ed6a61a20c011b5056a37200d994a41071014defc9a",
     "publicReleasePublished": false
   },
   "limitations": [
+    "Update checking and browser installer handoff supported; in-app replacement and automatic restart are not included",
     "Windows installation and runtime not verified in this pass",
     "Apple Developer ID signing and notarization not included",
     "Docker, 4 GiB file transfer, 10-minute terminal load and 1 GiB terminal output tests were not rerun",
