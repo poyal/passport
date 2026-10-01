@@ -73,6 +73,10 @@ export function App() {
   const [boot, setBoot] = useState<Bootstrap | null>(null),
     [active, setActive] = useState("home"),
     [activePane, setActivePane] = useState(""),
+    [localFocus, setLocalFocus] = useState<{
+      workspaceId: string;
+      paneId: string;
+    } | null>(null),
     [states, setStates] = useState<Record<string, SessionState>>({}),
     [jobs, setJobs] = useState<TransferJob[]>([]),
     [toast, setToast] = useState<{ text: string; error: boolean } | null>(null),
@@ -588,6 +592,28 @@ export function App() {
     activate();
     return () => observer.disconnect();
   }, [activation]);
+  useEffect(() => {
+    if (!localFocus) return;
+    if (active !== localFocus.workspaceId) {
+      setLocalFocus(null);
+      return;
+    }
+    // Focus after React has committed the visible pane and its xterm mount.
+    // An IPC reply can arrive before that commit; a frame scheduled from the
+    // connection promise alone may run while the terminal is still detached.
+    const entry = terminals.get(localFocus.paneId);
+    if (!entry?.term.element?.isConnected) return;
+    const frame = requestAnimationFrame(() => {
+      if (
+        document.hasFocus() &&
+        entry.term.element?.offsetParent &&
+        !document.querySelector('[role="dialog"]')
+      )
+        entry.term.focus();
+      setLocalFocus(null);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [localFocus, active, boot?.document, boot?.workspaceOwners]);
   const openLocalTerminal = async () => {
     const current = bootRef.current;
     if (!current) return;
@@ -623,16 +649,8 @@ export function App() {
     if (ok) {
       setActive(id);
       setActivePane(paneId);
+      setLocalFocus({ workspaceId: id, paneId });
       await connectPane(paneId, LOCAL_HOST_ID);
-      requestAnimationFrame(() => {
-        const entry = terminals.get(paneId);
-        if (
-          document.hasFocus() &&
-          entry?.term.element?.offsetParent &&
-          !document.querySelector('[role="dialog"]')
-        )
-          entry.term.focus();
-      });
     }
   };
   const closeTab = async (id: string) => {
