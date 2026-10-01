@@ -1,5 +1,15 @@
 # Passport 검증 기록
 
+## 1.1.0 Windows 게시 전 기능 검증 — 2026-10-01
+
+Windows 11 Pro x64(10.0.26200)에서 타입·단위/프로토콜 통합 **112개 통과·4개 조건부 생략**, Rust helper 검사 **2개 통과**, 전체 소스 GUI **54개 통과·4개 조건부 생략**을 확인했다. SSH/SFTP·FTP/FTPS, DPAPI 저장·재시작 후 SSH 인증, 로컬·SSH 혼합 작업, 탭 템플릿, 입력 포커스, CLI 색상, 알림 라우팅, 창 이동, 로그·파일·설정 UI, PTY 종료를 포함한다. 별도 PowerShell 7이 없는 로컬 PC에서는 해당 셸 검사를 생략했고 Docker·장시간 부하도 이번 기본 검사에 포함하지 않았다.
+
+이전 Windows CI의 GUI 실패 6개를 같은 Windows 환경에서 재현했다. 셸 복구와 종료 시험은 실제 선택 셸과 일치하도록 보정했고, 프로파일 체크박스는 역할로 선택한다. 작은 Windows 창에서는 로그 목록과 본문이 세로로 배치되므로 가로·세로 배치 양쪽의 경계와 독립 스크롤을 검증한다.
+
+추가한 Windows 셸별 검사에서 실제 cmd 오류 2개도 발견해 수정했다. node-pty의 argv 이스케이프가 시작 파일의 따옴표에 역슬래시를 추가해 실행을 막았고, Rust의 argv 이스케이프는 DOSKEY 매크로 이름과 명령에 따옴표를 그대로 등록했다. 각 프로그램이 해석하는 원래 명령줄을 전달하도록 수정했다. 내장 Bash·cmd·Windows PowerShell에서 한글·공백·특수문자가 있는 PATH, 환경 변수, 단축 명령과 실제 키보드 입력을 통과했다.
+
+로컬 검증에는 작업 폴더에 격리한 Rust GNU helper와 고정된 Node-API 네이티브 바이너리를 사용했다. 공개 Windows 릴리즈는 별도 MSVC CI 빌드에서 패키지 검증을 통과한 경우에만 게시한다. 설치·패키지·공개 파일 검증 결과는 게시 완료 후 별도 기록한다. 실제 AI 서비스 요청과 OS 배너 표시를 이번 자동 검사로 확인했다고 주장하지 않는다.
+
 ## 1.1.0 Mac 공개 배포와 Windows 이관 — 2026-10-01
 
 `v1.1.0`은 `42563e5e2131d554ab1251921141c98e3bf4a64b`의 Mac DMG를 [정식 릴리즈](https://github.com/poyal/passport/releases/tag/v1.1.0)에 게시했다. [배포 실행](https://github.com/poyal/passport/actions/runs/36846311401)의 Mac 작업에서 기본 검사·소스 GUI·DMG 생성·서명 무결성·실제 패키지 실행·패키지 GUI를 통과했다. 공개 DMG를 다시 다운로드해 GitHub 자산 digest와 `SHA256SUMS.txt` 양쪽에 일치하는지 확인했다.

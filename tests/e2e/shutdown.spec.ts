@@ -37,7 +37,7 @@ for (const mode of ["active", "closed", "reopened"] as const) {
               kind: "pane" as const,
               id: crypto.randomUUID(),
               hostId,
-              local: { shell: "default" as const, cwd: "" },
+              local: { shell: b.document.settings.terminal.shell, cwd: "" },
             },
           }));
           b.document.workspaces = workspaces;

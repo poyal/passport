@@ -28,7 +28,7 @@ export const bashFile = (file: string) =>
     : file;
 export type LaunchSpec = {
   executable: string;
-  args: string[];
+  args: string[] | string;
   cwd: string;
   env: NodeJS.ProcessEnv;
   snapshot: AppliedEnvironment;
@@ -277,7 +277,7 @@ export function prepareLaunch(
   )
     env.CLAUDE_CODE_GIT_BASH_PATH = bashPath();
   const shell = snapshot.shell;
-  let args: string[];
+  let args: string[] | string;
   if (shell === "bash" || shell === "zsh" || shell === "passport-bash") {
     const helperUnix = bashFile(helper);
     const q = shQuote;
@@ -340,7 +340,9 @@ export function prepareLaunch(
     if (config.agent) body += `"${cmdValue(helper)}" run ${config.agent}\r\n`;
     const file = write("startup.cmd", body);
     env.PASSPORT_STARTUP = file;
-    args = ["/v:off", "/k", '"%PASSPORT_STARTUP%"'];
+    // cmd parses its own quotes. node-pty's argv escaping uses backslashes,
+    // which cmd treats as literal characters instead of quote escapes.
+    args = '/v:off /s /k ""%PASSPORT_STARTUP%""';
   } else {
     if (profiles.length || config.agent)
       throw new Error(

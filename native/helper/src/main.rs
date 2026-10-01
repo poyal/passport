@@ -441,8 +441,12 @@ fn main() {
                 .chain(args[4..].iter().map(|v| quote(v)))
                 .collect::<Vec<_>>()
                 .join(" ");
+            // DOSKEY reads its own command line; CRT argv quoting would become
+            // part of the macro name and backslash-escape the target's quotes.
+            use std::os::windows::process::CommandExt;
             let applied = Command::new("doskey.exe")
-                .args(["/exename=cmd.exe", &format!("{name}={value} $*")])
+                .arg("/exename=cmd.exe")
+                .raw_arg(format!("{name}={value} $*"))
                 .status()
                 .is_ok_and(|s| s.success());
             transmit(

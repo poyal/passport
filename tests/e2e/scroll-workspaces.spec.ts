@@ -220,7 +220,7 @@ test("file action triggers toggle, dismiss, restore focus and stay in bounds whi
   });
 });
 
-test("log list and output fill equal height and scroll independently at both themes and window sizes", async ({}, info) => {
+test("log list and output fit and scroll independently at both themes and window sizes", async ({}, info) => {
   await page.getByRole("button", { name: "설정", exact: true }).click();
   await page
     .locator(".settings-sidebar")
@@ -258,17 +258,27 @@ test("log list and output fill equal height and scroll independently at both the
               status = document
                 .querySelector(".app-status")!
                 .getBoundingClientRect();
-            return (
-              Math.abs(a.bottom - b.bottom) < 2 &&
-              a.bottom < status.top &&
-              a.height > 200 &&
-              list.scrollHeight > list.clientHeight &&
-              output.scrollHeight > output.clientHeight &&
-              content.scrollHeight <= content.clientHeight + 1
-            );
+            const stacked = Math.abs(a.left - b.left) < 2;
+            return {
+              aligned: stacked
+                ? a.bottom <= b.top
+                : Math.abs(a.bottom - b.bottom) < 2,
+              fitsWindow: a.bottom < status.top && b.bottom < status.top,
+              usableHeight: a.height >= (stacked ? 80 : 200) && b.height > 200,
+              listScrolls: list.scrollHeight > list.clientHeight,
+              outputScrolls: output.scrollHeight > output.clientHeight,
+              contentFits: content.scrollHeight <= content.clientHeight + 1,
+            };
           }),
         )
-        .toBe(true);
+        .toEqual({
+          aligned: true,
+          fitsWindow: true,
+          usableHeight: true,
+          listScrolls: true,
+          outputScrolls: true,
+          contentFits: true,
+        });
       await page.locator(".log-reader pre").hover();
       await page.mouse.wheel(0, 1500);
       await expect

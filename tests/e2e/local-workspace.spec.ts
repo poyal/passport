@@ -63,8 +63,9 @@ test("an unavailable default shell leaves a retryable local tab", async () => {
     await page.evaluate(async () => {
       const boot = await window.passport.call("bootstrap", undefined);
       const pane = boot.document.workspaces[0].root;
-      if (pane.kind === "pane") pane.local!.shell = "default";
-      boot.document.settings.terminal.shell = "default";
+      const shell = boot.platform === "win32" ? "passport-bash" : "default";
+      if (pane.kind === "pane") pane.local!.shell = shell;
+      boot.document.settings.terminal.shell = shell;
       await window.passport.call("save", boot.document);
     });
     await page
@@ -145,7 +146,7 @@ test("creates mixed local/SSH workspaces, previews profiles, routes alerts and r
     await page
       .getByLabel("시작 프로파일", { exact: true })
       .selectOption("custom");
-    await page.getByLabel(/Unix 단축명령/).check();
+    await page.getByRole("checkbox", { name: /Unix 단축명령/ }).check();
     await page.screenshot({ path: info.outputPath("local-settings.png") });
     await page
       .getByRole("button", { name: "새 로컬 터미널", exact: true })
