@@ -5,6 +5,7 @@ import {
   templatesWithoutHost,
 } from "../src/shared/workspace-templates";
 import { panes } from "../src/shared/layout";
+import { migrateDocument } from "../src/shared/migration";
 import {
   documentSchema,
   emptyDocument,
@@ -62,6 +63,40 @@ function fixture() {
   };
 }
 describe("saved workspaces", () => {
+  it("removes legacy multi-tab templates before validation and reports import omissions", async () => {
+    const { document, template } = fixture();
+    const second = cloneWorkspaces(document.workspaces, "", "", id)
+      .workspaces[0];
+    const legacy = {
+      ...document,
+      workspaces: [...document.workspaces, second],
+      workspaceTemplates: [
+        template,
+        {
+          ...template,
+          id: id(),
+          workspaces: [...template.workspaces, second],
+        },
+      ],
+    };
+    expect(documentSchema.safeParse(legacy).success).toBe(false);
+    const migrated = migrateDocument(legacy);
+    expect(migrated.workspaceTemplates).toEqual([template]);
+    expect(migrated.workspaces).toEqual(legacy.workspaces);
+    expect(migrated.hosts).toEqual(legacy.hosts);
+    expect(migrateDocument(migrated)).toEqual(migrated);
+    const imported = await decodePortable(
+      JSON.stringify({
+        format: "passport",
+        version: 2,
+        profiles: [],
+        document: legacy,
+      }),
+    );
+    expect(imported.omittedTemplates).toBe(1);
+    expect(imported.document.workspaceTemplates).toEqual([template]);
+    expect(legacy.workspaceTemplates).toHaveLength(2);
+  });
   it("copies split ratios, order and focus while using independent IDs every time", () => {
     const { workspaces, template, document } = fixture();
     const reopened = cloneWorkspaces(

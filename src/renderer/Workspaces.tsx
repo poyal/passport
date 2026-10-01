@@ -20,6 +20,7 @@ import {
   Plug,
   ChevronUp,
   ChevronDown,
+  Save,
 } from "lucide-react";
 import type {
   Appearance,
@@ -55,6 +56,7 @@ import {
   ToggleField,
 } from "./components";
 export const dragMime = "application/x-passport-layout";
+export const dragGroupMime = "application/x-passport-group";
 type Edge = "left" | "right" | "top" | "bottom";
 const minimum = (n: Layout): [number, number] => {
   if (n.kind === "pane") return [320, 180];
@@ -238,6 +240,18 @@ function Leaf({
         workspace: string;
         node: string;
       };
+      const sourceWorkspace = app.document.workspaces.find(
+        (w) => w.id === source.workspace,
+      );
+      if (
+        !sourceWorkspace ||
+        !panes(sourceWorkspace.root).some((p) => p.id === source.node)
+      ) {
+        app.notify(
+          "묶인 탭 전체는 다른 탭 안으로 옮길 수 없습니다. 개별 패널을 이동해 주세요.",
+        );
+        return;
+      }
       const r = event.currentTarget.getBoundingClientRect();
       if (side === "left" || side === "right" ? r.width < 645 : r.height < 365)
         throw new Error("분할할 공간이 부족합니다. 창을 확대해 주세요.");
@@ -306,7 +320,13 @@ function Leaf({
       onFocusCapture={() => app.setActivePane(pane.id)}
       onDragOver={(e) => {
         if (e.dataTransfer.types.includes(dragMime)) {
+          if (e.dataTransfer.types.includes(dragGroupMime)) {
+            e.dataTransfer.dropEffect = "none";
+            setEdge(null);
+            return;
+          }
           e.preventDefault();
+          e.dataTransfer.dropEffect = "move";
           setEdge(dropEdge(e));
         }
       }}
@@ -740,10 +760,10 @@ function Branch({
         minWidth: min[0],
         minHeight: min[1],
         gridTemplateColumns: horizontal
-          ? `${ratio}fr 5px ${1 - ratio}fr`
+          ? `${ratio * 100}fr 5px ${(1 - ratio) * 100}fr`
           : undefined,
         gridTemplateRows: !horizontal
-          ? `${ratio}fr 5px ${1 - ratio}fr`
+          ? `${ratio * 100}fr 5px ${(1 - ratio) * 100}fr`
           : undefined,
       }}
     >
@@ -866,6 +886,13 @@ export function WorkspaceView({ workspace }: { workspace: Workspace }) {
           </span>
         </div>
         <div className="row">
+          <IconButton
+            label="템플릿 저장"
+            disabled={app.document.workspaceTemplates.length >= 100}
+            onClick={() => app.saveTemplate(workspace.id)}
+          >
+            <Save size={17} />
+          </IconButton>
           <IconButton
             label="배치 연결"
             onClick={() => {

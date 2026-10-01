@@ -1,4 +1,4 @@
-name: Publish Mac release
+name: Publish release
 
 on:
   push:
@@ -56,3 +56,6 @@ jobs:
         with:
           name: release-verification-results
           path: test-results/
+  windows:
+    needs: release
+    uses: ./.github/workflows/release-windows.yml

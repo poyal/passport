@@ -240,7 +240,7 @@ export type Workspace = z.infer<typeof workspaceSchema>;
 export const workspaceTemplateSchema = z.object({
   id: idSchema,
   name: short.min(1),
-  workspaces: z.array(workspaceSchema).min(1).max(32),
+  workspaces: z.array(workspaceSchema).length(1),
   activeWorkspaceId: idSchema,
   activePaneId: idSchema,
 });

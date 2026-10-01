@@ -1,6 +1,6 @@
 {
   "name": "passport",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "description": "로컬 AI와 SSH를 함께 사용하는 터미널 작업 공간",
@@ -27,7 +27,8 @@
     "test:ssh:docker": "node scripts/docker-ssh.mjs",
     "test:terminal:large": "npm run build && node scripts/terminal-large.mjs",
     "build:helper": "node scripts/build-helper.mjs",
-    "prepare:runtime": "node scripts/prepare-runtime.mjs"
+    "prepare:runtime": "node scripts/prepare-runtime.mjs",
+    "docs:screenshots": "esbuild scripts/docs-screenshots.mjs --bundle --platform=node --format=esm --packages=external --outfile=release/checks/docs-screenshots/runner.mjs && node release/checks/docs-screenshots/runner.mjs"
   },
   "build": {
     "appId": "io.passport.desktop",

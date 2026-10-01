@@ -299,38 +299,44 @@ test("log list and output fill equal height and scroll independently at both the
   }
 });
 
-test("SSH chooser keeps local controls aligned and only the host list scrolls", async ({}, info) => {
-  for (const [width, height] of [
-    [1024, 680],
-    [1440, 900],
-  ]) {
-    await resize(width, height);
-    await page.getByRole("button", { name: "새 터미널", exact: true }).click();
-    const dialog = page.getByRole("dialog", { name: "새 터미널" });
-    await dialog.getByRole("button", { name: "SSH", exact: true }).click();
-    await expect(dialog.locator(".connection-chooser button")).toHaveCount(101);
-    const outside = await dialog.evaluate(
-      (e) => e.scrollHeight - e.clientHeight,
-    );
-    expect(outside).toBeLessThanOrEqual(1);
-    await dialog.locator(".connection-chooser").hover();
-    await page.mouse.wheel(0, 100000);
-    await expect(
-      dialog.locator(".connection-chooser button").last(),
-    ).toBeInViewport();
-    await expect(
-      dialog.getByRole("button", { name: "호스트 관리", exact: true }),
-    ).toBeInViewport();
-    await expect(dialog.getByLabel("연결할 호스트 검색")).toBeInViewport();
-    await page.screenshot({
-      path: info.outputPath(`ssh-chooser-${width}.png`),
-      animations: "disabled",
-    });
-    await page.keyboard.press("Escape");
-  }
+test("plus opens a local tab immediately using defaults and focuses input", async ({}, info) => {
+  await page
+    .getByRole("button", { name: "새 로컬 터미널", exact: true })
+    .click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.locator(".workspace-tab")).toHaveCount(3);
+  await expect(
+    page.locator(".view:not([hidden]) .xterm-helper-textarea"),
+  ).toBeFocused();
+  await expect
+    .poll(() =>
+      page.evaluate(async () =>
+        (await window.passport.call("bootstrap", undefined)).sessionStates.some(
+          (s) => s.status === "connected",
+        ),
+      ),
+    )
+    .toBe(true);
+  const boot = await page.evaluate(() =>
+    window.passport.call("bootstrap", undefined),
+  );
+  expect(panes(boot.document.workspaces.at(-1)!.root)[0].local).toMatchObject({
+    cwd: boot.home,
+    shell: boot.document.settings.terminal.shell,
+    profiles: { mode: "inherit", ids: [] },
+  });
+  await page.screenshot({ path: info.outputPath("local-tab.png") });
+  await page
+    .getByRole("button", { name: "로컬 터미널 탭 닫기", exact: true })
+    .click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "확인", exact: true })
+    .click();
+  await expect(page.locator(".workspace-tab")).toHaveCount(2);
 });
 
-test("saved workspaces preserve tab order, focus and split ratios, reopen without sharing live IDs, and persist on restart", async ({}, info) => {
+test("workspace save button preserves only that tab, focus and splits; templates open directly and persist", async ({}, info) => {
   await page
     .locator(".workspace-tab")
     .first()
@@ -338,23 +344,20 @@ test("saved workspaces preserve tab order, focus and split ratios, reopen withou
     .first()
     .click();
   await page.locator(".terminal-pane").nth(1).click();
-  await page.getByRole("button", { name: "템플릿", exact: true }).click();
-  await page.getByRole("button", { name: "현재 창 저장", exact: true }).click();
+  await page.getByRole("button", { name: "템플릿 저장", exact: true }).click();
   await page.getByRole("dialog").locator("input").fill("Build and monitor");
   await page
     .getByRole("dialog")
-    .getByRole("button", { name: "적용", exact: true })
+    .getByRole("button", { name: "저장", exact: true })
     .click();
+  await page.getByRole("button", { name: "템플릿", exact: true }).click();
   await expect(page.locator(".workspace-template-row")).toHaveCount(1);
   const saved = await page.evaluate(
     async () =>
       (await window.passport.call("bootstrap", undefined)).document
         .workspaceTemplates[0],
   );
-  expect(saved.workspaces.map((w) => w.name)).toEqual([
-    "Build servers",
-    "Monitoring",
-  ]);
+  expect(saved.workspaces.map((w) => w.name)).toEqual(["Build servers"]);
   expect(saved.workspaces[0].root).toMatchObject({
     direction: "horizontal",
     ratio: 0.32,
@@ -363,7 +366,7 @@ test("saved workspaces preserve tab order, focus and split ratios, reopen withou
   await page
     .getByRole("button", { name: "Build and monitor 배치만 열기", exact: true })
     .click();
-  await expect(page.locator(".workspace-tab")).toHaveCount(4);
+  await expect(page.locator(".workspace-tab")).toHaveCount(3);
   expect(server.shells).toHaveLength(0);
   const restored = await page.evaluate(
     async () =>
@@ -372,16 +375,16 @@ test("saved workspaces preserve tab order, focus and split ratios, reopen withou
   expect(restored[2].root).toMatchObject({ ratio: 0.32 });
   expect(
     new Set(restored.flatMap((w) => panes(w.root).map((p) => p.id))).size,
-  ).toBe(6);
+  ).toBe(5);
   await page.getByRole("button", { name: "템플릿", exact: true }).click();
   await page
     .getByRole("button", {
-      name: "Build and monitor 불러오고 시작",
+      name: "Build and monitor 열기",
       exact: true,
     })
     .click();
-  await expect.poll(() => server.shells.length).toBe(3);
-  await expect(page.locator(".workspace-tab")).toHaveCount(6);
+  await expect.poll(() => server.shells.length).toBe(2);
+  await expect(page.locator(".workspace-tab")).toHaveCount(4);
   await page.getByRole("button", { name: "템플릿", exact: true }).click();
   await page.screenshot({
     path: info.outputPath("workspace-library.png"),
@@ -391,7 +394,7 @@ test("saved workspaces preserve tab order, focus and split ratios, reopen withou
   await launch();
   await page.getByRole("button", { name: "템플릿", exact: true }).click();
   await expect(page.locator(".workspace-template-row")).toHaveCount(1);
-  expect(server.shells).toHaveLength(3);
+  expect(server.shells).toHaveLength(2);
   await page
     .getByRole("button", { name: "Build and monitor 이름 변경", exact: true })
     .click();
@@ -408,7 +411,7 @@ test("saved workspaces preserve tab order, focus and split ratios, reopen withou
   ).toBeVisible();
   await page
     .getByRole("button", {
-      name: "Daily operations 스페이스 삭제",
+      name: "Daily operations 템플릿 삭제",
       exact: true,
     })
     .click();
@@ -417,8 +420,36 @@ test("saved workspaces preserve tab order, focus and split ratios, reopen withou
     .getByRole("button", { name: "확인", exact: true })
     .click();
   await expect(page.locator(".workspace-template-row")).toHaveCount(0);
-  await expect(page.locator(".workspace-tab")).toHaveCount(6);
+  await expect(page.locator(".workspace-tab")).toHaveCount(4);
   expect(errors).toEqual([]);
+});
+
+test("saving the selected tab refuses a closed source", async () => {
+  await page
+    .locator(".workspace-tab")
+    .filter({ hasText: "Monitoring" })
+    .locator("button")
+    .first()
+    .click();
+  await page.getByRole("button", { name: "템플릿 저장", exact: true }).click();
+  await expect(page.getByLabel("저장할 탭")).toHaveValue(original[1].id);
+  await expect(page.getByLabel("템플릿 이름")).toHaveValue("Monitoring");
+  await page.evaluate(async (id) => {
+    const { document } = await window.passport.call("bootstrap", undefined);
+    document.workspaces = document.workspaces.filter((w) => w.id !== id);
+    await window.passport.call("save", document);
+  }, original[1].id);
+  await expect(page.getByRole("dialog").getByRole("alert")).toContainText(
+    "탭이 닫혔거나",
+  );
+  await expect(
+    page.getByRole("dialog").getByRole("button", { name: "저장", exact: true }),
+  ).toBeDisabled();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "취소", exact: true })
+    .click();
+  await expect(page.locator(".workspace-template-row")).toHaveCount(0);
 });
 
 test("long workspace libraries scroll without moving controls and refuse to exceed terminal capacity", async ({}, info) => {
@@ -426,7 +457,7 @@ test("long workspace libraries scroll without moving controls and refuse to exce
     id: randomUUID(),
     name: `Saved workspace ${String(i).padStart(2, "0")}`,
     ...cloneWorkspaces(
-      original,
+      [original[0]],
       original[0].id,
       panes(original[0].root)[0].id,
       randomUUID,
@@ -458,7 +489,7 @@ test("long workspace libraries scroll without moving controls and refuse to exce
       page.locator(".workspace-template-row").last(),
     ).toBeInViewport();
     await expect(
-      page.getByRole("button", { name: "현재 창 저장", exact: true }),
+      page.getByRole("button", { name: "탭 저장", exact: true }),
     ).toBeInViewport();
     expect(
       await page
@@ -482,16 +513,21 @@ test("long workspace libraries scroll without moving controls and refuse to exce
     .click();
   await expect(page.locator(".toast")).toContainText("최대 32개");
   await expect(page.locator(".workspace-tab")).toHaveCount(32);
-  expect(server.shells).toHaveLength(3);
+  await page
+    .getByRole("button", { name: "새 로컬 터미널", exact: true })
+    .click();
+  await expect(page.locator(".toast")).toContainText("최대 32개");
+  await expect(page.locator(".workspace-tab")).toHaveCount(32);
+  expect(server.shells).toHaveLength(2);
   await page
     .getByRole("button", {
-      name: "Saved workspace 59 현재 창으로 갱신",
+      name: "Saved workspace 59 탭으로 갱신",
       exact: true,
     })
     .click();
   await page
     .getByRole("dialog")
-    .getByRole("button", { name: "확인", exact: true })
+    .getByRole("button", { name: "갱신", exact: true })
     .click();
   await expect
     .poll(() =>
@@ -502,6 +538,6 @@ test("long workspace libraries scroll without moving controls and refuse to exce
           ).document.workspaceTemplates.at(-1)!.workspaces.length,
       ),
     )
-    .toBe(32);
+    .toBe(1);
   expect(errors).toEqual([]);
 });

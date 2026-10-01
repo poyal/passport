@@ -252,9 +252,8 @@ test("opens and keeps a local tab active when ownership events arrive after the 
     },
   );
   try {
-    await page.getByRole("button", { name: "새 터미널", exact: true }).click();
     await page
-      .getByRole("button", { name: "로컬 터미널 열기", exact: true })
+      .getByRole("button", { name: "새 로컬 터미널", exact: true })
       .click();
     await expect(page.locator(".view:not([hidden]) .pill").first()).toHaveText(
       "1 / 1 연결",
@@ -301,14 +300,25 @@ test("saves custom colors and shortcuts and applies highlights without changing 
         ).document.settings.shortcuts.newTab,
     )
     .toBe("Mod+Shift+Y");
+  // The preceding window-transfer test leaves another native window focused.
+  const windowId = (
+    await page.evaluate(() => window.passport.call("bootstrap", undefined))
+  ).windowId;
+  await application.evaluate(({ app, BrowserWindow }, id) => {
+    app.focus({ steal: true });
+    BrowserWindow.fromId(id)?.focus();
+  }, windowId);
+  await expect.poll(() => page.evaluate(() => document.hasFocus())).toBe(true);
   await page.keyboard.press(
     process.platform === "darwin" ? "Meta+Shift+y" : "Control+Shift+y",
   );
-  await expect(page.getByRole("dialog")).toBeVisible();
-  await page
-    .getByRole("dialog")
-    .getByRole("button", { name: "닫기", exact: true })
-    .click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.locator(".workspace-tab.active")).toContainText(
+    "로컬 터미널",
+  );
+  await expect(
+    page.locator(".view:not([hidden]) .xterm-helper-textarea"),
+  ).toBeFocused();
   await page.locator(".workspace-tab").filter({ hasText: "후속 작업" }).click();
   await page
     .locator(`[data-pane-id="${paneA}"] .xterm-helper-textarea`)

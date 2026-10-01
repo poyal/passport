@@ -6,6 +6,8 @@ import { randomUUID } from "node:crypto";
 import { Store, type Vault } from "../src/main/store";
 import { hostSchema } from "../src/shared/model";
 import Database from "better-sqlite3";
+import { cloneWorkspaces } from "../src/shared/workspace-templates";
+import { LOCAL_HOST_ID } from "../src/shared/advanced";
 const cleanups: (() => Promise<void>)[] = [];
 afterEach(async () => {
   for (const fn of cleanups.splice(0).reverse()) await fn();
@@ -15,6 +17,87 @@ const vault: Vault = {
   encryptString: (s) => Buffer.from(s.split("").reverse().join("")),
   decryptString: (b) => b.toString().split("").reverse().join(""),
 };
+it("upgrades v4 atomically, backs up and removes only multi-tab templates permanently", async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "passport-template-v4-"));
+  let store = new Store(dir, vault);
+  try {
+    const document = store.read();
+    const workspace = {
+      id: randomUUID(),
+      name: "Local project",
+      root: {
+        kind: "pane" as const,
+        id: randomUUID(),
+        hostId: LOCAL_HOST_ID,
+        local: { shell: "default" as const, cwd: "" },
+      },
+    };
+    document.workspaces = [workspace];
+    const template = {
+      id: randomUUID(),
+      name: "One tab",
+      ...cloneWorkspaces(
+        [workspace],
+        workspace.id,
+        workspace.root.id,
+        randomUUID,
+      ),
+    };
+    document.workspaceTemplates = [
+      template,
+      {
+        ...template,
+        id: randomUUID(),
+        name: "Whole window",
+        ...cloneWorkspaces(
+          [
+            workspace,
+            {
+              ...workspace,
+              id: randomUUID(),
+              root: { ...workspace.root, id: randomUUID() },
+            },
+          ],
+          workspace.id,
+          "",
+          randomUUID,
+        ),
+      },
+    ];
+    store.db
+      .prepare("UPDATE metadata SET value=?")
+      .run(JSON.stringify(document));
+    store.db.pragma("user_version=4");
+    store.close();
+    store = new Store(dir, vault);
+    expect(store.read().workspaceTemplates).toEqual([template]);
+    expect(store.read().workspaces).toEqual([workspace]);
+    expect(store.db.pragma("user_version", { simple: true })).toBe(5);
+    const backup = (await fs.readdir(dir)).find((name) =>
+      name.startsWith("before-v5-"),
+    )!;
+    const original = new Database(path.join(dir, backup), { readonly: true });
+    try {
+      expect(
+        JSON.parse(
+          (
+            original.prepare("SELECT value FROM metadata").get() as {
+              value: string;
+            }
+          ).value,
+        ).workspaceTemplates,
+      ).toHaveLength(2);
+    } finally {
+      original.close();
+    }
+    store.close();
+    store = new Store(dir, vault);
+    expect(store.read().workspaceTemplates).toEqual([template]);
+  } finally {
+    if (store.db.open) store.close();
+    await fs.rm(dir, { recursive: true, force: true });
+  }
+});
 async function setup() {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), "passport-db-"));
   const store = new Store(dir, vault);
@@ -139,14 +222,14 @@ it("upgrades v0.1 metadata without losing hosts and rejects a future database ve
     store.db.pragma("user_version = 1");
     store.close();
     store = new Store(dir, vault);
-    expect(store.db.pragma("user_version", { simple: true })).toBe(4);
+    expect(store.db.pragma("user_version", { simple: true })).toBe(5);
     expect(store.read().hosts[0].name).toBe("기존 서버");
     expect(store.read().hosts[0].icon).toBe("auto");
     expect(store.read().tunnels).toEqual([]);
     expect(store.read().settings.shortcuts.newTab).toBe("Mod+Shift+T");
     store.close();
     const future = new Database(path.join(dir, "passport.sqlite"));
-    future.pragma("user_version=5");
+    future.pragma("user_version=6");
     future.close();
     expect(() => new Store(dir, vault)).toThrow("새로운 Passport");
   } finally {

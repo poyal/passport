@@ -1,0 +1,404 @@
+{
+  "completedAt": "2026-10-01T08:18:02.130827+00:00",
+  "beforeKiB": 6613384,
+  "afterKiB": 5017828,
+  "savedKiB": 1595556,
+  "moves": [
+    {
+      "from": "release/local-ai-preview",
+      "to": "release/builds/20261001T031732Z-legacy-mac-arm64-local-ai-preview"
+    },
+    {
+      "from": "release/local-terminal-preview",
+      "to": "release/builds/20261001T040600Z-legacy-mac-arm64-local-terminal-preview"
+    },
+    {
+      "from": "release/icon-fix-preview",
+      "to": "release/builds/20261001T032624Z-legacy-mac-arm64-icon-fix-preview"
+    },
+    {
+      "from": "release/notification-fix-preview",
+      "to": "release/builds/20261001T033725Z-legacy-mac-arm64-notification-fix-preview"
+    },
+    {
+      "from": "release/startup-fix-preview",
+      "to": "release/builds/20261001T040310Z-legacy-mac-arm64-startup-fix-preview"
+    },
+    {
+      "from": "release/local-color-preview",
+      "to": "release/builds/20261001T042905Z-legacy-mac-arm64-local-color-preview"
+    },
+    {
+      "from": "release/mac-arm64",
+      "to": "release/builds/20261001T031727Z-legacy-mac-arm64-mac-arm64/mac-arm64"
+    },
+    {
+      "from": "release/v0.3.2",
+      "to": "release/builds/20260930T010619Z-legacy-mac-arm64-v0.3.2"
+    },
+    {
+      "from": "release/recheck-20260930",
+      "to": "release/builds/20260930T003146Z-legacy-mac-arm64-recheck-20260930"
+    },
+    {
+      "from": "release/recheck-spaces-v1.0.2",
+      "to": "release/checks/20260930T090706Z-legacy-mac-arm64-recheck-spaces-v1.0.2"
+    },
+    {
+      "from": "release/recheck-ui-v0.3.4",
+      "to": "release/checks/20260930T044927Z-legacy-mac-arm64-recheck-ui-v0.3.4"
+    },
+    {
+      "from": "release/recheck-ui-v1.0.1",
+      "to": "release/checks/20260930T064037Z-legacy-mac-arm64-recheck-ui-v1.0.1"
+    },
+    {
+      "from": "release/recheck-updates-v1.0.1",
+      "to": "release/checks/20260930T075331Z-legacy-mac-arm64-recheck-updates-v1.0.1"
+    },
+    {
+      "from": "release/recheck-updates-v1.0.2",
+      "to": "release/checks/20260930T092444Z-legacy-mac-arm64-recheck-updates-v1.0.2"
+    },
+    {
+      "from": "release/icon-review",
+      "to": "release/checks/20261001T032711Z-legacy-mac-arm64-icon-review"
+    },
+    {
+      "from": "release/installed-backup-20261001-130506",
+      "to": "release/backups/20261001T040553Z-legacy-mac-arm64-installed-backup-20261001-130506"
+    },
+    {
+      "from": "release/installed-color-backup-20261001-133159",
+      "to": "release/backups/20261001T043201Z-legacy-mac-arm64-installed-color-backup-20261001-133159"
+    },
+    {
+      "from": "release/github-v1.0.1",
+      "to": "release/packages/v1.0.1/github/mac-arm64"
+    },
+    {
+      "from": "release/github-v1.0.2",
+      "to": "release/packages/v1.0.2/github/mac-arm64"
+    },
+    {
+      "from": "release/Passport-1.0.2-mac-arm64.dmg",
+      "to": "release/packages/v1.0.2/local/mac-arm64/Passport-1.0.2-mac-arm64.dmg"
+    },
+    {
+      "from": "release/Passport-1.0.2-mac-arm64.dmg.sha256",
+      "to": "release/packages/v1.0.2/local/mac-arm64/Passport-1.0.2-mac-arm64.dmg.sha256"
+    },
+    {
+      "from": "release/builder-debug.yml",
+      "to": "release/checks/20261001T081737Z-4d2940c-dirty-mac-arm64-cleanup/legacy-records/builder-debug.yml"
+    },
+    {
+      "from": "release/github-release-v1.0.0.json",
+      "to": "release/checks/20261001T081737Z-4d2940c-dirty-mac-arm64-cleanup/legacy-records/github-release-v1.0.0.json"
+    },
+    {
+      "from": "release/SHA256SUMS-v1.0.0-local.txt",
+      "to": "release/checks/20261001T081737Z-4d2940c-dirty-mac-arm64-cleanup/legacy-records/SHA256SUMS-v1.0.0-local.txt"
+    },
+    {
+      "from": "release/SHA256SUMS-v1.0.0-github.txt",
+      "to": "release/checks/20261001T081737Z-4d2940c-dirty-mac-arm64-cleanup/legacy-records/SHA256SUMS-v1.0.0-github.txt"
+    },
+    {
+      "from": "release/Passport-1.0.1-mac-arm64.dmg.sha256",
+      "to": "release/checks/20261001T081737Z-4d2940c-dirty-mac-arm64-cleanup/legacy-records/Passport-1.0.1-mac-arm64.dmg.sha256"
+    }
+  ],
+  "deleted": [
+    {
+      "path": "release/Passport-0.1.0-arm64.dmg",
+      "bytes": 152193830,
+      "sha256": "e6f9524bb8191c5cc180740e252ca8da03f9447970a149ac8c86fb6ef3ac2b49",
+      "reason": "Superseded local installer; published latest/previous and latest local installer retained."
+    },
+    {
+      "path": "release/Passport-0.3.0-mac-arm64.dmg",
+      "bytes": 153260889,
+      "sha256": "32d3a54712328930a91beeab29d635f235619dd536cf9a2018fa40db34a91d46",
+      "reason": "Superseded local installer; published latest/previous and latest local installer retained."
+    },
+    {
+      "path": "release/Passport-0.3.1-mac-arm64.dmg",
+      "bytes": 153294046,
+      "sha256": "d85fc624fbc85953a0b8265a3e000733da6b17233bce15317fbebf807a6af16e",
+      "reason": "Superseded local installer; published latest/previous and latest local installer retained."
+    },
+    {
+      "path": "release/Passport-0.3.2-mac-arm64.dmg",
+      "bytes": 153288699,
+      "sha256": "bd3eb339ad3f979ed5bea310d8460b86ec106f62159156341fa5e55920b0bc7e",
+      "reason": "Superseded local installer; published latest/previous and latest local installer retained."
+    },
+    {
+      "path": "release/Passport-0.3.3-mac-arm64.dmg",
+      "bytes": 153295344,
+      "sha256": "de4676592676f79807e6cca84e74b9b8c201b4cb751e942db062afc0a4b1d12a",
+      "reason": "Superseded local installer; published latest/previous and latest local installer retained."
+    },
+    {
+      "path": "release/Passport-0.3.4-mac-arm64.dmg",
+      "bytes": 153297879,
+      "sha256": "2435d25de7cc6276e1127476a219df7634ead2dee712877147e63fb1f40c43fe",
+      "reason": "Superseded local installer; published latest/previous and latest local installer retained."
+    },
+    {
+      "path": "release/Passport-1.0.0-mac-arm64.dmg",
+      "bytes": 153297652,
+      "sha256": "9fd8d595bfa6e339211fea4a529a96f04d7cb10e195410075e2e411f50a949ec",
+      "reason": "Superseded local installer; published latest/previous and latest local installer retained."
+    },
+    {
+      "path": "release/Passport-1.0.1-mac-arm64.dmg",
+      "bytes": 153315070,
+      "sha256": "f4b0100a1c34e767ea761ed6a61a20c011b5056a37200d994a41071014defc9a",
+      "reason": "Superseded local installer; published latest/previous and latest local installer retained."
+    },
+    {
+      "path": "release/installed-backup-20261001-130506/installed-previous.app",
+      "version": "1.0.2",
+      "treeSha256": "8879dec166061189782e5fb86b5a16900d96be4c1cb0e77aa81e24c76bcc7501",
+      "files": 648,
+      "bytes": 389843756,
+      "reason": "Identical app bundle duplicated inside the same backup set.",
+      "equivalent": "release/installed-backup-20261001-130506/Passport.app"
+    },
+    {
+      "path": "release/installed-color-backup-20261001-133053",
+      "reason": "Empty failed backup; zero-byte database cannot restore data."
+    },
+    {
+      "path": "release/.icon-icns",
+      "reason": "Regenerable icon packaging intermediate."
+    },
+    {
+      "path": "release/.DS_Store",
+      "reason": "Finder metadata outside application bundles."
+    },
+    {
+      "path": "release/notification-fix-preview/.icon-icns",
+      "reason": "Regenerable icon packaging intermediate."
+    },
+    {
+      "path": "release/local-terminal-preview/.icon-icns",
+      "reason": "Regenerable icon packaging intermediate."
+    },
+    {
+      "path": "release/local-terminal-preview/.DS_Store",
+      "reason": "Finder metadata outside application bundles."
+    },
+    {
+      "path": "release/local-terminal-preview/mac-arm64/.DS_Store",
+      "reason": "Finder metadata outside application bundles."
+    },
+    {
+      "path": "release/startup-fix-preview/.icon-icns",
+      "reason": "Regenerable icon packaging intermediate."
+    },
+    {
+      "path": "release/local-ai-preview/.icon-icns",
+      "reason": "Regenerable icon packaging intermediate."
+    },
+    {
+      "path": "release/local-ai-preview/.DS_Store",
+      "reason": "Finder metadata outside application bundles."
+    },
+    {
+      "path": "release/local-ai-preview/mac-arm64/.DS_Store",
+      "reason": "Finder metadata outside application bundles."
+    },
+    {
+      "path": "release/recheck-20260930/.icon-icns",
+      "reason": "Regenerable icon packaging intermediate."
+    },
+    {
+      "path": "release/local-color-preview/.icon-icns",
+      "reason": "Regenerable icon packaging intermediate."
+    },
+    {
+      "path": "release/v0.3.2/.icon-icns",
+      "reason": "Regenerable icon packaging intermediate."
+    },
+    {
+      "path": "release/icon-fix-preview/.icon-icns",
+      "reason": "Regenerable icon packaging intermediate."
+    },
+    {
+      "path": "release/mac-arm64/.DS_Store",
+      "reason": "Finder metadata outside application bundles."
+    }
+  ],
+  "retainedVerified": [
+    {
+      "path": "release/builds/20261001T033725Z-legacy-mac-arm64-notification-fix-preview/mac-arm64/Passport.app",
+      "version": "1.0.2",
+      "treeSha256": "11553713f6955340cd106319cc2a86c0d841cd4f0a00bdf8422eeea19991d68a",
+      "files": 694,
+      "bytes": 389241215,
+      "legacyPath": "release/notification-fix-preview/mac-arm64/Passport.app"
+    },
+    {
+      "path": "release/builds/20261001T040600Z-legacy-mac-arm64-local-terminal-preview/mac-arm64/Passport.app",
+      "version": "1.0.2",
+      "treeSha256": "c835b4c5d2562cd7c1fdd282b097cb3b36715623f0d8c1949f7cf2ff92c551e0",
+      "files": 693,
+      "bytes": 389109789,
+      "legacyPath": "release/local-terminal-preview/mac-arm64/Passport.app"
+    },
+    {
+      "path": "release/builds/20261001T040310Z-legacy-mac-arm64-startup-fix-preview/mac-arm64/Passport.app",
+      "version": "1.0.2",
+      "treeSha256": "763e1eac25626639176230fc623ed8bba0def6d7988a9fd940d94f2604f519fe",
+      "files": 694,
+      "bytes": 389242758,
+      "legacyPath": "release/startup-fix-preview/mac-arm64/Passport.app"
+    },
+    {
+      "path": "release/builds/20261001T031732Z-legacy-mac-arm64-local-ai-preview/mac-arm64/Passport.app",
+      "version": "1.0.2",
+      "treeSha256": "0ecae458dd9e45dfef1506a19d1e7428dcb8bae34d2898d6bf7a1d48c188be63",
+      "files": 693,
+      "bytes": 389110081,
+      "legacyPath": "release/local-ai-preview/mac-arm64/Passport.app"
+    },
+    {
+      "path": "release/builds/20260930T003146Z-legacy-mac-arm64-recheck-20260930/mac-arm64/Passport.app",
+      "version": "0.3.1",
+      "treeSha256": "2d82b1c24bb184b167bc4b13caee2cf34de7567dc5d8f213c95d070986d438c8",
+      "files": 648,
+      "bytes": 387993530,
+      "legacyPath": "release/recheck-20260930/mac-arm64/Passport.app"
+    },
+    {
+      "path": "release/builds/20261001T042905Z-legacy-mac-arm64-local-color-preview/mac-arm64/Passport.app",
+      "version": "1.0.2",
+      "treeSha256": "3e010c3fe0b5f61fa48eeac20ec162e976f9e859be47a6716236597c64ca2cee",
+      "files": 694,
+      "bytes": 389244006,
+      "legacyPath": "release/local-color-preview/mac-arm64/Passport.app"
+    },
+    {
+      "path": "release/builds/20260930T010619Z-legacy-mac-arm64-v0.3.2/mac-arm64/Passport.app",
+      "version": "0.3.2",
+      "treeSha256": "451d61a67bfa079ca705bd904914275501e4621ee2fa9f7a33a105906fcbed3c",
+      "files": 648,
+      "bytes": 387999611,
+      "legacyPath": "release/v0.3.2/mac-arm64/Passport.app"
+    },
+    {
+      "path": "release/builds/20261001T032624Z-legacy-mac-arm64-icon-fix-preview/mac-arm64/Passport.app",
+      "version": "1.0.2",
+      "treeSha256": "4818d232ffb6679f20175792fe183df87505d7afab51fe63dc5e8fedc80542a3",
+      "files": 693,
+      "bytes": 389109998,
+      "legacyPath": "release/icon-fix-preview/mac-arm64/Passport.app"
+    },
+    {
+      "path": "release/builds/20261001T031727Z-legacy-mac-arm64-mac-arm64/mac-arm64/Passport.app",
+      "version": "1.0.2",
+      "treeSha256": "2e762326b31a9b51951b36eeb265c930cbee405a265086b39eff4f957dbe9222",
+      "files": 648,
+      "bytes": 388084785,
+      "legacyPath": "release/mac-arm64/Passport.app"
+    },
+    {
+      "path": "release/backups/20261001T040553Z-legacy-mac-arm64-installed-backup-20261001-130506/Passport.app",
+      "version": "1.0.2",
+      "treeSha256": "8879dec166061189782e5fb86b5a16900d96be4c1cb0e77aa81e24c76bcc7501",
+      "files": 648,
+      "bytes": 389843756,
+      "legacyPath": "release/installed-backup-20261001-130506/Passport.app"
+    },
+    {
+      "path": "release/backups/20261001T043201Z-legacy-mac-arm64-installed-color-backup-20261001-133159/Passport.app",
+      "version": "1.0.2",
+      "treeSha256": "763e1eac25626639176230fc623ed8bba0def6d7988a9fd940d94f2604f519fe",
+      "files": 694,
+      "bytes": 389242758,
+      "legacyPath": "release/installed-color-backup-20261001-133159/Passport.app"
+    },
+    {
+      "path": "release/packages/v1.0.2/local/mac-arm64/Passport-1.0.2-mac-arm64.dmg",
+      "bytes": 153305368,
+      "sha256": "a44abcbb68f3ecb2fb333cd01034dfba74eaadd212b5489328da30db8b634b58",
+      "legacyPath": "release/Passport-1.0.2-mac-arm64.dmg"
+    },
+    {
+      "path": "release/packages/v1.0.1/github/mac-arm64/Passport-1.0.1-mac-arm64.dmg",
+      "bytes": 154616004,
+      "sha256": "8c4943db382f6b9f06fe2e7c823464f84b2bf52c4376ef9c3808d63035f5779e",
+      "legacyPath": "release/github-v1.0.1/Passport-1.0.1-mac-arm64.dmg"
+    },
+    {
+      "path": "release/packages/v1.0.2/github/mac-arm64/Passport-1.0.2-mac-arm64.dmg",
+      "bytes": 154617128,
+      "sha256": "fe66cb02a0c24a3290d52b2c472b6c2a8fb64c4c3cd488913190870d7f36a77e",
+      "legacyPath": "release/github-v1.0.2/Passport-1.0.2-mac-arm64.dmg"
+    },
+    {
+      "path": "release/builds/20260930T003146Z-legacy-mac-arm64-recheck-20260930/Passport-0.3.1-mac-arm64.dmg",
+      "bytes": 153292482,
+      "sha256": "fbfd966fff3d28ce8306ddcb08cde8f1516a036ea978961f7c1cba04586a125d",
+      "legacyPath": "release/recheck-20260930/Passport-0.3.1-mac-arm64.dmg"
+    },
+    {
+      "path": "release/builds/20260930T010619Z-legacy-mac-arm64-v0.3.2/Passport-0.3.2-mac-arm64.dmg",
+      "bytes": 153288699,
+      "sha256": "bd3eb339ad3f979ed5bea310d8460b86ec106f62159156341fa5e55920b0bc7e",
+      "legacyPath": "release/v0.3.2/Passport-0.3.2-mac-arm64.dmg"
+    },
+    {
+      "path": "release/backups/20261001T040553Z-legacy-mac-arm64-installed-backup-20261001-130506/passport.sqlite",
+      "bytes": 114688,
+      "sha256": "65c6f142e4f4a24c17f37b5c8d2c1783de1eb643e86637f22f10d9761ed33de7",
+      "quickCheck": "ok",
+      "legacyPath": "release/installed-backup-20261001-130506/passport.sqlite"
+    },
+    {
+      "path": "release/backups/20261001T043201Z-legacy-mac-arm64-installed-color-backup-20261001-133159/passport.sqlite",
+      "bytes": 114688,
+      "sha256": "43e52ebfec07283fa133bd87bee391a8b1799379c5cf7b33058e57287b7cb4d4",
+      "quickCheck": "ok",
+      "legacyPath": "release/installed-color-backup-20261001-133159/passport.sqlite"
+    }
+  ],
+  "reportDirectory": "release/checks/20261001T081737Z-4d2940c-dirty-mac-arm64-cleanup",
+  "retention": {
+    "rootDirectories": [
+      "builds",
+      "packages",
+      "checks",
+      "backups"
+    ],
+    "publishedVersions": [
+      "1.0.2",
+      "1.0.1"
+    ],
+    "localInstallerVersion": "1.0.2 (before local AI features)",
+    "completeBackupSets": 2,
+    "protectedPreviewBuilds": [
+      "release/builds/20261001T042905Z-legacy-mac-arm64-local-color-preview",
+      "release/builds/20261001T040310Z-legacy-mac-arm64-startup-fix-preview"
+    ],
+    "otherUniqueBuilds": "Retained because they are less than seven days old."
+  },
+  "checks": {
+    "retainedContentHashesMatch": 18,
+    "backupSqliteQuickChecksPassed": 2,
+    "publishedDmgDigestsMatchGitHub": 2,
+    "localInstallerChecksumMatches": true,
+    "updatedMarkdownLinks": [
+      "docs/verification.md"
+    ],
+    "installedAppAndLiveUserDataModified": false
+  },
+  "testApp": {
+    "shortcut": "release/builds/Passport.app",
+    "target": "release/builds/20261001T042905Z-legacy-mac-arm64-local-color-preview/mac-arm64/Passport.app",
+    "codeSignatureVerification": "passed"
+  }
+}

@@ -8,7 +8,7 @@ import {
 import { promisify } from "node:util";
 import { z } from "zod";
 import { cloneWorkspaces } from "../shared/workspace-templates";
-import { migrateDocument } from "../shared/migration";
+import { legacyTemplateCount, migrateDocument } from "../shared/migration";
 import {
   documentSchema,
   emptyDocument,
@@ -20,22 +20,32 @@ import {
   type Secret,
 } from "../shared/model";
 
-export const packageSchema = z.object({
-  format: z.literal("passport"),
-  version: z.union([z.literal(1), z.literal(2)]).transform(() => 2 as const),
-  document: z.preprocess((raw) => migrateDocument(raw), documentSchema),
-  profiles: z
-    .array(
-      z.object({
-        id: z.string().uuid(),
-        name: z.string().max(256),
-        type: z.enum(["password", "key"]),
-        username: profileUsernameSchema.optional(),
-      }),
-    )
-    .max(5000),
-  secrets: z.record(z.string().uuid(), secretSchema).optional(),
-});
+export const packageSchema = z.preprocess(
+  (raw) => {
+    if (!raw || typeof raw !== "object") return raw;
+    const value = raw as Record<string, unknown>;
+    const { omittedTemplates: _, ...data } = value;
+    const count = legacyTemplateCount(value.document);
+    return count ? { ...data, omittedTemplates: count } : data;
+  },
+  z.object({
+    format: z.literal("passport"),
+    version: z.union([z.literal(1), z.literal(2)]).transform(() => 2 as const),
+    document: z.preprocess((raw) => migrateDocument(raw), documentSchema),
+    profiles: z
+      .array(
+        z.object({
+          id: z.string().uuid(),
+          name: z.string().max(256),
+          type: z.enum(["password", "key"]),
+          username: profileUsernameSchema.optional(),
+        }),
+      )
+      .max(5000),
+    secrets: z.record(z.string().uuid(), secretSchema).optional(),
+    omittedTemplates: z.number().int().nonnegative().optional(),
+  }),
+);
 export type Portable = z.infer<typeof packageSchema>;
 const sealedSchema = z.object({
   format: z.literal("passport-encrypted"),

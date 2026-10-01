@@ -851,7 +851,7 @@ export function Settings() {
             </span>
             <span>
               작업 배치 <b>{preview.document.workspaces.length}</b>
-              스페이스 <b>{preview.document.workspaceTemplates.length}</b>
+              템플릿 <b>{preview.document.workspaceTemplates.length}</b>
             </span>
           </div>
           <div className="preview-list">

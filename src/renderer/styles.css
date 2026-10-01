@@ -2390,10 +2390,6 @@ select:disabled {
   font-size: 12px;
   line-height: 1.4;
 }
-.tabs {
-  margin-right: 48px;
-}
-
 .picker-toolbar {
   display: flex;
   gap: 12px;

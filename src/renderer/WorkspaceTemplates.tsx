@@ -38,37 +38,6 @@ export function WorkspaceTemplates() {
   const currentTabs = app.document.workspaces.filter(
     (w) => app.boot.workspaceOwners[w.id] === app.boot.windowId,
   );
-  const snapshot = (workspaces = currentTabs) => {
-    const active =
-      workspaces.find((w) =>
-        panes(w.root).some((p) => p.id === app.activePane),
-      ) ?? workspaces[0];
-    return cloneWorkspaces(workspaces, active?.id ?? "", app.activePane, uuid);
-  };
-  const save = async () => {
-    const name = await app.ask(
-      "스페이스 저장",
-      "현재 창의 모든 터미널 탭과 분할 방향·크기를 저장합니다.",
-      "내 작업 공간",
-    );
-    if (!name?.trim()) return;
-    const ok = await app.update((d) => ({
-      ...d,
-      workspaceTemplates: [
-        ...d.workspaceTemplates,
-        {
-          id: uuid(),
-          name: name.trim(),
-          ...snapshot(
-            d.workspaces.filter(
-              (w) => app.boot.workspaceOwners[w.id] === app.boot.windowId,
-            ),
-          ),
-        },
-      ],
-    }));
-    if (ok) app.notify("스페이스를 저장했습니다.");
-  };
   const open = async (template: WorkspaceTemplate, connect: boolean) => {
     if (busy) return;
     setBusy(true);
@@ -86,7 +55,7 @@ export function WorkspaceTemplates() {
           32
         )
           throw new Error(
-            "스페이스를 열 공간이 부족합니다. 전체 터미널은 최대 32개이므로 사용하지 않는 탭을 닫아 주세요.",
+            "템플릿을 열 공간이 부족합니다. 전체 터미널은 최대 32개이므로 사용하지 않는 탭을 닫아 주세요.",
           );
         return { ...d, workspaces: [...d.workspaces, ...restored.workspaces] };
       });
@@ -102,36 +71,12 @@ export function WorkspaceTemplates() {
       setBusy(false);
     }
   };
-  const replace = async (template: WorkspaceTemplate) => {
-    if (
-      !(await app.confirm(
-        "스페이스 갱신",
-        `‘${template.name}’을 현재 창의 ${currentTabs.length}개 탭과 분할 배치로 바꿀까요?`,
-      ))
-    )
-      return;
-    await app.update((d) => ({
-      ...d,
-      workspaceTemplates: d.workspaceTemplates.map((t) =>
-        t.id === template.id
-          ? {
-              ...t,
-              ...snapshot(
-                d.workspaces.filter(
-                  (w) => app.boot.workspaceOwners[w.id] === app.boot.windowId,
-                ),
-              ),
-            }
-          : t,
-      ),
-    }));
-  };
   return (
     <div className="workspace-library">
       <div className="page-heading">
         <div>
           <h1>템플릿</h1>
-          <p>자주 사용하는 터미널 탭과 분할 배치를 저장하고 함께 여세요.</p>
+          <p>터미널 탭 하나와 그 안의 분할 배치를 저장하고 다시 여세요.</p>
         </div>
         <button
           className="primary"
@@ -140,26 +85,25 @@ export function WorkspaceTemplates() {
             !currentTabs.length ||
             app.document.workspaceTemplates.length >= 100
           }
-          onClick={() => void save().catch(app.notify)}
+          onClick={() => app.saveTemplate()}
         >
-          <Save size={16} />
-          현재 창 저장
+          <Save size={16} />탭 저장
         </button>
       </div>
       <p className="hint workspace-library-hint">
-        이름을 누르면 배치만 불러옵니다. 실행 버튼을 누르면 새 배치에서 로컬
-        AI와 SSH를 함께 시작합니다.
+        템플릿을 누르면 새 탭에서 로컬 터미널과 SSH를 시작합니다. 연결 없이
+        배치만 열 수도 있습니다.
       </p>
       <div
         className="workspace-template-list"
-        aria-label="저장된 스페이스"
+        aria-label="저장된 템플릿"
         tabIndex={0}
       >
         {!app.document.workspaceTemplates.length && (
           <Empty
             icon={<Layers size={28} />}
-            title="저장된 스페이스가 없습니다"
-            description="로컬 AI와 SSH 패널을 배치한 뒤 ‘현재 창 저장’을 누르세요."
+            title="저장된 템플릿이 없습니다"
+            description="로컬 AI와 SSH 패널을 배치한 뒤 ‘탭 저장’을 누르세요."
           />
         )}
         {app.document.workspaceTemplates.map((template) => {
@@ -173,8 +117,8 @@ export function WorkspaceTemplates() {
               <button
                 className="workspace-template-open"
                 disabled={busy}
-                aria-label={`${template.name} 배치만 열기`}
-                onClick={() => void open(template, false)}
+                aria-label={`${template.name} 열기`}
+                onClick={() => void open(template, true)}
               >
                 <span className="template-preview" aria-hidden="true">
                   <LayoutPreview node={template.workspaces[0].root} />
@@ -193,16 +137,16 @@ export function WorkspaceTemplates() {
               </button>
               <div className="workspace-template-actions">
                 <IconButton
-                  label={`${template.name} 불러오고 시작`}
+                  label={`${template.name} 배치만 열기`}
                   disabled={busy}
-                  onClick={() => void open(template, true)}
+                  onClick={() => void open(template, false)}
                 >
                   <FolderOpen size={16} />
                 </IconButton>
                 <IconButton
-                  label={`${template.name} 현재 창으로 갱신`}
+                  label={`${template.name} 탭으로 갱신`}
                   disabled={busy || !currentTabs.length}
-                  onClick={() => void replace(template).catch(app.notify)}
+                  onClick={() => app.saveTemplate(undefined, template.id)}
                 >
                   <RefreshCw size={16} />
                 </IconButton>
@@ -212,7 +156,7 @@ export function WorkspaceTemplates() {
                   onClick={() =>
                     void app
                       .ask(
-                        "스페이스 이름",
+                        "템플릿 이름",
                         "새 이름을 입력하세요.",
                         template.name,
                       )
@@ -233,13 +177,13 @@ export function WorkspaceTemplates() {
                   <Pencil size={16} />
                 </IconButton>
                 <IconButton
-                  label={`${template.name} 스페이스 삭제`}
+                  label={`${template.name} 템플릿 삭제`}
                   disabled={busy}
                   className="danger"
                   onClick={() =>
                     void app
                       .confirm(
-                        "스페이스 삭제",
+                        "템플릿 삭제",
                         `‘${template.name}’의 저장된 배치를 삭제할까요? 열린 터미널은 유지됩니다.`,
                       )
                       .then(

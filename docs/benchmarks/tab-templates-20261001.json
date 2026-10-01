@@ -1,0 +1,48 @@
+{
+  "createdAt": "2026-10-01T09:17:05.768698+00:00",
+  "purpose": "Single-tab templates, in-workspace save button and immediate local terminal creation",
+  "sourceCommit": "4d2940c359269e78cab58813f2eb4d14b2a2b2ea",
+  "dirty": true,
+  "platform": "mac-arm64",
+  "verification": {
+    "typecheckAndBuild": "passed",
+    "unit": {
+      "passed": 111,
+      "skipped": 4
+    },
+    "sourceGuiScenarios": 24,
+    "finalPackagedGuiScenarios": 10,
+    "signature": "ad-hoc verified; not notarized",
+    "normalExit": true,
+    "windowsRuntime": "not executed on this Mac"
+  },
+  "linkedArtifacts": {
+    "build": "release/builds/20261001T091600Z-4d2940c-dirty-mac-arm64-tab-templates",
+    "checks": "release/checks/20261001T090800Z-4d2940c-dirty-mac-arm64-tab-templates"
+  },
+  "files": [
+    {
+      "path": "release/builds/20261001T091600Z-4d2940c-dirty-mac-arm64-tab-templates/mac-arm64/Passport.app/Contents/Resources/app.asar",
+      "bytes": 55005690,
+      "sha256": "3bfbe42185eaadf2c4ae5960b7525bbfd7a1f2ac758aa2116da04f26f2b5d9d0"
+    },
+    {
+      "path": "release/builds/20261001T091600Z-4d2940c-dirty-mac-arm64-tab-templates/mac-arm64/Passport.app/Contents/MacOS/Passport",
+      "bytes": 34800,
+      "sha256": "756e1d0648e730a80155262d8f7fb4491f9710e19dfc67c1e62e6a7120819998"
+    }
+  ],
+  "behavior": [
+    "Save button is inside the selected workspace toolbar; sidebar tabs contain no save action.",
+    "Templates contain one workspace including splits; card click opens and connects a new independent workspace.",
+    "Plus and new-tab shortcut open a local shell immediately in the home directory.",
+    "DB v5 migration backs up the old database and removes multi-tab templates; imports report omission count."
+  ],
+  "artifactReview": {
+    "removed": [],
+    "currentBuild": "release/builds/20261001T091600Z-4d2940c-dirty-mac-arm64-tab-templates",
+    "previousBuild": "release/builds/20261001T082526Z-4d2940c-dirty-mac-arm64-sidebar",
+    "expiredCleanupCandidates": [],
+    "note": "No generated build/check folders exceed seven-day retention. Kept all existing app and recovery artifacts."
+  }
+}

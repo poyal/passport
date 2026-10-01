@@ -68,15 +68,15 @@ export function moveLayout(
         ? (find(n.children[0]) ?? find(n.children[1]))
         : undefined;
   const incoming = find(source.root);
-  if (
-    !incoming ||
-    panes(incoming).some((p) => p.id === target) ||
-    incoming.id === target
-  )
-    return workspaces;
+  if (incoming?.kind !== "pane" || incoming.id === target) return workspaces;
   const remainder = removeNode(source.root, nodeId);
   const destRoot = from === to ? remainder : destination.root;
   if (!destRoot) return workspaces;
+  // A stale drop target must not remove the source panel from its workspace.
+  const containsTarget = (node: Layout): boolean =>
+    node.id === target ||
+    (node.kind === "split" && node.children.some(containsTarget));
+  if (!containsTarget(destRoot)) return workspaces;
   const result = insertSplit(destRoot, target, incoming, edge, splitId);
   return workspaces.flatMap((w) =>
     w.id === to

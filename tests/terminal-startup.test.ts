@@ -138,9 +138,9 @@ it("backs up v3 before migrating and keeps the original database on validation f
   expect(
     fs
       .readdirSync(dir)
-      .some((f) => f.startsWith("before-v4-") && f.endsWith(".sqlite")),
+      .some((f) => f.startsWith("before-v5-") && f.endsWith(".sqlite")),
   ).toBe(true);
-  expect(store.db.pragma("user_version", { simple: true })).toBe(4);
+  expect(store.db.pragma("user_version", { simple: true })).toBe(5);
   store.close();
 });
 it("resolves pane/project/global profile precedence and remaps imported profile collisions", () => {

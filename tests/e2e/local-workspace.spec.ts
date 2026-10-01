@@ -6,6 +6,86 @@ import { sshFixture } from "../fixtures/ssh-server";
 import { hostSchema } from "../../src/shared/model";
 import { closeCleanly } from "../fixtures/electron-exit";
 
+test("an unavailable default shell leaves a retryable local tab", async () => {
+  const directory = await fs.mkdtemp(
+    path.join(os.tmpdir(), "passport-shell-error-"),
+  );
+  const application = await electron.launch({
+    executablePath: process.env.PASSPORT_E2E_EXECUTABLE,
+    args: process.env.PASSPORT_E2E_EXECUTABLE ? [] : ["."],
+    env: {
+      ...process.env,
+      PASSPORT_DATA_DIR: directory,
+      PASSPORT_DISABLE_UPDATE_CHECK: "1",
+    },
+  });
+  try {
+    const page = await application.firstWindow();
+    await expect(
+      page.getByRole("button", { name: "새 로컬 터미널", exact: true }),
+    ).toBeVisible();
+    await application.evaluate(({ dialog }) => {
+      dialog.showMessageBox = async () => ({
+        response: 1,
+        checkboxChecked: false,
+      });
+    });
+    await page.evaluate(async () => {
+      const boot = await window.passport.call("bootstrap", undefined);
+      boot.document.settings.terminal.shell =
+        boot.platform === "win32" ? "zsh" : "cmd";
+      await window.passport.call("save", boot.document);
+    });
+    await page
+      .getByRole("button", { name: "새 로컬 터미널", exact: true })
+      .click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect
+      .poll(() =>
+        page.evaluate(
+          async () =>
+            (await window.passport.call("bootstrap", undefined))
+              .sessionStates[0]?.status,
+        ),
+      )
+      .toBe("error");
+    const state = (
+      await page.evaluate(() => window.passport.call("bootstrap", undefined))
+    ).sessionStates[0];
+    await expect(page.locator(".connection-banner")).toContainText(
+      state.message!,
+    );
+    await expect(
+      page
+        .locator(".connection-banner")
+        .getByRole("button", { name: "연결", exact: true }),
+    ).toBeEnabled();
+    await page.evaluate(async () => {
+      const boot = await window.passport.call("bootstrap", undefined);
+      const pane = boot.document.workspaces[0].root;
+      if (pane.kind === "pane") pane.local!.shell = "default";
+      boot.document.settings.terminal.shell = "default";
+      await window.passport.call("save", boot.document);
+    });
+    await page
+      .locator(".connection-banner")
+      .getByRole("button", { name: "연결", exact: true })
+      .click();
+    await expect
+      .poll(() =>
+        page.evaluate(
+          async () =>
+            (await window.passport.call("bootstrap", undefined))
+              .sessionStates[0]?.status,
+        ),
+      )
+      .toBe("connected");
+  } finally {
+    await closeCleanly(application);
+    await fs.rm(directory, { recursive: true, force: true });
+  }
+});
+
 test("creates mixed local/SSH workspaces, previews profiles, routes alerts and restores without executing", async ({}, info) => {
   const directory = await fs.mkdtemp(
     path.join(os.tmpdir(), "passport-local-e2e-"),
@@ -54,21 +134,23 @@ test("creates mixed local/SSH workspaces, previews profiles, routes alerts and r
       },
       { host },
     );
+    await page.getByRole("button", { name: "설정", exact: true }).click();
     await page
-      .getByRole("button", { name: "로컬 터미널 선택한 셸로 프로젝트 작업" })
+      .locator(".settings-sidebar")
+      .getByRole("button", { name: "로컬 터미널", exact: true })
       .click();
-    await page.screenshot({ path: info.outputPath("local-chooser.png") });
-    await page.getByLabel("프로젝트 폴더", { exact: true }).fill(project);
     await page
-      .getByLabel("실행 셸", { exact: true })
+      .getByLabel("기본 셸", { exact: true })
       .selectOption(process.platform === "win32" ? "passport-bash" : "bash");
     await page
       .getByLabel("시작 프로파일", { exact: true })
       .selectOption("custom");
     await page.getByLabel(/Unix 단축명령/).check();
+    await page.screenshot({ path: info.outputPath("local-settings.png") });
     await page
-      .getByRole("button", { name: "로컬 터미널 열기", exact: true })
+      .getByRole("button", { name: "새 로컬 터미널", exact: true })
       .click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect
       .poll(async () =>
         page.evaluate(
@@ -83,7 +165,11 @@ test("creates mixed local/SSH workspaces, previews profiles, routes alerts and r
       .getAttribute("data-pane-id");
     expect(local).toBeTruthy();
     await page.getByRole("button", { name: "실행 환경", exact: true }).click();
-    await expect(page.getByRole("dialog")).toContainText(project);
+    await expect(page.getByRole("dialog")).toContainText(
+      await page.evaluate(
+        async () => (await window.passport.call("bootstrap", undefined)).home,
+      ),
+    );
     await expect(page.getByRole("dialog")).toContainText("Unix 단축명령");
     await page.getByRole("button", { name: "닫기", exact: true }).click();
     await page
@@ -160,11 +246,9 @@ test("creates mixed local/SSH workspaces, previews profiles, routes alerts and r
       .getByRole("button", { name: "닫기", exact: true })
       .click();
     await page.getByRole("button", { name: "템플릿", exact: true }).click();
-    await page
-      .getByRole("button", { name: "현재 창 저장", exact: true })
-      .click();
+    await page.getByRole("button", { name: "탭 저장", exact: true }).click();
     await page.getByRole("dialog").getByRole("textbox").fill("혼합 작업");
-    await page.getByRole("button", { name: "적용", exact: true }).click();
+    await page.getByRole("button", { name: "저장", exact: true }).click();
     await page
       .getByRole("button", { name: "혼합 작업 배치만 열기", exact: true })
       .click();
@@ -379,10 +463,8 @@ console.log('CLI_FIXTURE_FINISHED');
       },
       { bin, directory },
     );
-    await page.getByRole("button", { name: "새 터미널", exact: true }).click();
-    await page.getByLabel("프로젝트 폴더", { exact: true }).fill(directory);
     await page
-      .getByRole("button", { name: "로컬 터미널 열기", exact: true })
+      .getByRole("button", { name: "새 로컬 터미널", exact: true })
       .click();
     await expect
       .poll(() =>

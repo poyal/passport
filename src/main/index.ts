@@ -483,6 +483,10 @@ function preview(
   previews.set(token, { data, warnings, kind });
   setTimeout(() => previews.delete(token), 5 * 60 * 1000).unref();
   const current = store.read();
+  if (data.omittedTemplates)
+    warnings.push(
+      `여러 탭을 묶은 기존 템플릿 ${data.omittedTemplates}개를 제외했습니다.`,
+    );
   const duplicates = data.document.hosts.filter((h) =>
     current.hosts.some(
       (c) => c.id === h.id || hostIdentity(c) === hostIdentity(h),
@@ -746,26 +750,26 @@ async function call<K extends Call>(
         const workspace = current.workspaces.find((w) =>
           panes(w.root).some((p) => p.id === i.id),
         );
-        const snapshot = previewEnvironment(
-          pane.local,
-          current.settings.terminal,
-          workspace,
-        );
-        const integration = selectedProfiles(
-          current.settings.terminal,
-          workspace?.project?.profiles,
-          pane.local.profiles,
-        ).some((p) => p.integration === "ai-notifications");
-        const credentials = activity.register(
-          i.id,
-          snapshot.sessionInstanceId,
-          {
-            claude: integration && current.settings.notifications.claude,
-            codex: integration && current.settings.notifications.codex,
-          },
-        );
         let launch: ReturnType<typeof prepareLaunch> | undefined;
         try {
+          const snapshot = previewEnvironment(
+            pane.local,
+            current.settings.terminal,
+            workspace,
+          );
+          const integration = selectedProfiles(
+            current.settings.terminal,
+            workspace?.project?.profiles,
+            pane.local.profiles,
+          ).some((p) => p.integration === "ai-notifications");
+          const credentials = activity.register(
+            i.id,
+            snapshot.sessionInstanceId,
+            {
+              claude: integration && current.settings.notifications.claude,
+              codex: integration && current.settings.notifications.codex,
+            },
+          );
           launch = prepareLaunch(
             pane.local,
             current.settings.terminal,
@@ -779,6 +783,14 @@ async function call<K extends Call>(
         } catch (error) {
           launch?.cleanup();
           activity.unregister(i.id);
+          emit({
+            kind: "session",
+            state: {
+              id: i.id,
+              status: "error",
+              message: error instanceof Error ? error.message : String(error),
+            },
+          });
           throw error;
         }
         return;
@@ -1369,9 +1381,14 @@ async function createWindow() {
   });
   const dev =
     !app.isPackaged && process.env.PASSPORT_DEV_URL === "http://127.0.0.1:5173";
-  await win.loadURL(
-    dev ? "http://127.0.0.1:5173" : "passport://app/index.html",
-  );
+  try {
+    await win.loadURL(
+      dev ? "http://127.0.0.1:5173" : "passport://app/index.html",
+    );
+  } catch (error) {
+    // Closing a window during its initial navigation rejects loadURL as well.
+    if (!quitting && !win.isDestroyed()) throw error;
+  }
   return win;
 }
 void app
@@ -1545,6 +1562,7 @@ void app
     }, 60_000);
     logPruneTimer.unref();
     await createWindow();
+    if (quitting) return;
     updates.start(
       app.isPackaged && process.env.PASSPORT_DISABLE_UPDATE_CHECK !== "1",
     );
@@ -1561,6 +1579,7 @@ void app
     });
   })
   .catch((error) => {
+    if (quitting) return;
     dialog.showErrorBox(
       "Passport 시작 실패",
       error instanceof Error ? error.message : "앱을 시작할 수 없습니다.",

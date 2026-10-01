@@ -5,7 +5,6 @@ import {
   moveLayout,
   panes,
   preparePaste,
-  removeNode,
 } from "../src/shared/layout";
 import {
   emptyDocument,
@@ -15,7 +14,7 @@ import {
 } from "../src/shared/model";
 const pane = (): Pane => ({ kind: "pane", id: id(), hostId: id() });
 describe("workspace layout", () => {
-  it("moves an entire split tab without changing pane/session IDs", () => {
+  it("refuses to merge a grouped tab but allows moving one of its panels", () => {
     const a = pane(),
       b = pane(),
       c = pane();
@@ -34,11 +33,26 @@ describe("workspace layout", () => {
       "right",
       id(),
     );
-    expect(next).toHaveLength(1);
-    expect(panes(next[0].root).map((p) => p.id)).toEqual([a.id, b.id, c.id]);
+    expect(next).toEqual([one, two]);
+    const moved = moveLayout(
+      [one, two],
+      two.id,
+      b.id,
+      one.id,
+      a.id,
+      "right",
+      id(),
+    );
+    expect(moved).toHaveLength(2);
+    expect(panes(moved[0].root).map((p) => p.id)).toEqual([a.id, b.id]);
+    expect(panes(moved[1].root).map((p) => p.id)).toEqual([c.id]);
+  });
+  it("does not remove a panel if its drop target has disappeared", () => {
+    const a = { id: id(), name: "A", root: pane() };
+    const b = { id: id(), name: "B", root: pane() };
     expect(
-      removeNode(next[0].root, b.id) && panes(removeNode(next[0].root, b.id)!),
-    ).toHaveLength(2);
+      moveLayout([a, b], a.id, a.root.id, b.id, id(), "right", id()),
+    ).toEqual([a, b]);
   });
   it("ignores dropping a tree inside itself", () => {
     const p = pane();

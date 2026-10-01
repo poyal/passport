@@ -30,6 +30,8 @@ Windows에서 Python·Visual Studio 빌드 도구 없이 **현재 고정된 의�
 npm ci --ignore-scripts
 node node_modules/electron/install.js
 node scripts/patch-ssh2.mjs
+npm run build:helper
+npm run prepare:runtime -- x64
 npm run check
 npm run build
 npx electron-builder --win nsis --x64 --publish never '--config.npmRebuild=false'
@@ -70,7 +72,7 @@ $env:PASSPORT_DATA_DIR = Join-Path $env:TEMP 'passport-development'
 npm run dev
 ```
 
-현재 SQLite 스키마는 4이며 문서·portable package는 버전 2다. DB 이행 전 SQLite 백업을 남긴다. v0.1·v0.3.0 데이터는 자동 승격하며, 승격된 DB를 구버전에서 다시 쓰는 것을 차단한다. 기존 버전을 비교할 때는 프로필 복사본을 사용한다. 기기 간 데이터 이동은 앱의 내보내기·가져오기 흐름으로 검증한다.
+현재 SQLite 스키마는 5이며 문서·portable package는 버전 2다. DB 이행 전 `before-v5-<timestamp>.sqlite` 백업을 남긴다. 여러 탭을 묶은 이전 템플릿은 제외하고, 단일 탭 템플릿과 열린 작업 배치는 유지한다. v0.1·v0.3.0 데이터는 자동 승격하며, 승격된 DB를 구버전에서 다시 쓰는 것을 차단한다. 기존 버전을 비교할 때는 프로필 복사본을 사용한다. 기기 간 데이터 이동은 앱의 내보내기·가져오기 흐름으로 검증한다.
 
 ## 기본 검사
 
@@ -114,10 +116,10 @@ npm run test:ssh:docker
 같은 실행에서 실제 Electron 앱의 SSH 터미널과 SFTP 복사 메뉴도 검사한다. 8개 서버 구성 간 왕복 전송, 한글·공백 경로, 재귀 폴더·빈 파일, 충돌 처리, 원격 권한·이름 변경·삭제와 128MiB 왕복·취소 후 정리를 포함한다. `PASSPORT_E2E_EXECUTABLE`이 없으면 소스를 빌드해 실행한다. Windows 패키지를 대상으로 기록을 분리하려면:
 
 ```powershell
-$env:PASSPORT_E2E_EXECUTABLE = (Resolve-Path 'release/current-user/win-unpacked/Passport.exe').Path
+$env:PASSPORT_E2E_EXECUTABLE = (Resolve-Path 'release/win-unpacked/Passport.exe').Path
 $env:PASSPORT_DOCKER_RESULTS = 'docs/benchmarks/docker-ssh-windows-v1.0.2.json'
 $env:PASSPORT_DOCKER_GUI_RESULTS = 'docs/benchmarks/docker-desktop-windows-v1.0.2.json'
-$env:PASSPORT_DOCKER_OUTPUT = 'release/windows-full/docker-gui'
+$env:PASSPORT_DOCKER_OUTPUT = 'release/checks/windows-docker/gui'
 npm run test:ssh:docker
 ```
 
@@ -142,10 +144,10 @@ $env:PASSPORT_STRESS = '1'
 $env:PASSPORT_STRESS_RESULTS = 'docs/benchmarks/file-stress-windows-v1.0.2.json'
 node scripts/test.mjs tests/stress.test.ts
 $env:PASSPORT_DISABLE_UPDATE_CHECK = '1'
-$env:PASSPORT_E2E_EXECUTABLE = (Resolve-Path 'release/current-user/win-unpacked/Passport.exe').Path
+$env:PASSPORT_E2E_EXECUTABLE = (Resolve-Path 'release/win-unpacked/Passport.exe').Path
 $env:PASSPORT_UI_STRESS = '1'
 $env:PASSPORT_TEXT_BENCH = '1'
-npx playwright test tests/e2e/stress.spec.ts tests/e2e/throughput.spec.ts --output=release/windows-full/terminal-load
+npx playwright test tests/e2e/stress.spec.ts tests/e2e/throughput.spec.ts --output=release/checks/windows-terminal-load
 ```
 
 파일 부하 검사는 4GiB 해시와 작은 파일 10,000개 전체 내용을 확인한다. `PASSPORT_STRESS_RESULTS`를 지정하면 RSS 증가와 소요시간을 별도 JSON으로 보관한다. 터미널 부하 결과도 지정한 시험 출력 폴더에 저장한다.

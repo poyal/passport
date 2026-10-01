@@ -45,7 +45,8 @@ try {
   const state = await page.evaluate(async () => {
     const b = await window.passport.call("bootstrap");
     b.document.settings.terminal.profileIds = ["unix-shortcuts"];
-    if (b.platform === "darwin") b.document.settings.terminal.shell = "zsh";
+    b.document.settings.terminal.shell =
+      b.platform === "win32" ? "passport-bash" : "zsh";
     await window.passport.call("save", b.document);
     return {
       hosts: b.document.hosts.length,
@@ -56,9 +57,8 @@ try {
   });
   if (state.hosts !== 0 || state.version !== 2 || state.nodeAvailable)
     throw new Error("패키징 검증 실패");
-  await page.getByRole("button", { name: "새 터미널", exact: true }).click();
   await page
-    .getByRole("button", { name: "로컬 터미널 열기", exact: true })
+    .getByRole("button", { name: "새 로컬 터미널", exact: true })
     .click();
   await page.waitForFunction(async () =>
     (await window.passport.call("bootstrap")).sessionStates.some(
@@ -66,11 +66,7 @@ try {
     ),
   );
   await page.locator(".view:not([hidden]) .xterm-helper-textarea").focus();
-  await page.keyboard.type(
-    runtime.platform === "win32"
-      ? "echo ('PACKAGED_' + 'PTY_OK')"
-      : "printf 'PACKAGED_%s\\n' PTY_OK",
-  );
+  await page.keyboard.type("printf 'PACKAGED_%s\\n' PTY_OK");
   await page.keyboard.press("Enter");
   await page.waitForFunction(() =>
     document

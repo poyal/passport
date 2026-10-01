@@ -27,6 +27,7 @@ export type AppContextValue = {
     sftp?: boolean,
   ) => Promise<Secret | undefined | null>;
   openHost: (host: Host) => Promise<void>;
+  saveTemplate: (workspaceId?: string, templateId?: string) => void;
   connectPane: (id: string, hostId: string) => Promise<void>;
   settingsSection: string;
   openSettings: (section: string) => void;

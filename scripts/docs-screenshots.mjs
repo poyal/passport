@@ -1,17 +1,22 @@
-// Run after npm run build. All connections and data belong to this demo run.
+// Run with npm run docs:screenshots after npm run build.
 import { _electron as electron, expect } from "@playwright/test";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
-import { fileURLToPath } from "node:url";
+import { execFileSync } from "node:child_process";
 import { emptyDocument, hostSchema } from "../src/shared/model.ts";
 import { sshFixture } from "../tests/fixtures/ssh-server.ts";
 import { closeCleanly } from "../tests/fixtures/electron-exit.ts";
 
-const root = fileURLToPath(new URL("../", import.meta.url));
+const root = process.cwd();
 const output = path.join(root, "docs/assets");
-const directory = await fs.mkdtemp(path.join(os.tmpdir(), "passport-docs-"));
+const directory = await fs.mkdtemp(
+  path.join(
+    process.platform === "darwin" ? "/tmp" : os.tmpdir(),
+    "passport-docs-",
+  ),
+);
 let server, app;
 try {
   const remote = path.join(directory, "remote");
@@ -42,9 +47,19 @@ try {
     );
   }
   server = await sshFixture(remote);
+  const project = path.join(directory, "passport-demo");
+  const shellConfig = path.join(directory, "shell");
+  await fs.mkdir(project);
+  await fs.mkdir(shellConfig);
+  await fs.writeFile(path.join(shellConfig, ".zshrc"), 'PROMPT="demo %% "\n');
   app = await electron.launch({
     args: [root],
-    env: { ...process.env, PASSPORT_DATA_DIR: path.join(directory, "profile") },
+    env: {
+      ...process.env,
+      PASSPORT_DATA_DIR: path.join(directory, "profile"),
+      PASSPORT_DISABLE_UPDATE_CHECK: "1",
+      ZDOTDIR: shellConfig,
+    },
     timeout: 30000,
   });
   const page = await app.firstWindow();
@@ -60,7 +75,7 @@ try {
     BrowserWindow.getAllWindows()[0].setContentSize(1360, 850);
   });
   page.setDefaultTimeout(15000);
-  await page.waitForSelector(".hosts-view");
+  await page.waitForSelector(".home-view");
   const { version } = JSON.parse(
     await fs.readFile(path.join(root, "package.json"), "utf8"),
   );
@@ -108,11 +123,25 @@ try {
   const panes = hosts
     .slice(0, 3)
     .map((host) => ({ kind: "pane", id: randomUUID(), hostId: host.id }));
+  panes[0] = {
+    kind: "pane",
+    id: randomUUID(),
+    hostId: randomUUID(),
+    local: { shell: "zsh", cwd: project, profiles: { mode: "none", ids: [] } },
+  };
   const document = emptyDocument();
   document.hosts = hosts;
   document.groups = groups;
   document.settings.colorMode = "dark";
   document.settings.appearance.fontSize = 14;
+  document.settings.appearance.theme = "tokyo-night";
+  document.settings.terminal.profileIds = [
+    "unix-shortcuts",
+    "ai-notifications",
+  ];
+  document.settings.notifications.claude = true;
+  document.settings.notifications.codex = true;
+  document.settings.notifications.desktop = "off";
   document.snippets = [
     {
       id: randomUUID(),
@@ -132,7 +161,7 @@ try {
   document.workspaces = [
     {
       id: randomUUID(),
-      name: "서비스 모니터링",
+      name: "프로젝트 개발",
       root: {
         kind: "split",
         id: randomUUID(),
@@ -195,10 +224,10 @@ try {
       pane,
     );
   }
-  await expect.poll(() => server.shells.length).toBe(3);
+  await expect.poll(() => server.shells.length).toBe(2);
   const mint = (text) => `\x1b[32m${text}\x1b[0m`;
   const blue = (text) => `\x1b[36m${text}\x1b[0m`;
-  const muted = (text) => `\x1b[90m${text}\x1b[0m`;
+  const muted = (text) => `\x1b[38;2;154;165;189m${text}\x1b[0m`;
   const lines = [
     [
       blue("PASSPORT / DEVELOPMENT"),
@@ -244,14 +273,40 @@ try {
     ],
   ];
   server.shells.forEach((shell, i) =>
-    shell.write("\x1b[2J\x1b[H" + lines[i].join("\r\n")),
+    shell.write("\x1b[2J\x1b[H" + lines[i + 1].join("\r\n")),
+  );
+  const localLines = [
+    blue("PASSPORT / LOCAL DEVELOPMENT"),
+    muted("문서 촬영용 로컬 셸 · 예제 프로젝트"),
+    "",
+    "프로젝트: passport-demo",
+    "",
+    mint("로컬 AI 작업과 SSH를 같은 탭에서"),
+    "",
+    "  claude       설치된 Claude Code 실행",
+    "  codex        설치된 Codex 실행",
+    "",
+    "  → 오른쪽에서 서버 로그와 파일 확인",
+    "  → 상단 저장 아이콘으로 이 탭을 템플릿에 저장",
+    "",
+    muted("AI 도구는 별도 설치와 로그인이 필요합니다."),
+    "",
+  ].join("\n");
+  const quote = (s) => "'" + s.replaceAll("'", "'\\''") + "'";
+  const demoOutput = path.join(directory, "demo-output.txt");
+  await fs.writeFile(demoOutput, "\x1b[2J\x1b[H" + localLines);
+  await page.evaluate(
+    async ({ id, command }) => {
+      await window.passport.call("session.input", { id, data: command + "\r" });
+    },
+    { id: panes[0].id, command: `cat ${quote(demoOutput)}` },
   );
   await expect(page.locator(".view:not([hidden]) .terminal-pane")).toHaveCount(
     3,
   );
   await expect
     .poll(() => page.locator(".xterm-rows").allTextContents())
-    .toContainEqual(expect.stringContaining("예제 서비스"));
+    .toContainEqual(expect.stringContaining("별도 설치와 로그인"));
   await fs.mkdir(output, { recursive: true });
   const capture = async (name) => {
     await page.mouse.move(1, 1);
@@ -268,6 +323,10 @@ try {
     console.log(`Captured docs/assets/${name}`);
   };
   await capture("workspace.png");
+  await page
+    .locator(`[data-pane-id="${panes[0].id}"]`)
+    .getByRole("button", { name: "집중 보기", exact: true })
+    .click();
   await page.getByRole("button", { name: "외형", exact: true }).click();
   await expect(page.locator(".toolbox .theme-item")).toHaveCount(12);
   await page
@@ -278,6 +337,19 @@ try {
   await page
     .getByRole("button", { name: "도구 패널 닫기", exact: true })
     .click();
+  await page.getByRole("button", { name: "분할 복원", exact: true }).click();
+  await page.getByRole("button", { name: "템플릿 저장", exact: true }).click();
+  await page
+    .getByLabel("템플릿 이름", { exact: true })
+    .fill("로컬 개발 + 서버 확인");
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "저장", exact: true })
+    .click();
+  await page.getByRole("button", { name: "템플릿", exact: true }).click();
+  await expect(page.locator(".workspace-template-row")).toHaveCount(1);
+  await expect(page.locator(".toast")).toHaveCount(0, { timeout: 15000 });
+  await capture("templates.png");
   await page.getByRole("button", { name: "호스트", exact: true }).click();
   await page.locator(".host-row").filter({ hasText: "개발 · API" }).click();
   await page
@@ -314,6 +386,14 @@ try {
   await page.getByRole("button", { name: "설정", exact: true }).click();
   await page
     .locator(".settings-sidebar")
+    .getByRole("button", { name: "로컬 터미널", exact: true })
+    .click();
+  await expect(
+    page.getByRole("switch", { name: "Claude Code 알림 연동", exact: true }),
+  ).toHaveAttribute("aria-checked", "true");
+  await capture("local-settings.png");
+  await page
+    .locator(".settings-sidebar")
     .getByRole("button", { name: "외형", exact: true })
     .click();
   await page.getByRole("tab", { name: "테마", exact: true }).click();
@@ -330,6 +410,27 @@ try {
     "poyal.work@gmail.com",
   );
   await capture("about.png");
+  await fs.writeFile(
+    path.join(root, "release/checks/docs-screenshots/artifact.json"),
+    JSON.stringify(
+      {
+        createdAt: new Date().toISOString(),
+        version,
+        sourceCommit: execFileSync("git", ["rev-parse", "HEAD"], {
+          encoding: "utf8",
+        }).trim(),
+        dirty: !!execFileSync("git", ["status", "--porcelain"], {
+          encoding: "utf8",
+        }).trim(),
+        platform: `${process.platform}-${process.arch}`,
+        status: "captured",
+        output: "docs/assets",
+        fixturesOnly: true,
+      },
+      null,
+      2,
+    ) + "\n",
+  );
 } finally {
   try {
     if (app) await closeCleanly(app);

@@ -1,0 +1,54 @@
+{
+  "createdAt": "2026-10-01T09:28:41.735154+00:00",
+  "purpose": "Block merging grouped tabs; fix nested grid space; icon-only template save; handle close during initial navigation",
+  "sourceCommit": "4d2940c359269e78cab58813f2eb4d14b2a2b2ea",
+  "dirty": true,
+  "platform": "mac-arm64",
+  "verification": {
+    "typecheckAndBuild": "passed",
+    "unitPassed": 16,
+    "sourceGuiPassed": 8,
+    "packagedGuiPassed": 8,
+    "earlyQuit": {
+      "phase": "intercept-first-navigation",
+      "exitCode": 0,
+      "signal": null,
+      "errorDialog": ""
+    },
+    "gridReproduction": {
+      "availableWidth": 1240,
+      "beforeTrackWidths": [
+        320,
+        5,
+        645
+      ],
+      "afterTrackWidths": [
+        590,
+        5,
+        645
+      ]
+    },
+    "signature": "ad-hoc verified; not notarized",
+    "windowsRuntime": "not executed on this Mac"
+  },
+  "linkedArtifacts": {
+    "build": "release/builds/20261001T092500Z-4d2940c-dirty-mac-arm64-group-drag",
+    "checks": "release/checks/20261001T092500Z-4d2940c-dirty-mac-arm64-group-drag"
+  },
+  "files": [
+    {
+      "path": "release/builds/20261001T092500Z-4d2940c-dirty-mac-arm64-group-drag/mac-arm64/Passport.app/Contents/Resources/app.asar",
+      "bytes": 55006947,
+      "sha256": "6552c1de134e48b898e776214a76af0e11d9717696ae9d62ab1edfd48b48e224"
+    },
+    {
+      "path": "release/builds/20261001T092500Z-4d2940c-dirty-mac-arm64-group-drag/mac-arm64/Passport.app/Contents/MacOS/Passport",
+      "bytes": 34800,
+      "sha256": "48d6141437ef6671873861c688457f8ef91396e95a2d8097a006b8f460c671f5"
+    }
+  ],
+  "artifactReview": {
+    "removed": [],
+    "olderThanSevenDaysUnprotected": []
+  }
+}

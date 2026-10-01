@@ -71,11 +71,7 @@ printf 'COLOR_FIXTURE_DONE\\n'
         await window.passport.call("save", b.document);
       }, mode);
       await page
-        .getByRole("button", { name: "새 터미널", exact: true })
-        .click();
-      await page.getByLabel("프로젝트 폴더", { exact: true }).fill(directory);
-      await page
-        .getByRole("button", { name: "로컬 터미널 열기", exact: true })
+        .getByRole("button", { name: "새 로컬 터미널", exact: true })
         .click();
       await expect
         .poll(() =>

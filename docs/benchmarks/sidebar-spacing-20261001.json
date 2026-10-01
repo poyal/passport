@@ -1,0 +1,317 @@
+{
+  "runId": "20261001T082526Z-4d2940c-dirty-mac-arm64-sidebar",
+  "build": "release/builds/20261001T082526Z-4d2940c-dirty-mac-arm64-sidebar",
+  "checks": "release/checks/20261001T082526Z-4d2940c-dirty-mac-arm64-sidebar",
+  "sourceCommit": "4d2940c359269e78cab58813f2eb4d14b2a2b2ea",
+  "createdAt": "2026-10-01T08:25:26.728879+00:00",
+  "change": "Remove obsolete 48px right margin inherited from horizontal tabs",
+  "verification": {
+    "before": [
+      {
+        "width": 1440,
+        "collapsed": false,
+        "sidebarWidth": 204,
+        "navWidth": 139,
+        "leftGap": 8,
+        "rightGap": 57,
+        "marginRight": "48px",
+        "documentOverflow": false,
+        "rows": [
+          {
+            "width": 139,
+            "fits": true
+          },
+          {
+            "width": 139,
+            "fits": true
+          },
+          {
+            "width": 139,
+            "fits": true
+          },
+          {
+            "width": 139,
+            "fits": true
+          },
+          {
+            "width": 139,
+            "fits": true
+          },
+          {
+            "width": 139,
+            "fits": true
+          },
+          {
+            "width": 139,
+            "fits": true
+          }
+        ],
+        "closeButtonsFit": true
+      }
+    ],
+    "after": [
+      {
+        "width": 1440,
+        "collapsed": false,
+        "sidebarWidth": 204,
+        "navWidth": 187,
+        "leftGap": 8,
+        "rightGap": 9,
+        "marginRight": "0px",
+        "documentOverflow": false,
+        "rows": [
+          {
+            "width": 187,
+            "fits": true
+          },
+          {
+            "width": 187,
+            "fits": true
+          },
+          {
+            "width": 187,
+            "fits": true
+          },
+          {
+            "width": 187,
+            "fits": true
+          },
+          {
+            "width": 187,
+            "fits": true
+          },
+          {
+            "width": 187,
+            "fits": true
+          },
+          {
+            "width": 187,
+            "fits": true
+          }
+        ],
+        "closeButtonsFit": true
+      },
+      {
+        "width": 1024,
+        "collapsed": false,
+        "sidebarWidth": 164,
+        "navWidth": 147,
+        "leftGap": 8,
+        "rightGap": 9,
+        "marginRight": "0px",
+        "documentOverflow": false,
+        "rows": [
+          {
+            "width": 147,
+            "fits": true
+          },
+          {
+            "width": 147,
+            "fits": true
+          },
+          {
+            "width": 147,
+            "fits": true
+          },
+          {
+            "width": 147,
+            "fits": true
+          },
+          {
+            "width": 147,
+            "fits": true
+          },
+          {
+            "width": 147,
+            "fits": true
+          },
+          {
+            "width": 147,
+            "fits": true
+          }
+        ],
+        "closeButtonsFit": true
+      },
+      {
+        "width": 1024,
+        "collapsed": true,
+        "sidebarWidth": 54,
+        "navWidth": 43,
+        "leftGap": 5,
+        "rightGap": 6,
+        "marginRight": "0px",
+        "documentOverflow": false,
+        "rows": [
+          {
+            "width": 43,
+            "fits": true
+          },
+          {
+            "width": 43,
+            "fits": true
+          },
+          {
+            "width": 43,
+            "fits": true
+          },
+          {
+            "width": 43,
+            "fits": true
+          },
+          {
+            "width": 43,
+            "fits": true
+          },
+          {
+            "width": 43,
+            "fits": true
+          },
+          {
+            "width": 43,
+            "fits": true
+          }
+        ],
+        "closeButtonsFit": true
+      }
+    ],
+    "packaged": [
+      {
+        "width": 1440,
+        "collapsed": false,
+        "sidebarWidth": 204,
+        "navWidth": 187,
+        "leftGap": 8,
+        "rightGap": 9,
+        "marginRight": "0px",
+        "documentOverflow": false,
+        "rows": [
+          {
+            "width": 187,
+            "fits": true
+          },
+          {
+            "width": 187,
+            "fits": true
+          },
+          {
+            "width": 187,
+            "fits": true
+          },
+          {
+            "width": 187,
+            "fits": true
+          },
+          {
+            "width": 187,
+            "fits": true
+          },
+          {
+            "width": 187,
+            "fits": true
+          },
+          {
+            "width": 187,
+            "fits": true
+          }
+        ],
+        "closeButtonsFit": true
+      },
+      {
+        "width": 1024,
+        "collapsed": false,
+        "sidebarWidth": 164,
+        "navWidth": 147,
+        "leftGap": 8,
+        "rightGap": 9,
+        "marginRight": "0px",
+        "documentOverflow": false,
+        "rows": [
+          {
+            "width": 147,
+            "fits": true
+          },
+          {
+            "width": 147,
+            "fits": true
+          },
+          {
+            "width": 147,
+            "fits": true
+          },
+          {
+            "width": 147,
+            "fits": true
+          },
+          {
+            "width": 147,
+            "fits": true
+          },
+          {
+            "width": 147,
+            "fits": true
+          },
+          {
+            "width": 147,
+            "fits": true
+          }
+        ],
+        "closeButtonsFit": true
+      },
+      {
+        "width": 1024,
+        "collapsed": true,
+        "sidebarWidth": 54,
+        "navWidth": 43,
+        "leftGap": 5,
+        "rightGap": 6,
+        "marginRight": "0px",
+        "documentOverflow": false,
+        "rows": [
+          {
+            "width": 43,
+            "fits": true
+          },
+          {
+            "width": 43,
+            "fits": true
+          },
+          {
+            "width": 43,
+            "fits": true
+          },
+          {
+            "width": 43,
+            "fits": true
+          },
+          {
+            "width": 43,
+            "fits": true
+          },
+          {
+            "width": 43,
+            "fits": true
+          },
+          {
+            "width": 43,
+            "fits": true
+          }
+        ],
+        "closeButtonsFit": true
+      }
+    ]
+  },
+  "typecheckAndBuild": "passed",
+  "signatureVerification": "passed (ad-hoc)",
+  "normalExit": "passed",
+  "testApp": "release/builds/Passport.app",
+  "installedAppUpdate": {
+    "reason": "The running app still used /Applications/Passport.app with the old 48px tab margin; the preview shortcut had been updated separately.",
+    "path": "/Applications/Passport.app",
+    "backup": "release/backups/20261001T084610Z-4d2940c-dirty-mac-arm64-sidebar-install",
+    "appAsarSha256": "437c74c4ccfbab5f3eb1ea9e946355f2d6a8a98f579026d05b13c7d97cae375e",
+    "appWasClosedBeforeReplacement": true,
+    "backupDatabaseQuickCheck": "ok",
+    "liveDatabaseUnchangedDuringReplacement": true,
+    "signatureVerification": "passed"
+  }
+}

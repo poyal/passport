@@ -36,20 +36,20 @@ export class Store {
     mkdirSync(directory, { recursive: true, mode: 0o700 });
     this.db = new Database(path.join(directory, "passport.sqlite"));
     const version = Number(this.db.pragma("user_version", { simple: true }));
-    if (version > 4) {
+    if (version > 5) {
       this.db.close();
       throw new Error("더 새로운 Passport 버전에서 만든 데이터베이스입니다.");
     }
     try {
       if (
-        version < 4 &&
+        version < 5 &&
         this.db
           .prepare(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='metadata'",
           )
           .get()
       ) {
-        const backup = path.join(directory, `before-v4-${Date.now()}.sqlite`);
+        const backup = path.join(directory, `before-v5-${Date.now()}.sqlite`);
         this.db.exec(`VACUUM INTO '${backup.replace(/'/g, "''")}'`);
         chmodSync(backup, 0o600);
       }
@@ -67,13 +67,13 @@ export class Store {
           this.db.exec(
             "ALTER TABLE credentials ADD COLUMN username TEXT NOT NULL DEFAULT ''",
           );
-        if (version < 4) {
+        if (version < 5) {
           const metadata = this.db
             .prepare("SELECT value FROM metadata WHERE id=1")
             .get() as { value: string } | undefined;
           if (metadata) {
             const document = migrateDocument(JSON.parse(metadata.value));
-            if (process.platform === "win32") {
+            if (version < 4 && process.platform === "win32") {
               for (const workspace of [
                 ...document.workspaces,
                 ...document.workspaceTemplates.flatMap((t) => t.workspaces),
@@ -113,7 +113,7 @@ export class Store {
         this.db.exec(
           "CREATE TABLE IF NOT EXISTS activity (id TEXT PRIMARY KEY, created INTEGER NOT NULL, value TEXT NOT NULL)",
         );
-        this.db.pragma("user_version = 4");
+        this.db.pragma("user_version = 5");
         if (!this.db.prepare("SELECT id FROM metadata").get()) {
           const document = emptyDocument();
           document.settings.terminal = defaultTerminalSettings(

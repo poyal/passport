@@ -152,9 +152,8 @@ test("closes live terminals without parsing externally changed settings", async 
       });
     }, errors);
     const page = await application.firstWindow();
-    await page.getByRole("button", { name: "새 터미널", exact: true }).click();
     await page
-      .getByRole("button", { name: "로컬 터미널 열기", exact: true })
+      .getByRole("button", { name: "새 로컬 터미널", exact: true })
       .click();
     await expect
       .poll(() =>

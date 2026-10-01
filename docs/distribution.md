@@ -22,6 +22,8 @@ Mac 설치본은 ad-hoc 서명이며 Developer ID 서명·Apple 공증을 포함
 
 파일 이름의 버전은 `package.json`을 따른다. `npm run pack`은 설치 프로그램 없이 현재 환경의 앱 폴더를 만든다. `release/`와 `dist/`는 생성물이며 저장소에 커밋하지 않는다. README는 최신 공개 릴리즈 링크를 유지하고 버전별 링크는 릴리즈 목록에 추가한다.
 
+산출물의 저장 위치와 보관 기간은 [산출물 보관 규칙](#산출물-보관-규칙)을 따른다. 기존 명령의 루트 출력 경로는 아래에 명시한 전환 전 예외다.
+
 Mac 최소 버전 목표는 14이며 macOS 27 로컬 환경과 macOS 15 GitHub Actions에서 앱 실행을 확인했다. Windows 대상은 Windows 11 x64·ARM64이며 각각의 설치 및 실행 검증을 구분한다. Intel Mac과 Rosetta 의존 Mac 패키지는 만들지 않는다.
 
 Windows의 `npm ci`는 네이티브 재컴파일 후 [ConPTY 배치 스크립트](../scripts/prepare-node-pty.mjs)로 DLL·OpenConsole을 실제 네이티브 모듈 옆에 복사한다. 패키징의 [afterPack](../scripts/after-pack.mjs)에서도 다시 배치한다. electron-builder 재컴파일이 node-pty의 원래 postinstall 복사 결과를 지워도 패키지에 필요한 파일을 포함하도록 한다.
@@ -100,11 +102,11 @@ Docker 매트릭스와 장시간 부하, 별도 Python 환경을 요구하는 FT
 
 ## GitHub Release 게시
 
-[Publish Mac release](../.github/workflows/release.yml)은 `v*.*.*` 태그 push에서 실행한다. 태그와 `package.json`의 버전이 같아야 하고 `docs/releases/v<버전>.md`가 있어야 한다. ARM64 Mac runner에서 기본 검사·GUI·DMG·패키지 실행과 구형 SSH/파일 색상을 확인하고 모든 단계가 통과하면 해당 버전의 GitHub Release에 DMG와 `SHA256SUMS.txt`를 게시한다. 게시 권한은 해당 작업의 저장소 contents로 한정한다. [GitHub ARM64 runner 공식 안내](https://docs.github.com/en/actions/reference/runners/github-hosted-runners).
+[Publish release](../.github/workflows/release.yml)은 `v*.*.*` 태그 push에서 실행한다. 태그와 `package.json`의 버전이 같아야 하고 `docs/releases/v<버전>.md`가 있어야 한다. ARM64 Mac runner에서 기본 검사·GUI·DMG·패키지 실행과 구형 SSH/파일 색상을 확인하고 모든 단계가 통과하면 해당 버전의 GitHub Release에 DMG와 `SHA256SUMS.txt`를 게시한다. Mac 게시가 끝나면 같은 태그 커밋으로 Windows 게시 워크플로를 호출한다. 게시 권한은 해당 작업의 저장소 contents로 한정한다. [GitHub ARM64 runner 공식 안내](https://docs.github.com/en/actions/reference/runners/github-hosted-runners).
 
-[Publish Windows release](../.github/workflows/release-windows.yml)은 `workflow_dispatch`로만 실행한다. 소스나 워크플로 수정의 푸시만으로 설치본을 재배포하지 않는다. Windows x64 runner에서 Python FTP/FTPS fixture, Rust helper와 내장 Bash를 준비하고 `npm ci`·기본 검사·EXE 빌드·현재 사용자 설치 범위·실제 패키지 GUI를 검증한다. 통과하면 [게시 스크립트](../scripts/publish-windows-release.mjs)가 `package.json`과 같은 버전의 기존 정식 릴리즈에 EXE를 추가한다. 기존 Mac DMG와 체크섬을 검증·보존하고 합본 체크섬·Windows 소스 커밋을 게시한 뒤 공개 EXE를 다시 다운로드해 해시를 확인한다. 다른 바이트의 같은 이름 EXE가 이미 있거나 릴리즈가 불변 상태면 게시를 중단한다.
+[Publish Windows release](../.github/workflows/release-windows.yml)은 수동 `workflow_dispatch` 또는 버전 태그 배포의 `workflow_call`로 실행한다. 일반 브랜치 푸시만으로 설치본을 재배포하지 않는다. Windows x64 runner에서 Python FTP/FTPS fixture, Rust helper와 내장 Bash를 준비하고 `npm ci`·기본 검사·EXE 빌드·현재 사용자 설치 범위·실제 패키지 GUI를 검증한다. 통과하면 [게시 스크립트](../scripts/publish-windows-release.mjs)가 `package.json`과 같은 버전의 기존 정식 릴리즈에 EXE를 추가한다. 기존 Mac DMG와 체크섬을 검증·보존하고 합본 체크섬·Windows 소스 커밋을 게시한 뒤 공개 EXE를 다시 다운로드해 해시를 확인한다. 다른 바이트의 같은 이름 EXE가 이미 있거나 릴리즈가 불변 상태면 게시를 중단한다.
 
-공개 배포 검증과 설치 파일 해시는 [검증 기록](verification.md)과 버전별 `docs/benchmarks/github-release-*.json`에 보관한다. 로컬 파일과 runner에서 만든 파일은 별도 빌드이므로 각각의 해시를 사용한다. Mac 배포 소스는 해당 버전 태그이며 Windows 추가 게시 소스는 해당 `main` 빌드 커밋이다. Windows 게시 때문에 기존 Mac 태그를 옮기지 않고 게시 후 문서를 `main`에 반영한다.
+공개 배포 검증과 설치 파일 해시는 [검증 기록](verification.md)과 버전별 `docs/benchmarks/github-release-*.json`에 보관한다. 로컬 파일과 runner에서 만든 파일은 별도 빌드이므로 각각의 해시를 사용한다. Mac 배포 소스는 해당 버전 태그이며 Windows 연속 배포도 같은 태그 커밋을 사용한다. 수동 추가 게시 소스는 해당 `main` 빌드 커밋이다. Windows 게시 때문에 기존 릴리즈 태그를 옮기지 않고 게시 후 문서를 `main`에 반영한다.
 
 ## 배포 갱신 순서
 
@@ -120,3 +122,54 @@ Release 자산은 설치 파일과 `SHA256SUMS.txt`만 올린다. GitHub가 태�
 설치 파일은 사용자가 버튼을 눌렀을 때 기본 브라우저로 다운로드한다. ad-hoc Mac 설치본의 앱 내부 자동 교체는 제공하지 않는다. 향후 `electron-updater`를 도입하려면 Developer ID 서명과 업데이트용 앱 ZIP·버전 메타데이터 게시를 함께 준비해야 한다. [자동 업데이트 공식 문서](https://www.electron.build/v26/docs/features/auto-update/).
 
 같은 기기에서 앱을 종료하고 새 DMG·EXE로 기존 앱을 교체하면 기존 데이터를 유지한다. 설정 내보내기는 선택적인 별도 백업이다. DB 스키마가 바뀌는 버전은 기존 데이터 승격과 이전 버전 재사용 제한도 확인한다.
+
+## 산출물 보관 규칙
+
+`release/`는 로컬 작업용 산출물 보관소다. 공개 설치 파일의 기준은 GitHub Release, 장기 검증 기록의 기준은 `docs/verification.md`와 `docs/benchmarks/`다. 기능을 수정할 때마다 전체 앱 복사본을 무기한 보관하지 않는다.
+
+### 저장 위치
+
+| 경로                                        | 내용                                        | 기본 보관 기준                                                                                                      |
+| ------------------------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `release/builds/<실행 ID>/`                 | 패키징된 앱, 테스트용 DMG·EXE, builder 로그 | 플랫폼·아키텍처별 최근 성공 2회. 나머지 성공 결과는 7일 후 정리 후보, 재현 자료가 필요 없는 실패 결과는 1일 후 후보 |
+| `release/packages/v<버전>/<출처>/<플랫폼>/` | 보관할 설치 파일과 SHA-256, 배포 메타데이터 | 플랫폼별 최신 공개 버전과 직전 공개 버전. 미공개 설치 파일은 현재 배포 후보 1개                                     |
+| `release/checks/<실행 ID>/`                 | 스크린샷, trace, 로그, 검증 JSON·HTML       | 성공 자료는 요약 기록 후 7일. 실패 자료는 문제 해결 후 7일                                                          |
+| `release/backups/<실행 ID>/`                | 설치 교체 직전 앱과 사용자 DB의 복구 세트   | 플랫폼별 검증된 최근 2세트 보존. 그보다 오래된 세트는 최소 7일 경과하고 새 설치본의 정상 동작을 확인한 뒤 정리 후보 |
+
+Mac에서 바로 테스트할 앱은 **`release/builds/Passport.app`**이다. 최근 검증한 빌드의 실제 앱을 가리키는 상대 심볼릭 링크이며 별도 앱 복사본은 아니다. 새 빌드의 검증이 끝나면 링크 대상을 갱신하고 현재 대상은 정리에서 제외한다. 다른 Passport가 같은 사용자 데이터로 실행 중이면 완전히 종료한 뒤 연다. 현재 대상과 해시는 각 빌드의 `artifact.json`과 최신 검증 기록에서 확인한다.
+
+보관 기준은 **정리 후보를 고르는 규칙**이며 자동 삭제 작업이 아니다. 최근 성공 2회와 최근 복구 2세트는 날짜가 오래돼도 유지한다. 설치 파일은 GitHub에 게시된 바이트와 체크섬을 확인한 뒤 이전 로컬 사본을 정리한다. 폴더 용량만으로 사용자 DB나 복구 세트를 삭제하지 않는다.
+
+실행 ID는 `UTC시각-커밋7자리-플랫폼-용도`로 통일한다. 예: `20261001T045129Z-4d2940c-mac-arm64-colors`. 커밋하지 않은 변경이 있으면 커밋 뒤에 `-dirty`를 붙이고, 실행 시점의 변경 파일 목록과 실제 산출물 해시도 남긴다. 같은 초에 겹치면 번호를 붙인다. 플랫폼은 `mac-arm64`, `win-x64`, `win-arm64`를 사용한다.
+
+패키지 출처는 `local`과 `github`를 구분한다. 같은 버전의 로컬 빌드와 공개 파일은 해시가 다를 수 있으므로 서로 덮어쓰지 않는다. 예: `packages/v1.0.2/github/mac-arm64/Passport-1.0.2-mac-arm64.dmg`. 추가 후보를 비교해야 하면 `builds/`에서 검증하고 확정한 1개만 `packages/`에 보관한다.
+
+각 실행 폴더에는 `artifact.json`을 남긴다. `createdAt`(UTC), `purpose`, `sourceCommit`, `dirty`, `platform`, `source`(로컬 또는 공개 다운로드), `status`(진행 중·성공·실패), 검증 요약, 실제 파일 경로와 SHA-256, 연결된 검증·백업 경로를 기록한다. 백업에는 DB 무결성 확인 여부와 복구 대상 앱도 기록한다. 파일이 비어 있거나 검증하지 않은 백업은 성공으로 표시하지 않는다. 인증 정보나 사용자 DB 내용은 메타데이터에 넣지 않는다.
+
+### 생성과 정리 절차
+
+1. 실행 전에 목적에 맞는 폴더를 정한다. 수동 electron-builder 실행은 `--config.directories.output=release/builds/<실행 ID>`로 출력을 지정한다. 검증 자료는 대응하는 `checks/<실행 ID>`에 모은다. `fix-preview`, `recheck-*`, `installed-*-backup-*` 같은 새 폴더를 루트에 추가하지 않는다.
+2. 같은 빌드에서 얻은 앱·DMG·검증 자료를 서로 연결하고, 최종 설치 파일만 `packages/`로 옮긴다. 같은 앱을 이름만 바꾸어 여러 번 백업하지 않는다. 실제 앱과 DB의 복구 세트는 `backups/`에 보관한다.
+3. 검증 결과와 공개 파일 해시를 장기 문서에 기록한다. 과거 문서의 파일 경로는 당시 실행 기록이므로 다른 빌드로 덮어쓰지 않는다. 파일을 이동하거나 정리하면 이전 경로·새 경로 또는 삭제 사실을 기록한다. 계속 보여 줘야 할 대표 이미지는 기존 문서 자산 위치에 보관한다.
+4. 작업을 마칠 때 용량과 보관 기준을 넘은 후보를 확인한다. 보존해야 할 예외에는 `KEEP.md`로 이유·관련 이슈·재검토일을 남긴다. 진행 중인 작업과 실행·마운트 중인 앱, 미해결 문제의 자료도 후보에서 제외한다.
+5. 정리 요청을 받으면 대상 경로·크기·남길 복구 세트를 먼저 확인한 뒤 해당 후보만 정리한다. `release/` 전체를 일괄 삭제하지 않는다. 메타데이터가 없는 기존 폴더는 검증 기록과 내용을 대조해 분류한 뒤 처리한다. 백업과 재현 자료는 확인되지 않았다는 이유만으로 지우지 않는다.
+
+### 기존 폴더의 분류와 적용 범위
+
+2026-10-01 로컬 조사에서 `release/`의 디스크 사용량은 약 **6.3GiB**였다. 아래는 정리 전 분류다. 같은 날 사용자 요청으로 네 가지 폴더에 분류하고 중복 앱·이전 로컬 설치 파일·중간 결과를 정리해 **약 4.8GiB**로 줄였다. [이동 경로·삭제 목록·해시 검증 기록](benchmarks/release-cleanup-20261001.json)을 함께 확인한다.
+
+| 기존 항목                                                                                                                                  | 분류 및 처리 기준                                                                                                           |
+| ------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| `local-ai-preview`, `local-terminal-preview`, `icon-fix-preview`, `notification-fix-preview`, `startup-fix-preview`, `local-color-preview` | 빌드 6개, 약 2.2GiB. `builds/` 대상이며 최근 성공 2회와 재현에 필요한 빌드를 식별한다                                       |
+| `mac-arm64`, `v0.3.2`, `recheck-20260930`                                                                                                  | 빌드 결과. 들어 있는 설치 파일과 검증 자료는 각각 별도 분류한다                                                             |
+| `Passport-*.dmg`, `github-v*`, SHA-256·게시 결과 파일                                                                                      | 로컬/공개 출처를 확인해 `packages/`에 분류한다. 과거 설치본은 보관 기준과 공개 파일 확인 후 후보로 정한다                   |
+| `recheck-ui-*`, `recheck-spaces-*`, `recheck-updates-*`, `icon-review`                                                                     | `checks/` 대상. 문서에서 참조하는 대표 자료와 미해결 문제 자료를 먼저 확인한다                                              |
+| `installed-backup-20261001-130506`, `installed-color-backup-20261001-133159`                                                               | 복구 백업, 합계 약 1.1GiB. 앱·DB 세트를 유지한다. 첫 폴더의 앱 사본 2개는 내용과 복구 용도를 확인한 뒤 중복 여부를 판단한다 |
+| `installed-color-backup-20261001-133053`                                                                                                   | DB가 0바이트인 실패 시도. 복구 가능한 백업 수에 포함하지 않는다                                                             |
+| `builder-debug.yml`, `.icon-icns`, `.DS_Store`                                                                                             | 빌드 로그·중간 결과·OS 메타데이터. 관련 작업 종료와 재현 필요 여부 확인 후 정리 후보                                        |
+
+기존 자료의 정확한 소스 커밋을 알 수 없는 경우에는 실행 ID에 `legacy`, 메타데이터의 `sourceCommit`에 `null`을 사용했다. 과거 검증 결과를 확인하지 못한 자료는 `legacy-unclassified`로 표시하고, 이번 이동의 해시 검증과 원래 빌드의 성공 여부를 구분했다. 원래 폴더 수정 시각을 이용한 날짜에도 그 출처를 기록했다.
+
+공개 설치본 1.0.2·1.0.1과 마지막 로컬 DMG, 검증된 복구 백업 2세트를 보관했다. 보관한 앱·DMG·DB 18개의 내용 해시가 동일하고 백업 DB 2개가 `quick_check`를 통과했다. 최근 성공 미리보기 2개는 보존 대상으로 표시했다. 다른 고유 빌드와 검증 자료도 생성 후 7일이 지나지 않아 유지했다. 삭제한 오래된 로컬 설치 파일은 공개 설치 파일과 다른 빌드였으며, 동일하다고 간주해 삭제한 것이 아니다.
+
+새 수동 작업부터 이 규칙을 사용한다. 현재 `package.json`, CI, 기존 smoke·게시 스크립트는 아직 `release/` 루트를 사용하므로 경로 전환 전까지 기존 출력에 한해 허용한다. 이번 정리는 기존 산출물의 분류·이동·삭제이며 자동 출력 경로 변경, 자동 정리 명령이나 스케줄은 포함하지 않는다.

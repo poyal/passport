@@ -454,6 +454,34 @@ export function TerminalChooser({
 export function TerminalSettings() {
   const app = useApp();
   const settings = app.document.settings.terminal;
+  const [preview, setPreview] = useState<AppliedEnvironment | null>(null);
+  const [previewError, setPreviewError] = useState("");
+  useEffect(() => {
+    let cancelled = false;
+    void api
+      .call("terminal.preview", {
+        local: {
+          shell: settings.shell,
+          cwd: app.boot.home,
+          profiles: { mode: "inherit", ids: [] },
+        },
+      })
+      .then((value) => {
+        if (!cancelled) {
+          setPreview(value);
+          setPreviewError("");
+        }
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          setPreview(null);
+          setPreviewError(String(error.message));
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [settings, app.boot.home]);
   const [profileIds, setProfileIds] = useState(settings.profileIds);
   useEffect(() => setProfileIds(settings.profileIds), [settings.profileIds]);
   const [profileMode, setProfileMode] = useState<"none" | "custom">(
@@ -522,6 +550,32 @@ export function TerminalSettings() {
         <p className="hint">
           아래 순서대로 적용합니다. 변경은 새로 여는 터미널부터 적용됩니다.
         </p>
+        <details>
+          <summary>적용 순서와 충돌 미리보기</summary>
+          {previewError && (
+            <p role="alert" className="error-text">
+              {previewError}
+            </p>
+          )}
+          {preview && (
+            <>
+              <p className="path-caption">{preview.cwd}</p>
+              {preview.results.length ? (
+                preview.results.map((result, index) => (
+                  <p className="hint" key={index}>
+                    {result}
+                  </p>
+                ))
+              ) : (
+                <p className="hint">추가 항목 없음</p>
+              )}
+              <p className="hint">
+                사용자 셸 초기화 후 적용합니다. 실제 적용 결과는 터미널의 ‘실행
+                환경’에서 확인할 수 있습니다.
+              </p>
+            </>
+          )}
+        </details>
       </section>
       <section className="settings-card">
         <div className="row">

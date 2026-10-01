@@ -1,0 +1,45 @@
+{
+  "createdAt": "2026-10-01T09:46:52.554109+00:00",
+  "version": "1.1.0",
+  "sourceCommit": "4d2940c359269e78cab58813f2eb4d14b2a2b2ea",
+  "dirty": true,
+  "platform": "mac-arm64",
+  "verification": {
+    "typecheckAndBuild": "passed",
+    "unitPassed": 112,
+    "unitSkipped": 4,
+    "sourceGui": {
+      "passed": 48,
+      "failedInitially": 1,
+      "skipped": 5,
+      "failure": "advanced custom shortcut focus; unchanged scenario passed twice in subsequent 12-test recheck"
+    },
+    "packagedGuiPassed": 24,
+    "packagedSmoke": "passed; actual local PTY, helper, document v2, Node isolation, exit code 0",
+    "signature": "ad-hoc verified; not notarized",
+    "screenshots": 8,
+    "markdownLinks": "passed"
+  },
+  "files": [
+    {
+      "path": "release/packages/v1.1.0/local/mac-arm64/Passport-1.1.0-mac-arm64.dmg",
+      "bytes": 153786608,
+      "sha256": "d0bc932ed45cb453d669e3751f167c00b9c5357aa0453630887c09cb5f78e20b"
+    },
+    {
+      "path": "release/builds/20261001T094800Z-4d2940c-dirty-mac-arm64-v1.1.0/mac-arm64/Passport.app/Contents/Resources/app.asar",
+      "bytes": 55006947,
+      "sha256": "db808f6cf70f93abb14f5e76025c4d65a14167382c10eec814f24f2688624dea"
+    }
+  ],
+  "linkedArtifacts": {
+    "build": "release/builds/20261001T094800Z-4d2940c-dirty-mac-arm64-v1.1.0",
+    "checks": "release/checks/20261001-v1.1.0",
+    "package": "release/packages/v1.1.0/local/mac-arm64"
+  },
+  "artifactReview": {
+    "protected": "current and previous verified builds, installed-app reproduction and backups",
+    "expiredCandidates": [],
+    "installationReplaced": false
+  }
+}

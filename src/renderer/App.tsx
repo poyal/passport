@@ -27,12 +27,12 @@ import type {
 import { panes, preparePaste } from "../shared/layout";
 import { api, uuid, message } from "./api";
 import { AppContext } from "./context";
-import { TerminalChooser, type TerminalChoice } from "./TerminalSetup";
+import { TemplateEditor } from "./TemplateEditor";
 import { ActivityView } from "./Activity";
 import { Hosts } from "./Hosts";
 import { FilesView } from "./FilesView";
 import { WorkspaceTemplates } from "./WorkspaceTemplates";
-import { WorkspaceView, dragMime } from "./Workspaces";
+import { WorkspaceView, dragMime, dragGroupMime } from "./Workspaces";
 import { Settings, SecretEditor, blankSecret } from "./Settings";
 import { IconButton, Modal, Tooltips } from "./components";
 import {
@@ -46,6 +46,7 @@ import {
   setTerminalSettings,
 } from "./terminals";
 import {
+  LOCAL_HOST_ID,
   effectiveHost,
   connectionHost,
   shortcutMatch,
@@ -77,9 +78,11 @@ export function App() {
     [toast, setToast] = useState<{ text: string; error: boolean } | null>(null),
     [settingsSection, setSettingsSection] = useState("appearance"),
     [requests, setRequests] = useState<Request[]>([]),
-    [chooser, setChooser] = useState(false),
+    [templateEditor, setTemplateEditor] = useState<{
+      workspaceId?: string;
+      templateId?: string;
+    } | null>(null),
     [sidebarCollapsed, setSidebarCollapsed] = useState(false),
-    [intent, setIntent] = useState<"local" | "ssh">("local"),
     [activities, setActivities] = useState<Activity[]>([]),
     [activation, setActivation] = useState<{
       workspaceId: string;
@@ -419,7 +422,6 @@ export function App() {
     if (ok) {
       setActive(id);
       setActivePane(paneId);
-      setChooser(false);
       await connectPane(paneId, host.id);
     }
   };
@@ -479,7 +481,7 @@ export function App() {
       if (shortcutMatch(e, shortcuts.newTab, mac)) {
         e.preventDefault();
         e.stopPropagation();
-        setChooser(true);
+        void openLocalTerminal();
         return;
       }
       if (shortcutMatch(e, shortcuts.activity, mac)) {
@@ -560,7 +562,7 @@ export function App() {
       window.removeEventListener("blur", focus);
       window.removeEventListener("focusin", focus);
     };
-  }, [active, activePane, chooser, requests.length]);
+  }, [active, activePane, templateEditor, requests.length]);
   useEffect(() => {
     if (!activation) return;
     let activated = false;
@@ -586,33 +588,51 @@ export function App() {
     activate();
     return () => observer.disconnect();
   }, [activation]);
-  const openTerminal = async (choice: TerminalChoice) => {
-    if (!choice.local) {
-      const host = bootRef.current?.document.hosts.find(
-        (h) => h.id === choice.hostId,
-      );
-      if (host) await openHost(host);
-      return;
-    }
+  const openLocalTerminal = async () => {
+    const current = bootRef.current;
+    if (!current) return;
     const id = uuid(),
       paneId = uuid();
-    const ok = await update((d) => ({
-      ...d,
-      workspaces: [
-        ...d.workspaces,
-        {
-          id,
-          name: "로컬 터미널",
-          project: { cwd: choice.local!.cwd },
-          root: { kind: "pane", id: paneId, ...choice },
-        },
-      ],
-    }));
+    const ok = await update((d) => {
+      if (d.workspaces.flatMap((w) => panes(w.root)).length >= 32)
+        throw new Error(
+          "전체 터미널은 최대 32개입니다. 사용하지 않는 탭을 닫아 주세요.",
+        );
+      return {
+        ...d,
+        workspaces: [
+          ...d.workspaces,
+          {
+            id,
+            name: "로컬 터미널",
+            project: { cwd: current.home },
+            root: {
+              kind: "pane",
+              id: paneId,
+              hostId: LOCAL_HOST_ID,
+              local: {
+                shell: d.settings.terminal.shell,
+                cwd: current.home,
+                profiles: { mode: "inherit", ids: [] },
+              },
+            },
+          },
+        ],
+      };
+    });
     if (ok) {
       setActive(id);
       setActivePane(paneId);
-      setChooser(false);
-      await connectPane(paneId, choice.hostId);
+      await connectPane(paneId, LOCAL_HOST_ID);
+      requestAnimationFrame(() => {
+        const entry = terminals.get(paneId);
+        if (
+          document.hasFocus() &&
+          entry?.term.element?.offsetParent &&
+          !document.querySelector('[role="dialog"]')
+        )
+          entry.term.focus();
+      });
     }
   };
   const closeTab = async (id: string) => {
@@ -677,6 +697,8 @@ export function App() {
         credentials,
         openHost,
         connectPane,
+        saveTemplate: (workspaceId, templateId) =>
+          setTemplateEditor({ workspaceId, templateId }),
         active,
         settingsSection,
         openSettings: (section) => {
@@ -779,6 +801,8 @@ export function App() {
                       dragMime,
                       JSON.stringify({ workspace: w.id, node: w.root.id }),
                     );
+                    if (w.root.kind === "split")
+                      e.dataTransfer.setData(dragGroupMime, "1");
                     e.dataTransfer.effectAllowed = "move";
                   }}
                   onDragOver={(e) => {
@@ -859,11 +883,8 @@ export function App() {
                 </div>
               ))}
             <IconButton
-              label="새 터미널"
-              onClick={() => {
-                setIntent("local");
-                setChooser(true);
-              }}
+              label="새 로컬 터미널"
+              onClick={() => void openLocalTerminal()}
             >
               <Plus size={18} />
             </IconButton>
@@ -888,8 +909,8 @@ export function App() {
                 <button
                   key={kind}
                   onClick={() => {
-                    setIntent(kind);
-                    setChooser(true);
+                    if (kind === "local") void openLocalTerminal();
+                    else setActive("hosts");
                   }}
                 >
                   <TerminalIcon size={22} />
@@ -998,11 +1019,10 @@ export function App() {
             </IconButton>
           </div>
         )}
-        {chooser && (
-          <TerminalChooser
-            initial={intent}
-            onClose={() => setChooser(false)}
-            onSelect={openTerminal}
+        {templateEditor && (
+          <TemplateEditor
+            {...templateEditor}
+            onClose={() => setTemplateEditor(null)}
           />
         )}
         {requests[0] && (

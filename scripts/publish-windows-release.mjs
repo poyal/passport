@@ -6,17 +6,21 @@ import { createHash } from "node:crypto";
 const dryRun = process.env.PASSPORT_RELEASE_DRY_RUN === "1";
 const repo = process.env.GITHUB_REPOSITORY || "poyal/passport";
 assert.equal(repo, "poyal/passport", "Unexpected release repository");
+const version = JSON.parse(await fs.readFile("package.json", "utf8")).version;
+assert.match(version, /^\d+\.\d+\.\d+$/);
 if (!dryRun) {
   assert.equal(
     process.env.GITHUB_ACTIONS,
     "true",
     "Publish through the verified Actions workflow",
   );
-  assert.equal(process.env.GITHUB_REF, "refs/heads/main", "Publish from main");
+  assert.ok(
+    process.env.GITHUB_REF === "refs/heads/main" ||
+      process.env.GITHUB_REF === `refs/tags/v${version}`,
+    "Publish from main or the matching stable release tag",
+  );
   assert.ok(process.env.GH_TOKEN, "The workflow needs a repository token");
 }
-const version = JSON.parse(await fs.readFile("package.json", "utf8")).version;
-assert.match(version, /^\d+\.\d+\.\d+$/);
 const name = `Passport-${version}-win-x64.exe`;
 const installer = process.env.PASSPORT_RELEASE_INSTALLER || `release/${name}`;
 const bytes = (await fs.stat(installer)).size;
@@ -137,7 +141,7 @@ if (sums !== originalSums) {
 }
 const heading = "## Windows x64 설치본 추가";
 const sourceURL = `https://github.com/${repo}/commit/${process.env.GITHUB_SHA}`;
-const note = `${heading}\n\nWindows 11 x64용 설치 프로그램을 추가했습니다. 현재 사용자 전용으로 설치하며 설치 폴더 선택을 지원합니다. 보호된 시스템 파일 때문에 로컬 파일 목록이 실패하던 문제와 Windows 터미널 종료를 수정했습니다.\n\n비밀번호·키 SSH 인증, 구형 SSH, SFTP 왕복·서버 간 전송, 실제 DPAPI와 터미널 부하 검증을 완료했습니다. EXE는 코드 서명되지 않았습니다. SHA256SUMS.txt에는 Mac과 Windows 체크섬을 함께 제공합니다.\n\nWindows 설치본 소스: [${process.env.GITHUB_SHA.slice(0, 7)}](${sourceURL}).\n`;
+const note = `${heading}\n\nWindows 11 x64용 설치 프로그램을 추가했습니다. 현재 사용자 전용으로 설치하며 설치 폴더 선택을 지원합니다. 내장 Passport Bash를 포함하며 Git Bash를 따로 설치할 필요가 없습니다.\n\n기본 검사, 현재 사용자 설치 범위, 패키지 PTY·GUI·실제 DPAPI 검증을 통과했습니다. 실제 AI 서비스의 대화형 승인과 OS 배너 표시는 별도 기기 확인이 필요합니다. EXE는 코드 서명되지 않았습니다. SHA256SUMS.txt에는 Mac과 Windows 체크섬을 함께 제공합니다.\n\nWindows 설치본 소스: [${process.env.GITHUB_SHA.slice(0, 7)}](${sourceURL}).\n`;
 const body = (release.body || "").split(heading)[0].trimEnd() + "\n\n" + note;
 await api(release.url, {
   method: "PATCH",
