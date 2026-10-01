@@ -10,6 +10,10 @@ Windows 11 Pro x64(10.0.26200)에서 타입·단위/프로토콜 통합 **112개
 
 로컬 검증에는 작업 폴더에 격리한 Rust GNU helper와 고정된 Node-API 네이티브 바이너리를 사용했다. 공개 Windows 릴리즈는 별도 MSVC CI 빌드에서 패키지 검증을 통과한 경우에만 게시한다. 설치·패키지·공개 파일 검증 결과는 게시 완료 후 별도 기록한다. 실제 AI 서비스 요청과 OS 배너 표시를 이번 자동 검사로 확인했다고 주장하지 않는다.
 
+동일한 로컬 패키지의 전체 GUI도 **54개 통과·4개 생략**했고, 배포할 dist 파일 65개와 app.asar 내용 일치·x64 앱/helper/Bash·렌더러 격리·정상 종료를 확인했다. 시험 EXE의 현재 사용자 전용 설치·실제 DPAPI·셸·시작 시 공개 업데이트 확인·제거를 통과했으며 설치된 페이로드가 빌드와 같고 제거 후 레지스트리가 남지 않았다. [로컬 Windows 검증·해시 기록](benchmarks/verification-windows-v1.1.0.json).
+
+[첫 Windows 추가 게시 실행](https://github.com/poyal/passport/actions/runs/36859824420)은 기본 검사·패키지 smoke·설치 범위·기존 GUI 51개를 통과했지만 신규 셸 검사 4개에서 PATH 확인이 실패해 게시를 건너뛰었다. 네 셸의 초기화·환경 변수·단축 명령은 통과했으나 긴 runner PATH가 검증할 앞부분을 화면 밖으로 밀었다. 첫 PATH 항목만 출력하도록 검사하고, 로컬 패키지에 긴 PATH를 전달한 셸 검사 **3개 통과·PowerShell 7 생략**으로 재검증했다.
+
 ## 1.1.0 Mac 공개 배포와 Windows 이관 — 2026-10-01
 
 `v1.1.0`은 `42563e5e2131d554ab1251921141c98e3bf4a64b`의 Mac DMG를 [정식 릴리즈](https://github.com/poyal/passport/releases/tag/v1.1.0)에 게시했다. [배포 실행](https://github.com/poyal/passport/actions/runs/36846311401)의 Mac 작업에서 기본 검사·소스 GUI·DMG 생성·서명 무결성·실제 패키지 실행·패키지 GUI를 통과했다. 공개 DMG를 다시 다운로드해 GitHub 자산 digest와 `SHA256SUMS.txt` 양쪽에 일치하는지 확인했다.

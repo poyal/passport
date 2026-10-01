@@ -17,7 +17,9 @@ let application;
 try {
   application = await electron.launch({ executablePath, args: [], env });
   const page = await application.firstWindow();
-  await expect(page.locator(".hosts-view")).toBeVisible();
+  await expect(
+    page.locator(".home-view:visible, .hosts-view:visible"),
+  ).toBeVisible();
   const runtime = await application.evaluate(({ app }) => ({
     packaged: app.isPackaged,
     version: app.getVersion(),
@@ -50,7 +52,8 @@ try {
     .click();
   await expect(page.locator(".update-result")).toContainText(state.message);
   await page.locator(".update-card").scrollIntoViewIfNeeded();
-  const screenshotDirectory = `release/recheck-updates-v${runtime.version}`;
+  const screenshotDirectory =
+    process.argv[3] || `release/recheck-updates-v${runtime.version}`;
   await fs.mkdir(screenshotDirectory, { recursive: true });
   await page.screenshot({
     path: path.join(screenshotDirectory, "packaged-startup.png"),

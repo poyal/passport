@@ -95,14 +95,18 @@ for (const shell of [
         shell === "passport-bash"
           ? [
               "printf '%s\\n' \"$SHELL_PROBE_VALUE\"",
-              "printf '%s\\n' \"$PATH\"",
+              "printf '%s\\n' \"${PATH%%:*}\"",
               "probe",
             ]
           : shell === "cmd"
-            ? ["set SHELL_PROBE_VALUE", "set PATH", "probe"]
+            ? [
+                "set SHELL_PROBE_VALUE",
+                'for /f "tokens=1 delims=;" %p in ("%PATH%") do @echo "%p"',
+                "probe",
+              ]
             : [
                 "Write-Output $env:SHELL_PROBE_VALUE",
-                "Write-Output $env:PATH",
+                "Write-Output ($env:PATH -split ';')[0]",
                 "probe",
               ];
       await page.locator(".xterm-helper-textarea").focus();

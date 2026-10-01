@@ -1,0 +1,150 @@
+{
+  "version": "1.1.0",
+  "verifiedAt": "2026-10-01T12:25:58.346Z",
+  "platform": "win-x64",
+  "sourceCommit": "16387d3b1440587f63605f5224381426bd337aad",
+  "buildBaseCommit": "349fa041c350b547889c1bdf4503837f3d31d441",
+  "builtWithUncommittedFixes": true,
+  "origin": "local",
+  "status": "passed",
+  "client": {
+    "os": "Windows 11 Pro 10.0.26200 x64",
+    "node": "v24.14.0",
+    "electron": "44.4.5"
+  },
+  "helperTarget": "x86_64-pc-windows-gnu",
+  "nativeModules": "pinned Node-API prebuilds; no MSVC rebuild",
+  "checks": {
+    "typecheck": "passed",
+    "unitAndProtocol": {
+      "passed": 112,
+      "skipped": 4,
+      "ftpAndFTPS": true
+    },
+    "helper": {
+      "passed": 2
+    },
+    "sourceGUI": {
+      "startTime": "2026-10-01T12:07:09.835Z",
+      "duration": 111387.12800000001,
+      "expected": 54,
+      "skipped": 4,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "packagedGUI": {
+      "startTime": "2026-10-01T12:13:47.098Z",
+      "duration": 105482.604,
+      "expected": 54,
+      "skipped": 4,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "payload": {
+      "matchingDistFiles": 65,
+      "peArchitecture": "AMD64",
+      "version": "1.1.0"
+    },
+    "packagedSmoke": {
+      "packagedSmoke": "passed",
+      "localPTY": "passed",
+      "bundledHelper": "passed",
+      "shutdown": "passed",
+      "exitCode": 0,
+      "appVersion": "1.1.0",
+      "arch": "x64",
+      "platform": "win32",
+      "hosts": 0,
+      "fonts": 96,
+      "version": 2,
+      "nodeAvailable": false
+    },
+    "installerScope": {
+      "directoryChooserFirst": true,
+      "installScopeSelectionRemoved": true,
+      "allUsersOverrideRejected": true,
+      "rejectedExitCode": 2
+    },
+    "installerLifecycle": {
+      "nsisInstall": "passed",
+      "installExitCode": 0,
+      "currentUserOnly": true,
+      "installedPayloadMatches": true,
+      "appAsarSHA256": "30170d1264628cb08317dde07078f76713cff064f9c59e926206b14db10d2972",
+      "installedPTY": "passed",
+      "installedDPAPI": "passed",
+      "installedShells": "passed",
+      "publicUpdateCheck": "passed",
+      "nsisUninstall": "passed",
+      "uninstallExitCode": 0,
+      "registryRemoved": true,
+      "installationDirectory": "C:\\Users\\ttt45\\Workspace\\personal\\passport\\release\\builds\\20261001T120238Z-349fa04-dirty-win-x64-v1.1.0\\installed-app-verified",
+      "sourceCommit": "16387d3b1440587f63605f5224381426bd337aad",
+      "helperTarget": "x86_64-pc-windows-gnu"
+    }
+  },
+  "files": [
+    {
+      "path": "release/builds/20261001T120238Z-349fa04-dirty-win-x64-v1.1.0/Passport-1.1.0-win-x64.exe",
+      "bytes": 189624304,
+      "sha256": "24566b58e8e66da4c265a8015b302d1becf88b9fd343787db50ea9fcc4eb8541"
+    },
+    {
+      "path": "release/builds/20261001T120238Z-349fa04-dirty-win-x64-v1.1.0/win-unpacked/Passport.exe",
+      "bytes": 246077440,
+      "sha256": "534080223ee7de27436a1b3161a7885e3d889a8cc884c1563800b068e33ce487"
+    },
+    {
+      "path": "release/builds/20261001T120238Z-349fa04-dirty-win-x64-v1.1.0/win-unpacked/resources/app.asar",
+      "bytes": 55441196,
+      "sha256": "30170d1264628cb08317dde07078f76713cff064f9c59e926206b14db10d2972"
+    },
+    {
+      "path": "release/builds/20261001T120238Z-349fa04-dirty-win-x64-v1.1.0/win-unpacked/resources/terminal/helper/win32-x64/passport-helper.exe",
+      "bytes": 726528,
+      "sha256": "df77b98db0a68a03c78521f3767d8f2e6b1eb66b594526ff307ff747dfb13c80"
+    },
+    {
+      "path": "release/builds/20261001T120238Z-349fa04-dirty-win-x64-v1.1.0/win-unpacked/resources/terminal/runtime/x64/bin/bash.exe",
+      "bytes": 29696,
+      "sha256": "de2099f488acb59b21c120fa5f8a79b0d8856f6104b6f5165c25d6875d9be1c3"
+    }
+  ],
+  "linkedArtifacts": {
+    "build": "release/builds/20261001T120238Z-349fa04-dirty-win-x64-v1.1.0",
+    "checks": "release/checks/20261001T114454Z-349fa04-win-x64-v1.1.0"
+  },
+  "fixes": [
+    "cmd startup uses a native command line instead of CRT argv quote escaping",
+    "DOSKEY macro registration preserves its native command line",
+    "Windows GUI uses the selected shell and responsive log layout"
+  ],
+  "limits": [
+    "PowerShell 7 absent locally; verification delegated to the release runner",
+    "Docker and optional long load tests not run",
+    "No real AI service request or physical IME/OS banner assertion"
+  ],
+  "initialFailures": {
+    "missingHelper": "resolved by preparing the native helper",
+    "unitWorkerExit": "one transient worker exit; verbose full rerun and final npm run check passed without changing runtime tests",
+    "previousCI": {
+      "run": 36846311401,
+      "reproduced": 6,
+      "resolved": 6
+    }
+  },
+  "artifactReview": {
+    "existingArtifactsDeleted": false,
+    "existingInstallationReplaced": false,
+    "userDatabaseModified": false,
+    "cleanupCandidates": [
+      "successful checks after 7 days",
+      "unpublished local installer after public-byte verification when no longer the current candidate"
+    ],
+    "protected": [
+      "latest successful Windows build and previous successful build",
+      "public latest and previous packages",
+      "reproduction logs until resolved"
+    ]
+  }
+}
