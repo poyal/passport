@@ -24,7 +24,7 @@ const password = "test-only-export-password";
 const errors: string[] = [];
 const portable = {
   format: "passport" as const,
-  version: 1 as const,
+  version: 2 as const,
   document: emptyDocument(),
   profiles: [],
 };
@@ -62,6 +62,7 @@ test.beforeAll(async () => {
     env: { ...process.env, PASSPORT_DATA_DIR: path.join(directory, "data") },
   });
   page = await application.firstWindow();
+  await page.getByRole("button", { name: "호스트", exact: true }).click();
   page.on("pageerror", (error) => errors.push(error.message));
   await expect(page.locator(".hosts-view")).toBeVisible();
   await application.evaluate(({ safeStorage, dialog, shell }) => {

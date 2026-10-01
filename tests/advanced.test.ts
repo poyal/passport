@@ -162,7 +162,7 @@ it("keeps local terminals and remaps tunnel hosts in portable imports", async ()
   const portable = await decodePortable(
     await encodePortable({
       format: "passport",
-      version: 1,
+      version: 2,
       document: incoming,
       profiles: [],
     }),

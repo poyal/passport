@@ -13,7 +13,7 @@ function sample(): Portable {
   const auth = id();
   return {
     format: "passport",
-    version: 1,
+    version: 2,
     document: {
       ...emptyDocument(),
       hosts: [

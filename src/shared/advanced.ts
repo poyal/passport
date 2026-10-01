@@ -128,6 +128,7 @@ export function validateShortcuts(bindings: Record<string, string>) {
   for (const mac of [false, true]) {
     const seen = new Set<string>();
     for (const binding of Object.values(bindings)) {
+      if (!binding) continue;
       const pieces = binding.split("+");
       const key = pieces.pop();
       if (

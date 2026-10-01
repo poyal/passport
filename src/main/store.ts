@@ -18,6 +18,10 @@ import {
   type Secret,
 } from "../shared/model";
 import { packageSchema, safeJson, type Portable } from "./portable";
+import { migrateDocument } from "../shared/migration";
+import { defaultTerminalSettings } from "../shared/terminal-config";
+import { resolvedShell } from "./shells";
+import { panes } from "../shared/layout";
 export interface Vault {
   isEncryptionAvailable(): boolean;
   encryptString(value: string): Buffer;
@@ -32,40 +36,97 @@ export class Store {
     mkdirSync(directory, { recursive: true, mode: 0o700 });
     this.db = new Database(path.join(directory, "passport.sqlite"));
     const version = Number(this.db.pragma("user_version", { simple: true }));
-    if (version > 3) {
+    if (version > 4) {
       this.db.close();
       throw new Error("더 새로운 Passport 버전에서 만든 데이터베이스입니다.");
     }
-    this.db.pragma("journal_mode = WAL");
-    this.db.pragma("foreign_keys = ON");
-    this.db.exec(
-      "CREATE TABLE IF NOT EXISTS metadata (id INTEGER PRIMARY KEY CHECK(id=1), value TEXT NOT NULL); CREATE TABLE IF NOT EXISTS credentials (id TEXT PRIMARY KEY, name TEXT NOT NULL, type TEXT NOT NULL, secret BLOB); CREATE TABLE IF NOT EXISTS known_hosts (address TEXT NOT NULL, port INTEGER NOT NULL, fingerprint TEXT NOT NULL, PRIMARY KEY(address,port));",
-    );
-    if (
-      !(this.db.pragma("table_info(credentials)") as { name: string }[]).some(
-        (c) => c.name === "username",
-      )
-    )
-      this.db.exec(
-        "ALTER TABLE credentials ADD COLUMN username TEXT NOT NULL DEFAULT ''",
-      );
-    if (version < 3) {
-      const metadata = this.db
-        .prepare("SELECT value FROM metadata WHERE id=1")
-        .get() as { value: string } | undefined;
-      if (metadata) {
-        const document = documentSchema.parse(JSON.parse(metadata.value));
-        for (const host of document.hosts)
-          if (host.icon === "server") host.icon = "auto";
+    try {
+      if (
+        version < 4 &&
         this.db
-          .prepare("UPDATE metadata SET value=? WHERE id=1")
-          .run(JSON.stringify(document));
+          .prepare(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='metadata'",
+          )
+          .get()
+      ) {
+        const backup = path.join(directory, `before-v4-${Date.now()}.sqlite`);
+        this.db.exec(`VACUUM INTO '${backup.replace(/'/g, "''")}'`);
+        chmodSync(backup, 0o600);
       }
+      this.db.pragma("journal_mode = WAL");
+      this.db.pragma("foreign_keys = ON");
+      this.db.transaction(() => {
+        this.db.exec(
+          "CREATE TABLE IF NOT EXISTS metadata (id INTEGER PRIMARY KEY CHECK(id=1), value TEXT NOT NULL); CREATE TABLE IF NOT EXISTS credentials (id TEXT PRIMARY KEY, name TEXT NOT NULL, type TEXT NOT NULL, secret BLOB); CREATE TABLE IF NOT EXISTS known_hosts (address TEXT NOT NULL, port INTEGER NOT NULL, fingerprint TEXT NOT NULL, PRIMARY KEY(address,port));",
+        );
+        if (
+          !(
+            this.db.pragma("table_info(credentials)") as { name: string }[]
+          ).some((c) => c.name === "username")
+        )
+          this.db.exec(
+            "ALTER TABLE credentials ADD COLUMN username TEXT NOT NULL DEFAULT ''",
+          );
+        if (version < 4) {
+          const metadata = this.db
+            .prepare("SELECT value FROM metadata WHERE id=1")
+            .get() as { value: string } | undefined;
+          if (metadata) {
+            const document = migrateDocument(JSON.parse(metadata.value));
+            if (process.platform === "win32") {
+              for (const workspace of [
+                ...document.workspaces,
+                ...document.workspaceTemplates.flatMap((t) => t.workspaces),
+              ])
+                for (const pane of panes(workspace.root))
+                  if (
+                    pane.local &&
+                    ["default", "powershell"].includes(pane.local.shell)
+                  ) {
+                    try {
+                      pane.local.shell = resolvedShell(pane.local.shell).id;
+                    } catch {
+                      pane.local.needsReview = true;
+                    }
+                  }
+              if (
+                ["default", "powershell"].includes(
+                  document.settings.terminal.shell,
+                )
+              ) {
+                try {
+                  document.settings.terminal.shell = resolvedShell(
+                    document.settings.terminal.shell,
+                  ).id;
+                } catch {
+                  /* keep missing selection visible */
+                }
+              }
+            }
+            for (const host of document.hosts)
+              if (version < 3 && host.icon === "server") host.icon = "auto";
+            this.db
+              .prepare("UPDATE metadata SET value=? WHERE id=1")
+              .run(JSON.stringify(document));
+          }
+        }
+        this.db.exec(
+          "CREATE TABLE IF NOT EXISTS activity (id TEXT PRIMARY KEY, created INTEGER NOT NULL, value TEXT NOT NULL)",
+        );
+        this.db.pragma("user_version = 4");
+        if (!this.db.prepare("SELECT id FROM metadata").get()) {
+          const document = emptyDocument();
+          document.settings.terminal = defaultTerminalSettings(
+            process.platform,
+          );
+          this.save(document);
+        }
+      })();
+      chmodSync(path.join(directory, "passport.sqlite"), 0o600);
+    } catch (error) {
+      this.db.close();
+      throw error;
     }
-    this.db.pragma("user_version = 3");
-    if (!this.db.prepare("SELECT id FROM metadata").get())
-      this.save(emptyDocument());
-    chmodSync(path.join(directory, "passport.sqlite"), 0o600);
   }
   read(): PassportDocument {
     const document = documentSchema.parse(
@@ -175,7 +236,7 @@ export class Store {
   portable(includeSecrets = false): Portable {
     const result: Portable = {
       format: "passport",
-      version: 1,
+      version: 2,
       document: this.read(),
       profiles: this.profiles(),
     };

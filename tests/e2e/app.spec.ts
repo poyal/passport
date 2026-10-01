@@ -25,6 +25,7 @@ test.beforeAll(async () => {
     timeout: 30000,
   });
   page = await application.firstWindow();
+  await page.getByRole("button", { name: "호스트", exact: true }).click();
   await page.waitForLoadState("domcontentloaded");
   await application.evaluate(({ dialog }) => {
     dialog.showMessageBox = async () => ({
@@ -190,6 +191,7 @@ test("host CRUD, live SSH, split session preservation, themes, and persistence",
     env: { ...process.env, PASSPORT_DATA_DIR: path.join(directory, "data") },
   });
   page = await application.firstWindow();
+  await page.getByRole("button", { name: "호스트", exact: true }).click();
   page.on("pageerror", (error) => errors.push(error.message));
   await expect(page.locator(".workspace-tab")).toHaveCount(1);
   const restored = await page.evaluate(() =>
@@ -367,13 +369,14 @@ test("opening the app never requests access to the operating system secret store
   });
   try {
     await page.reload();
+    await page.getByRole("button", { name: "호스트", exact: true }).click();
     await expect(
       page.getByRole("heading", { name: "호스트", exact: true }),
     ).toBeVisible();
     const bootstrap = await page.evaluate(() =>
       window.passport.call("bootstrap", undefined),
     );
-    expect(bootstrap.document.version).toBe(1);
+    expect(bootstrap.document.version).toBe(2);
     expect(await probe.evaluate((p) => p.restore())).toBe(0);
   } finally {
     await probe.evaluate((p) => p.restore());

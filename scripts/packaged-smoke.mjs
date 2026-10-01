@@ -17,7 +17,11 @@ try {
   app = await electron.launch({
     executablePath: executable,
     args: [],
-    env: { ...process.env, PASSPORT_DATA_DIR: directory },
+    env: {
+      ...process.env,
+      PASSPORT_DATA_DIR: directory,
+      PASSPORT_DISABLE_UPDATE_CHECK: "1",
+    },
     timeout: 30000,
   });
   page = await app.firstWindow({ timeout: 30000 });
@@ -30,7 +34,7 @@ try {
     });
   });
   page.setDefaultTimeout(15000);
-  await page.waitForSelector(".hosts-view");
+  await page.waitForSelector(".home-view");
   const runtime = await app.evaluate(({ app }) => ({
     appVersion: app.getVersion(),
     arch: process.arch,
@@ -40,6 +44,9 @@ try {
     throw new Error("Mac 설치본은 Apple Silicon 네이티브여야 합니다.");
   const state = await page.evaluate(async () => {
     const b = await window.passport.call("bootstrap");
+    b.document.settings.terminal.profileIds = ["unix-shortcuts"];
+    if (b.platform === "darwin") b.document.settings.terminal.shell = "zsh";
+    await window.passport.call("save", b.document);
     return {
       hosts: b.document.hosts.length,
       fonts: b.fonts.length,
@@ -47,15 +54,15 @@ try {
       nodeAvailable: typeof window.require !== "undefined",
     };
   });
-  if (state.hosts !== 0 || state.version !== 1 || state.nodeAvailable)
+  if (state.hosts !== 0 || state.version !== 2 || state.nodeAvailable)
     throw new Error("패키징 검증 실패");
-  await page.getByRole("button", { name: "새 SSH 탭", exact: true }).click();
+  await page.getByRole("button", { name: "새 터미널", exact: true }).click();
   await page
     .getByRole("button", { name: "로컬 터미널 열기", exact: true })
     .click();
   await page.waitForFunction(async () =>
     (await window.passport.call("bootstrap")).sessionStates.some(
-      (s) => s.status === "connected",
+      (s) => s.status === "connected" && s.environment?.status === "ready",
     ),
   );
   await page.locator(".view:not([hidden]) .xterm-helper-textarea").focus();
@@ -79,6 +86,7 @@ try {
     JSON.stringify({
       packagedSmoke: "passed",
       localPTY: "passed",
+      bundledHelper: "passed",
       shutdown: "passed",
       exitCode,
       ...runtime,

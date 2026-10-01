@@ -31,6 +31,7 @@ test("16 visible terminals process 100 KiB/s each for ten minutes", async ({}, i
       });
     });
     const page = await app.firstWindow();
+    await page.getByRole("button", { name: "호스트", exact: true }).click();
     await page.waitForLoadState("domcontentloaded");
     await expect(
       page.getByRole("heading", { name: "호스트", exact: true }),

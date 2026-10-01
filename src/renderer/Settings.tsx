@@ -37,6 +37,8 @@ import {
 import { GroupSettings } from "./GroupSettings";
 import { AppearancePanel } from "./Workspaces";
 import { UpdatesPanel } from "./Updates";
+import { TerminalSettings } from "./TerminalSetup";
+import { NotificationSettings } from "./Activity";
 export const blankSecret = (): Secret => ({
   type: "password",
   password: "",
@@ -162,6 +164,16 @@ export function Settings() {
         <div className="sidebar-label">환경 설정</div>
         {[
           { id: "appearance", label: "외형", icon: <Palette size={16} /> },
+          {
+            id: "terminal",
+            label: "로컬 터미널",
+            icon: <Keyboard size={16} />,
+          },
+          {
+            id: "notifications",
+            label: "AI 작업 알림",
+            icon: <Info size={16} />,
+          },
           { id: "tunnels", label: "포트 포워딩", icon: <Network size={16} /> },
           { id: "logs", label: "세션 로그", icon: <FileText size={16} /> },
           { id: "groups", label: "그룹 관리", icon: <FolderOpen size={16} /> },
@@ -188,6 +200,8 @@ export function Settings() {
       <div
         className={`settings-content ${section === "logs" ? "settings-logs" : ""}`}
       >
+        {section === "terminal" && <TerminalSettings />}
+        {section === "notifications" && <NotificationSettings />}
         {section === "groups" && <GroupSettings />}
         {section === "tunnels" && <TunnelSettings />}
         {section === "logs" && <LogSettings />}

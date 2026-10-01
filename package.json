@@ -3,7 +3,7 @@
   "version": "1.0.2",
   "private": true,
   "type": "module",
-  "description": "개인용 SSH 및 파일 전송 데스크톱 앱",
+  "description": "로컬 AI와 SSH를 함께 사용하는 터미널 작업 공간",
   "author": {
     "name": "Poyal",
     "email": "poyal.work@gmail.com",
@@ -20,11 +20,14 @@
     "postinstall": "node scripts/patch-ssh2.mjs && electron-builder install-app-deps && node scripts/prepare-node-pty.mjs",
     "pack": "npm run build && electron-builder --dir",
     "dist:mac": "npm run build && electron-builder --mac dmg --arm64",
-    "dist:win": "npm run build && electron-builder --win nsis --x64",
+    "dist:mac:signed": "node -e \"require('./electron-builder.mac-signed.cjs')\" && npm run build && electron-builder --config electron-builder.mac-signed.cjs --mac dmg --arm64 --publish never",
+    "dist:win": "npm run prepare:runtime -- x64 && npm run build && electron-builder --win nsis --x64",
     "format": "prettier --write src tests scripts *.config.ts",
-    "dist:win:arm64": "npm run build && electron-builder --win nsis --arm64",
+    "dist:win:arm64": "npm run prepare:runtime -- arm64 && npm run build && electron-builder --win nsis --arm64",
     "test:ssh:docker": "node scripts/docker-ssh.mjs",
-    "test:terminal:large": "npm run build && node scripts/terminal-large.mjs"
+    "test:terminal:large": "npm run build && node scripts/terminal-large.mjs",
+    "build:helper": "node scripts/build-helper.mjs",
+    "prepare:runtime": "node scripts/prepare-runtime.mjs"
   },
   "build": {
     "appId": "io.passport.desktop",
@@ -51,11 +54,36 @@
       "category": "public.app-category.developer-tools",
       "minimumSystemVersion": "14.0",
       "identity": "-",
-      "icon": "build/icon.png"
+      "icon": "build/icon.png",
+      "extraResources": [
+        {
+          "from": "resources/terminal/helper/darwin-${arch}",
+          "to": "terminal/helper/darwin-${arch}",
+          "filter": [
+            "**/*"
+          ]
+        }
+      ]
     },
     "win": {
       "target": "nsis",
-      "icon": "build/icon.png"
+      "icon": "build/icon.png",
+      "extraResources": [
+        {
+          "from": "resources/terminal/helper/win32-${arch}",
+          "to": "terminal/helper/win32-${arch}",
+          "filter": [
+            "**/*"
+          ]
+        },
+        {
+          "from": "resources/terminal/runtime/${arch}",
+          "to": "terminal/runtime/${arch}",
+          "filter": [
+            "**/*"
+          ]
+        }
+      ]
     },
     "nsis": {
       "oneClick": false,
@@ -70,7 +98,14 @@
       "writeUpdateInfo": false
     },
     "publish": null,
-    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+    "beforePack": "scripts/check-resources.cjs",
+    "extraResources": [
+      {
+        "from": "resources/terminal/runtime-manifest.json",
+        "to": "terminal/runtime-manifest.json"
+      }
+    ]
   },
   "dependencies": {
     "@fontsource/jetbrains-mono": "5.3.0",

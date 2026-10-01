@@ -4,10 +4,12 @@
 
 ## 환경 준비
 
-Node.js 24 이상과 npm을 사용한다. 네이티브 모듈을 빌드하려면 macOS에서는 Xcode Command Line Tools, Windows에서는 Visual Studio C++ 빌드 도구와 Python이 필요하다. Mac은 Apple Silicon, Windows는 대상 아키텍처와 같은 x64 또는 ARM64 환경을 사용한다.
+Node.js 24 이상, npm, stable Rust 도구 체인(cargo)을 사용한다. 네이티브 모듈을 빌드하려면 macOS에서는 Xcode Command Line Tools, Windows에서는 Visual Studio C++ 빌드 도구와 Python이 필요하다. Mac은 Apple Silicon, Windows는 대상 아키텍처와 같은 x64 또는 ARM64 환경을 사용한다.
 
 ```sh
 npm ci
+npm run build:helper
+# Windows에서만: npm run prepare:runtime -- x64 (ARM64는 arm64)
 npm run dev
 ```
 
@@ -68,7 +70,7 @@ $env:PASSPORT_DATA_DIR = Join-Path $env:TEMP 'passport-development'
 npm run dev
 ```
 
-현재 SQLite 스키마는 3이다. v0.1·v0.3.0 데이터는 자동 승격하며, 승격된 DB를 구버전에서 다시 쓰는 것을 차단한다. 기존 버전을 비교할 때는 프로필 복사본을 사용한다. 기기 간 데이터 이동은 앱의 내보내기·가져오기 흐름으로 검증한다.
+현재 SQLite 스키마는 4이며 문서·portable package는 버전 2다. DB 이행 전 SQLite 백업을 남긴다. v0.1·v0.3.0 데이터는 자동 승격하며, 승격된 DB를 구버전에서 다시 쓰는 것을 차단한다. 기존 버전을 비교할 때는 프로필 복사본을 사용한다. 기기 간 데이터 이동은 앱의 내보내기·가져오기 흐름으로 검증한다.
 
 ## 기본 검사
 
@@ -155,3 +157,9 @@ npx playwright test tests/e2e/stress.spec.ts tests/e2e/throughput.spec.ts --outp
 - README 화면 갱신: [스크린샷 안내](screenshots.md).
 - DMG·EXE 생성과 실제 설치본 확인: [배포 안내](distribution.md).
 - 제품 범위와 제외 기능: [확정 계획](plan.md).
+
+## 로컬 셸 리소스
+
+`npm run build`는 Rust helper를 현재 대상에 맞게 빌드하고 라이선스를 모은다. `PASSPORT_CARGO`로 cargo 실행 파일을 지정할 수 있다. 대상은 darwin-arm64, win32-x64, win32-arm64이며 Windows 설치본은 같은 대상의 Windows 빌드 환경을 사용한다. `npm run prepare:runtime -- x64` 또는 `-- arm64`는 고정된 공식 Portable Git을 내려받고 SHA-256을 확인해 시작 파일 패치를 적용한다. 생성된 바이너리·런타임은 Git에 넣지 않는다. `npm run dist:win`과 `dist:win:arm64`는 준비 단계를 포함한다.
+
+프로파일과 알림 구조·수동 검증 한계는 [로컬 AI 작업 안내](local-ai-workspaces.md)를 따른다.

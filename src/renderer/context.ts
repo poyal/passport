@@ -7,8 +7,10 @@ import type {
   TransferJob,
   Appearance,
   Secret,
+  Activity,
 } from "../shared/model";
 export type AppContextValue = {
+  activities: Activity[];
   boot: Bootstrap;
   document: PassportDocument;
   update: (fn: (doc: PassportDocument) => PassportDocument) => Promise<boolean>;

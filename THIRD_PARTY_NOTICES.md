@@ -33,3 +33,11 @@ Alpine Linux, CentOS, Red Hat, Rocky Linux, Ubuntu, Debian, Fedora, Linux, Apple
 - Fedora 로고: Fedora Project / Red Hat, Inc., [Fedora 브랜드 안내](https://docs.fedoraproject.org/en-US/project/brand/).
 
 원본 출처, 개별 라이선스 정보와 고지는 `licenses/os-icons/` 및 설치본의 `dist/licenses/os-icons/`에 포함합니다.
+
+## Windows 셸 런타임과 네이티브 helper
+
+Windows Passport Bash는 [Git for Windows Portable 2.56.0.windows.1](https://github.com/git-for-windows/git/releases/tag/v2.56.0.windows.1)을 포함한다. 정확한 대상 파일과 SHA-256은 `resources/terminal/runtime-manifest.json`에 있다. Git·Bash·MSYS2·GNU 도구·OpenSSH 등 각 구성요소의 원본 라이선스와 배포물 고지는 런타임 디렉터리에 유지한다. 업스트림 소스·패키지 정보는 [Git for Windows 소스](https://github.com/git-for-windows/git/tree/v2.56.0.windows.1), [Git for Windows 패키지 저장소](https://github.com/git-for-windows/MSYS2-packages), [패키징 스크립트](https://github.com/git-for-windows/build-extra)를 따른다. 공개 Windows 배포 시 해당 바이너리에 대응하는 구성요소별 소스 제공 의무를 별도로 확인한다.
+
+Passport 변경: `etc/profile.d/bash_profile.sh`의 사용자 `.bash_profile` 자동 생성 동작을 비활성화했다. 같은 위치의 `.passport-original` 파일에 원본을 보존하고 런타임 manifest에 변경을 기록한다. 사용자 홈 파일에는 패치하지 않는다.
+
+Rust helper는 잠금 파일 `native/helper/Cargo.lock`을 사용한다. 빌드 시 각 의존성의 이름·버전·라이선스 및 제공된 라이선스 원문을 `terminal/helper/<platform>-<arch>/licenses/`에 포함한다.

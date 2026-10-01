@@ -22,6 +22,7 @@ test("legacy SSH works without a host option for terminal and SFTP, and first-ke
   });
   try {
     const page = await app.firstWindow();
+    await page.getByRole("button", { name: "호스트", exact: true }).click();
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
     await expect(page.locator(".hosts-view")).toBeVisible();

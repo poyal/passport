@@ -6,15 +6,17 @@ import {
   Plus,
   Settings as SettingsIcon,
   X,
-  ArrowUpRight,
   ShieldCheck,
-  Search,
   Info,
   Download,
   Layers,
+  Bell,
+  House,
+  PanelLeft,
 } from "lucide-react";
 import type {
   Appearance,
+  Activity,
   Bootstrap,
   Host,
   PassportDocument,
@@ -25,9 +27,10 @@ import type {
 import { panes, preparePaste } from "../shared/layout";
 import { api, uuid, message } from "./api";
 import { AppContext } from "./context";
+import { TerminalChooser, type TerminalChoice } from "./TerminalSetup";
+import { ActivityView } from "./Activity";
 import { Hosts } from "./Hosts";
 import { FilesView } from "./FilesView";
-import { HostIcon } from "./HostIcon";
 import { WorkspaceTemplates } from "./WorkspaceTemplates";
 import { WorkspaceView, dragMime } from "./Workspaces";
 import { Settings, SecretEditor, blankSecret } from "./Settings";
@@ -45,7 +48,6 @@ import {
 import {
   effectiveHost,
   connectionHost,
-  LOCAL_HOST_ID,
   shortcutMatch,
   variables,
   interpolate,
@@ -68,7 +70,7 @@ type Request =
     };
 export function App() {
   const [boot, setBoot] = useState<Bootstrap | null>(null),
-    [active, setActive] = useState("hosts"),
+    [active, setActive] = useState("home"),
     [activePane, setActivePane] = useState(""),
     [states, setStates] = useState<Record<string, SessionState>>({}),
     [jobs, setJobs] = useState<TransferJob[]>([]),
@@ -76,7 +78,13 @@ export function App() {
     [settingsSection, setSettingsSection] = useState("appearance"),
     [requests, setRequests] = useState<Request[]>([]),
     [chooser, setChooser] = useState(false),
-    [hostSearch, setHostSearch] = useState(""),
+    [sidebarCollapsed, setSidebarCollapsed] = useState(false),
+    [intent, setIntent] = useState<"local" | "ssh">("local"),
+    [activities, setActivities] = useState<Activity[]>([]),
+    [activation, setActivation] = useState<{
+      workspaceId: string;
+      paneId: string;
+    } | null>(null),
     [fileRequest, setFileRequest] = useState<{
       side: number;
       hostId: string;
@@ -85,6 +93,7 @@ export function App() {
     [sessionAppearance, setSessionAppearance] = useState<
       Record<string, Partial<Appearance>>
     >({}),
+    [bootIconReady, setBootIconReady] = useState(false),
     [fatal, setFatal] = useState("");
   const bootRef = useRef(boot),
     updateRef = useRef<Bootstrap["updateState"] | null>(null),
@@ -110,12 +119,36 @@ export function App() {
     window.addEventListener("unhandledrejection", rejection);
     return () => window.removeEventListener("unhandledrejection", rejection);
   }, [notify]);
+  const selectionRestored = useRef(false);
   const refresh = useCallback(async () => {
     const data = await api.call("bootstrap", undefined);
     if (updateRef.current) data.updateState = updateRef.current;
     bootRef.current = data;
     setBoot(data);
+    void api.call("activity.list", undefined).then(setActivities).catch(notify);
     setStates(Object.fromEntries(data.sessionStates.map((s) => [s.id, s])));
+    if (!selectionRestored.current) {
+      selectionRestored.current = true;
+      try {
+        const selected = JSON.parse(
+          localStorage.getItem("passport-selection") || "null",
+        );
+        const workspace = data.document.workspaces.find(
+          (w) =>
+            w.id === selected?.workspace &&
+            data.workspaceOwners[w.id] === data.windowId,
+        );
+        if (workspace) {
+          setActive(workspace.id);
+          setActivePane(
+            panes(workspace.root).find((p) => p.id === selected?.pane)?.id ||
+              panes(workspace.root)[0].id,
+          );
+        }
+      } catch {
+        /* selection is optional */
+      }
+    }
   }, []);
   const update = useCallback(
     (fn: (d: PassportDocument) => PassportDocument): Promise<boolean> => {
@@ -142,7 +175,11 @@ export function App() {
   useEffect(() => {
     void refresh().catch((e) => setFatal(message(e)));
     const off = api.onEvent((event) => {
-      if (event.kind === "session") {
+      if (event.kind === "activity") {
+        setActivities(event.items);
+      } else if (event.kind === "activate-pane") {
+        setActivation(event);
+      } else if (event.kind === "session") {
         const known = bootRef.current?.document.workspaces.some(
           (w) =>
             bootRef.current?.workspaceOwners[w.id] ===
@@ -247,7 +284,14 @@ export function App() {
       ),
     );
     if (
-      !["hosts", "files", "settings", "workspaceTemplates"].includes(active) &&
+      ![
+        "home",
+        "activity",
+        "hosts",
+        "files",
+        "settings",
+        "workspaceTemplates",
+      ].includes(active) &&
       !boot.document.workspaces.some(
         (w) => w.id === active && boot.workspaceOwners[w.id] === boot.windowId,
       )
@@ -255,9 +299,20 @@ export function App() {
       setActive(
         boot.document.workspaces
           .filter((w) => boot.workspaceOwners[w.id] === boot.windowId)
-          .at(-1)?.id ?? "hosts",
+          .at(-1)?.id ?? "home",
       );
   }, [boot?.document.workspaces, boot?.workspaceOwners]);
+  useEffect(() => {
+    if (!boot?.document.workspaces.some((w) => w.id === active)) return;
+    try {
+      localStorage.setItem(
+        "passport-selection",
+        JSON.stringify({ workspace: active, pane: activePane }),
+      );
+    } catch {
+      /* storage can be unavailable */
+    }
+  }, [active, activePane]);
   useEffect(() => {
     setBroadcast([]);
   }, [active]);
@@ -417,6 +472,7 @@ export function App() {
   });
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (document.querySelector('[role="dialog"]')) return;
       const shortcuts = bootRef.current?.document.settings.shortcuts;
       if (!shortcuts) return;
       const mac = bootRef.current?.platform === "darwin";
@@ -424,6 +480,31 @@ export function App() {
         e.preventDefault();
         e.stopPropagation();
         setChooser(true);
+        return;
+      }
+      if (shortcutMatch(e, shortcuts.activity, mac)) {
+        e.preventDefault();
+        e.stopPropagation();
+        setActive("activity");
+        return;
+      }
+      if (shortcutMatch(e, shortcuts.recentActivity, mac)) {
+        e.preventDefault();
+        e.stopPropagation();
+        void api
+          .call("activity.list", undefined)
+          .then(async (items) => {
+            for (const item of items.filter((i) => !i.read)) {
+              try {
+                await api.call("activity.open", { id: item.id });
+                return;
+              } catch {
+                /* closed terminal: try next unread */
+              }
+            }
+            notify("이동할 수 있는 미확인 터미널이 없습니다.");
+          })
+          .catch(notify);
         return;
       }
       if (shortcutMatch(e, shortcuts.search, mac)) {
@@ -452,6 +533,88 @@ export function App() {
     window.addEventListener("keydown", handler, true);
     return () => window.removeEventListener("keydown", handler, true);
   }, [active, activePane]);
+  useEffect(() => {
+    const focus = () => {
+      const owned = bootRef.current?.document.workspaces.find(
+        (w) =>
+          w.id === active &&
+          bootRef.current?.workspaceOwners[w.id] === bootRef.current?.windowId,
+      );
+      void api
+        .call("activity.focus", {
+          paneId:
+            document.hasFocus() &&
+            owned &&
+            !document.querySelector('[role="dialog"]')
+              ? activePane || null
+              : null,
+        })
+        .catch(() => {});
+    };
+    focus();
+    window.addEventListener("focus", focus);
+    window.addEventListener("blur", focus);
+    window.addEventListener("focusin", focus);
+    return () => {
+      window.removeEventListener("focus", focus);
+      window.removeEventListener("blur", focus);
+      window.removeEventListener("focusin", focus);
+    };
+  }, [active, activePane, chooser, requests.length]);
+  useEffect(() => {
+    if (!activation) return;
+    let activated = false;
+    const activate = () => {
+      if (activated || document.querySelector('[role="dialog"]')) return;
+      activated = true;
+      setActive(activation.workspaceId);
+      setActivePane(activation.paneId);
+      setActivation(null);
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          window.dispatchEvent(
+            new CustomEvent("passport-activate", { detail: activation.paneId }),
+          );
+          requestAnimationFrame(() =>
+            terminals.get(activation.paneId)?.term.focus(),
+          );
+        }),
+      );
+    };
+    const observer = new MutationObserver(activate);
+    observer.observe(document.body, { childList: true, subtree: true });
+    activate();
+    return () => observer.disconnect();
+  }, [activation]);
+  const openTerminal = async (choice: TerminalChoice) => {
+    if (!choice.local) {
+      const host = bootRef.current?.document.hosts.find(
+        (h) => h.id === choice.hostId,
+      );
+      if (host) await openHost(host);
+      return;
+    }
+    const id = uuid(),
+      paneId = uuid();
+    const ok = await update((d) => ({
+      ...d,
+      workspaces: [
+        ...d.workspaces,
+        {
+          id,
+          name: "로컬 터미널",
+          project: { cwd: choice.local!.cwd },
+          root: { kind: "pane", id: paneId, ...choice },
+        },
+      ],
+    }));
+    if (ok) {
+      setActive(id);
+      setActivePane(paneId);
+      setChooser(false);
+      await connectPane(paneId, choice.hostId);
+    }
+  };
   const closeTab = async (id: string) => {
     const w = bootRef.current?.document.workspaces.find((w) => w.id === id);
     if (!w) return;
@@ -464,7 +627,7 @@ export function App() {
       count &&
       !(await confirm(
         "작업 탭 닫기",
-        `${w.name}의 연결 ${count}개를 종료할까요?`,
+        `${w.name}: 로컬 세션 ${panes(w.root).filter((p) => p.local && ["connected", "connecting"].includes(states[p.id]?.status)).length}개 · SSH 연결 ${panes(w.root).filter((p) => !p.local && ["connected", "connecting"].includes(states[p.id]?.status)).length}개를 종료할까요?`,
       ))
     )
       return;
@@ -476,7 +639,12 @@ export function App() {
   if (fatal)
     return (
       <div className="boot-screen">
-        <img src={icon} />
+        <img
+          src={icon}
+          alt=""
+          className={bootIconReady ? "ready" : undefined}
+          onLoad={() => setBootIconReady(true)}
+        />
         <h1>Passport를 시작할 수 없습니다.</h1>
         <p>{fatal}</p>
         <button onClick={() => location.reload()}>다시 시도</button>
@@ -485,18 +653,21 @@ export function App() {
   if (!boot)
     return (
       <div className="boot-screen">
-        <img src={icon} />
+        <img
+          src={icon}
+          alt=""
+          className={bootIconReady ? "ready" : undefined}
+          onLoad={() => setBootIconReady(true)}
+        />
         <h1>Passport</h1>
         <p>작업 공간을 준비하고 있습니다.</p>
       </div>
     );
-  const connected = Object.values(states).filter(
-    (s) => s.status === "connected",
-  ).length;
   return (
     <AppContext.Provider
       value={{
         boot,
+        activities,
         document: boot.document,
         update,
         refresh,
@@ -528,13 +699,53 @@ export function App() {
           setSessionAppearance((p) => ({ ...p, [id]: value })),
       }}
     >
-      <div className={`app ${boot.platform === "darwin" ? "mac" : ""}`}>
+      <div
+        className={`app ${boot.platform === "darwin" ? "mac" : ""} ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}
+      >
         <header className="app-titlebar">
           <div className="brand">
             <img src={icon} alt="" />
             <span>Passport</span>
           </div>
-          <nav className="tabs" aria-label="작업 탭">
+          <IconButton
+            label={sidebarCollapsed ? "작업 목록 펼치기" : "작업 목록 접기"}
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          >
+            <PanelLeft size={17} />
+          </IconButton>
+          <span className="window-caption">
+            {boot.document.workspaces.find((w) => w.id === active)?.name ||
+              "로컬 AI · SSH 작업 공간"}
+          </span>
+          <button
+            className={`activity-button ${active === "activity" ? "active" : ""}`}
+            aria-label="알림함"
+            onClick={() => setActive("activity")}
+          >
+            <Bell size={17} />
+            {activities.filter((a) => !a.read).length > 0 && (
+              <small>{activities.filter((a) => !a.read).length}</small>
+            )}
+          </button>
+
+          <IconButton
+            label="설정"
+            className={active === "settings" ? "active" : ""}
+            onClick={() => setActive("settings")}
+          >
+            <SettingsIcon size={18} />
+          </IconButton>
+        </header>
+        <aside className="workspace-sidebar">
+          {" "}
+          <nav className="tabs" aria-label="작업 목록">
+            <button
+              className={`app-tab fixed ${active === "home" ? "active" : ""}`}
+              onClick={() => setActive("home")}
+            >
+              <House size={15} />
+              시작
+            </button>
             <button
               className={`app-tab fixed ${active === "hosts" ? "active" : ""}`}
               onClick={() => setActive("hosts")}
@@ -547,7 +758,7 @@ export function App() {
               onClick={() => setActive("workspaceTemplates")}
             >
               <Layers size={15} />
-              스페이스
+              템플릿
             </button>
             <button
               className={`app-tab fixed ${active === "files" ? "active" : ""}`}
@@ -629,6 +840,12 @@ export function App() {
                   >
                     <TerminalIcon size={14} />
                     <span>{w.name}</span>
+                    {activities.some(
+                      (a) =>
+                        !a.read && panes(w.root).some((p) => p.id === a.paneId),
+                    ) && (
+                      <i className="unread-dot" aria-label="읽지 않은 알림" />
+                    )}
                     {panes(w.root).length > 1 && (
                       <small>{panes(w.root).length}</small>
                     )}
@@ -641,19 +858,67 @@ export function App() {
                   </IconButton>
                 </div>
               ))}
-            <IconButton label="새 SSH 탭" onClick={() => setChooser(true)}>
+            <IconButton
+              label="새 터미널"
+              onClick={() => {
+                setIntent("local");
+                setChooser(true);
+              }}
+            >
               <Plus size={18} />
             </IconButton>
           </nav>
-          <IconButton
-            label="설정"
-            className={active === "settings" ? "active" : ""}
-            onClick={() => setActive("settings")}
-          >
-            <SettingsIcon size={18} />
-          </IconButton>
-        </header>
+        </aside>
         <main className="app-main">
+          <div className="view home-view" hidden={active !== "home"}>
+            <div className="home-intro">
+              <img src={icon} alt="" />
+              <h1>한 작업 공간에서 로컬 AI와 SSH를 함께</h1>
+              <p>
+                프로젝트에서 AI 작업을 시작하고, 옆 패널에 서버를 연결하세요.
+              </p>
+            </div>
+            <div className="home-actions">
+              {(
+                [
+                  ["local", "로컬 터미널", "선택한 셸로 프로젝트 작업"],
+                  ["ssh", "SSH 연결", "저장한 서버에 연결"],
+                ] as const
+              ).map(([kind, label, detail]) => (
+                <button
+                  key={kind}
+                  onClick={() => {
+                    setIntent(kind);
+                    setChooser(true);
+                  }}
+                >
+                  <TerminalIcon size={22} />
+                  <strong>{label}</strong>
+                  <small>{detail}</small>
+                </button>
+              ))}
+            </div>
+            <div className="row">
+              <button onClick={() => setActive("workspaceTemplates")}>
+                템플릿 불러오기
+              </button>
+              <button
+                onClick={() => {
+                  setSettingsSection("terminal");
+                  setActive("settings");
+                }}
+              >
+                터미널 기본 설정
+              </button>
+            </div>
+            <p className="hint">
+              저장한 배치는 자동 실행하지 않습니다. 왼쪽 작업을 선택해 필요한
+              터미널을 시작하세요.
+            </p>
+          </div>
+          <div className="view" hidden={active !== "activity"}>
+            <ActivityView />
+          </div>
           <div className="view" hidden={active !== "hosts"}>
             <Hosts />
           </div>
@@ -679,7 +944,25 @@ export function App() {
             <ShieldCheck size={12} />
             <span>로컬 작업 공간</span>
             <span className="divider" />
-            <span>{connected}개 SSH 연결</span>
+            <span>
+              로컬{" "}
+              {
+                boot.document.workspaces
+                  .flatMap((w) => panes(w.root))
+                  .filter(
+                    (p) => p.local && states[p.id]?.status === "connected",
+                  ).length
+              }{" "}
+              · SSH{" "}
+              {
+                boot.document.workspaces
+                  .flatMap((w) => panes(w.root))
+                  .filter(
+                    (p) => !p.local && states[p.id]?.status === "connected",
+                  ).length
+              }{" "}
+              연결
+            </span>
           </div>
           <div>
             {jobs.some((j) => j.state === "running") && (
@@ -716,107 +999,11 @@ export function App() {
           </div>
         )}
         {chooser && (
-          <Modal
-            title="SSH 연결 열기"
-            className="ssh-chooser-modal"
+          <TerminalChooser
+            initial={intent}
             onClose={() => setChooser(false)}
-          >
-            <div className="local-shell-choice">
-              <label>
-                로컬 셸
-                <select id="local-shell">
-                  {boot.shells.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <button
-                onClick={() =>
-                  void (async () => {
-                    const shell = (
-                      document.getElementById(
-                        "local-shell",
-                      ) as HTMLSelectElement
-                    ).value as import("../shared/model").LocalShell["shell"];
-                    const id = uuid(),
-                      paneId = uuid();
-                    const ok = await update((d) => ({
-                      ...d,
-                      workspaces: [
-                        ...d.workspaces,
-                        {
-                          id,
-                          name: "로컬 터미널",
-                          root: {
-                            kind: "pane",
-                            id: paneId,
-                            hostId: LOCAL_HOST_ID,
-                            local: { shell, cwd: "" },
-                          },
-                        },
-                      ],
-                    }));
-                    if (ok) {
-                      setActive(id);
-                      setActivePane(paneId);
-                      setChooser(false);
-                      await connectPane(paneId, LOCAL_HOST_ID);
-                    }
-                  })()
-                }
-              >
-                로컬 터미널 열기
-              </button>
-            </div>
-            <div className="section-line" />
-            <div className="search-box">
-              <Search size={16} />
-              <input
-                autoFocus
-                aria-label="연결할 호스트 검색"
-                placeholder="호스트 검색"
-                value={hostSearch}
-                onChange={(e) => setHostSearch(e.target.value)}
-              />
-            </div>
-            <div className="connection-chooser">
-              {boot.document.hosts
-                .filter(
-                  (h) =>
-                    h.protocol === "ssh" &&
-                    `${h.name} ${h.address}`
-                      .toLowerCase()
-                      .includes(hostSearch.toLowerCase()),
-                )
-                .map((h) => (
-                  <button key={h.id} onClick={() => void openHost(h)}>
-                    <HostIcon host={h} />
-                    <div>
-                      <strong>{h.name}</strong>
-                      <small>
-                        {
-                          connectionHost(boot.document, h, boot.profiles)
-                            .username
-                        }
-                        @{h.address}:{h.port}
-                      </small>
-                    </div>
-                    <ArrowUpRight size={16} />
-                  </button>
-                ))}
-            </div>
-            <button
-              className="full"
-              onClick={() => {
-                setChooser(false);
-                setActive("hosts");
-              }}
-            >
-              호스트 관리로 이동
-            </button>
-          </Modal>
+            onSelect={openTerminal}
+          />
         )}
         {requests[0] && (
           <RequestDialog

@@ -29,6 +29,7 @@ test("large terminal text remains interactive and bounded through 1 GiB", async 
   let timer: ReturnType<typeof setInterval> | undefined;
   try {
     const page = await app.firstWindow();
+    await page.getByRole("button", { name: "호스트", exact: true }).click();
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
     await expect(page.locator(".hosts-view")).toBeVisible();

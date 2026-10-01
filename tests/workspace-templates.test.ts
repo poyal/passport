@@ -152,7 +152,7 @@ describe("saved workspaces", () => {
     const { document, template } = fixture();
     const data = {
       format: "passport" as const,
-      version: 1 as const,
+      version: 2 as const,
       document,
       profiles: [],
     };

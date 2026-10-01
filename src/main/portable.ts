@@ -8,6 +8,7 @@ import {
 import { promisify } from "node:util";
 import { z } from "zod";
 import { cloneWorkspaces } from "../shared/workspace-templates";
+import { migrateDocument } from "../shared/migration";
 import {
   documentSchema,
   emptyDocument,
@@ -21,8 +22,8 @@ import {
 
 export const packageSchema = z.object({
   format: z.literal("passport"),
-  version: z.literal(1),
-  document: documentSchema,
+  version: z.union([z.literal(1), z.literal(2)]).transform(() => 2 as const),
+  document: z.preprocess((raw) => migrateDocument(raw), documentSchema),
   profiles: z
     .array(
       z.object({
@@ -152,6 +153,52 @@ export function mergePortable(
   const document = structuredClone(current),
     resultProfiles = structuredClone(profiles),
     hostMap = new Map<string, string>();
+  incoming = structuredClone(incoming);
+  const startupProfiles = structuredClone(current.settings.terminal.profiles);
+  const profileMap = new Map<string, string>();
+  for (const profile of incoming.document.settings.terminal.profiles) {
+    const existing = startupProfiles.find((p) => p.id === profile.id);
+    if (!existing) startupProfiles.push(profile);
+    else if (conflict === "overwrite")
+      startupProfiles[startupProfiles.indexOf(existing)] = profile;
+    else if (JSON.stringify(existing) !== JSON.stringify(profile)) {
+      const id = randomUUID();
+      profileMap.set(profile.id, id);
+      startupProfiles.push({ ...profile, id });
+    }
+  }
+  const remapSelection = (
+    selection?: import("../shared/terminal-config").ProfileSelection,
+  ) => {
+    if (selection?.mode === "custom")
+      selection.ids = selection.ids.map((id) => profileMap.get(id) || id);
+  };
+  for (const workspace of [
+    ...incoming.document.workspaces,
+    ...incoming.document.workspaceTemplates.flatMap((t) => t.workspaces),
+  ]) {
+    if (
+      !workspace.project?.profiles ||
+      workspace.project.profiles.mode === "inherit"
+    )
+      workspace.project = {
+        cwd: workspace.project?.cwd || "",
+        profiles: {
+          mode: "custom",
+          ids: [...incoming.document.settings.terminal.profileIds],
+        },
+      };
+    remapSelection(workspace.project.profiles);
+    const walk = (node: typeof workspace.root) => {
+      if (node.kind === "pane") {
+        if (node.local) {
+          remapSelection(node.local.profiles);
+          node.local.needsReview = true;
+        }
+      } else node.children.forEach(walk);
+    };
+    walk(workspace.root);
+  }
   function merge<T extends { id: string }>(list: T[], other: T[]) {
     for (const item of other) {
       const index = list.findIndex((x) => x.id === item.id);
@@ -222,6 +269,10 @@ export function mergePortable(
   merge(customThemes, incoming.document.settings.customThemes);
   if (conflict === "overwrite") document.settings = incoming.document.settings;
   document.settings = { ...document.settings, customThemes };
+  document.settings.terminal = {
+    ...document.settings.terminal,
+    profiles: startupProfiles,
+  };
   merge(
     document.tunnels,
     incoming.document.tunnels.map((t) => ({

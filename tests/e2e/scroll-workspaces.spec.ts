@@ -54,6 +54,7 @@ const launch = async () => {
     },
   });
   page = await application.firstWindow();
+  await page.getByRole("button", { name: "호스트", exact: true }).click();
   page.on("pageerror", (e) => errors.push(e.message));
   await expect(page.locator(".hosts-view")).toBeVisible();
   await application.evaluate(({ safeStorage, dialog }) => {
@@ -304,30 +305,21 @@ test("SSH chooser keeps local controls aligned and only the host list scrolls", 
     [1440, 900],
   ]) {
     await resize(width, height);
-    await page.getByRole("button", { name: "새 SSH 탭", exact: true }).click();
-    const dialog = page.getByRole("dialog", { name: "SSH 연결 열기" });
+    await page.getByRole("button", { name: "새 터미널", exact: true }).click();
+    const dialog = page.getByRole("dialog", { name: "새 터미널" });
+    await dialog.getByRole("button", { name: "SSH", exact: true }).click();
     await expect(dialog.locator(".connection-chooser button")).toHaveCount(101);
-    const geometry = await dialog.evaluate((e) => {
-      const select = e
-          .querySelector(".local-shell-choice select")!
-          .getBoundingClientRect(),
-        button = e
-          .querySelector(".local-shell-choice > button")!
-          .getBoundingClientRect();
-      return {
-        bottoms: Math.abs(select.bottom - button.bottom),
-        outside: e.scrollHeight - e.clientHeight,
-      };
-    });
-    expect(geometry.bottoms).toBeLessThan(2);
-    expect(geometry.outside).toBeLessThanOrEqual(1);
+    const outside = await dialog.evaluate(
+      (e) => e.scrollHeight - e.clientHeight,
+    );
+    expect(outside).toBeLessThanOrEqual(1);
     await dialog.locator(".connection-chooser").hover();
     await page.mouse.wheel(0, 100000);
     await expect(
       dialog.locator(".connection-chooser button").last(),
     ).toBeInViewport();
     await expect(
-      dialog.getByRole("button", { name: "호스트 관리로 이동", exact: true }),
+      dialog.getByRole("button", { name: "호스트 관리", exact: true }),
     ).toBeInViewport();
     await expect(dialog.getByLabel("연결할 호스트 검색")).toBeInViewport();
     await page.screenshot({
@@ -346,7 +338,7 @@ test("saved workspaces preserve tab order, focus and split ratios, reopen withou
     .first()
     .click();
   await page.locator(".terminal-pane").nth(1).click();
-  await page.getByRole("button", { name: "스페이스", exact: true }).click();
+  await page.getByRole("button", { name: "템플릿", exact: true }).click();
   await page.getByRole("button", { name: "현재 창 저장", exact: true }).click();
   await page.getByRole("dialog").locator("input").fill("Build and monitor");
   await page
@@ -381,23 +373,23 @@ test("saved workspaces preserve tab order, focus and split ratios, reopen withou
   expect(
     new Set(restored.flatMap((w) => panes(w.root).map((p) => p.id))).size,
   ).toBe(6);
-  await page.getByRole("button", { name: "스페이스", exact: true }).click();
+  await page.getByRole("button", { name: "템플릿", exact: true }).click();
   await page
     .getByRole("button", {
-      name: "Build and monitor 스페이스 열고 연결",
+      name: "Build and monitor 불러오고 시작",
       exact: true,
     })
     .click();
   await expect.poll(() => server.shells.length).toBe(3);
   await expect(page.locator(".workspace-tab")).toHaveCount(6);
-  await page.getByRole("button", { name: "스페이스", exact: true }).click();
+  await page.getByRole("button", { name: "템플릿", exact: true }).click();
   await page.screenshot({
     path: info.outputPath("workspace-library.png"),
     animations: "disabled",
   });
   await closeCleanly(application);
   await launch();
-  await page.getByRole("button", { name: "스페이스", exact: true }).click();
+  await page.getByRole("button", { name: "템플릿", exact: true }).click();
   await expect(page.locator(".workspace-template-row")).toHaveCount(1);
   expect(server.shells).toHaveLength(3);
   await page
@@ -454,7 +446,7 @@ test("long workspace libraries scroll without moving controls and refuse to exce
     }));
     await window.passport.call("save", document);
   }, templates);
-  await page.getByRole("button", { name: "스페이스", exact: true }).click();
+  await page.getByRole("button", { name: "템플릿", exact: true }).click();
   for (const [width, height] of [
     [1024, 680],
     [1440, 900],

@@ -1,4 +1,14 @@
 import { z } from "zod";
+import {
+  shellIdSchema,
+  profileSelectionSchema,
+  terminalSettingsSchema,
+  notificationSettingsSchema,
+  builtinProfiles,
+  selectedProfiles,
+  type ShellInfo,
+  type AppliedEnvironment,
+} from "./terminal-config";
 
 export const idSchema = z.string().uuid();
 const short = z.string().max(256);
@@ -77,10 +87,15 @@ export const customThemeSchema = z.object({
 });
 export type CustomTheme = z.infer<typeof customThemeSchema>;
 export const localShellSchema = z.object({
-  shell: z
-    .enum(["default", "zsh", "bash", "powershell", "cmd"])
-    .default("default"),
-  cwd: z.string().max(4096).default(""),
+  shell: shellIdSchema.default("default"),
+  cwd: z
+    .string()
+    .max(4096)
+    .refine((v) => !/[\0\r\n]/.test(v))
+    .default(""),
+  profiles: profileSelectionSchema.optional(),
+  agent: z.enum(["claude", "codex"]).optional(),
+  needsReview: z.boolean().optional(),
 });
 export type LocalShell = z.infer<typeof localShellSchema>;
 export type Appearance = z.infer<typeof appearanceSchema>;
@@ -211,6 +226,15 @@ export const workspaceSchema = z.object({
   id: idSchema,
   name: short.min(1),
   root: layoutSchema,
+  project: z
+    .object({
+      cwd: z
+        .string()
+        .max(4096)
+        .refine((v) => !/[\0\r\n]/.test(v)),
+      profiles: profileSelectionSchema.optional(),
+    })
+    .optional(),
 });
 export type Workspace = z.infer<typeof workspaceSchema>;
 export const workspaceTemplateSchema = z.object({
@@ -222,23 +246,55 @@ export const workspaceTemplateSchema = z.object({
 });
 export type WorkspaceTemplate = z.infer<typeof workspaceTemplateSchema>;
 export const settingsSchema = z.object({
+  terminal: terminalSettingsSchema.default(() =>
+    terminalSettingsSchema.parse({}),
+  ),
+  notifications: notificationSettingsSchema.default(() =>
+    notificationSettingsSchema.parse({}),
+  ),
   appearance: appearanceSchema.default(() => appearanceSchema.parse({})),
   colorMode: z.enum(["system", "dark", "light"]).default("system"),
   confirmNewHostKeys: z.boolean().default(true),
   customThemes: z.array(customThemeSchema).max(100).default([]),
-  shortcuts: z
-    .record(
-      z.enum(["copy", "paste", "search", "nextPane", "previousPane", "newTab"]),
-      z.string().max(80),
-    )
-    .default({
-      copy: "Platform+C",
-      paste: "Platform+V",
-      search: "Mod+Shift+F",
-      nextPane: "Alt+ArrowRight",
-      previousPane: "Alt+ArrowLeft",
-      newTab: "Mod+Shift+T",
-    }),
+  shortcuts: z.preprocess(
+    (raw) => {
+      if (!raw || typeof raw !== "object") return raw;
+      const bindings = raw as Record<string, string>;
+      return {
+        activity: Object.values(bindings).includes("Mod+Shift+I")
+          ? ""
+          : "Mod+Shift+I",
+        recentActivity: Object.values(bindings).includes("Mod+Shift+U")
+          ? ""
+          : "Mod+Shift+U",
+        ...bindings,
+      };
+    },
+    z
+      .record(
+        z.enum([
+          "copy",
+          "paste",
+          "search",
+          "nextPane",
+          "previousPane",
+          "newTab",
+          "activity",
+          "recentActivity",
+        ]),
+        z.string().max(80),
+      )
+      .default({
+        copy: "Platform+C",
+        paste: "Platform+V",
+        search: "Mod+Shift+F",
+        nextPane: "Alt+ArrowRight",
+        previousPane: "Alt+ArrowLeft",
+        newTab: "Mod+Shift+T",
+        activity: "Mod+Shift+I",
+        recentActivity: "Mod+Shift+U",
+      }),
+  ),
   autoLog: z.boolean().default(true),
   logRetentionDays: z
     .number()
@@ -251,7 +307,7 @@ export const settingsSchema = z.object({
 });
 export const documentSchema = z
   .object({
-    version: z.literal(1),
+    version: z.literal(2),
     revision: z.number().int().nonnegative().default(0),
     tunnels: z.array(tunnelSchema).max(100).default([]),
     hosts: z.array(hostSchema).max(5000),
@@ -263,6 +319,22 @@ export const documentSchema = z
   })
   .superRefine((d, ctx) => {
     const fail = (message: string) => ctx.addIssue({ code: "custom", message });
+    const profiles = d.settings.terminal.profiles;
+    if (
+      new Set(profiles.map((p) => p.id)).size !== profiles.length ||
+      profiles.some(
+        (p) =>
+          p.origin !== "user" ||
+          p.integration ||
+          builtinProfiles.some((b) => b.id === p.id),
+      )
+    )
+      fail("사용자 시작 프로파일 ID 또는 출처가 잘못되었습니다.");
+    try {
+      selectedProfiles(d.settings.terminal);
+    } catch (e) {
+      fail(String(e));
+    }
     for (const list of [
       d.hosts,
       d.groups,
@@ -314,6 +386,16 @@ export const documentSchema = z
         if (ids.has(n.id)) fail("분할 ID가 중복됩니다.");
         ids.add(n.id);
         if (n.kind === "pane") {
+          if (n.local)
+            try {
+              selectedProfiles(
+                d.settings.terminal,
+                undefined,
+                n.local.profiles,
+              );
+            } catch (e) {
+              fail(String(e));
+            }
           if (!n.local && !hostIds.has(n.hostId))
             fail("배치의 호스트를 찾을 수 없습니다.");
           return 1;
@@ -321,6 +403,11 @@ export const documentSchema = z
         return n.children.reduce((a, c) => a + walk(c, depth + 1), 0);
       };
       for (const w of workspaces) {
+        try {
+          selectedProfiles(d.settings.terminal, w.project?.profiles);
+        } catch (e) {
+          fail(String(e));
+        }
         if (ids.has(w.id)) fail("작업 탭 ID가 중복됩니다.");
         ids.add(w.id);
         const count = walk(w.root);
@@ -346,7 +433,7 @@ export const documentSchema = z
 export type PassportDocument = z.infer<typeof documentSchema>;
 export const emptyDocument = (): PassportDocument =>
   documentSchema.parse({
-    version: 1,
+    version: 2,
     hosts: [],
     groups: [],
     snippets: [],
@@ -386,12 +473,27 @@ export type Bootstrap = {
   workspaceOwners: Record<string, number>;
   sessionStates: SessionState[];
   tunnelStates: TunnelState[];
-  shells: { id: LocalShell["shell"]; name: string }[];
+  shells: ShellInfo[];
 };
 export type SessionState = {
   id: string;
   status: "connecting" | "connected" | "disconnected" | "error";
   message?: string;
+  environment?: AppliedEnvironment;
+};
+export type Activity = {
+  id: string;
+  paneId: string;
+  workspaceId: string;
+  generation: string;
+  source: "claude" | "codex" | "terminal";
+  kind: "completed" | "permission" | "attention";
+  title: string;
+  body: string;
+  created: number;
+  read: boolean;
+  resolved: boolean;
+  available?: boolean;
 };
 export type FileEntry = {
   name: string;
@@ -425,6 +527,8 @@ export type TransferJob = {
   cleanup?: string;
 };
 export type AppEvent =
+  | { kind: "activity"; items: Activity[] }
+  | { kind: "activate-pane"; workspaceId: string; paneId: string }
   | { kind: "update"; state: import("./updates").UpdateState }
   | { kind: "notice"; message: string }
   | { kind: "session"; state: SessionState }
@@ -480,6 +584,18 @@ export type ImportPasswordRequest = {
 export type Result<T> = { ok: true; value: T } | { ok: false; error: string };
 
 export interface Calls {
+  "terminal.folder": { input: undefined; output: string | null };
+  "terminal.preview": {
+    input: { local: LocalShell; workspaceId?: string };
+    output: AppliedEnvironment;
+  };
+  "activity.list": { input: undefined; output: Activity[] };
+  "activity.read": { input: { id?: string }; output: void };
+  "activity.open": { input: { id: string }; output: void };
+  "activity.clear": { input: undefined; output: void };
+  "activity.focus": { input: { paneId: string | null }; output: void };
+  "activity.test": { input: undefined; output: boolean };
+  "activity.settings": { input: undefined; output: void };
   bootstrap: { input: undefined; output: Bootstrap };
   "updates.check": {
     input: undefined;

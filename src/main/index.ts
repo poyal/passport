@@ -11,6 +11,7 @@ import {
   net,
   Menu,
   shell,
+  Notification,
 } from "electron";
 import path from "node:path";
 import os from "node:os";
@@ -35,6 +36,8 @@ import {
   customThemeSchema,
   type TerminalSnapshot,
   type SessionState,
+  localShellSchema,
+  type Activity,
 } from "../shared/model";
 import { Store } from "./store";
 import { Sessions, type TrustPrompt } from "./ssh";
@@ -51,6 +54,9 @@ import {
   type Portable,
 } from "./portable";
 import { LocalSessions, availableShells } from "./local";
+import { ActivityService } from "./activity";
+import { prepareLaunch, previewEnvironment } from "./startup";
+import { selectedProfiles } from "../shared/terminal-config";
 import { SessionLogs } from "./logs";
 import { Tunnels } from "./tunnels";
 import {
@@ -64,8 +70,13 @@ import { about } from "../shared/about";
 import { UpdateChecker } from "./updates";
 
 app.setName("Passport");
+if (process.platform === "win32") app.setAppUserModelId("io.passport.desktop");
 if (process.env.PASSPORT_DATA_DIR)
   app.setPath("userData", path.resolve(process.env.PASSPORT_DATA_DIR));
+// Share one process across app copies using the same settings directory. Separate
+// test/development data directories still have independent instances.
+const ownsDataDirectory = app.requestSingleInstanceLock();
+if (!ownsDataDirectory) app.quit();
 protocol.registerSchemesAsPrivileged([
   {
     scheme: "passport",
@@ -87,6 +98,17 @@ const encryptedImports = new Map<string, { text: string; owner: number }>();
 let fonts: string[] = [];
 let updates: UpdateChecker;
 let locals: LocalSessions, logs: SessionLogs, tunnels: Tunnels;
+let activity: ActivityService;
+const focusedPanes = new Map<number, string | null>();
+const banners = new Set<Notification>();
+function trackBanner(banner: Notification) {
+  if (banners.size >= 20) {
+    const oldest = banners.values().next().value!;
+    banners.delete(oldest);
+    oldest.close();
+  }
+  banners.add(banner);
+}
 const windows = new Map<number, BrowserWindow>();
 const owners = new Map<string, number>();
 const states = new Map<string, SessionState>();
@@ -108,8 +130,7 @@ const workspaceFor = (id: string) =>
     panes(w.root).some((p) => p.id === id),
   );
 const ownerOf = (id: string) => owners.get(workspaceFor(id)?.id || "");
-function publishDocument() {
-  const document = store.read();
+function publishDocument(document = store.read()) {
   documentCache = document;
   for (const id of owners.keys())
     if (!document.workspaces.some((w) => w.id === id)) owners.delete(id);
@@ -123,6 +144,7 @@ function publishDocument() {
       } satisfies AppEvent);
 }
 function closeSession(id: string) {
+  activity?.unregister(id);
   logs?.stop(id);
   sessions.close(id);
   locals.close(id);
@@ -149,8 +171,13 @@ let shutdownComplete = false;
 const emit = (event: AppEvent, replay = false) => {
   if (shutdown) return;
   if (event.kind === "session") {
+    const previous = states.get(event.state.id);
     states.set(event.state.id, event.state);
-    if (event.state.status === "connected" && store.read().settings.autoLog) {
+    if (
+      event.state.status === "connected" &&
+      previous?.status !== "connected" &&
+      shouldAutoLog(event.state.id)
+    ) {
       try {
         logs.start(event.state.id, sessionLogName(event.state.id));
       } catch (error) {
@@ -159,10 +186,18 @@ const emit = (event: AppEvent, replay = false) => {
           message: `세션 로그를 기록하지 못했습니다: ${error instanceof Error ? error.message : "저장 오류"}`,
         });
       }
-    } else if (event.state.status === "disconnected")
+    } else if (
+      event.state.status === "disconnected" ||
+      event.state.status === "error"
+    ) {
       logs?.stop(event.state.id);
+      activity?.unregister(event.state.id);
+    }
   }
-  if (event.kind === "output" && !replay) logs?.append(event.id, event.data);
+  if (event.kind === "output" && !replay) {
+    logs?.append(event.id, event.data);
+    activity?.observe(event.id, event.data);
+  }
   if (event.kind === "output" || event.kind === "session") {
     const id = event.kind === "output" ? event.id : event.state.id;
     const workspace = workspaceFor(id);
@@ -182,6 +217,71 @@ const emit = (event: AppEvent, replay = false) => {
     for (const w of windows.values())
       if (!w.isDestroyed()) w.webContents.send("passport:event", event);
 };
+function shouldAutoLog(id: string) {
+  const document = store.read();
+  const pane = document.workspaces
+    .flatMap((w) => panes(w.root))
+    .find((p) => p.id === id);
+  return pane?.local
+    ? document.settings.terminal.autoLogLocal
+    : document.settings.autoLog;
+}
+async function openActivity(id: string) {
+  const deadline = Date.now() + 10000;
+  while (moves.has(workspaceFor(activity.active(id).paneId)?.id || "")) {
+    if (Date.now() > deadline)
+      throw new Error("창 이동이 아직 진행 중입니다. 잠시 후 다시 시도하세요.");
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  const item = activity.active(id);
+  const workspace = workspaceFor(item.paneId);
+  const target = windows.get(ownerOf(item.paneId) ?? -1);
+  if (!workspace || !target || target.isDestroyed())
+    throw new Error("터미널 창을 찾을 수 없습니다.");
+  if (target.isMinimized()) target.restore();
+  target.show();
+  target.focus();
+  target.webContents.send("passport:event", {
+    kind: "activate-pane",
+    workspaceId: workspace.id,
+    paneId: item.paneId,
+  } satisfies AppEvent);
+  activity.read(id);
+}
+function desktopActivity(item: Activity) {
+  const settings = store.read().settings.notifications;
+  const focused = BrowserWindow.getFocusedWindow();
+  if (
+    settings.desktop === "off" ||
+    (settings.desktop === "background" && focused) ||
+    (settings.desktop === "unfocused" &&
+      focused &&
+      focusedPanes.get(focused.id) === item.paneId) ||
+    !Notification.isSupported()
+  )
+    return;
+  const banner = new Notification({
+    title: item.title,
+    body: settings.preview ? item.body : "Passport에서 터미널을 확인하세요.",
+    silent: !settings.sound,
+  });
+  trackBanner(banner);
+  banner.on("click", () => {
+    void openActivity(item.id).catch((error) =>
+      emit({ kind: "notice", message: String(error) }),
+    );
+  });
+  banner.on("close", () => banners.delete(banner));
+  banner.on("failed", () => {
+    banners.delete(banner);
+    emit({
+      kind: "notice",
+      message:
+        "운영체제 알림을 표시하지 못했습니다. 알림 권한과 방해 금지 설정을 확인하세요.",
+    });
+  });
+  banner.show();
+}
 const confirm: TrustPrompt = async (host, fingerprint) => {
   const result = await dialog.showMessageBox(
     BrowserWindow.getFocusedWindow() || window!,
@@ -221,6 +321,18 @@ const pathSchema = z
   );
 const idObject = z.object({ id: idSchema });
 const schemas: Record<Call, z.ZodType> = {
+  "terminal.folder": z.undefined(),
+  "terminal.preview": z.object({
+    local: localShellSchema,
+    workspaceId: idSchema.optional(),
+  }),
+  "activity.list": z.undefined(),
+  "activity.read": z.object({ id: idSchema.optional() }),
+  "activity.open": idObject,
+  "activity.clear": z.undefined(),
+  "activity.focus": z.object({ paneId: idSchema.nullable() }),
+  "activity.test": z.undefined(),
+  "activity.settings": z.undefined(),
   bootstrap: z.undefined(),
   "updates.check": z.undefined(),
   "updates.open": z.object({ target: z.enum(["download", "release"]) }),
@@ -408,18 +520,10 @@ function preview(
   ])
     for (const pane of panes(workspace.root)) {
       if (!pane.local) continue;
-      if (pane.local.cwd) {
-        pane.local.cwd = "";
-        warnings.push(
-          `${workspace.name}: 로컬 시작 폴더는 현재 기기에서 다시 지정합니다.`,
-        );
-      }
-      if (!availableShells().some((s) => s.id === pane.local!.shell)) {
-        pane.local.shell = "default";
-        warnings.push(
-          `${workspace.name}: 설치되지 않은 셸을 기본 셸로 대체합니다.`,
-        );
-      }
+      pane.local.needsReview = true;
+      warnings.push(
+        `${workspace.name}: 로컬 폴더·셸·시작 프로파일을 확인한 뒤 실행할 수 있습니다.`,
+      );
     }
   // Imported absolute local key paths are never opened. Private key material only comes from an explicit file picker or encrypted package.
   return {
@@ -481,6 +585,61 @@ async function call<K extends Call>(
   )
     throw new Error("이 창의 파일 연결이 아닙니다.");
   switch (name) {
+    case "terminal.folder": {
+      const result = await dialog.showOpenDialog(caller, {
+        title: "프로젝트 폴더 선택",
+        properties: ["openDirectory"],
+      });
+      return result.canceled ? null : result.filePaths[0];
+    }
+    case "terminal.preview": {
+      const document = store.read();
+      const workspace = document.workspaces.find((w) => w.id === i.workspaceId);
+      return previewEnvironment(i.local, document.settings.terminal, workspace);
+    }
+    case "activity.list":
+      return activity.list();
+    case "activity.read":
+      activity.read(i.id);
+      return;
+    case "activity.clear":
+      activity.clear();
+      return;
+    case "activity.open":
+      return openActivity(i.id);
+    case "activity.focus":
+      if (i.paneId) assertOwned(i.paneId, caller);
+      focusedPanes.set(caller.id, i.paneId);
+      return;
+    case "activity.settings":
+      if (process.platform === "darwin")
+        await shell.openExternal(
+          "x-apple.systempreferences:com.apple.Notifications-Settings.extension",
+        );
+      else if (process.platform === "win32")
+        await shell.openExternal("ms-settings:notifications");
+      else throw new Error("운영체제의 알림 설정을 직접 열어 주세요.");
+      return;
+    case "activity.test": {
+      if (!Notification.isSupported()) return false;
+      const banner = new Notification({
+        title: "Passport 알림 테스트",
+        body: "Passport 데스크톱 테스트 알림입니다.",
+        silent: !store.read().settings.notifications.sound,
+      });
+      trackBanner(banner);
+      banner.once("close", () => banners.delete(banner));
+      banner.once("failed", () => {
+        banners.delete(banner);
+        emit({
+          kind: "notice",
+          message:
+            "알림 표시 실패: 운영체제 권한과 방해 금지 설정을 확인하세요.",
+        });
+      });
+      banner.show();
+      return true;
+    }
     case "bootstrap":
       return bootstrap(caller);
     case "save": {
@@ -510,9 +669,14 @@ async function call<K extends Call>(
         ),
       }));
       const saved = store.save(doc);
-      if (doc.settings.autoLog !== previous.settings.autoLog) {
+      activity.restrictAgents(doc.settings.notifications);
+      if (
+        doc.settings.autoLog !== previous.settings.autoLog ||
+        doc.settings.terminal.autoLogLocal !==
+          previous.settings.terminal.autoLogLocal
+      ) {
         for (const [id, state] of states) {
-          if (!doc.settings.autoLog) logs.stop(id);
+          if (!shouldAutoLog(id)) logs.stop(id);
           else if (state.status === "connected") {
             try {
               logs.start(id, sessionLogName(id));
@@ -578,7 +742,45 @@ async function call<K extends Call>(
         .flatMap((w) => panes(w.root))
         .find((p) => p.id === i.id)!;
       if (pane.local) {
-        locals.open(i.id, pane.local);
+        closeSession(i.id);
+        const workspace = current.workspaces.find((w) =>
+          panes(w.root).some((p) => p.id === i.id),
+        );
+        const snapshot = previewEnvironment(
+          pane.local,
+          current.settings.terminal,
+          workspace,
+        );
+        const integration = selectedProfiles(
+          current.settings.terminal,
+          workspace?.project?.profiles,
+          pane.local.profiles,
+        ).some((p) => p.integration === "ai-notifications");
+        const credentials = activity.register(
+          i.id,
+          snapshot.sessionInstanceId,
+          {
+            claude: integration && current.settings.notifications.claude,
+            codex: integration && current.settings.notifications.codex,
+          },
+        );
+        let launch: ReturnType<typeof prepareLaunch> | undefined;
+        try {
+          launch = prepareLaunch(
+            pane.local,
+            current.settings.terminal,
+            current.settings.notifications,
+            workspace,
+            path.join(app.getPath("userData"), "shell-sessions"),
+            credentials,
+            snapshot,
+          );
+          locals.open(i.id, pane.local, launch);
+        } catch (error) {
+          launch?.cleanup();
+          activity.unregister(i.id);
+          throw error;
+        }
         return;
       }
       const { host, secret } = secretFor(i.hostId, i.secret);
@@ -587,6 +789,8 @@ async function call<K extends Call>(
         : undefined;
       if (startup && /\{\{/.test(startup))
         throw new Error("시작 스니펫은 입력 변수가 없는 명령을 선택하세요.");
+      closeSession(i.id);
+      activity.register(i.id, randomUUID());
       await sessions.open(
         i.id,
         host,
@@ -738,7 +942,7 @@ async function call<K extends Call>(
         return preview(
           {
             format: "passport",
-            version: 1,
+            version: 2,
             document: parsed.document,
             profiles: [],
           },
@@ -757,7 +961,7 @@ async function call<K extends Call>(
         return preview(
           {
             format: "passport",
-            version: 1,
+            version: 2,
             document: { ...emptyDocument(), snippets: parsed.snippets },
             profiles: [],
           },
@@ -1096,7 +1300,9 @@ async function createWindow() {
         moves.delete(id);
         for (const event of move.events) emit(event, true);
       }
-    for (const w of store.read().workspaces)
+    // Closing a window must release its live resources even if persisted
+    // settings have become unreadable. Ownership uses the last accepted layout.
+    for (const w of documentCache?.workspaces ?? [])
       if (owners.get(w.id) === win.id)
         for (const p of panes(w.root)) closeSession(p.id);
     for (const [id, owner] of endpointOwners)
@@ -1159,7 +1365,7 @@ async function createWindow() {
         if (window) owners.set(workspace, window.id);
         else owners.delete(workspace);
       }
-    publishDocument();
+    if (windows.size && documentCache) publishDocument(documentCache);
   });
   const dev =
     !app.isPackaged && process.env.PASSPORT_DEV_URL === "http://127.0.0.1:5173";
@@ -1171,6 +1377,7 @@ async function createWindow() {
 void app
   .whenReady()
   .then(async () => {
+    if (!ownsDataDirectory) return;
     updates = new UpdateChecker({
       version: app.getVersion(),
       platform: process.platform,
@@ -1184,6 +1391,14 @@ void app
       emit({ kind: "notice", message }),
     );
     locals = new LocalSessions(emit);
+    activity = new ActivityService(store.db, {
+      workspace: (paneId) => workspaceFor(paneId)?.id,
+      changed: (items) => emit({ kind: "activity", items }),
+      notify: desktopActivity,
+      ready: (id, generation, result) => locals.ready(id, generation, result),
+      error: (message) => emit({ kind: "notice", message }),
+    });
+    await activity.start();
     tunnels = new Tunnels(store, confirm, (state) =>
       emit({ kind: "tunnel", state }),
     );
@@ -1289,7 +1504,13 @@ void app
           submenu: [
             { label: "전체 화면", role: "togglefullscreen" },
             ...(!app.isPackaged
-              ? [{ label: "개발자 도구", role: "toggleDevTools" as const }]
+              ? [
+                  {
+                    label: "개발자 도구",
+                    role: "toggleDevTools" as const,
+                    accelerator: "CommandOrControl+Alt+Shift+I",
+                  },
+                ]
               : []),
           ],
         },
@@ -1330,6 +1551,14 @@ void app
     app.on("activate", () => {
       if (!window) void createWindow();
     });
+    app.on("second-instance", () => {
+      const target = BrowserWindow.getFocusedWindow() ?? window;
+      if (target) {
+        if (target.isMinimized()) target.restore();
+        target.show();
+        target.focus();
+      } else void createWindow();
+    });
   })
   .catch((error) => {
     dialog.showErrorBox(
@@ -1357,6 +1586,8 @@ app.on("will-quit", (event) => {
     transfers?.cancelAll();
     files?.closeAll();
     await locals?.shutdown();
+    for (const banner of banners) banner.close();
+    await activity?.close();
     store?.close();
     shutdownComplete = true;
     app.quit();

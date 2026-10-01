@@ -2,66 +2,11 @@ import * as pty from "node-pty";
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
-import type { AppEvent, LocalShell, Bootstrap } from "../shared/model";
-export function shellPaths(): Map<LocalShell["shell"], string> {
-  const entries: [LocalShell["shell"], string][] =
-    process.platform === "win32"
-      ? [
-          [
-            "powershell",
-            path.join(
-              process.env.ProgramFiles || "C:\\Program Files",
-              "PowerShell",
-              "7",
-              "pwsh.exe",
-            ),
-          ],
-          [
-            "powershell",
-            path.join(
-              process.env.SystemRoot || "C:\\Windows",
-              "System32",
-              "WindowsPowerShell",
-              "v1.0",
-              "powershell.exe",
-            ),
-          ],
-          [
-            "cmd",
-            path.join(
-              process.env.SystemRoot || "C:\\Windows",
-              "System32",
-              "cmd.exe",
-            ),
-          ],
-        ]
-      : [
-          ["default", process.env.SHELL || "/bin/zsh"],
-          ["zsh", "/bin/zsh"],
-          ["bash", "/bin/bash"],
-        ];
-  const found = new Map<LocalShell["shell"], string>();
-  for (const [key, file] of entries)
-    if (fs.existsSync(file) && !found.has(key)) found.set(key, file);
-  if (!found.has("default") && found.size)
-    found.set(
-      "default",
-      found.get("powershell") || found.values().next().value!,
-    );
-  return found;
-}
-export function availableShells(): Bootstrap["shells"] {
-  return [...shellPaths().keys()].map((id) => ({
-    id,
-    name: {
-      default: "기본 로그인 셸",
-      zsh: "zsh",
-      bash: "bash",
-      powershell: "PowerShell",
-      cmd: "명령 프롬프트",
-    }[id],
-  }));
-}
+import type { AppEvent, LocalShell } from "../shared/model";
+import { shellPaths } from "./shells";
+export { shellPaths, availableShells } from "./shells";
+import type { LaunchSpec } from "./startup";
+import { localTerminalEnv } from "./terminal-env";
 type LocalSession = {
   pty: pty.IPty;
   inFlight: number;
@@ -70,6 +15,8 @@ type LocalSession = {
   dataListener: pty.IDisposable;
   timer?: ReturnType<typeof setTimeout>;
   killTimer?: ReturnType<typeof setTimeout>;
+  launch?: LaunchSpec;
+  startupTimer?: ReturnType<typeof setTimeout>;
 };
 export class LocalSessions {
   // A closed tab may still own a native exit callback. Keep tracking that
@@ -78,35 +25,29 @@ export class LocalSessions {
   private shuttingDown = false;
   sessions = new Map<string, LocalSession>();
   constructor(readonly emit: (e: AppEvent) => void) {}
-  open(id: string, config: LocalShell) {
+  open(id: string, config: LocalShell, launch?: LaunchSpec) {
     if (this.shuttingDown) throw new Error("앱을 종료하고 있습니다.");
     this.close(id);
-    const executable = shellPaths().get(config.shell);
+    const executable = launch?.executable || shellPaths().get(config.shell);
     if (!executable)
       throw new Error("이 기기에 해당 셸이 설치되어 있지 않습니다.");
-    const cwd = config.cwd || os.homedir();
+    const cwd = launch?.cwd || config.cwd || os.homedir();
     if (!fs.statSync(cwd).isDirectory())
       throw new Error("시작 폴더를 찾을 수 없습니다.");
-    const env: NodeJS.ProcessEnv = {
-      ...process.env,
-      TERM: "xterm-256color",
-      TERM_PROGRAM: "Passport",
-    };
-    // Do not reuse the parent Terminal.app's shell-session restoration ID.
-    delete env.TERM_SESSION_ID;
     const terminal = pty.spawn(
       executable,
-      process.platform === "win32"
-        ? path.basename(executable).toLowerCase() === "cmd.exe"
-          ? []
-          : ["-NoLogo"]
-        : ["-l"],
+      launch?.args ??
+        (process.platform === "win32"
+          ? path.basename(executable).toLowerCase() === "cmd.exe"
+            ? []
+            : ["-NoLogo"]
+          : ["-l"]),
       {
         name: "xterm-256color",
         cols: 100,
         rows: 30,
         cwd,
-        env,
+        env: launch?.env || localTerminalEnv(),
         // Use the bundled ConPTY on Windows 11. The system ConPTY shutdown
         // forks a console-list helper that can race with the shell's exit.
         useConptyDll: process.platform === "win32",
@@ -119,6 +60,7 @@ export class LocalSessions {
     this.pendingExits.add(exited);
     const entry: LocalSession = {
       pty: terminal,
+      launch,
       inFlight: 0,
       queue: "",
       alive: true,
@@ -134,6 +76,12 @@ export class LocalSessions {
     });
     terminal.onExit(() => {
       entry.alive = false;
+      clearTimeout(entry.startupTimer);
+      try {
+        entry.launch?.cleanup();
+      } catch {
+        /* a locked loader is reclaimed on the next app start */
+      }
       clearTimeout(entry.killTimer);
       entry.dataListener.dispose();
       // Defer resolution past the JS/native callback stack. Electron must not
@@ -147,7 +95,50 @@ export class LocalSessions {
         this.emit({ kind: "session", state: { id, status: "disconnected" } });
       }
     });
-    this.emit({ kind: "session", state: { id, status: "connected" } });
+    this.emit({
+      kind: "session",
+      state: { id, status: "connected", environment: launch?.snapshot },
+    });
+    if (launch && launch.snapshot.status === "starting")
+      entry.startupTimer = setTimeout(() => {
+        if (
+          this.sessions.get(id) !== entry ||
+          launch.snapshot.status !== "starting"
+        )
+          return;
+        launch.snapshot.status = "failed";
+        launch.snapshot.results.push(
+          "초기화 완료 신호가 없습니다. 셸 시작 파일·실행 정책·프로파일 오류를 확인하세요.",
+        );
+        this.emit({
+          kind: "session",
+          state: { id, status: "connected", environment: launch.snapshot },
+        });
+      }, 15000);
+  }
+  ready(id: string, generation: string, result?: string) {
+    const entry = this.sessions.get(id),
+      snapshot = entry?.launch?.snapshot;
+    if (!entry || !snapshot || snapshot.sessionInstanceId !== generation)
+      return;
+    if (result) {
+      if (snapshot.results.length < 250) snapshot.results.push(result);
+      if (result.startsWith("!error:")) {
+        snapshot.status = "failed";
+        clearTimeout(entry.startupTimer);
+      }
+    } else {
+      snapshot.status = "ready";
+      clearTimeout(entry.startupTimer);
+    }
+    this.emit({
+      kind: "session",
+      state: {
+        id,
+        status: "connected",
+        environment: structuredClone(snapshot),
+      },
+    });
   }
   private flush(id: string) {
     const s = this.sessions.get(id);
@@ -186,6 +177,7 @@ export class LocalSessions {
     if (!s) return;
     this.sessions.delete(id);
     clearTimeout(s.timer);
+    clearTimeout(s.startupTimer);
     s.dataListener.dispose();
     s.queue = "";
     if (s.alive) {

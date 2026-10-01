@@ -44,6 +44,7 @@ test("real Docker SSH and SFTP through the desktop application", async ({}, info
     });
     try {
       const page = await app.firstWindow();
+      await page.getByRole("button", { name: "호스트", exact: true }).click();
       const errors: string[] = [];
       page.on("pageerror", (error) => errors.push(error.message));
       await app.evaluate(({ dialog }) => {

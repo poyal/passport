@@ -1,0 +1,10 @@
+{
+  "version": "2.56.0.windows.1",
+  "source": "https://github.com/git-for-windows/git/releases/tag/v2.56.0.windows.1",
+  "license": "GPL-2.0 and bundled component licenses (retained in runtime)",
+  "patches": ["Disable etc/profile.d/bash_profile.sh to prevent creation of user startup files; preserve original as bash_profile.sh.passport-original"],
+  "assets": {
+    "x64": { "name": "PortableGit-2.56.0-64-bit.7z.exe", "sha256": "eceb5e061aa90df2f69ddd3e90f0030e1b8037a7829934bc40e4be1caa1accc1" },
+    "arm64": { "name": "PortableGit-2.56.0-arm64.7z.exe", "sha256": "edd9bd32aefa5d2bd4b938c38c18ceca306a7f6b29a6951cd6a4bb16d9d28d8f" }
+  }
+}

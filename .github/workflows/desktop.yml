@@ -28,7 +28,11 @@ jobs:
         with:
           node-version: "24"
           cache: npm
+      - uses: dtolnay/rust-toolchain@stable
       - run: npm ci
+      - run: npm run build:helper
+      - if: matrix.target == 'win'
+        run: npm run prepare:runtime -- ${{ matrix.arch }}
       - run: npm run check
       - run: npm run build
       - run: npx playwright test

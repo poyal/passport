@@ -26,7 +26,9 @@ jobs:
       - name: Verify release version
         run: |
           node --input-type=module -e 'import fs from "node:fs"; const version = JSON.parse(fs.readFileSync("package.json")).version; if (!/^v\d+\.\d+\.\d+$/.test(process.env.GITHUB_REF_NAME) || process.env.GITHUB_REF_NAME !== `v${version}`) throw new Error("A stable tag matching the package version is required"); if (!fs.existsSync(`docs/releases/v${version}.md`)) throw new Error("Release notes are required"); if (process.arch !== "arm64") throw new Error("An ARM64 runner is required");'
+      - uses: dtolnay/rust-toolchain@stable
       - run: npm ci
+      - run: npm run build:helper
       - run: npm run check
       - run: npm run build
       - run: npx playwright test

@@ -46,6 +46,7 @@ test("Windows DPAPI protects stored credentials and reconnects after restart", a
       });
     });
     const page = await application.firstWindow();
+    await page.getByRole("button", { name: "호스트", exact: true }).click();
     await expect(page.locator(".hosts-view")).toBeVisible();
     return page;
   };

@@ -130,7 +130,7 @@ export function WorkspaceTemplates() {
     <div className="workspace-library">
       <div className="page-heading">
         <div>
-          <h1>스페이스</h1>
+          <h1>템플릿</h1>
           <p>자주 사용하는 터미널 탭과 분할 배치를 저장하고 함께 여세요.</p>
         </div>
         <button
@@ -147,8 +147,8 @@ export function WorkspaceTemplates() {
         </button>
       </div>
       <p className="hint workspace-library-hint">
-        열린 탭은 유지됩니다. 이름을 누르면 저장된 배치를 새 탭으로 열고
-        연결합니다. 폴더 버튼으로 배치만 열 수도 있습니다.
+        이름을 누르면 배치만 불러옵니다. 실행 버튼을 누르면 새 배치에서 로컬
+        AI와 SSH를 함께 시작합니다.
       </p>
       <div
         className="workspace-template-list"
@@ -159,7 +159,7 @@ export function WorkspaceTemplates() {
           <Empty
             icon={<Layers size={28} />}
             title="저장된 스페이스가 없습니다"
-            description="SSH 탭을 열고 원하는 위치로 분할한 뒤 ‘현재 창 저장’을 누르세요."
+            description="로컬 AI와 SSH 패널을 배치한 뒤 ‘현재 창 저장’을 누르세요."
           />
         )}
         {app.document.workspaceTemplates.map((template) => {
@@ -173,8 +173,8 @@ export function WorkspaceTemplates() {
               <button
                 className="workspace-template-open"
                 disabled={busy}
-                aria-label={`${template.name} 스페이스 열고 연결`}
-                onClick={() => void open(template, true)}
+                aria-label={`${template.name} 배치만 열기`}
+                onClick={() => void open(template, false)}
               >
                 <span className="template-preview" aria-hidden="true">
                   <LayoutPreview node={template.workspaces[0].root} />
@@ -193,9 +193,9 @@ export function WorkspaceTemplates() {
               </button>
               <div className="workspace-template-actions">
                 <IconButton
-                  label={`${template.name} 배치만 열기`}
+                  label={`${template.name} 불러오고 시작`}
                   disabled={busy}
-                  onClick={() => void open(template, false)}
+                  onClick={() => void open(template, true)}
                 >
                   <FolderOpen size={16} />
                 </IconButton>

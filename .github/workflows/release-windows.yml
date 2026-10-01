@@ -2,9 +2,6 @@ name: Publish Windows release
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths: [".github/workflows/release-windows.yml"]
 
 permissions:
   contents: write
@@ -37,6 +34,9 @@ jobs:
           'C:\Program Files\Git\usr\bin' | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
       - name: Install dependencies and prepare native ConPTY
         run: npm ci
+      - uses: dtolnay/rust-toolchain@stable
+      - run: npm run build:helper
+      - run: npm run prepare:runtime -- x64
       - run: npm run check
       - run: npm run build
       - run: npx electron-builder --win nsis --x64 --publish never

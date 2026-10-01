@@ -42,7 +42,11 @@ import { themes, getTheme } from "../shared/themes";
 import { useApp } from "./context";
 import { api, uuid } from "./api";
 import { attachTerminal, applyAppearance, terminals } from "./terminals";
-import { HostPicker } from "./HostPicker";
+import {
+  TerminalChooser,
+  ProfileSelector,
+  type TerminalChoice,
+} from "./TerminalSetup";
 import {
   IconButton,
   Modal,
@@ -81,6 +85,8 @@ function Leaf({
       resultCount: 0,
     }),
     [split, setSplit] = useState(false),
+    [environment, setEnvironment] = useState(false),
+    [reconfigure, setReconfigure] = useState(false),
     [splitDirection, setSplitDirection] = useState<"horizontal" | "vertical">(
       "horizontal",
     ),
@@ -196,7 +202,14 @@ function Leaf({
           const root = removeNode(w.root, pane.id);
           return root ? [{ ...w, root }] : [];
         }),
-        { id, name: host.name, root: pane },
+        {
+          id,
+          name: host.name,
+          root: pane,
+          project: workspace.project
+            ? structuredClone(workspace.project)
+            : undefined,
+        },
       ],
     }));
     if (ok) {
@@ -246,13 +259,8 @@ function Leaf({
   };
   const addSplit = async (
     direction: "horizontal" | "vertical",
-    splitHost: string,
+    choice: TerminalChoice,
   ) => {
-    const h = app.document.hosts.find((x) => x.id === splitHost);
-    if (!h) {
-      app.notify("연결할 호스트를 선택해 주세요.");
-      return;
-    }
     if (app.document.workspaces.flatMap((w) => panes(w.root)).length >= 32) {
       app.notify("최대 32개의 터미널을 열 수 있습니다.");
       return;
@@ -265,7 +273,7 @@ function Leaf({
       app.notify("분할할 공간이 부족합니다. 창을 확대해 주세요.");
       return;
     }
-    const p: Pane = { kind: "pane", id: uuid(), hostId: h.id };
+    const p: Pane = { kind: "pane", id: uuid(), ...choice };
     const ok = await app.update((d) => ({
       ...d,
       workspaces: d.workspaces.map((w) =>
@@ -287,12 +295,12 @@ function Leaf({
       setSplit(false);
       setMaximized(null);
       app.setActivePane(p.id);
-      await app.connectPane(p.id, h.id);
+      await app.connectPane(p.id, p.hostId);
     }
   };
   return (
     <section
-      className={`terminal-pane ${app.activePane === pane.id ? "focused" : ""}`}
+      className={`terminal-pane ${app.activePane === pane.id ? "focused" : ""} ${app.activities.some((a) => a.paneId === pane.id && a.kind === "permission" && !a.resolved && a.available) ? "needs-input" : ""}`}
       data-pane-id={pane.id}
       onMouseDown={() => app.setActivePane(pane.id)}
       onFocusCapture={() => app.setActivePane(pane.id)}
@@ -319,9 +327,22 @@ function Leaf({
           }
         >
           <TerminalIcon size={14} />
-          <strong>{host.name}</strong>
+          <strong>
+            {pane.local
+              ? pane.local.agent === "claude"
+                ? "Claude Code"
+                : pane.local.agent === "codex"
+                  ? "Codex"
+                  : "로컬"
+              : host.name}
+          </strong>
           <span>
-            {host.username}@{host.address}
+            {pane.local
+              ? app.sessionStates[pane.id]?.environment?.cwd ||
+                pane.local.cwd ||
+                workspace.project?.cwd ||
+                app.boot.home
+              : `${host.username}@${host.address}`}
           </span>
         </div>
         <span
@@ -334,6 +355,18 @@ function Leaf({
                 : "연결 끊김"
           }
         />
+        {app.activities.some((a) => a.paneId === pane.id && !a.read) && (
+          <button
+            className="unread-dot"
+            aria-label="이 터미널의 알림"
+            onClick={() => app.setActive("activity")}
+          />
+        )}
+        {pane.local && (
+          <IconButton label="실행 환경" onClick={() => setEnvironment(true)}>
+            <Wrench size={14} />
+          </IconButton>
+        )}
         <IconButton
           label="터미널 검색"
           onClick={() => (search === null ? setSearch("") : closeSearch())}
@@ -414,11 +447,12 @@ function Leaf({
         </div>
       )}
       {split && (
-        <HostPicker
+        <TerminalChooser
           title="터미널 분할"
-          sshOnly
+          initial={pane.local ? "local" : "ssh"}
+          workspaceId={workspace.id}
           onClose={() => setSplit(false)}
-          onSelect={(id) => void addSplit(splitDirection, id)}
+          onSelect={(choice) => addSplit(splitDirection, choice)}
         >
           <div className="segmented" role="group" aria-label="분할 방향">
             <button
@@ -436,7 +470,90 @@ function Leaf({
               상하 분할
             </button>
           </div>
-        </HostPicker>
+        </TerminalChooser>
+      )}
+      {environment && (
+        <Modal title="실행 환경" onClose={() => setEnvironment(false)}>
+          <p>
+            {pane.local?.shell} · {status}
+          </p>
+          {app.sessionStates[pane.id]?.environment ? (
+            <>
+              <p className="path-caption">
+                {app.sessionStates[pane.id].environment!.executable}
+              </p>
+              <p className="path-caption">
+                {app.sessionStates[pane.id].environment!.cwd}
+              </p>
+              <p>
+                프로파일 초기화:{" "}
+                {app.sessionStates[pane.id].environment!.status}
+              </p>
+              {app.sessionStates[pane.id].environment!.profiles.map((p) => (
+                <p key={p.id}>
+                  {p.name} · v{p.revision}
+                </p>
+              ))}
+              <details open>
+                <summary>적용 기록</summary>
+                {app.sessionStates[pane.id].environment!.results.map((r, i) => (
+                  <p className="hint" key={i}>
+                    {r}
+                  </p>
+                ))}
+              </details>
+            </>
+          ) : (
+            <p className="hint">실행 중인 세션이 없습니다.</p>
+          )}
+          <p className="hint">
+            이 기록은 실행 시점의 설정입니다. 기본값을 바꿔도 실행 중인 셸에는
+            다시 주입하지 않습니다.
+          </p>
+          <button
+            onClick={() => {
+              setEnvironment(false);
+              setReconfigure(true);
+            }}
+          >
+            셸·폴더·프로파일 변경
+          </button>
+        </Modal>
+      )}
+      {reconfigure && (
+        <TerminalChooser
+          title="로컬 터미널 설정"
+          initialLocal={pane.local}
+          workspaceId={workspace.id}
+          onClose={() => setReconfigure(false)}
+          onSelect={async (choice) => {
+            setReconfigure(false);
+            if (
+              status === "connected" &&
+              !(await app.confirm(
+                "터미널 새로 시작",
+                "이 패널의 실행 중인 프로세스를 종료하고 선택한 설정으로 시작할까요?",
+              ))
+            )
+              return;
+            const ok = await app.update((d) => ({
+              ...d,
+              workspaces: d.workspaces.map((w) =>
+                w.id === workspace.id
+                  ? {
+                      ...w,
+                      root: replaceNode(w.root, pane.id, {
+                        ...pane,
+                        ...choice,
+                        local: choice.local,
+                      }),
+                    }
+                  : w,
+              ),
+            }));
+            if (ok) await app.connectPane(pane.id, choice.hostId);
+          }}
+        />
       )}
       <div
         className="terminal-mount"
@@ -703,9 +820,22 @@ function Branch({
 export function WorkspaceView({ workspace }: { workspace: Workspace }) {
   const app = useApp(),
     [maximized, setMaximized] = useState<string | null>(null),
+    [projectSettings, setProjectSettings] = useState(false),
     [tool, setTool] = useState<"snippets" | "appearance" | "operations" | null>(
       null,
     );
+  useEffect(() => {
+    const activate = (event: Event) => {
+      if (
+        panes(workspace.root).some(
+          (p) => p.id === (event as CustomEvent).detail,
+        )
+      )
+        setMaximized(null);
+    };
+    window.addEventListener("passport-activate", activate);
+    return () => window.removeEventListener("passport-activate", activate);
+  }, [workspace.root]);
   const focused = maximized
     ? panes(workspace.root).find((p) => p.id === maximized)
     : undefined;
@@ -719,9 +849,18 @@ export function WorkspaceView({ workspace }: { workspace: Workspace }) {
   }, [app.active, app.activePane, workspace.id, ids.join(",")]);
   return (
     <div className="workspace-view">
+      {projectSettings && (
+        <ProjectSettings
+          workspace={workspace}
+          onClose={() => setProjectSettings(false)}
+        />
+      )}
       <div className="workspace-bar">
         <div className="row">
           <strong>{workspace.name}</strong>
+          <button onClick={() => setProjectSettings(true)}>
+            프로젝트 설정
+          </button>
           <span className="pill">
             {connected.length} / {ids.length} 연결
           </span>
@@ -1284,5 +1423,76 @@ export function AppearancePanel({
         </>
       )}
     </div>
+  );
+}
+
+function ProjectSettings({
+  workspace,
+  onClose,
+}: {
+  workspace: Workspace;
+  onClose: () => void;
+}) {
+  const app = useApp();
+  const [project, setProject] = useState(
+    workspace.project || {
+      cwd: "",
+      profiles: { mode: "inherit" as const, ids: [] },
+    },
+  );
+  return (
+    <Modal title="작업 프로젝트 설정" onClose={onClose}>
+      <label>
+        기본 프로젝트 폴더
+        <div className="row">
+          <input
+            value={project.cwd}
+            placeholder={app.boot.home}
+            onChange={(e) => setProject({ ...project, cwd: e.target.value })}
+          />
+          <button
+            onClick={() =>
+              void api
+                .call("terminal.folder", undefined)
+                .then((cwd) => {
+                  if (cwd) setProject({ ...project, cwd });
+                })
+                .catch(app.notify)
+            }
+          >
+            폴더 선택
+          </button>
+        </div>
+      </label>
+      <ProfileSelector
+        shell={app.document.settings.terminal.shell}
+        value={project.profiles}
+        onChange={(profiles) => setProject({ ...project, profiles })}
+      />
+      <p className="hint">
+        이 작업에서 새로 여는 로컬 패널이 상속합니다. 패널에 직접 선택한 설정이
+        있으면 우선 적용합니다.
+      </p>
+      <div className="modal-actions">
+        <button onClick={onClose}>취소</button>
+        <button
+          className="primary"
+          onClick={() =>
+            void app
+              .update((d) => ({
+                ...d,
+                workspaces: d.workspaces.map((w) =>
+                  w.id === workspace.id ? { ...w, project } : w,
+                ),
+              }))
+              .then((ok) => {
+                if (ok) onClose();
+              })
+          }
+        >
+          저장
+        </button>
+      </div>
+    </Modal>
   );
 }

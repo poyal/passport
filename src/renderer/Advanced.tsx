@@ -1473,6 +1473,8 @@ export function ShortcutSettings() {
           nextPane: "다음 패널",
           previousPane: "이전 패널",
           newTab: "새 탭",
+          activity: "알림함 (빈 값으로 끄기)",
+          recentActivity: "최근 미확인 터미널",
         }).map(([id, label]) => (
           <label key={id}>
             {label}

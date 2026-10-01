@@ -1,0 +1,34 @@
+{
+  "date": "2026-10-01",
+  "platform": "darwin-arm64",
+  "publication": "local-only",
+  "tests": {
+    "unitIntegrationPassed": 101,
+    "unitIntegrationSkipped": 4,
+    "guiUniquePassed": 38,
+    "guiOptionalSkipped": 2,
+    "packagedFeatureGuiPassed": 2,
+    "rustUnitPassed": 1
+  },
+  "packaged": {
+    "distFilesCompared": 65,
+    "distMatches": true,
+    "helperMatchesAfterRemovingSignatures": true,
+    "helperBytes": 617568,
+    "helperSha256": "c4c1e4aa695e0f7a30a5a5eec25498b6484b9f733c3bf2bbf9d3946cb9c8c783",
+    "manifestPresent": true,
+    "helperLicensesPresent": true,
+    "smoke": "passed",
+    "exitCode": 0,
+    "codesignVerification": "passed",
+    "signature": "ad-hoc"
+  },
+  "windows": {
+    "x64": "runtime checksum, executables, home-file patch and cargo check passed",
+    "arm64": "runtime checksum, executables, home-file patch and cargo check passed",
+    "desktopExecution": "not tested"
+  },
+  "liveAiServiceRequests": "not tested",
+  "osNotificationDelivery": "not verified",
+  "performanceP95": "not measured"
+}

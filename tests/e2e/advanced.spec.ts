@@ -32,6 +32,7 @@ test.beforeAll(async () => {
     env: { ...process.env, PASSPORT_DATA_DIR: path.join(directory, "data") },
   });
   page = await application.firstWindow();
+  await page.getByRole("button", { name: "호스트", exact: true }).click();
   page.on("pageerror", (e) => errors.push(e.message));
   await application.evaluate(({ dialog }) => {
     dialog.showMessageBox = async () => ({
@@ -251,7 +252,7 @@ test("opens and keeps a local tab active when ownership events arrive after the 
     },
   );
   try {
-    await page.getByRole("button", { name: "새 SSH 탭", exact: true }).click();
+    await page.getByRole("button", { name: "새 터미널", exact: true }).click();
     await page
       .getByRole("button", { name: "로컬 터미널 열기", exact: true })
       .click();

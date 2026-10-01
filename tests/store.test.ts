@@ -139,14 +139,14 @@ it("upgrades v0.1 metadata without losing hosts and rejects a future database ve
     store.db.pragma("user_version = 1");
     store.close();
     store = new Store(dir, vault);
-    expect(store.db.pragma("user_version", { simple: true })).toBe(3);
+    expect(store.db.pragma("user_version", { simple: true })).toBe(4);
     expect(store.read().hosts[0].name).toBe("기존 서버");
     expect(store.read().hosts[0].icon).toBe("auto");
     expect(store.read().tunnels).toEqual([]);
     expect(store.read().settings.shortcuts.newTab).toBe("Mod+Shift+T");
     store.close();
     const future = new Database(path.join(dir, "passport.sqlite"));
-    future.pragma("user_version=4");
+    future.pragma("user_version=5");
     future.close();
     expect(() => new Store(dir, vault)).toThrow("새로운 Passport");
   } finally {

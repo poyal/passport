@@ -34,6 +34,7 @@ test.beforeEach(async () => {
   const [major, minor, patch] = currentVersion.split(".").map(Number);
   nextVersion = `${major}.${minor}.${patch + 1}`;
   page = await application.firstWindow();
+  await page.getByRole("button", { name: "호스트", exact: true }).click();
   page.on("pageerror", (error) => errors.push(error.message));
   await expect(page.locator(".hosts-view")).toBeVisible();
   await page.getByRole("button", { name: "설정", exact: true }).click();

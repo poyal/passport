@@ -7,6 +7,15 @@ import type {
   Result,
 } from "../shared/model";
 const names: Call[] = [
+  "terminal.folder",
+  "terminal.preview",
+  "activity.list",
+  "activity.read",
+  "activity.open",
+  "activity.clear",
+  "activity.focus",
+  "activity.test",
+  "activity.settings",
   "bootstrap",
   "updates.check",
   "updates.open",

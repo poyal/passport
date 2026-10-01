@@ -32,6 +32,25 @@ Windows NSIS 설치본은 [설치 스크립트](../build/installer.nsh)에서 �
 ./scripts/windows-installer-smoke.ps1 -InstallerPath release/Passport-1.0.2-win-x64.exe
 ```
 
+## macOS 권한 유지와 Developer ID 서명
+
+로컬 터미널의 Claude 같은 자식 프로세스가 보호된 파일이나 미디어 보관함에 접근하면 macOS는 Passport에 권한을 요청할 수 있다. Apple Music, OneDrive 등은 각각 별도의 권한이므로 처음에는 개별 확인이 필요하다. 앱 설정만으로 이 확인을 대신할 수 없다.
+
+ad-hoc 서명은 앱을 다시 빌드해 교체할 때 코드 해시가 바뀐다. macOS가 저장한 앱의 코드 요구사항과 새 설치본이 일치하지 않으면 이전에 결정한 접근 권한을 다시 물을 수 있다. 업데이트 후에도 앱의 신원을 유지하려면 동일한 개발자 팀의 Developer ID Application 서명과 번들 ID `io.passport.desktop`을 유지해야 한다. [Apple 코드 서명 요구사항 설명](https://developer.apple.com/documentation/technotes/tn3127-inside-code-signing-requirements).
+
+인증서를 키체인에 준비한 뒤 정식 서명용 명령을 사용한다. 개인 키나 인증서 암호를 저장소에 넣지 않는다.
+
+```sh
+security find-identity -v -p codesigning
+CSC_NAME='Developer ID Application: Your Name (ABCDEFGHIJ)' npm run dist:mac:signed
+```
+
+`CSC_NAME`에는 위 명령에 표시된 인증서의 전체 이름을 넣는다. [서명 빌드 설정](../electron-builder.mac-signed.cjs)은 기존 패키지 리소스와 번들 ID를 유지하고 `forceCodeSigning: true`로 인증서가 없거나 사용할 수 없으면 빌드를 실패시킨다. 임시 서명으로 자동 전환하지 않는다. CI에서 키체인을 새로 준비해야 하면 electron-builder의 `CSC_LINK`·`CSC_KEY_PASSWORD`를 비밀 환경 변수로 공급할 수 있다. 이 경우에도 같은 `CSC_NAME`을 사용한다.
+
+Developer ID 서명과 Apple 공증은 별도다. 이 명령만으로 공증 완료를 보장하지 않는다. 공증에 필요한 인증 정보는 electron-builder가 지원하는 `APPLE_KEYCHAIN_PROFILE` 등으로 따로 준비한다. 인증서 발급 전에는 기존 `dist:mac`·`pack` 및 CI 명령이 여전히 ad-hoc 설치본을 만든다. 공개 릴리즈를 정식 서명으로 전환할 때에는 릴리즈 워크플로의 패키징 단계에도 `--config electron-builder.mac-signed.cjs`와 인증서 환경 변수를 적용해야 한다.
+
+처음 ad-hoc 설치본에서 Developer ID 설치본으로 전환할 때에는 권한 확인이 다시 필요할 수 있다. 이후 두 버전을 번갈아 `/Applications/Passport.app`에 덮어쓰지 않는다. 권한 취소나 새 접근 대상에 대한 확인까지 없애는 것은 아니다. 검증은 같은 설치본의 터미널 재연결·앱 재실행, 이후 동일한 개발자 서명을 사용한 두 빌드 사이의 업데이트를 각각 구분해 수행한다. 인증서가 없는 환경에서는 업데이트 간 권한 유지 검증을 완료한 것으로 기록하지 않는다.
+
 ## 아이콘과 오픈소스 고지
 
 [확정한 v2 아이콘](icons.md)을 `scripts/build.mjs`가 `build/icon.png`로 복사한다. electron-builder가 해당 원본을 패키지 아이콘으로 사용한다. 원본 경로는 `design/icons/04-passport-terminal-v2.png`다.
@@ -83,7 +102,7 @@ Docker 매트릭스와 장시간 부하, 별도 Python 환경을 요구하는 FT
 
 [Publish Mac release](../.github/workflows/release.yml)은 `v*.*.*` 태그 push에서 실행한다. 태그와 `package.json`의 버전이 같아야 하고 `docs/releases/v<버전>.md`가 있어야 한다. ARM64 Mac runner에서 기본 검사·GUI·DMG·패키지 실행과 구형 SSH/파일 색상을 확인하고 모든 단계가 통과하면 해당 버전의 GitHub Release에 DMG와 `SHA256SUMS.txt`를 게시한다. 게시 권한은 해당 작업의 저장소 contents로 한정한다. [GitHub ARM64 runner 공식 안내](https://docs.github.com/en/actions/reference/runners/github-hosted-runners).
 
-[Publish Windows release](../.github/workflows/release-windows.yml)은 수동 실행하거나 `main`에서 해당 워크플로 파일을 변경해 푸시할 때 실행한다. Windows x64 runner에서 Python FTP/FTPS fixture를 준비하고 `npm ci`·기본 검사·EXE 빌드·현재 사용자 설치 범위·실제 패키지 GUI를 검증한다. 통과하면 [게시 스크립트](../scripts/publish-windows-release.mjs)가 `package.json`과 같은 버전의 기존 정식 릴리즈에 EXE를 추가한다. 기존 Mac DMG와 체크섬을 검증·보존하고 합본 체크섬·Windows 소스 커밋을 게시한 뒤 공개 EXE를 다시 다운로드해 해시를 확인한다. 다른 바이트의 같은 이름 EXE가 이미 있거나 릴리즈가 불변 상태면 게시를 중단한다.
+[Publish Windows release](../.github/workflows/release-windows.yml)은 `workflow_dispatch`로만 실행한다. 소스나 워크플로 수정의 푸시만으로 설치본을 재배포하지 않는다. Windows x64 runner에서 Python FTP/FTPS fixture, Rust helper와 내장 Bash를 준비하고 `npm ci`·기본 검사·EXE 빌드·현재 사용자 설치 범위·실제 패키지 GUI를 검증한다. 통과하면 [게시 스크립트](../scripts/publish-windows-release.mjs)가 `package.json`과 같은 버전의 기존 정식 릴리즈에 EXE를 추가한다. 기존 Mac DMG와 체크섬을 검증·보존하고 합본 체크섬·Windows 소스 커밋을 게시한 뒤 공개 EXE를 다시 다운로드해 해시를 확인한다. 다른 바이트의 같은 이름 EXE가 이미 있거나 릴리즈가 불변 상태면 게시를 중단한다.
 
 공개 배포 검증과 설치 파일 해시는 [검증 기록](verification.md)과 버전별 `docs/benchmarks/github-release-*.json`에 보관한다. 로컬 파일과 runner에서 만든 파일은 별도 빌드이므로 각각의 해시를 사용한다. Mac 배포 소스는 해당 버전 태그이며 Windows 추가 게시 소스는 해당 `main` 빌드 커밋이다. Windows 게시 때문에 기존 Mac 태그를 옮기지 않고 게시 후 문서를 `main`에 반영한다.
 

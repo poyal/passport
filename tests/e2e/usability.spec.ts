@@ -34,6 +34,7 @@ test.beforeAll(async () => {
     env: { ...process.env, PASSPORT_DATA_DIR: path.join(directory, "data") },
   });
   page = await application.firstWindow();
+  await page.getByRole("button", { name: "호스트", exact: true }).click();
   page.on("pageerror", (error) => errors.push(error.message));
   await expect(page.locator(".hosts-view")).toBeVisible();
   await application.evaluate(({ dialog, safeStorage }) => {
@@ -238,7 +239,7 @@ test("profile account connects, paste is immediate and literal, automatic logs c
   await page.getByRole("button", { name: "터미널 분할", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "터미널 분할" })).toBeVisible();
   await page.getByLabel("연결할 호스트 검색").fill("예제 서버 63");
-  await expect(page.locator(".host-choice")).toHaveCount(1);
+  await expect(page.locator(".connection-chooser button")).toHaveCount(1);
   await page
     .getByRole("dialog")
     .getByRole("button", { name: "닫기", exact: true })

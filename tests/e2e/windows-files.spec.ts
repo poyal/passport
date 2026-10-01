@@ -26,6 +26,7 @@ test("Windows drive root remains browsable around protected system files", async
   });
   try {
     const page = await application.firstWindow();
+    await page.getByRole("button", { name: "호스트", exact: true }).click();
     await expect(page.locator(".hosts-view")).toBeVisible();
     await page.getByRole("button", { name: "파일", exact: true }).click();
     const input = page.getByLabel("왼쪽 경로", { exact: true });

@@ -21,6 +21,7 @@ test("file types follow every theme while server ANSI, input and output text sta
   });
   try {
     const page = await app.firstWindow();
+    await page.getByRole("button", { name: "호스트", exact: true }).click();
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
     await expect(page.locator(".hosts-view")).toBeVisible();
