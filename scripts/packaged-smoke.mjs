@@ -1,4 +1,4 @@
-import { _electron as electron } from "@playwright/test";
+import { _electron as electron, expect } from "@playwright/test";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -88,9 +88,34 @@ try {
       (s) => s.status === "connected" && s.environment?.status === "ready",
     ),
   );
+  // The bootstrap reply may precede the renderer's session event. Wait for
+  // the visible connected state before sending real keyboard input.
+  phase = "renderer connection";
+  await expect(page.locator(".view:not([hidden]) .pill").first()).toHaveText(
+    "1 / 1 연결",
+    { timeout: 15000 },
+  );
+  if (runtime.platform === "win32") {
+    phase = "interactive Bash prompt";
+    await expect(page.locator(".view:not([hidden]) .xterm-rows")).toContainText(
+      /\$\s*$/,
+      { timeout: 15000 },
+    );
+  }
   phase = "terminal input";
+  await page.bringToFront();
   await page.locator(".view:not([hidden]) .xterm-helper-textarea").focus();
-  await page.keyboard.type("printf 'PACKAGED_%s\\n' PTY_OK");
+  await expect(
+    page.locator(".view:not([hidden]) .xterm-helper-textarea"),
+  ).toBeFocused();
+  await page.waitForFunction(() => document.hasFocus());
+  await page.evaluate(
+    () =>
+      new Promise((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(resolve)),
+      ),
+  );
+  await page.keyboard.type("printf 'PACKAGED_%s\\n' PTY_OK", { delay: 20 });
   await page.keyboard.press("Enter");
   await page.waitForFunction(() =>
     document
@@ -118,8 +143,17 @@ try {
   if (page && !page.isClosed())
     console.error(
       "Package UI diagnostic",
+      phase,
       await page
         .evaluate(() => ({
+          focusedElement: document.activeElement?.className,
+          documentFocused: document.hasFocus(),
+          status: [
+            ...document.querySelectorAll(".view:not([hidden]) .pill"),
+          ].map((e) => e.textContent),
+          terminal: document.querySelector(".view:not([hidden]) .xterm-rows")
+            ?.textContent,
+          error: document.querySelector(".toast.error")?.textContent,
           activeTabs: [...document.querySelectorAll(".app-tab.active")].map(
             (e) => e.textContent,
           ),

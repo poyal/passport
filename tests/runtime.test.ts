@@ -105,6 +105,36 @@ it("ignores stale exit callbacks after reopening a local pane and drains closed 
   }
 });
 
+it.skipIf(process.platform !== "win32")(
+  "shuts down four quiet Windows PTYs after their last output has drained",
+  async () => {
+    let output = "";
+    const local = new LocalSessions((event) => {
+      if (event.kind === "output") {
+        output += event.data;
+        local.ack(event.id, event.bytes);
+      }
+    });
+    try {
+      for (let index = 0; index < 4; index++) {
+        const id = `quiet-${index}`;
+        local.open(id, { shell: "cmd", cwd: os.tmpdir() });
+        local.input(id, `echo QUIET_${index}_READY\r`);
+        await expect
+          .poll(() => output, { timeout: 5000 })
+          .toContain(`QUIET_${index}_READY`);
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const started = Date.now();
+      await local.shutdown();
+      expect(Date.now() - started).toBeLessThan(5000);
+      expect(local.sessions.size).toBe(0);
+    } finally {
+      await local.shutdown();
+    }
+  },
+);
+
 it.skipIf(process.platform === "win32")(
   "waits for a shell that ignores SIGHUP and force-closes it before shutdown",
   async () => {

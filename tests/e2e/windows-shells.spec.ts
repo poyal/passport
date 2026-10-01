@@ -109,9 +109,25 @@ for (const shell of [
                 "Write-Output ($env:PATH -split ';')[0]",
                 "probe",
               ];
+      await expect(
+        page.locator(".view:not([hidden]) .pill").first(),
+      ).toHaveText("1 / 1 연결");
+      await expect(page.locator(".xterm-rows")).toContainText(
+        shell === "passport-bash" ? /\$\s*$/ : />\s*$/,
+        { timeout: 15000 },
+      );
+      await page.bringToFront();
       await page.locator(".xterm-helper-textarea").focus();
+      await expect(page.locator(".xterm-helper-textarea")).toBeFocused();
+      await page.waitForFunction(() => document.hasFocus());
+      await page.evaluate(
+        () =>
+          new Promise((resolve) =>
+            requestAnimationFrame(() => requestAnimationFrame(resolve)),
+          ),
+      );
       for (const command of commands) {
-        await page.keyboard.type(command);
+        await page.keyboard.type(command, { delay: 20 });
         await page.keyboard.press("Enter");
       }
       await expect(page.locator(".xterm-rows")).toContainText(

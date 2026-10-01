@@ -3,11 +3,46 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+export async function patchWindowsPtyAgent(root) {
+  const { version } = JSON.parse(
+    await fs.readFile(path.join(root, "package.json"), "utf8"),
+  );
+  assert.equal(
+    version,
+    "1.1.0",
+    "Review the Windows PTY drain patch for the new node-pty version",
+  );
+  const filename = path.join(root, "lib/windowsPtyAgent.js");
+  const source = await fs.readFile(filename, "utf8");
+  const marker =
+    "// Passport: drain and close even when no output follows kill.";
+  if (source.includes(marker)) return;
+  const original = `this._inSocket.destroy();
+                this._ptyNative.kill(this._pty, this._useConptyDll);
+                this._outSocket.on('data', function () {
+                    _this._conoutSocketWorker.dispose();
+                });`;
+  const replacement = `${original}
+                ${marker}
+                this._conoutSocketWorker.dispose();`;
+  const normalized = source.replaceAll("\r\n", "\n");
+  assert.equal(
+    normalized.split(original).length,
+    2,
+    "Review the node-pty Windows shutdown implementation",
+  );
+  await fs.writeFile(filename, normalized.replace(original, replacement));
+  console.log("node-pty: Windows quiet-output shutdown patch applied");
+}
+
 export async function prepareWindowsPty(sourceRoot, targetRoot, arch) {
   assert.ok(
     ["x64", "arm64"].includes(arch),
     "Unsupported Windows PTY architecture",
   );
+  await patchWindowsPtyAgent(sourceRoot);
+  if (path.resolve(sourceRoot) !== path.resolve(targetRoot))
+    await patchWindowsPtyAgent(targetRoot);
   const versions = await fs.readdir(
     path.join(sourceRoot, "third_party/conpty"),
   );
