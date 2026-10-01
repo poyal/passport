@@ -1,0 +1,65 @@
+{
+  "version": "1.1.0",
+  "sourceCommit": "42563e5e2131d554ab1251921141c98e3bf4a64b",
+  "platform": "mac-arm64",
+  "origin": "github",
+  "verifiedAt": "2026-10-01T10:06:36.304652+00:00",
+  "status": "download-and-checksum-verified",
+  "releaseURL": "https://github.com/poyal/passport/releases/tag/v1.1.0",
+  "workflowRun": 36846311401,
+  "files": [
+    {
+      "name": "Passport-1.1.0-mac-arm64.dmg",
+      "bytes": 155035369,
+      "sha256": "2d7fcb465b0651f7b8915566eb348e37e40f1aa98b6254047013db65d1d9c8ce",
+      "downloadURL": "https://github.com/poyal/passport/releases/download/v1.1.0/Passport-1.1.0-mac-arm64.dmg"
+    },
+    {
+      "name": "SHA256SUMS.txt",
+      "bytes": 95,
+      "sha256": "5cdbce077018c8cacad01529dbb7f40469f866d0fc00407a0a0f2db062dbf9c1",
+      "downloadURL": "https://github.com/poyal/passport/releases/download/v1.1.0/SHA256SUMS.txt"
+    }
+  ],
+  "recordedAt": "2026-10-01T10:22:32.186198+00:00",
+  "macVerification": {
+    "jobId": 110317187990,
+    "conclusion": "success",
+    "checks": [
+      "npm run check",
+      "production build",
+      "source GUI",
+      "DMG packaging",
+      "codesign integrity",
+      "packaged smoke",
+      "packaged GUI"
+    ]
+  },
+  "windows": {
+    "status": "deferred-to-user",
+    "published": false,
+    "jobId": 110318920200,
+    "conclusion": "failure",
+    "passedSteps": [
+      "Set up job",
+      "Run actions/checkout@v4",
+      "Run actions/setup-node@v4",
+      "Run actions/setup-python@v5",
+      "Prepare FTP and FTPS fixtures",
+      "Install dependencies and prepare native ConPTY",
+      "Run dtolnay/rust-toolchain@stable",
+      "Run npm run build:helper",
+      "Run npm run prepare:runtime -- x64",
+      "Run npm run check",
+      "Run npm run build",
+      "Run npx electron-builder --win nsis --x64 --publish never",
+      "Verify current-user installer",
+      "Run actions/upload-artifact@v4",
+      "Post Run actions/checkout@v4",
+      "Complete job"
+    ],
+    "failedStep": "Verify packaged Windows app",
+    "retryRequested": false,
+    "workflow": "manual dispatch only"
+  }
+}

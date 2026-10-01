@@ -1,10 +1,23 @@
 # Passport 검증 기록
 
+## 1.1.0 Mac 공개 배포와 Windows 이관 — 2026-10-01
+
+`v1.1.0`은 `42563e5e2131d554ab1251921141c98e3bf4a64b`의 Mac DMG를 [정식 릴리즈](https://github.com/poyal/passport/releases/tag/v1.1.0)에 게시했다. [배포 실행](https://github.com/poyal/passport/actions/runs/36846311401)의 Mac 작업에서 기본 검사·소스 GUI·DMG 생성·서명 무결성·실제 패키지 실행·패키지 GUI를 통과했다. 공개 DMG를 다시 다운로드해 GitHub 자산 digest와 `SHA256SUMS.txt` 양쪽에 일치하는지 확인했다.
+
+- 파일: `Passport-1.1.0-mac-arm64.dmg`, 155,035,369바이트.
+- SHA-256: `2d7fcb465b0651f7b8915566eb348e37e40f1aa98b6254047013db65d1d9c8ce`.
+- 공개 사본: `release/packages/v1.1.0/github/mac-arm64/`.
+- 바로 테스트할 앱: `release/builds/Passport.app` → `20261001T100100Z-42563e5-mac-arm64-v1.1.0/mac-arm64/Passport.app`. 같은 소스의 로컬 빌드로, 소스 포커스 GUI 36개·패키지 GUI 24개와 실제 PTY·helper·격리·정상 종료·서명 검사를 통과했다. CI DMG와는 별도 빌드다.
+
+Windows 작업은 helper·내장 Bash 준비·기본 검사·빌드·EXE 생성·현재 사용자 설치 범위 검사를 통과했지만 **Verify packaged Windows app** 단계에서 실패해 게시를 건너뛰었다. 사용자가 Windows EXE 빌드와 확인을 직접 진행하기로 해 재실행하지 않았다. 따라서 전체 실행은 실패로 표시되지만 완료된 Mac 게시에는 영향이 없으며, Windows 1.1.0 EXE와 Windows 체크섬은 공개하지 않았다. 이후 Windows 게시를 수동 실행으로 분리했고 임시 배포 정리 워크플로는 실행 후 제거했다. Windows 11 실기·AI CLI·OS 알림 검증 완료를 주장하지 않는다.
+
+`/Applications/Passport.app`과 사용자 DB는 이번 배포에서 교체하지 않았다. 초기 포커스 수정 전 DMG는 미공개 빌드 폴더에 보관하고 배포 후보에서 제외했다. 현행·직전 앱과 복구 백업은 유지한다. 공개 버전 1.1.0·1.0.2보다 오래된 로컬 1.0.1 DMG는 다음 정리 후보이며 이번 배포에서는 삭제하지 않았다. [공개 배포 결과와 해시](benchmarks/github-release-v1.1.0.json) · [로컬 검증 이력](benchmarks/release-v1.1.0-local.json).
+
 ## 1.1.0 게시 전 포커스 회귀 수정 — 2026-10-01
 
 첫 태그 빌드에서 Mac 기본 검사·전체 소스 GUI·DMG 생성은 통과했으나 실제 패키지의 새 로컬 탭 입력 포커스 검사가 실패해 게시를 중단했다. [실패 실행](https://github.com/poyal/passport/actions/runs/36844994158)의 아티팩트에서 단일 프레임 포커스 요청이 간헐적으로 적용되지 않는 것을 확인했다. 연결 응답 직후에 포커스를 요청하던 흐름을 React의 패널 마운트·활성화 반영 이후로 옮겼다. 새 탭에서 벗어나거나 대화상자가 열려 있으면 입력 포커스를 빼앗지 않는다.
 
-수정 후 타입·빌드와 단축키·창 이동·새 로컬 탭·템플릿·스크롤 시나리오를 세 번씩 반복한 **36개 GUI 검사**를 통과했다. 최초 실패의 설치 파일은 공개하지 않았으며, 게시 전 `v1.1.0` 태그를 수정 커밋으로 갱신해 전체 배포 검증을 다시 수행한다.
+수정 후 타입·빌드와 단축키·창 이동·새 로컬 탭·템플릿·스크롤 시나리오를 세 번씩 반복한 **36개 GUI 검사**를 통과했다. 최초 실패의 설치 파일은 공개하지 않았으며, 게시 전 `v1.1.0` 태그를 수정 커밋으로 갱신해 배포 검증을 다시 수행했다. 최종 결과는 위 공개 배포 기록을 따른다.
 
 ## 1.1.0 릴리즈 후보 — 2026-10-01
 
@@ -12,7 +25,7 @@ README 화면 8장을 실제 1.1.0 앱에서 촬영했다. 로컬·SSH 혼합 �
 
 Mac 타입·프로덕션 빌드, 단위/통합 **112개 통과·4개 조건부 생략**. 전체 소스 GUI는 **48개 통과·5개 생략·포커스 검사 1개 실패**였고, 해당 시나리오를 포함한 6개 검사를 같은 순서로 두 번 재실행해 **12개 모두 통과**했다. 최종 패키지에서도 해당 단축키를 포함한 **24개 GUI 검사 통과**, 실제 로컬 PTY·helper·렌더러 격리·정상 종료와 ad-hoc 서명 무결성을 확인했다. FTP/FTPS 별도 Python fixture, Docker 및 선택 장시간 부하는 이 로컬 실행에서 생략했다. Windows 및 공개 파일 결과는 배포 완료 후 아래에 추가한다.
 
-바로 테스트할 앱은 `release/builds/Passport.app`이며 1.1.0 검증 빌드에 연결했다. `/Applications/Passport.app`과 사용자 데이터는 교체하지 않았다. 로컬 DMG는 `release/packages/v1.1.0/local/mac-arm64/`에 보관한다. 현재·직전 검증 빌드와 설치 복구 자료를 보호하며 만료된 정리 후보는 없다. [빌드·해시·검증 기록](benchmarks/release-v1.1.0-local.json).
+이 후보 확인 당시 `release/builds/Passport.app`을 1.1.0 검증 빌드에 연결했으며 `/Applications/Passport.app`과 사용자 데이터는 교체하지 않았다. 이후 포커스 수정에 따라 바로가기를 최종 빌드로 갱신했다. 초기 로컬 DMG는 `release/packages/v1.1.0/local/mac-arm64/`에서 `release/builds/20261001T094800Z-4d2940c-dirty-mac-arm64-v1.1.0/`으로 옮기고 미공개 후보로 기록했다. [빌드·해시·검증 기록](benchmarks/release-v1.1.0-local.json).
 
 ## 그룹 드래그 제한과 중첩 분할 여백 수정 — 2026-10-01
 
@@ -117,6 +130,7 @@ PNG가 일부만 로딩된 상태에서 화면에 그려져 시작 아이콘이 
 [검증 요약과 패키지 helper 해시](benchmarks/local-ai-workspaces.json). 패키지의 `dist/` 파일은 빌드 결과와 바이트 단위로 일치한다. helper는 패키징 서명 때문에 원본 해시가 달라지며, 임시 복사본에서 양쪽 서명을 제거한 뒤 코드 일치와 패키지 원본의 서명 유효성을 각각 확인했다.
 
 **남은 대상별 확인:** Windows 11 설치·오프라인 첫 실행·cmd/PowerShell/Bash 동작·named pipe 권한·OS 알림 클릭, Mac 14, 실제 계정의 Claude/Codex 완료·승인·공유 데몬, 제한된 PowerShell 정책과 사용자 셸 플러그인은 미검증이다. OS 배너의 실제 표시·집중 모드와 이벤트 처리 P95 200 ms 목표도 이번 자동 시험만으로 통과 처리하지 않는다. 추가 프로파일을 사용하는 Bash의 `login_shell`/자동 `.bash_logout` 차이는 사용 안내에 명시했다.
+
 ## 1.0.2 Windows x64 추가 공개 배포 — 2026-09-30
 
 [기존 v1.0.2 릴리즈](https://github.com/poyal/passport/releases/tag/v1.0.2)에 Windows 11 x64 설치본을 추가했다. Windows 빌드 소스는 [28f538d](https://github.com/poyal/passport/commit/28f538db7459546dd4c8a9ed0db151e7d345dc68)이며 Mac 배포 태그는 옮기지 않았다. 기존 Mac DMG의 154,617,128바이트 크기와 SHA-256 `fe66cb02a0c24a3290d52b2c472b6c2a8fb64c4c3cd488913190870d7f36a77e`를 보존하고 `SHA256SUMS.txt`에 Windows 체크섬을 추가했다.

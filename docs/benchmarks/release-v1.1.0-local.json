@@ -22,7 +22,7 @@
   },
   "files": [
     {
-      "path": "release/packages/v1.1.0/local/mac-arm64/Passport-1.1.0-mac-arm64.dmg",
+      "path": "release/builds/20261001T094800Z-4d2940c-dirty-mac-arm64-v1.1.0/Passport-1.1.0-mac-arm64.dmg",
       "bytes": 153786608,
       "sha256": "d0bc932ed45cb453d669e3751f167c00b9c5357aa0453630887c09cb5f78e20b"
     },
@@ -35,11 +35,43 @@
   "linkedArtifacts": {
     "build": "release/builds/20261001T094800Z-4d2940c-dirty-mac-arm64-v1.1.0",
     "checks": "release/checks/20261001-v1.1.0",
-    "package": "release/packages/v1.1.0/local/mac-arm64"
+    "package": "release/builds/20261001T094800Z-4d2940c-dirty-mac-arm64-v1.1.0"
   },
   "artifactReview": {
     "protected": "current and previous verified builds, installed-app reproduction and backups",
     "expiredCandidates": [],
+    "installationReplaced": false
+  },
+  "finalCandidate": {
+    "createdAt": "2026-10-01T10:03:35.089192+00:00",
+    "version": "1.1.0",
+    "sourceCommit": "42563e5e2131d554ab1251921141c98e3bf4a64b",
+    "dirty": false,
+    "platform": "mac-arm64",
+    "status": "passed",
+    "verification": {
+      "typecheckAndBuild": "passed",
+      "sourceFocusGuiPassed": 36,
+      "packagedFocusGuiPassed": 24,
+      "packagedSmoke": "passed; PTY, helper, renderer isolation and exit code 0",
+      "signature": "ad-hoc verified; not notarized"
+    },
+    "files": [
+      {
+        "path": "release/builds/20261001T100100Z-42563e5-mac-arm64-v1.1.0/mac-arm64/Passport.app/Contents/Resources/app.asar",
+        "bytes": 55007229,
+        "sha256": "c7af40b66c95a738d27bccc69103b2910efc6a207fe4df1ea820452571573bea"
+      }
+    ],
+    "checks": "release/checks/20261001-v1.1.0/focus-packaged",
+    "previousCandidate": "superseded before publication; initial GUI focus regression"
+  },
+  "initialCandidateStatus": "superseded-before-publication",
+  "finalArtifactReview": {
+    "protected": "current and previous verified builds, installed-app reproduction and backups",
+    "cleanupCandidates": ["release/packages/v1.0.1/github/mac-arm64"],
+    "reason": "Mac 1.1.0 and 1.0.2 are now the latest two public versions",
+    "deleted": false,
     "installationReplaced": false
   }
 }

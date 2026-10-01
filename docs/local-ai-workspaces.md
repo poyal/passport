@@ -64,4 +64,4 @@ Mac에서 타입 검사, Rust helper 빌드·단위 검사, 실제 PTY의 zsh �
 
 2026-10-01 별도 점검에서 설치된 **Claude 2.1.286의 `--print`**, **Codex 0.159.3의 `exec --ephemeral`**로 최소 응답을 실제 요청했고, 각각 응답 종료 신호·응답 완료 기록과 종료 코드 0을 확인했다. 원래 사용자 설정을 수정하지 않고 임시 앱 데이터와 작업 폴더를 사용했다. 실제 대화형 승인 화면·공유 데몬까지 검증한 결과는 아니다. 수정 설치본의 GUI에서는 직접 입력한 CLI fixture의 승인/완료 신호, 전경에서 배너 생략·배경에서 배너 요청을 확인했다.
 
-Windows x64·ARM64는 공식 번들 다운로드·SHA-256·필수 실행 파일·패치 확인과 Rust 대상 `cargo check`를 수행했다. 이 결과는 Windows 설치·셸 실행·OS 알림 성공을 뜻하지 않는다. `.github/workflows/desktop.yml`에 두 Windows 대상의 런타임 준비·helper 빌드·기존 데스크톱 검사를 연결했으며 실제 대상 실행 결과는 별도로 기록해야 한다. 실제 대화형 Claude/Codex 승인·공유 데몬, 제한된 PowerShell 실행 정책, 사용자 셸 플러그인 전체와 오프라인 Windows 설치는 배포 전 수동 검증 항목이다.
+Windows x64·ARM64는 공식 번들 다운로드·SHA-256·필수 실행 파일·패치 확인과 Rust 대상 `cargo check`를 수행했다. 이후 1.1.0 Windows x64 CI에서 helper·내장 Bash 준비·기본 검사·빌드·EXE 생성·설치 범위 검사를 통과했으나 패키지 검증 단계가 실패했다. Windows EXE는 사용자 기기에서 후속 확인하기로 해 공개하지 않았으며 자동 게시 연결도 해제했다. [해당 실행과 Mac 공개 결과](verification.md)를 확인한다. 이 결과를 Windows 전체 셸·OS 알림 검증 완료로 취급하지 않는다. `.github/workflows/desktop.yml`은 두 Windows 대상의 수동 검증을 제공한다. 실제 대화형 Claude/Codex 승인·공유 데몬, 제한된 PowerShell 실행 정책, 사용자 셸 플러그인 전체와 오프라인 Windows 설치는 별도 실기 검증 항목이다.

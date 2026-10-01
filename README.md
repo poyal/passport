@@ -27,11 +27,13 @@
 
 [최신 공개 릴리즈](https://github.com/poyal/passport/releases/latest)에서 컴퓨터에 맞는 설치 파일을 받으세요. 버전별 변경 사항은 [릴리즈 노트](docs/releases/README.md)에 정리합니다.
 
-| 컴퓨터                                       | 설치 파일                                                               | 배포 상태 |
-| -------------------------------------------- | ----------------------------------------------------------------------- | --------- |
-| Mac · Apple Silicon(M 시리즈), macOS 14 이상 | [Mac ARM64 `.dmg`](https://github.com/poyal/passport/releases/latest)   | 배포 중   |
-| Windows 11 · Intel / AMD(x64)                | [Windows x64 `.exe`](https://github.com/poyal/passport/releases/latest) | 배포 중   |
-| Windows · ARM64                              | ARM64용 설치 프로그램                                                   | 준비 중   |
+| 컴퓨터                                       | 설치 파일                                                                   | 배포 상태                        |
+| -------------------------------------------- | --------------------------------------------------------------------------- | -------------------------------- |
+| Mac · Apple Silicon(M 시리즈), macOS 14 이상 | [Mac ARM64 `.dmg`](https://github.com/poyal/passport/releases/latest)       | 배포 중                          |
+| Windows 11 · Intel / AMD(x64)                | [Windows x64 `.exe`](https://github.com/poyal/passport/releases/tag/v1.0.2) | 이전 버전 제공 · 새 버전 준비 중 |
+| Windows · ARM64                              | ARM64용 설치 프로그램                                                       | 준비 중                          |
+
+현재 새 버전은 Mac에 먼저 배포했습니다. 아래 로컬 AI·시작 프로파일·탭별 템플릿 기능을 포함한 Windows EXE는 별도 빌드·검증 후 추가합니다. 위 Windows 링크의 이전 설치본에는 이 신규 기능이 포함되지 않습니다.
 
 ### Windows
 
