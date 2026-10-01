@@ -12,7 +12,7 @@ afterEach(async () => {
     await fs.rm(directory, { recursive: true, force: true });
 });
 
-it.each(["EPERM", "EACCES", "ENOENT"])(
+it.each(["EPERM", "EACCES", "EINVAL", "ENOENT"])(
   "lists accessible siblings when an entry cannot be inspected (%s)",
   async (code) => {
     const directory = await fs.mkdtemp(
@@ -73,7 +73,7 @@ it("reports unexpected entry failures and keeps explicit file access errors", as
   await expect(adapter.stat("protected-file")).rejects.toBe(permissionError);
 });
 
-it.each(["EPERM", "EACCES"])(
+it.each(["EPERM", "EACCES", "EINVAL"])(
   "keeps transfer enumeration strict when a child is protected (%s)",
   async (code) => {
     const error = Object.assign(new Error("protected entry"), { code });

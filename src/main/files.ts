@@ -64,11 +64,15 @@ export class LocalAdapter implements FileAdapter {
           mode: s.mode,
         });
       } catch (error) {
-        // Browsing may omit protected entries; recursive transfers remain strict.
+        // Windows protected files may report EINVAL as well as permission errors.
+        // Browsing may omit these entries; recursive transfers remain strict.
         const code = (error as NodeJS.ErrnoException).code;
         if (
           code !== "ENOENT" &&
-          !(options?.skipUnreadable && ["EACCES", "EPERM"].includes(code ?? ""))
+          !(
+            options?.skipUnreadable &&
+            ["EACCES", "EPERM", "EINVAL"].includes(code ?? "")
+          )
         )
           throw error;
       }

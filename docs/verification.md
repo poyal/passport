@@ -14,6 +14,10 @@ Windows 11 Pro x64(10.0.26200)에서 타입·단위/프로토콜 통합 **112개
 
 [첫 Windows 추가 게시 실행](https://github.com/poyal/passport/actions/runs/36859824420)은 기본 검사·패키지 smoke·설치 범위·기존 GUI 51개를 통과했지만 신규 셸 검사 4개에서 PATH 확인이 실패해 게시를 건너뛰었다. 네 셸의 초기화·환경 변수·단축 명령은 통과했으나 긴 runner PATH가 검증할 앞부분을 화면 밖으로 밀었다. 첫 PATH 항목만 출력하도록 검사하고, 로컬 패키지에 긴 PATH를 전달한 셸 검사 **3개 통과·PowerShell 7 생략**으로 재검증했다.
 
+[두 번째 실행](https://github.com/poyal/passport/actions/runs/36861988367)은 네 셸을 포함한 GUI **54개 통과·3개 생략** 후 드라이브 루트 검사에서 실패해 게시하지 않았다. 보호된 `C:\DumpStack.log.tmp`의 `lstat`가 runner에서 `EINVAL`을 반환해 전체 파일 목록 조회가 중단됐다. 목록 탐색에서는 해당 항목을 생략하고, 명시적 파일 접근과 재귀 전송은 오류를 유지하도록 수정했다. 접근 가능한 형제 항목 표시와 엄격한 전송 열거를 회귀 검사에 추가했다.
+
+이 수정 후 기본 검사 **114개 통과·4개 생략**, 실제 Windows 드라이브 루트 GUI **3회 통과**를 확인했다. 이전 로컬 설치본의 112개 결과는 그대로 보관하고, 파일 탐색 수정이 포함된 새 CI 설치본과 구분한다.
+
 ## 1.1.0 Mac 공개 배포와 Windows 이관 — 2026-10-01
 
 `v1.1.0`은 `42563e5e2131d554ab1251921141c98e3bf4a64b`의 Mac DMG를 [정식 릴리즈](https://github.com/poyal/passport/releases/tag/v1.1.0)에 게시했다. [배포 실행](https://github.com/poyal/passport/actions/runs/36846311401)의 Mac 작업에서 기본 검사·소스 GUI·DMG 생성·서명 무결성·실제 패키지 실행·패키지 GUI를 통과했다. 공개 DMG를 다시 다운로드해 GitHub 자산 digest와 `SHA256SUMS.txt` 양쪽에 일치하는지 확인했다.
