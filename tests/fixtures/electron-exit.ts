@@ -7,8 +7,16 @@ export async function closeCleanly(application: ElectronApplication) {
     child.exitCode !== null || child.signalCode !== null
       ? Promise.resolve([child.exitCode, child.signalCode])
       : once(child, "exit");
-  await application.close();
+  if (child.exitCode === null && child.signalCode === null) {
+    // Electron's asynchronous will-quit cleanup can still own native PTYs.
+    // Keep the debugger attached until normal cleanup finishes; Playwright's
+    // close() disconnects it immediately after requesting app.quit().
+    await application.evaluate(({ app }) => {
+      setTimeout(() => app.quit(), 0);
+    });
+  }
   const [code, signal] = await exited;
+  await application.close();
   expect(
     { code, signal },
     "Electron must exit normally, including native PTY teardown",
