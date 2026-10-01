@@ -50,6 +50,7 @@ jobs:
           PASSPORT_E2E_EXECUTABLE: ${{ github.workspace }}/release/win-unpacked/Passport.exe
         run: |
           node scripts/packaged-smoke.mjs release/win-unpacked/Passport.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           npx playwright test
       - name: Add Windows installer to the existing release
         env:
