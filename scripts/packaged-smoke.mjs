@@ -2,9 +2,8 @@ import { _electron as electron, expect } from "@playwright/test";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import assert from "node:assert/strict";
-import { once } from "node:events";
 import { spawnSync } from "node:child_process";
+import { closeCleanly } from "../tests/fixtures/electron-exit.ts";
 const executable = process.argv[2];
 if (!executable) throw new Error("패키징된 실행 파일 경로를 입력하세요.");
 const directory = await fs.mkdtemp(path.join(os.tmpdir(), "passport-package-"));
@@ -123,11 +122,9 @@ try {
       ?.textContent?.includes("PACKAGED_PTY_OK"),
   );
   phase = "shutdown";
-  const exited = once(app.process(), "exit");
-  await app.close();
-  const [exitCode, signal] = await exited;
+  await closeCleanly(app);
+  const exitCode = app.process().exitCode;
   app = undefined;
-  assert.deepEqual({ exitCode, signal }, { exitCode: 0, signal: null });
   console.log(
     JSON.stringify({
       packagedSmoke: "passed",
@@ -167,7 +164,7 @@ try {
   throw error;
 } finally {
   try {
-    if (app) await app.close();
+    if (app) await closeCleanly(app);
   } finally {
     clearTimeout(watchdog);
     await fs.rm(directory, { recursive: true, force: true });

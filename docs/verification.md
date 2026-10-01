@@ -15,6 +15,8 @@
 
 공개 EXE도 작업 폴더의 빈 경로에 현재 사용자용으로 실제 설치했다. 설치된 app.asar의 해시가 공개 페이로드와 일치하고, 설치본의 PTY·DPAPI 재시작 접속·셸 GUI **4개 통과·1개 생략**, 시작 시 공개 업데이트 확인과 제거를 통과했다. 설치·제거 코드가 모두 0이며 HKCU 등록은 제거되고 HKLM 설치 등록은 생성되지 않았다. 기존 설치본과 사용자 DB는 보존했다. 이전 로컬 GNU-helper 설치본은 별도 빌드로 기록한다. Windows EXE는 Authenticode 서명이 없으며 ARM64, 실제 AI 서비스 요청·물리 한글 IME·OS 알림 배너, 덮어쓰기 업그레이드와 Docker·장시간 부하는 이번 검증 범위에 포함하지 않는다. PowerShell 7은 CI에서 검증했으며 로컬 PC에서는 없어 생략했다.
 
+마지막 프로세스 확인에서 앞선 로컬·공개 smoke의 OpenConsole 2개가 부모 종료 후 남아 있었다. 작업 경로·생성 시각·부모 종료를 확인해 시험 소유 프로세스만 종료했다. smoke도 GUI fixture와 같이 정상 `app.quit()`과 실제 종료 코드 0을 기다린 뒤 디버거를 해제하도록 보완했다. 공개 앱의 바이트를 바꾸지 않고 **3회 추가 통과**했으며 매번 Passport·helper·OpenConsole 잔여 프로세스가 **0개**였다.
+
 공개 MSVC 빌드, ConPTY 수정 후 로컬 앱 `release/builds/20261001T135521Z-0c783ac-dirty-win-x64-conpty-v1.1.0/`, 이전 로컬 GNU-helper 설치본 및 공개 패키지를 각각 출처·해시와 함께 보관한다. 로그·화면·초기 실패 trace는 `release/checks/20261001T114454Z-349fa04-win-x64-v1.1.0/`에 남겼다. 사용하지 않은 최초 준비 폴더 `release/builds/20261001T114454Z-349fa04-win-x64-v1.1.0/`와 해결된 검증 자료의 7일 후 보관 만료분을 정리 후보로 기록했으며 기존 산출물을 삭제하지 않았다. [공개 게시·다운로드·실행 기록](benchmarks/github-release-windows-v1.1.0.json) · [로컬 설치·검증 기록](benchmarks/verification-windows-v1.1.0.json).
 
 기존 GUI 스크린샷 호출이 `test-results/`에 만든 이번 작업 파일 7개는 위 검증 폴더의 `manual-screenshots/`로 이동했다. 앞선 로컬 사전 빌드 의존성 환경의 간헐적인 Bash 합성 입력 누락은 원인을 확정하지 않았으므로 관련 앱과 자료를 `KEEP.md`로 보호하고 2026-10-09에 재검토한다. 최종 CI와 공개 패키지의 원래 혼합 알림 시나리오는 통과했으며 이를 앞선 관찰의 해결 증명으로 간주하지 않는다.

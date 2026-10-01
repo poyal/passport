@@ -430,7 +430,60 @@
       "originalMixedBashAlertScenario": "passed in final CI and downloaded public-package GUI",
       "record": "docs/benchmarks/github-release-windows-v1.1.0.json",
       "separateBuildFromLocalGNU": true,
-      "doesNotClaimEarlierSyntheticInputObservationResolved": true
+      "doesNotClaimEarlierSyntheticInputObservationResolved": true,
+      "normalQuitFollowup": {
+        "verificationBaseCommit": "19ba9b391fb8f34be4b43dfa2f7457a1288bc0f3",
+        "verificationDirty": true,
+        "changedFiles": [
+          "scripts/packaged-smoke.mjs"
+        ],
+        "scriptSHA256": "d18d9c093f74f0e57b4fa4e29dcb7bbb0e9aa70fa4b7c103e2e9dc7f728e3507",
+        "normalQuit": "Waits for normal app.quit and actual exit code 0 before debugger disconnect",
+        "publicInstallerBytesChanged": false,
+        "normalQuitSmokeRuns": [
+          {
+            "run": 1,
+            "smokeExitCode": 0,
+            "residualPackagedProcesses": 0,
+            "checkedAt": "2026-10-01T15:35:39.1869056Z"
+          },
+          {
+            "run": 2,
+            "smokeExitCode": 0,
+            "residualPackagedProcesses": 0,
+            "checkedAt": "2026-10-01T15:35:42.7567117Z"
+          },
+          {
+            "run": 3,
+            "smokeExitCode": 0,
+            "residualPackagedProcesses": 0,
+            "checkedAt": "2026-10-01T15:35:46.3086985Z"
+          }
+        ],
+        "earlierTaskOwnedOrphans": [
+          {
+            "pid": 18032,
+            "parentPid": 6456,
+            "createdAt": "2026-10-01T14:22:01.1673280Z",
+            "executable": "C:\\Users\\ttt45\\Workspace\\personal\\passport\\release\\builds\\20261001T135521Z-0c783ac-dirty-win-x64-conpty-v1.1.0\\win-unpacked\\resources\\app.asar.unpacked\\node_modules\\node-pty\\prebuilds\\win32-x64\\conpty\\OpenConsole.exe",
+            "commandLine": "\"C:\\Users\\ttt45\\Workspace\\personal\\passport\\release\\builds\\20261001T135521Z-0c783ac-dirty-win-x64-conpty-v1.1.0\\win-unpacked\\resources\\app.asar.unpacked\\node_modules\\node-pty\\prebuilds\\win32-x64\\conpty\\OpenConsole.exe\" --headless --width 100 --height 30 --signal 0xeac --server 0xfbc",
+            "parentMissing": true,
+            "stopped": "2026-10-01T15:35:04.7281484Z"
+          },
+          {
+            "pid": 10188,
+            "parentPid": 6648,
+            "createdAt": "2026-10-01T15:17:00.2658990Z",
+            "executable": "C:\\Users\\ttt45\\Workspace\\personal\\passport\\release\\builds\\20261001T151550Z-2519537-win-x64-public-v1.1.0\\win-unpacked\\resources\\app.asar.unpacked\\node_modules\\node-pty\\build\\Release\\conpty\\OpenConsole.exe",
+            "commandLine": "\"C:\\Users\\ttt45\\Workspace\\personal\\passport\\release\\builds\\20261001T151550Z-2519537-win-x64-public-v1.1.0\\win-unpacked\\resources\\app.asar.unpacked\\node_modules\\node-pty\\build\\Release\\conpty\\OpenConsole.exe\" --headless --width 100 --height 30 --signal 0xff0 --server 0xf88",
+            "parentMissing": true,
+            "stopped": "2026-10-01T15:35:04.7886418Z"
+          }
+        ],
+        "stoppedExistingUserProcesses": 0,
+        "record": "release/checks/20261001T114454Z-349fa04-win-x64-v1.1.0/public-smoke-normal-quit.json",
+        "verifiedAt": "2026-10-01T15:37:11.947Z"
+      }
     }
   }
 }
