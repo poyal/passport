@@ -6,7 +6,7 @@
 
 ## 현재 상태
 
-공개 버전과 준비 중인 버전은 [릴리즈 목록](releases/README.md)에서 확인한다. 1.1.0은 Apple Silicon Mac용 DMG를 공개했으며 Windows x64 EXE는 별도 빌드·검증 후 게시한다. `SHA256SUMS.txt`에는 해당 릴리즈에 실제 게시한 설치 파일만 포함한다. Windows x64의 기존 1.0.2 설치·PTY·DPAPI·종료·제거와 부하 시험 결과를 1.1.0의 완료 근거로 사용하지 않는다. Windows ARM64의 실제 설치·실행은 아직 확인하지 않았다. 공개 파일 해시와 버전별 시험 범위는 [검증 기록](verification.md)을 따른다.
+공개 버전과 준비 중인 버전은 [릴리즈 목록](releases/README.md)에서 확인한다. 1.1.0은 Apple Silicon Mac용 DMG와 Windows x64 EXE를 공개했다. `SHA256SUMS.txt`에는 두 설치 파일의 체크섬을 포함한다. Windows 1.1.0의 셸·PTY·DPAPI·GUI·설치·제거와 공개 파일 검증을 별도로 수행했다. Windows ARM64의 실제 설치·실행은 아직 확인하지 않았다. 공개 파일 해시와 버전별 시험 범위는 [검증 기록](verification.md)을 따른다.
 
 Mac 설치본은 ad-hoc 서명이며 Developer ID 서명·Apple 공증을 포함하지 않는다. `codesign` 무결성 검사 통과는 Apple 공증이나 Gatekeeper의 실행 허용을 뜻하지 않는다. 현재 결과와 DMG 해시는 [검증 기록](verification.md)에 보관한다.
 
@@ -27,6 +27,8 @@ Mac 설치본은 ad-hoc 서명이며 Developer ID 서명·Apple 공증을 포함
 Mac 최소 버전 목표는 14이며 macOS 27 로컬 환경과 macOS 15 GitHub Actions에서 앱 실행을 확인했다. Windows 대상은 Windows 11 x64·ARM64이며 각각의 설치 및 실행 검증을 구분한다. Intel Mac과 Rosetta 의존 Mac 패키지는 만들지 않는다.
 
 Windows의 `npm ci`는 네이티브 재컴파일 후 [ConPTY 배치 스크립트](../scripts/prepare-node-pty.mjs)로 DLL·OpenConsole을 실제 네이티브 모듈 옆에 복사한다. 패키징의 [afterPack](../scripts/after-pack.mjs)에서도 다시 배치한다. electron-builder 재컴파일이 node-pty의 원래 postinstall 복사 결과를 지워도 패키지에 필요한 파일을 포함하도록 한다.
+
+같은 스크립트는 node-pty 1.1.0의 Windows 종료 경로도 보완한다. 마지막 출력 뒤 조용한 PTY를 닫으면 추가 데이터 이벤트가 없어 출력 worker 정리를 시작하지 않던 경우에 정리를 예약한다. 출력 배출 대기는 유지하며 소스 의존성과 실제 패키지 양쪽에 적용한다. 의존성 버전이나 해당 코드가 바뀌면 패치를 자동 추정하지 않고 빌드를 중단해 검토한다.
 
 Windows NSIS 설치본은 [설치 스크립트](../build/installer.nsh)에서 현재 사용자 전용으로 고정한다. 사용자 범위 선택 화면을 생략하고 설치 폴더 선택은 유지한다. 관리자 권한 상승과 `/allusers` 재정의를 허용하지 않는다. 생성된 설치본의 첫 화면과 명령줄 재정의를 검사하려면 다음을 실행한다. 검사 결과 JSON은 설치본과 같은 폴더에 저장된다.
 
@@ -94,6 +96,8 @@ ARM64에서는 실행 경로를 `release/win-arm64-unpacked/Passport.exe`로 바
 ```sh
 node scripts/updates-smoke.mjs release/mac-arm64/Passport.app/Contents/MacOS/Passport
 ```
+
+Windows에서는 실제 `Passport.exe` 경로를 전달한다. 세 번째 인수로 화면 저장 폴더를 지정할 수 있으며 새 수동 검증은 `release/checks/<실행 ID>/updates`를 사용한다. 생략하면 기존 명령과의 호환을 위해 `release/recheck-updates-v<버전>`에 저장한다.
 
 ## 수동 CI
 

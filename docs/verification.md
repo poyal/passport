@@ -1,5 +1,24 @@
 # Passport 검증 기록
 
+## 1.1.0 Windows x64 공개 배포 — 2026-10-02
+
+[정식 v1.1.0 릴리즈](https://github.com/poyal/passport/releases/tag/v1.1.0)에 Windows x64 EXE를 추가했다. 소스는 [2519537](https://github.com/poyal/passport/commit/2519537ad5a0c9746dfac383702b6f285abce62c)이며 [Windows 배포 실행](https://github.com/poyal/passport/actions/runs/36879693336)이 기본 검사 **115개 통과·4개 생략**, MSVC 네이티브 재빌드·내장 Bash 준비·현재 사용자 설치 범위·실제 패키지 GUI **55개 통과·3개 생략**을 완료했다. 내장 Bash·cmd·Windows PowerShell·PowerShell 7의 시작 프로파일, 한글·특수문자 환경 변수·PATH·단축 명령과 DPAPI 저장·재시작 접속을 포함한다.
+
+검증 중 cmd 시작 파일과 DOSKEY 명령의 따옴표 처리, 보호된 시스템 파일의 `EINVAL`로 전체 드라이브 목록을 열지 못하던 문제와 조용한 PTY의 출력 worker가 남아 앱 종료가 멈추던 문제를 수정했다. 파일 탐색은 읽을 수 없는 항목을 생략하고 재귀 전송과 명시적 파일 접근의 오류는 유지한다. 기존 Mac DMG의 자산 ID·155,035,369바이트·SHA-256을 보존하고 합본 체크섬에 Windows 항목을 추가했다. Mac 태그 소스 `42563e5e2131d554ab1251921141c98e3bf4a64b`도 유지했다.
+
+- 공개 파일: [Passport-1.1.0-win-x64.exe](https://github.com/poyal/passport/releases/download/v1.1.0/Passport-1.1.0-win-x64.exe), **192,293,376바이트**.
+- SHA-256: `073cc6908037962350f8ad67a0880afd919fad9915e1f44abb9f7be2fe4b11d6`.
+- 공개 보관: `release/packages/v1.1.0/github/win-x64/`.
+- 실제 공개 EXE에서 추출해 검증한 앱: `release/builds/20261001T151550Z-2519537-win-x64-public-v1.1.0/win-unpacked/Passport.exe`.
+
+공개 EXE를 직접 내려받아 전체 바이트의 SHA-256을 GitHub 자산 digest와 `SHA256SUMS.txt` 양쪽에 대조했다. 추출한 앱에서 로컬 PTY·MSVC helper·렌더러 Node 격리·종료 코드 0, DPAPI·셸·혼합 작업·스크롤·종료 등 주요 GUI **26개 통과·1개 생략**을 확인했다. 실제 공개 GitHub 응답을 사용한 시작 시 업데이트 확인도 설치 1.1.0·최신 1.1.0·`installerAvailable: true`, About 표시와 정상 종료를 통과했다. 수동 업데이트 확인은 호출하지 않았다.
+
+공개 EXE도 작업 폴더의 빈 경로에 현재 사용자용으로 실제 설치했다. 설치된 app.asar의 해시가 공개 페이로드와 일치하고, 설치본의 PTY·DPAPI 재시작 접속·셸 GUI **4개 통과·1개 생략**, 시작 시 공개 업데이트 확인과 제거를 통과했다. 설치·제거 코드가 모두 0이며 HKCU 등록은 제거되고 HKLM 설치 등록은 생성되지 않았다. 기존 설치본과 사용자 DB는 보존했다. 이전 로컬 GNU-helper 설치본은 별도 빌드로 기록한다. Windows EXE는 Authenticode 서명이 없으며 ARM64, 실제 AI 서비스 요청·물리 한글 IME·OS 알림 배너, 덮어쓰기 업그레이드와 Docker·장시간 부하는 이번 검증 범위에 포함하지 않는다. PowerShell 7은 CI에서 검증했으며 로컬 PC에서는 없어 생략했다.
+
+공개 MSVC 빌드, ConPTY 수정 후 로컬 앱 `release/builds/20261001T135521Z-0c783ac-dirty-win-x64-conpty-v1.1.0/`, 이전 로컬 GNU-helper 설치본 및 공개 패키지를 각각 출처·해시와 함께 보관한다. 로그·화면·초기 실패 trace는 `release/checks/20261001T114454Z-349fa04-win-x64-v1.1.0/`에 남겼다. 사용하지 않은 최초 준비 폴더 `release/builds/20261001T114454Z-349fa04-win-x64-v1.1.0/`와 해결된 검증 자료의 7일 후 보관 만료분을 정리 후보로 기록했으며 기존 산출물을 삭제하지 않았다. [공개 게시·다운로드·실행 기록](benchmarks/github-release-windows-v1.1.0.json) · [로컬 설치·검증 기록](benchmarks/verification-windows-v1.1.0.json).
+
+기존 GUI 스크린샷 호출이 `test-results/`에 만든 이번 작업 파일 7개는 위 검증 폴더의 `manual-screenshots/`로 이동했다. 앞선 로컬 사전 빌드 의존성 환경의 간헐적인 Bash 합성 입력 누락은 원인을 확정하지 않았으므로 관련 앱과 자료를 `KEEP.md`로 보호하고 2026-10-09에 재검토한다. 최종 CI와 공개 패키지의 원래 혼합 알림 시나리오는 통과했으며 이를 앞선 관찰의 해결 증명으로 간주하지 않는다.
+
 ## 1.1.0 Windows 게시 전 기능 검증 — 2026-10-01
 
 Windows 11 Pro x64(10.0.26200)에서 타입·단위/프로토콜 통합 **112개 통과·4개 조건부 생략**, Rust helper 검사 **2개 통과**, 전체 소스 GUI **54개 통과·4개 조건부 생략**을 확인했다. SSH/SFTP·FTP/FTPS, DPAPI 저장·재시작 후 SSH 인증, 로컬·SSH 혼합 작업, 탭 템플릿, 입력 포커스, CLI 색상, 알림 라우팅, 창 이동, 로그·파일·설정 UI, PTY 종료를 포함한다. 별도 PowerShell 7이 없는 로컬 PC에서는 해당 셸 검사를 생략했고 Docker·장시간 부하도 이번 기본 검사에 포함하지 않았다.
@@ -8,7 +27,7 @@ Windows 11 Pro x64(10.0.26200)에서 타입·단위/프로토콜 통합 **112개
 
 추가한 Windows 셸별 검사에서 실제 cmd 오류 2개도 발견해 수정했다. node-pty의 argv 이스케이프가 시작 파일의 따옴표에 역슬래시를 추가해 실행을 막았고, Rust의 argv 이스케이프는 DOSKEY 매크로 이름과 명령에 따옴표를 그대로 등록했다. 각 프로그램이 해석하는 원래 명령줄을 전달하도록 수정했다. 내장 Bash·cmd·Windows PowerShell에서 한글·공백·특수문자가 있는 PATH, 환경 변수, 단축 명령과 실제 키보드 입력을 통과했다.
 
-로컬 검증에는 작업 폴더에 격리한 Rust GNU helper와 고정된 Node-API 네이티브 바이너리를 사용했다. 공개 Windows 릴리즈는 별도 MSVC CI 빌드에서 패키지 검증을 통과한 경우에만 게시한다. 설치·패키지·공개 파일 검증 결과는 게시 완료 후 별도 기록한다. 실제 AI 서비스 요청과 OS 배너 표시를 이번 자동 검사로 확인했다고 주장하지 않는다.
+로컬 검증에는 작업 폴더에 격리한 Rust GNU helper와 고정된 Node-API 네이티브 바이너리를 사용했다. 공개 Windows 릴리즈는 별도 MSVC CI 빌드에서 패키지 검증을 통과한 경우에만 게시한다. 최종 설치·패키지·공개 파일 검증 결과는 위 공개 배포 기록에 보관한다. 실제 AI 서비스 요청과 OS 배너 표시를 이번 자동 검사로 확인했다고 주장하지 않는다.
 
 동일한 로컬 패키지의 전체 GUI도 **54개 통과·4개 생략**했고, 배포할 dist 파일 65개와 app.asar 내용 일치·x64 앱/helper/Bash·렌더러 격리·정상 종료를 확인했다. 시험 EXE의 현재 사용자 전용 설치·실제 DPAPI·셸·시작 시 공개 업데이트 확인·제거를 통과했으며 설치된 페이로드가 빌드와 같고 제거 후 레지스트리가 남지 않았다. [로컬 Windows 검증·해시 기록](benchmarks/verification-windows-v1.1.0.json).
 
@@ -27,6 +46,8 @@ Windows 11 Pro x64(10.0.26200)에서 타입·단위/프로토콜 통합 **112개
 재현 중 별도의 Windows 종료 문제도 확인했다. node-pty 1.1.0은 내장 ConPTY 종료 뒤 추가 출력이 있어야 worker 정리를 시작해 조용한 PTY에서 종료 완료가 오지 않을 수 있었다. [배치 스크립트](../scripts/prepare-node-pty.mjs)가 출력 배출 대기를 유지하며 정리를 항상 시작하도록 소스 의존성과 패키지를 보완한다. 버전·원본 코드가 바뀌면 검토 없이 적용하지 않는다.
 
 네 개의 조용한 실제 Windows PTY를 종료하는 회귀를 포함해 기본 검사 **115개 통과·4개 생략**을 확인했다. 별도로 만든 로컬 패키지의 실행·PTY·격리·정상 종료 **3회 통과**, 5초 지연 이벤트 재현 **1회 통과**와 새 프롬프트·키 입력 조건을 적용한 셸 검사 **3개 통과·PowerShell 7 생략**을 확인했다. 기존 GNU-helper NSIS 설치본은 변경하지 않고 이 종료 보완이 포함된 새 앱과 구분해 보관한다.
+
+후속 CI에서는 패키지 실행과 500개 호스트 목록의 모든 스크롤 검사가 통과했지만 `afterAll`의 앱 종료 대기가 만료됐다. GUI 종료 검사는 정상 `app.quit()` 요청 뒤 실제 종료 코드 0을 기다린 다음 Playwright 디버거 연결을 해제하도록 보완했다. 여러 창·500개 호스트 시나리오 **18개 반복 통과**, 최종 로컬 패키지 전체 GUI **54개 통과·4개 생략**과 dist 파일 **65개 일치**를 확인했다. 앞선 혼합 Bash 알림 시험의 간헐적인 첫 합성 입력 누락, 폐기한 검사 수정, GUI를 제외한 네이티브 크기 변경·입력 **20회 통과** 자료도 [후속 검증 기록](benchmarks/verification-windows-v1.1.0.json)에 함께 보존한다. 공개 MSVC 설치본의 실행 결과는 별도로 기록한다.
 
 ## 1.1.0 Mac 공개 배포와 Windows 이관 — 2026-10-01
 

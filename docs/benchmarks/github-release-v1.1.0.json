@@ -36,6 +36,24 @@
     ]
   },
   "windows": {
+    "status": "published-and-runtime-verified",
+    "published": true,
+    "sourceCommit": "2519537ad5a0c9746dfac383702b6f285abce62c",
+    "workflowRun": 36879693336,
+    "conclusion": "success",
+    "verifiedAt": "2026-10-01T15:27:13.045Z",
+    "artifact": {
+      "assetId": 603519176,
+      "name": "Passport-1.1.0-win-x64.exe",
+      "bytes": 192293376,
+      "sha256": "073cc6908037962350f8ad67a0880afd919fad9915e1f44abb9f7be2fe4b11d6",
+      "downloadURL": "https://github.com/poyal/passport/releases/download/v1.1.0/Passport-1.1.0-win-x64.exe",
+      "authenticodeSigned": false,
+      "path": "release\\packages\\v1.1.0\\github\\win-x64\\Passport-1.1.0-win-x64.exe"
+    },
+    "record": "docs/benchmarks/github-release-windows-v1.1.0.json"
+  },
+  "windowsInitialAttempt": {
     "status": "deferred-to-user",
     "published": false,
     "jobId": 110318920200,
@@ -61,5 +79,15 @@
     "failedStep": "Verify packaged Windows app",
     "retryRequested": false,
     "workflow": "manual dispatch only"
-  }
+  },
+  "currentChecksum": {
+    "name": "SHA256SUMS.txt",
+    "digest": "sha256:3fa0eb4a425f0d66fd55f6198c167dbff6e8ffeef5db079144b69602cdf539aa",
+    "entries": [
+      "2d7fcb465b0651f7b8915566eb348e37e40f1aa98b6254047013db65d1d9c8ce  Passport-1.1.0-mac-arm64.dmg",
+      "073cc6908037962350f8ad67a0880afd919fad9915e1f44abb9f7be2fe4b11d6  Passport-1.1.0-win-x64.exe"
+    ]
+  },
+  "originalMacFilesPreserved": true,
+  "updatedAt": "2026-10-01T15:27:13.045Z"
 }

@@ -133,18 +133,304 @@
       "resolved": 6
     }
   },
+  "followupSourceVerification": {
+    "sourceCommit": "6e5ae4b686efbb7c5008df8b6d587fe63e4f2ce4",
+    "unitAndProtocol": {
+      "passed": 114,
+      "skipped": 4
+    },
+    "windowsDriveRootGUI": {
+      "passed": 3,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "longRunnerPATHOnLocalPackage": {
+      "passed": 3,
+      "skipped": 1
+    },
+    "fixes": [
+      "Shell PATH verification prints only the configured first item",
+      "Browsing skips EINVAL metadata errors for protected entries; recursive transfer enumeration remains strict"
+    ],
+    "earlierCIAttempts": [
+      {
+        "run": 36859824420,
+        "packagedGUIPassed": 51,
+        "failed": 4,
+        "skipped": 3,
+        "reason": "Long PATH scrolled the value outside the terminal viewport",
+        "published": false
+      },
+      {
+        "run": 36861988367,
+        "packagedGUIPassed": 54,
+        "failed": 1,
+        "skipped": 3,
+        "reason": "Protected DumpStack.log.tmp returned EINVAL during drive root browsing",
+        "published": false
+      }
+    ],
+    "note": "These source fixes do not change the separately preserved local installer bytes above."
+  },
   "artifactReview": {
+    "packagedSmokeWatchdog": {
+      "sourceCommit": "0c783ac277ffb5c9c107177421483842ef7de3ee",
+      "canceledCI": 36864037203,
+      "reason": "Packaged smoke exceeded its 45-second watchdog without terminating; GUI and publication never ran",
+      "normalSmokeAfterFix": "passed",
+      "forcedTimeoutExitCode": 1,
+      "forcedTimeoutElapsedSeconds": 1.0215985,
+      "testDeadlineMilliseconds": 600,
+      "productionDeadlineMilliseconds": 45000,
+      "scope": "verification-owned process tree",
+      "publicationGate": "Windows workflow exits immediately when packaged smoke fails"
+    },
     "existingArtifactsDeleted": false,
     "existingInstallationReplaced": false,
     "userDatabaseModified": false,
     "cleanupCandidates": [
-      "successful checks after 7 days",
-      "unpublished local installer after public-byte verification when no longer the current candidate"
+      {
+        "path": "release/builds/20261001T114454Z-349fa04-win-x64-v1.1.0",
+        "reason": "Unused preparation; retained without deletion"
+      },
+      {
+        "path": "release/builds/20261001T120238Z-349fa04-dirty-win-x64-v1.1.0",
+        "reason": "Third successful Windows build; candidate only after seven days and confirmed no reproduction dependency"
+      },
+      {
+        "path": "release/checks/20261001T114454Z-349fa04-win-x64-v1.1.0",
+        "reason": "Only resolved checks after seven days; unresolved input-observation evidence and tools needed to reproduce it remain protected"
+      }
     ],
     "protected": [
-      "latest successful Windows build and previous successful build",
-      "public latest and previous packages",
-      "reproduction logs until resolved"
-    ]
+      "release/builds/20261001T151550Z-2519537-win-x64-public-v1.1.0",
+      "release/builds/20261001T135521Z-0c783ac-dirty-win-x64-conpty-v1.1.0",
+      "release/packages/v1.1.0/github/win-x64",
+      "release/checks/20261001T114454Z-349fa04-win-x64-v1.1.0 (unexplained intermittent synthetic Bash-input observation retained)"
+    ],
+    "screenshotRelocation": {
+      "previousPath": "test-results",
+      "path": "release/checks/20261001T114454Z-349fa04-win-x64-v1.1.0/manual-screenshots",
+      "files": [
+        {
+          "name": ".last-run.json",
+          "bytes": 45,
+          "sha256": "e22df5d0991eb28c09093b1e678b3fa8cd1fab48185d38e67cf79fb6e63ad5ea",
+          "createdAt": "2026-10-01T11:53:28.6903799Z",
+          "modifiedAt": "2026-10-01T11:53:28.6903799Z"
+        },
+        {
+          "name": "bulk-spacing.png",
+          "bytes": 28316,
+          "sha256": "51d34d15480cfd62178f620d01216a553df9e0dd258ba5fc1a768a9b46c07a51",
+          "createdAt": "2026-10-01T11:54:03.3429307Z",
+          "modifiedAt": "2026-10-01T15:17:13.3182994Z"
+        },
+        {
+          "name": "file-scroll.png",
+          "bytes": 141327,
+          "sha256": "0f734ba6d6e01e4347c754cb9c6cab7a66274ed3011b2ad0124173711d314f17",
+          "createdAt": "2026-10-01T11:54:10.0358919Z",
+          "modifiedAt": "2026-10-01T14:57:18.5318663Z"
+        },
+        {
+          "name": "files.png",
+          "bytes": 86973,
+          "sha256": "0a64d8750e82b474ee5ac1455297dead1bd49b52ecb19df07904d0f9b8abf50a",
+          "createdAt": "2026-10-01T11:54:08.5919356Z",
+          "modifiedAt": "2026-10-01T14:57:16.9809703Z"
+        },
+        {
+          "name": "host-scroll.png",
+          "bytes": 95645,
+          "sha256": "f6e065ad06e8c3b27161c2747e30cf220a32cebe091e28e6238b81713a89f52e",
+          "createdAt": "2026-10-01T11:54:04.1665891Z",
+          "modifiedAt": "2026-10-01T15:17:14.2220405Z"
+        },
+        {
+          "name": "hosts.png",
+          "bytes": 101428,
+          "sha256": "183babab3bfd7bad5226e6e7aa2509275588286cdc5aa48a7390b0f01c29cde5",
+          "createdAt": "2026-10-01T11:54:07.2732221Z",
+          "modifiedAt": "2026-10-01T14:57:15.6340479Z"
+        },
+        {
+          "name": "terminal.png",
+          "bytes": 58005,
+          "sha256": "085c6468d194018dfd39f009a854c3cc419a7f26aad647418b5c6403677bcb7a",
+          "createdAt": "2026-10-01T11:54:07.0050207Z",
+          "modifiedAt": "2026-10-01T14:57:15.3121530Z"
+        }
+      ],
+      "verifiedTaskOwnership": true,
+      "reason": "Existing GUI screenshot calls used the compatibility test-results path; task-created files were moved after GUI verification finished."
+    },
+    "diskInventory": {
+      "measuredAt": "2026-10-01T15:30:10.886Z",
+      "directories": [
+        {
+          "path": "release/builds/20261001T151550Z-2519537-win-x64-public-v1.1.0",
+          "files": 10275,
+          "bytes": 911574574
+        },
+        {
+          "path": "release/builds/20261001T135521Z-0c783ac-dirty-win-x64-conpty-v1.1.0",
+          "files": 10042,
+          "bytes": 888982630
+        },
+        {
+          "path": "release/builds/20261001T120238Z-349fa04-dirty-win-x64-v1.1.0",
+          "files": 10042,
+          "bytes": 1078609932
+        },
+        {
+          "path": "release/builds/20261001T114454Z-349fa04-win-x64-v1.1.0",
+          "files": 1,
+          "bytes": 394
+        },
+        {
+          "path": "release/packages/v1.1.0/github/win-x64",
+          "files": 4,
+          "bytes": 192309210
+        },
+        {
+          "path": "release/checks/20261001T114454Z-349fa04-win-x64-v1.1.0",
+          "files": 3484,
+          "bytes": 1273835497
+        }
+      ],
+      "logicalFileBytes": true
+    }
+  },
+  "quietPTYFollowup": {
+    "productionSourceCommit": "201e20ffa7c92098ea4057c53e9bc2983bbdf330",
+    "verificationSourceCommit": "2519537ad5a0c9746dfac383702b6f285abce62c",
+    "build": "release/builds/20261001T135521Z-0c783ac-dirty-win-x64-conpty-v1.1.0",
+    "nativeModules": "pinned Node-API prebuilds",
+    "helperTarget": "x86_64-pc-windows-gnu",
+    "unitAndProtocol": {
+      "passed": 115,
+      "skipped": 4
+    },
+    "quietPTYShutdown": "four real quiet Windows PTYs; passed",
+    "packagedSmoke": {
+      "normalPassed": 3,
+      "delayedRendererSessionEventPassed": 1,
+      "exitCode": 0,
+      "repeatedCommands": false
+    },
+    "finalPackagedGUI": {
+      "startTime": "2026-10-01T14:57:05.878Z",
+      "duration": 106939.82400000001,
+      "expected": 54,
+      "skipped": 4,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "matchedDistFiles": 65,
+    "files": [
+      {
+        "path": "release/builds/20261001T135521Z-0c783ac-dirty-win-x64-conpty-v1.1.0/win-unpacked/Passport.exe",
+        "bytes": 246077440,
+        "sha256": "23ffd915d96885216d326398596ea71a96242c94dfc791fc79379f7c8b922338"
+      },
+      {
+        "path": "release/builds/20261001T135521Z-0c783ac-dirty-win-x64-conpty-v1.1.0/win-unpacked/resources/app.asar",
+        "bytes": 55440627,
+        "sha256": "8dab134b833e41af57f571d6903ae50b874ae8b5bcb89b23e01bc5894383c2ea"
+      },
+      {
+        "path": "release/builds/20261001T135521Z-0c783ac-dirty-win-x64-conpty-v1.1.0/win-unpacked/resources/terminal/helper/win32-x64/passport-helper.exe",
+        "bytes": 726528,
+        "sha256": "df77b98db0a68a03c78521f3767d8f2e6b1eb66b594526ff307ff747dfb13c80"
+      },
+      {
+        "path": "release/builds/20261001T135521Z-0c783ac-dirty-win-x64-conpty-v1.1.0/win-unpacked/resources/app.asar.unpacked/node_modules/node-pty/lib/windowsPtyAgent.js",
+        "bytes": 12519,
+        "sha256": "09836f0752b063685e2f1edb2f563265e6f924ddf713fe82d1172ab9e20197d4"
+      }
+    ],
+    "advancedWorkspacesRepeated": {
+      "passed": 18,
+      "unexpected": 0
+    },
+    "initialAlertInputObservation": {
+      "initialFullGUI": {
+        "passed": 53,
+        "failed": 1,
+        "skipped": 4
+      },
+      "diagnostic": "The local prebuild-backed mixed Bash test intermittently executed rintf after losing the first synthetic input character. Keyboard-only and a redraw-only wait did not resolve it; exploratory harness edits were discarded and kept only in the checks directory.",
+      "directNativeBoundaryChecks": {
+        "afterResizeNoDelay": {
+          "passed": 10,
+          "failed": 0
+        },
+        "afterResize500Milliseconds": {
+          "passed": 10,
+          "failed": 0
+        }
+      },
+      "finalOriginalAlertScenario": "passed in the full 54-test local package suite; public MSVC validation is recorded separately",
+      "earlierFailureEvidenceRetained": true
+    },
+    "earlierCI": [
+      {
+        "run": 36867262927,
+        "packagedSmoke": "failed before interactive shell readiness",
+        "published": false
+      },
+      {
+        "run": 36875108713,
+        "unitPassed": 115,
+        "packagedSmoke": "passed",
+        "GUI": {
+          "passed": 54,
+          "skipped": 3,
+          "failed": 1
+        },
+        "diagnostic": "All 500-host scroll assertions passed; afterAll timed out waiting for app.close()",
+        "published": false
+      }
+    ],
+    "testShutdown": "Requests normal app.quit() and waits for the real process exit before Playwright disconnects the debugger; exit code 0 remains mandatory",
+    "originalInstallerPayloadUnchanged": true,
+    "verifiedAt": "2026-10-01T15:01:24.528Z",
+    "publicMSVCValidation": {
+      "sourceCommit": "2519537ad5a0c9746dfac383702b6f285abce62c",
+      "workflowRun": 36879693336,
+      "ciGUI": {
+        "passed": 55,
+        "skipped": 3
+      },
+      "downloadedInstallerGUI": {
+        "startTime": "2026-10-01T15:17:08.044Z",
+        "duration": 52169.665,
+        "expected": 26,
+        "skipped": 1,
+        "unexpected": 0,
+        "flaky": 0,
+        "cases": [
+          "Windows DPAPI persistence and SSH",
+          "Bash/cmd/Windows PowerShell startup profiles",
+          "local and mixed workspaces",
+          "scroll and layout",
+          "500-host and multiple native windows",
+          "PTY shutdown"
+        ]
+      },
+      "installedGUI": {
+        "startTime": "2026-10-01T15:26:36.922Z",
+        "duration": 16667.003,
+        "expected": 4,
+        "skipped": 1,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "originalMixedBashAlertScenario": "passed in final CI and downloaded public-package GUI",
+      "record": "docs/benchmarks/github-release-windows-v1.1.0.json",
+      "separateBuildFromLocalGNU": true,
+      "doesNotClaimEarlierSyntheticInputObservationResolved": true
+    }
   }
 }

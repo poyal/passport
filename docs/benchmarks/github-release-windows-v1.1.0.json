@@ -1,0 +1,356 @@
+{
+  "version": "1.1.0",
+  "platform": "win-x64",
+  "origin": "github",
+  "status": "published-and-runtime-verified",
+  "releaseURL": "https://github.com/poyal/passport/releases/tag/v1.1.0",
+  "sourceCommit": "2519537ad5a0c9746dfac383702b6f285abce62c",
+  "workflowRun": 36879693336,
+  "workflowURL": "https://github.com/poyal/passport/actions/runs/36879693336",
+  "workflowConclusion": "success",
+  "verifiedAt": "2026-10-01T15:27:13.045Z",
+  "windowsPublishedAt": "2026-10-01T15:11:03Z",
+  "latestStableReleaseVerified": true,
+  "existingMacAssetPreserved": true,
+  "macArtifact": {
+    "assetId": 602956600,
+    "name": "Passport-1.1.0-mac-arm64.dmg",
+    "bytes": 155035369,
+    "digest": "sha256:2d7fcb465b0651f7b8915566eb348e37e40f1aa98b6254047013db65d1d9c8ce"
+  },
+  "windowsArtifact": {
+    "assetId": 603519176,
+    "name": "Passport-1.1.0-win-x64.exe",
+    "bytes": 192293376,
+    "sha256": "073cc6908037962350f8ad67a0880afd919fad9915e1f44abb9f7be2fe4b11d6",
+    "downloadURL": "https://github.com/poyal/passport/releases/download/v1.1.0/Passport-1.1.0-win-x64.exe",
+    "authenticodeSigned": false,
+    "path": "release\\packages\\v1.1.0\\github\\win-x64\\Passport-1.1.0-win-x64.exe"
+  },
+  "checksumAsset": {
+    "name": "SHA256SUMS.txt",
+    "digest": "sha256:3fa0eb4a425f0d66fd55f6198c167dbff6e8ffeef5db079144b69602cdf539aa",
+    "entries": [
+      "2d7fcb465b0651f7b8915566eb348e37e40f1aa98b6254047013db65d1d9c8ce  Passport-1.1.0-mac-arm64.dmg",
+      "073cc6908037962350f8ad67a0880afd919fad9915e1f44abb9f7be2fe4b11d6  Passport-1.1.0-win-x64.exe"
+    ]
+  },
+  "publicDownloadVerified": true,
+  "githubDigestAndChecksumsMatch": true,
+  "remoteVerificationSteps": [
+    "Set up job",
+    "Run actions/checkout@v4",
+    "Run actions/setup-node@v4",
+    "Run actions/setup-python@v5",
+    "Prepare FTP and FTPS fixtures",
+    "Install dependencies and prepare native ConPTY",
+    "Run dtolnay/rust-toolchain@stable",
+    "Run npm run build:helper",
+    "Run npm run prepare:runtime -- x64",
+    "Run npm run check",
+    "Run npm run build",
+    "Run npx electron-builder --win nsis --x64 --publish never",
+    "Verify current-user installer",
+    "Verify packaged Windows app",
+    "Add Windows installer to the existing release",
+    "Run actions/upload-artifact@v4",
+    "Post Run actions/setup-python@v5",
+    "Post Run actions/setup-node@v4",
+    "Post Run actions/checkout@v4",
+    "Complete job"
+  ],
+  "localVerificationRecord": "docs/benchmarks/verification-windows-v1.1.0.json",
+  "note": "The public MSVC CI installer and the locally verified GNU-helper installer are separate builds.",
+  "installedUserAppReplaced": false,
+  "installerRegistryModifiedDuringPublicDownloadVerification": false,
+  "publicInstallerPayloadExtracted": true,
+  "extractedBuild": "release/builds/20261001T151550Z-2519537-win-x64-public-v1.1.0",
+  "authenticode": {
+    "SignerCertificate": null,
+    "Status": "NotSigned",
+    "CheckedAt": "2026-10-01T15:16:59.1963614Z"
+  },
+  "tagPreserved": true,
+  "macTagSourceCommit": "42563e5e2131d554ab1251921141c98e3bf4a64b",
+  "ciChecks": {
+    "unitAndProtocol": {
+      "passed": 115,
+      "skipped": 4
+    },
+    "packagedGUI": {
+      "passed": 55,
+      "skipped": 3
+    },
+    "installerScope": "passed",
+    "packagedSmoke": "passed",
+    "helperTarget": "x86_64-pc-windows-msvc",
+    "nativeModules": "MSVC rebuilt by npm ci and electron-builder",
+    "quietPTYShutdown": "passed",
+    "nodePtyShutdownPatch": "1.1.0; source and packaged JS verified"
+  },
+  "publicPackagedSmoke": {
+    "packagedSmoke": "passed",
+    "localPTY": "passed",
+    "bundledHelper": "passed",
+    "shutdown": "passed",
+    "exitCode": 0,
+    "appVersion": "1.1.0",
+    "arch": "x64",
+    "platform": "win32",
+    "hosts": 0,
+    "fonts": 96,
+    "version": 2,
+    "nodeAvailable": false
+  },
+  "publicInstalledLifecycle": {
+    "nsisInstall": "passed",
+    "installExitCode": 0,
+    "currentUserOnly": true,
+    "installedPayloadMatches": true,
+    "appAsarSHA256": "7b860c983f80197f21c64c12020491a27f1a0eea578a46da509acc78cb33ad54",
+    "installedPTY": "passed",
+    "installedDPAPI": "passed",
+    "installedShells": "passed",
+    "publicUpdateCheck": "passed",
+    "nsisUninstall": "passed",
+    "uninstallExitCode": 0,
+    "registryRemoved": true,
+    "installationDirectory": "C:\\Users\\ttt45\\Workspace\\personal\\passport\\release\\builds\\20261001T151550Z-2519537-win-x64-public-v1.1.0\\installed-app-verified",
+    "sourceCommit": "2519537ad5a0c9746dfac383702b6f285abce62c",
+    "helperTarget": "x86_64-pc-windows-msvc",
+    "GUI": {
+      "startTime": "2026-10-01T15:26:36.922Z",
+      "duration": 16667.003,
+      "expected": 4,
+      "skipped": 1,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "existingInstallationReplaced": false,
+    "userDatabaseModified": false,
+    "packagedSmoke": {
+      "packagedSmoke": "passed",
+      "localPTY": "passed",
+      "bundledHelper": "passed",
+      "shutdown": "passed",
+      "exitCode": 0,
+      "appVersion": "1.1.0",
+      "arch": "x64",
+      "platform": "win32",
+      "hosts": 0,
+      "fonts": 96,
+      "version": 2,
+      "nodeAvailable": false
+    },
+    "startupUpdate": {
+      "startupUpdateCheck": "passed",
+      "manualChecks": 0,
+      "source": "public GitHub Releases",
+      "runtime": {
+        "packaged": true,
+        "version": "1.1.0"
+      },
+      "state": {
+        "currentVersion": "1.1.0",
+        "latestVersion": "1.1.0",
+        "status": "current",
+        "installerAvailable": true,
+        "checkedAt": 1790868414926,
+        "message": "최신 버전을 사용하고 있습니다."
+      },
+      "shutdownExitCode": 0
+    }
+  },
+  "publicStartupUpdate": {
+    "startupUpdateCheck": "passed",
+    "manualChecks": 0,
+    "source": "public GitHub Releases",
+    "runtime": {
+      "packaged": true,
+      "version": "1.1.0"
+    },
+    "state": {
+      "currentVersion": "1.1.0",
+      "latestVersion": "1.1.0",
+      "status": "current",
+      "installerAvailable": true,
+      "checkedAt": 1790867826993,
+      "message": "최신 버전을 사용하고 있습니다."
+    },
+    "shutdownExitCode": 0
+  },
+  "publicFocusedGUI": {
+    "startTime": "2026-10-01T15:17:08.044Z",
+    "duration": 52169.665,
+    "expected": 26,
+    "skipped": 1,
+    "unexpected": 0,
+    "flaky": 0,
+    "cases": [
+      "Windows DPAPI persistence and SSH",
+      "Bash/cmd/Windows PowerShell startup profiles",
+      "local and mixed workspaces",
+      "scroll and layout",
+      "500-host and multiple native windows",
+      "PTY shutdown"
+    ]
+  },
+  "publicPayloadFiles": [
+    {
+      "path": "release/builds/20261001T151550Z-2519537-win-x64-public-v1.1.0/win-unpacked/Passport.exe",
+      "bytes": 246077440,
+      "sha256": "5da450dedcc1e10550138f3ab2d1c2a2e8fe41304ad9088acad73040c9c56ee3"
+    },
+    {
+      "path": "release/builds/20261001T151550Z-2519537-win-x64-public-v1.1.0/win-unpacked/resources/app.asar",
+      "bytes": 55065095,
+      "sha256": "7b860c983f80197f21c64c12020491a27f1a0eea578a46da509acc78cb33ad54"
+    },
+    {
+      "path": "release/builds/20261001T151550Z-2519537-win-x64-public-v1.1.0/win-unpacked/resources/terminal/helper/win32-x64/passport-helper.exe",
+      "bytes": 594944,
+      "sha256": "45716ecee354811e44ca73039f4ecf38c841edbb86de9a2b8b34a4ee7044fd1e"
+    },
+    {
+      "path": "release/builds/20261001T151550Z-2519537-win-x64-public-v1.1.0/win-unpacked/resources/app.asar.unpacked/node_modules/node-pty/lib/windowsPtyAgent.js",
+      "bytes": 12519,
+      "sha256": "09836f0752b063685e2f1edb2f563265e6f924ddf713fe82d1172ab9e20197d4"
+    }
+  ],
+  "limitations": [
+    "Windows ARM64 not verified",
+    "PowerShell 7 verified on CI, unavailable on the local PC",
+    "No real AI service request, physical IME or OS notification banner check",
+    "No Docker matrix, long stress or overwrite upgrade repeated for 1.1.0",
+    "Unsigned Windows installer"
+  ],
+  "artifactReview": {
+    "builds": [
+      "release/builds/20261001T151550Z-2519537-win-x64-public-v1.1.0",
+      "release/builds/20261001T135521Z-0c783ac-dirty-win-x64-conpty-v1.1.0",
+      "release/builds/20261001T120238Z-349fa04-dirty-win-x64-v1.1.0"
+    ],
+    "package": "release/packages/v1.1.0/github/win-x64",
+    "checks": "release/checks/20261001T114454Z-349fa04-win-x64-v1.1.0",
+    "cleanupCandidate": "release/builds/20261001T114454Z-349fa04-win-x64-v1.1.0 (unused preparation; retained)",
+    "deletedExistingArtifacts": false,
+    "screenshotRelocation": {
+      "previousPath": "test-results",
+      "path": "release/checks/20261001T114454Z-349fa04-win-x64-v1.1.0/manual-screenshots",
+      "files": [
+        {
+          "name": ".last-run.json",
+          "bytes": 45,
+          "sha256": "e22df5d0991eb28c09093b1e678b3fa8cd1fab48185d38e67cf79fb6e63ad5ea",
+          "createdAt": "2026-10-01T11:53:28.6903799Z",
+          "modifiedAt": "2026-10-01T11:53:28.6903799Z"
+        },
+        {
+          "name": "bulk-spacing.png",
+          "bytes": 28316,
+          "sha256": "51d34d15480cfd62178f620d01216a553df9e0dd258ba5fc1a768a9b46c07a51",
+          "createdAt": "2026-10-01T11:54:03.3429307Z",
+          "modifiedAt": "2026-10-01T15:17:13.3182994Z"
+        },
+        {
+          "name": "file-scroll.png",
+          "bytes": 141327,
+          "sha256": "0f734ba6d6e01e4347c754cb9c6cab7a66274ed3011b2ad0124173711d314f17",
+          "createdAt": "2026-10-01T11:54:10.0358919Z",
+          "modifiedAt": "2026-10-01T14:57:18.5318663Z"
+        },
+        {
+          "name": "files.png",
+          "bytes": 86973,
+          "sha256": "0a64d8750e82b474ee5ac1455297dead1bd49b52ecb19df07904d0f9b8abf50a",
+          "createdAt": "2026-10-01T11:54:08.5919356Z",
+          "modifiedAt": "2026-10-01T14:57:16.9809703Z"
+        },
+        {
+          "name": "host-scroll.png",
+          "bytes": 95645,
+          "sha256": "f6e065ad06e8c3b27161c2747e30cf220a32cebe091e28e6238b81713a89f52e",
+          "createdAt": "2026-10-01T11:54:04.1665891Z",
+          "modifiedAt": "2026-10-01T15:17:14.2220405Z"
+        },
+        {
+          "name": "hosts.png",
+          "bytes": 101428,
+          "sha256": "183babab3bfd7bad5226e6e7aa2509275588286cdc5aa48a7390b0f01c29cde5",
+          "createdAt": "2026-10-01T11:54:07.2732221Z",
+          "modifiedAt": "2026-10-01T14:57:15.6340479Z"
+        },
+        {
+          "name": "terminal.png",
+          "bytes": 58005,
+          "sha256": "085c6468d194018dfd39f009a854c3cc419a7f26aad647418b5c6403677bcb7a",
+          "createdAt": "2026-10-01T11:54:07.0050207Z",
+          "modifiedAt": "2026-10-01T14:57:15.3121530Z"
+        }
+      ],
+      "verifiedTaskOwnership": true,
+      "reason": "Existing GUI screenshot calls used the compatibility test-results path; task-created files were moved after GUI verification finished."
+    },
+    "protected": [
+      "release/builds/20261001T151550Z-2519537-win-x64-public-v1.1.0",
+      "release/builds/20261001T135521Z-0c783ac-dirty-win-x64-conpty-v1.1.0",
+      "release/packages/v1.1.0/github/win-x64",
+      "release/checks/20261001T114454Z-349fa04-win-x64-v1.1.0 (unexplained intermittent synthetic Bash-input observation retained)"
+    ],
+    "cleanupCandidates": [
+      {
+        "path": "release/builds/20261001T114454Z-349fa04-win-x64-v1.1.0",
+        "reason": "Unused preparation; retained without deletion"
+      },
+      {
+        "path": "release/builds/20261001T120238Z-349fa04-dirty-win-x64-v1.1.0",
+        "reason": "Third successful Windows build; candidate only after seven days and confirmed no reproduction dependency"
+      },
+      {
+        "path": "release/checks/20261001T114454Z-349fa04-win-x64-v1.1.0",
+        "reason": "Only resolved checks after seven days; unresolved input-observation evidence and tools needed to reproduce it remain protected"
+      }
+    ],
+    "diskInventory": {
+      "measuredAt": "2026-10-01T15:30:10.886Z",
+      "directories": [
+        {
+          "path": "release/builds/20261001T151550Z-2519537-win-x64-public-v1.1.0",
+          "files": 10275,
+          "bytes": 911574574
+        },
+        {
+          "path": "release/builds/20261001T135521Z-0c783ac-dirty-win-x64-conpty-v1.1.0",
+          "files": 10042,
+          "bytes": 888982630
+        },
+        {
+          "path": "release/builds/20261001T120238Z-349fa04-dirty-win-x64-v1.1.0",
+          "files": 10042,
+          "bytes": 1078609932
+        },
+        {
+          "path": "release/builds/20261001T114454Z-349fa04-win-x64-v1.1.0",
+          "files": 1,
+          "bytes": 394
+        },
+        {
+          "path": "release/packages/v1.1.0/github/win-x64",
+          "files": 4,
+          "bytes": 192309210
+        },
+        {
+          "path": "release/checks/20261001T114454Z-349fa04-win-x64-v1.1.0",
+          "files": 3484,
+          "bytes": 1273835497
+        }
+      ],
+      "logicalFileBytes": true
+    }
+  },
+  "finalReleaseBodyVerified": true,
+  "finalMacTagVerified": true,
+  "finalReleaseAssetsVerified": true,
+  "finalDocumentationLinksChecked": 46,
+  "finalStateVerifiedAt": "2026-10-01T15:30:41.162Z"
+}
