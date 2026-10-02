@@ -101,55 +101,39 @@ export async function closeCleanly(
         let windowAudit:
           { mode: string; shown: number; focused: number } | undefined;
         if (child.exitCode === null && child.signalCode === null) {
-          windowAudit = await application.evaluate(async ({ app, dialog }) => {
-            if (process.env.PASSPORT_SHUTDOWN_DIAGNOSTICS) {
-              for (const event of [
-                "before-quit",
-                "will-quit",
-                "window-all-closed",
-                "quit",
-              ] as const)
-                app.on(event as "quit", () =>
-                  console.error(
-                    "TEST_QUIT",
-                    event,
-                    process.getActiveResourcesInfo(),
-                  ),
-                );
-            }
-            // Teardown must also answer the live-connection close confirmation.
-            dialog.showMessageBox = async () => ({
-              response: 1,
-              checkboxChecked: false,
-            });
-            // Let Passport finish its asynchronous will-quit cleanup first.
-            // Hold only the final, uncancelled will-quit so Playwright can
-            // disconnect the debugger before Node waits for it at exit.
-            // Closing the debugger before PTY cleanup finishes is unsafe;
-            // waiting for process exit before closing it can deadlock.
-            const cleaned = new Promise<void>((resolve) => {
-              const onWillQuit = (event: Electron.Event) => {
-                if (event.defaultPrevented) return;
-                event.preventDefault();
-                app.removeListener("will-quit", onWillQuit);
-                resolve();
-              };
-              app.on("will-quit", onWillQuit);
-            });
-            setTimeout(() => app.quit(), 0);
-            await cleaned;
-            // Playwright calls app.quit() inside an inspector evaluation.
-            // Finish that evaluation before entering Electron's native quit
-            // loop; all Passport cleanup has already completed above.
-            const quit = app.quit.bind(app);
-            app.quit = () => {
-              app.quit = quit;
-              setTimeout(quit, 0);
-            };
-            return (globalThis as any).__passportE2EWindowAudit;
-          });
+          windowAudit = await application.evaluate(
+            ({ app, dialog }, quitFirst) => {
+              if (process.env.PASSPORT_SHUTDOWN_DIAGNOSTICS) {
+                for (const event of [
+                  "before-quit",
+                  "will-quit",
+                  "window-all-closed",
+                  "quit",
+                ] as const)
+                  app.on(event as "quit", () =>
+                    console.error(
+                      "TEST_QUIT",
+                      event,
+                      process.getActiveResourcesInfo(),
+                    ),
+                  );
+              }
+              dialog.showMessageBox = async () => ({
+                response: 1,
+                checkboxChecked: false,
+              });
+              // Windows native PTYs require the debugger to stay attached until
+              // the established graceful quit path has completed.
+              if (quitFirst) setTimeout(() => app.quit(), 0);
+              return (globalThis as any).__passportE2EWindowAudit;
+            },
+            process.platform === "win32",
+          );
         }
+        if (process.platform === "win32") await exited;
         if (deadlineExpired) return;
+        // On macOS let Playwright own graceful quit and debugger disconnection.
+        // Independently require the real process to exit with code 0 below.
         await application.close();
         const [code, signal] = await exited;
         if (deadlineExpired) return;

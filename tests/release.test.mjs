@@ -890,10 +890,13 @@ test("Electron teardown checks actual process exit after the platform's graceful
     process: () => child,
     evaluate: async () => {
       cleanupFinished = true;
+      if (process.platform === "win32") {
+        child.exitCode = 0;
+        child.emit("exit", 0, null);
+      }
     },
     close: async () => {
       assert.equal(cleanupFinished, true);
-      assert.equal(child.exitCode, null);
       child.exitCode = 0;
       child.emit("exit", 0, null);
     },
@@ -921,14 +924,13 @@ test("Electron teardown rejects a stalled quit instead of waiting indefinitely",
   child.emit("exit", 0, null);
 });
 
-test("Electron teardown holds the final quit until cleanup and debugger close are ordered", async () => {
+test("Electron teardown waits for asynchronous native cleanup and actual process exit", async () => {
   const child = Object.assign(new EventEmitter(), {
     exitCode: null,
     signalCode: null,
     stderr: new PassThrough(),
   });
   let cleaned = false;
-  let debuggerClosed = false;
   const nativeApp = Object.assign(new EventEmitter(), {
     quit() {
       const event = {
@@ -940,7 +942,6 @@ test("Electron teardown holds the final quit until cleanup and debugger close ar
       nativeApp.emit("will-quit", event);
       if (!event.defaultPrevented) {
         assert.equal(cleaned, true);
-        assert.equal(debuggerClosed, true);
         child.exitCode = 0;
         child.emit("exit", 0, null);
       }
@@ -956,15 +957,13 @@ test("Electron teardown holds the final quit until cleanup and debugger close ar
   });
   const application = {
     process: () => child,
-    evaluate: (fn) => fn({ app: nativeApp, dialog: {} }),
+    evaluate: (fn, quitFirst) => fn({ app: nativeApp, dialog: {} }, quitFirst),
     close: async () => {
-      assert.equal(cleaned, true);
-      assert.equal(child.exitCode, null);
-      debuggerClosed = true;
-      nativeApp.quit();
+      if (child.exitCode === null) nativeApp.quit();
     },
   };
   await closeCleanly(application, 1000);
+  assert.equal(cleaned, true);
   assert.equal(child.exitCode, 0);
 });
 
