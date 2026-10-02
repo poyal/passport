@@ -1,0 +1,532 @@
+{
+  "createdAt": "2026-10-02T17:25:41.345Z",
+  "purpose": "Windows 1.1.1 taskbar icon patch and explicitly authorized same-version installer replacement",
+  "status": "published-and-public-download-verified",
+  "source": {
+    "commit": "34c4851fa5f0f71bf8bde0d5426a0777533d2503",
+    "dirty": false,
+    "fingerprint": "d0e2447b5c62a4a0a0a603167e2b32df3c329e701c9e149e67a6d2ce93569097"
+  },
+  "environment": {
+    "platform": "win32",
+    "arch": "x64",
+    "os": "10.0.26200",
+    "node": "v24.14.0",
+    "npm": "11.20.0",
+    "cargo": "cargo 1.99.0 (5f94df478 2026-08-27)",
+    "electron": "44.4.5"
+  },
+  "version": "1.1.1",
+  "platform": "win-x64",
+  "sourceTag": "v1.1.1-win-x64-icon-fix",
+  "authorization": "User explicitly requested Windows Electron taskbar icon patch and 1.1.1 update; prior same-version bugfix/test exception remains authorized",
+  "artifact": {
+    "name": "Passport-1.1.1-win-x64.exe",
+    "path": "release/builds/20261002T170934Z-34c4851-win-x64-local-release/Passport-1.1.1-win-x64.exe",
+    "bytes": 203809896,
+    "sha256": "252b152ed90b29ddd311d245b2db4ed25a70da80ceef5b9b876241e4d527c206"
+  },
+  "verificationManifest": "release/checks/20261002T170934Z-34c4851-win-x64-local-release/verification.json",
+  "checks": [
+    {
+      "name": "dependencies",
+      "status": "passed",
+      "startedAt": "2026-10-02T17:09:34.354Z",
+      "finishedAt": "2026-10-02T17:11:08.748Z"
+    },
+    {
+      "name": "ftp-fixtures",
+      "status": "passed",
+      "startedAt": "2026-10-02T17:11:08.751Z",
+      "finishedAt": "2026-10-02T17:11:16.270Z"
+    },
+    {
+      "name": "windows-tools",
+      "status": "passed",
+      "startedAt": "2026-10-02T17:11:16.272Z",
+      "finishedAt": "2026-10-02T17:11:16.680Z"
+    },
+    {
+      "name": "build",
+      "status": "passed",
+      "startedAt": "2026-10-02T17:11:16.683Z",
+      "finishedAt": "2026-10-02T17:11:21.514Z"
+    },
+    {
+      "name": "unit",
+      "status": "passed",
+      "startedAt": "2026-10-02T17:11:21.517Z",
+      "finishedAt": "2026-10-02T17:12:07.371Z"
+    },
+    {
+      "name": "release-tests",
+      "status": "passed",
+      "startedAt": "2026-10-02T17:12:07.373Z",
+      "finishedAt": "2026-10-02T17:12:18.458Z"
+    },
+    {
+      "name": "source-gui",
+      "status": "passed",
+      "mode": "hidden",
+      "tests": {
+        "startTime": "2026-10-02T17:12:19.592Z",
+        "duration": 109886.57,
+        "expected": 58,
+        "skipped": 4,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "startedAt": "2026-10-02T17:12:18.461Z",
+      "finishedAt": "2026-10-02T17:14:09.498Z"
+    },
+    {
+      "name": "source-desktop",
+      "status": "passed",
+      "mode": "desktop",
+      "tests": {
+        "startTime": "2026-10-02T17:14:10.468Z",
+        "duration": 9497.03,
+        "expected": 4,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "startedAt": "2026-10-02T17:14:09.501Z",
+      "finishedAt": "2026-10-02T17:14:19.983Z"
+    },
+    {
+      "name": "package",
+      "status": "passed",
+      "startedAt": "2026-10-02T17:14:19.986Z",
+      "finishedAt": "2026-10-02T17:17:50.327Z"
+    },
+    {
+      "name": "installer",
+      "status": "passed",
+      "startedAt": "2026-10-02T17:17:50.782Z",
+      "finishedAt": "2026-10-02T17:18:07.653Z"
+    },
+    {
+      "name": "packaged-smoke",
+      "status": "passed",
+      "startedAt": "2026-10-02T17:18:07.657Z",
+      "finishedAt": "2026-10-02T17:18:11.367Z"
+    },
+    {
+      "name": "packaged-gui",
+      "status": "passed",
+      "mode": "hidden",
+      "tests": {
+        "startTime": "2026-10-02T17:18:12.366Z",
+        "duration": 109837.416,
+        "expected": 58,
+        "skipped": 4,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "startedAt": "2026-10-02T17:18:11.370Z",
+      "finishedAt": "2026-10-02T17:20:02.223Z"
+    },
+    {
+      "name": "packaged-desktop",
+      "status": "passed",
+      "mode": "desktop",
+      "tests": {
+        "startTime": "2026-10-02T17:20:03.178Z",
+        "duration": 10610.772,
+        "expected": 4,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "startedAt": "2026-10-02T17:20:02.226Z",
+      "finishedAt": "2026-10-02T17:20:13.808Z"
+    }
+  ],
+  "unit": {
+    "passed": 129,
+    "skipped": 6
+  },
+  "releaseTests": {
+    "passed": 69,
+    "skipped": 1,
+    "skipReason": "Windows symbolic-link privilege"
+  },
+  "diagnosis": {
+    "originalExecutable": "Already contained Passport icon resources",
+    "originalNativeWindowIcons": "1254x1254 PNG passed as native window icon",
+    "taskbar": "A source-test-created Electron.lnk targeted this workspace electron.exe with the production AppUserModelId; deleting only that backed-up verification link and relaunching restored the Passport group icon",
+    "proof": {
+      "originalIdElectron": "taskbar-passport-button-desktop-postrepair.png",
+      "uniqueDiagnosticIdPassport": "taskbar-passport-button-desktop-unique.png",
+      "productionIdAfterCleanup": "taskbar-passport-button-desktop-after-electron-cleanup.png"
+    },
+    "windowsNativeNotificationSideEffect": "Both isSupported() and construction initialize the presenter and register shortcut/COM resources despite show/close mocks"
+  },
+  "changes": [
+    "Generate multiresolution ICO from approved PNG with locked electron-builder tools; same seven sizes in EXE, NSIS and external resources/icon.ico",
+    "Set explicit Windows window AppDetails icon/name/relaunch information before initial show, retaining io.passport.desktop",
+    "Compare WM_GETICON small/big pixel hashes on two real source and packaged windows at actual DPI",
+    "Isolated notification-policy fixture replaces adapter before native support/construction; no OS shortcut registration",
+    "Normalize verified original ConPTY source and tracked patch to LF before git apply; preserve original/fixed hash gates",
+    "Narrow publisher opt-in pins old Windows asset and both old tags, archives verified old bytes, validates staged replacement download before removing old name"
+  ],
+  "finalIconVerification": {
+    "checkedAt": "2026-10-02T17:20:41.556Z",
+    "status": "passed",
+    "sourceCommit": "34c4851fa5f0f71bf8bde0d5426a0777533d2503",
+    "manifest": "release/checks/20261002T170934Z-34c4851-win-x64-local-release/verification.json",
+    "icoSha256": "4324eb89261f27aff32603c835b957b46d5d1b49c183e0bce2eddb348f072035",
+    "runtimeIconSha256": "4324eb89261f27aff32603c835b957b46d5d1b49c183e0bce2eddb348f072035",
+    "resources": [
+      {
+        "path": "release/builds/20261002T170934Z-34c4851-win-x64-local-release/win-unpacked/Passport.exe",
+        "frames": [
+          {
+            "width": 16,
+            "height": 16,
+            "sha256": "5db7764664253d27b7195546d6381daa85592c1005b67d654baaef5f387b1fce"
+          },
+          {
+            "width": 24,
+            "height": 24,
+            "sha256": "6dd3f56209f805064e097be42dce3fa2228b86092f3ffe100fa4cb703255513d"
+          },
+          {
+            "width": 32,
+            "height": 32,
+            "sha256": "b4c9f8e8a5d24057a3aff923d280d2fc8fc36cd5c09f56bae41bcbf3cd3f5719"
+          },
+          {
+            "width": 48,
+            "height": 48,
+            "sha256": "fd8db5f8fbe5e6870af3c30a3b4a766861e45e21b3f4d1247c8d7ac43e112d82"
+          },
+          {
+            "width": 64,
+            "height": 64,
+            "sha256": "ccb94d8629794b5e965ffb2ec3fe5d19d42616c48f9bfcc30e7065fc1a626e30"
+          },
+          {
+            "width": 128,
+            "height": 128,
+            "sha256": "e15e937404629638edf2f0a1849b843fc33e91d27dc329a00a45e697c6a47bd3"
+          },
+          {
+            "width": 256,
+            "height": 256,
+            "sha256": "960328b31219a8a46902d16ca4a6e9ab2e35a866b39edc1b173ab33cdeb02759"
+          }
+        ]
+      },
+      {
+        "path": "release/checks/20261002T170934Z-34c4851-win-x64-local-release/nsis/Passport.exe",
+        "frames": [
+          {
+            "width": 16,
+            "height": 16,
+            "sha256": "5db7764664253d27b7195546d6381daa85592c1005b67d654baaef5f387b1fce"
+          },
+          {
+            "width": 24,
+            "height": 24,
+            "sha256": "6dd3f56209f805064e097be42dce3fa2228b86092f3ffe100fa4cb703255513d"
+          },
+          {
+            "width": 32,
+            "height": 32,
+            "sha256": "b4c9f8e8a5d24057a3aff923d280d2fc8fc36cd5c09f56bae41bcbf3cd3f5719"
+          },
+          {
+            "width": 48,
+            "height": 48,
+            "sha256": "fd8db5f8fbe5e6870af3c30a3b4a766861e45e21b3f4d1247c8d7ac43e112d82"
+          },
+          {
+            "width": 64,
+            "height": 64,
+            "sha256": "ccb94d8629794b5e965ffb2ec3fe5d19d42616c48f9bfcc30e7065fc1a626e30"
+          },
+          {
+            "width": 128,
+            "height": 128,
+            "sha256": "e15e937404629638edf2f0a1849b843fc33e91d27dc329a00a45e697c6a47bd3"
+          },
+          {
+            "width": 256,
+            "height": 256,
+            "sha256": "960328b31219a8a46902d16ca4a6e9ab2e35a866b39edc1b173ab33cdeb02759"
+          }
+        ]
+      },
+      {
+        "path": "release/builds/20261002T170934Z-34c4851-win-x64-local-release/Passport-1.1.1-win-x64.exe",
+        "frames": [
+          {
+            "width": 16,
+            "height": 16,
+            "sha256": "5db7764664253d27b7195546d6381daa85592c1005b67d654baaef5f387b1fce"
+          },
+          {
+            "width": 24,
+            "height": 24,
+            "sha256": "6dd3f56209f805064e097be42dce3fa2228b86092f3ffe100fa4cb703255513d"
+          },
+          {
+            "width": 32,
+            "height": 32,
+            "sha256": "b4c9f8e8a5d24057a3aff923d280d2fc8fc36cd5c09f56bae41bcbf3cd3f5719"
+          },
+          {
+            "width": 48,
+            "height": 48,
+            "sha256": "fd8db5f8fbe5e6870af3c30a3b4a766861e45e21b3f4d1247c8d7ac43e112d82"
+          },
+          {
+            "width": 64,
+            "height": 64,
+            "sha256": "ccb94d8629794b5e965ffb2ec3fe5d19d42616c48f9bfcc30e7065fc1a626e30"
+          },
+          {
+            "width": 128,
+            "height": 128,
+            "sha256": "e15e937404629638edf2f0a1849b843fc33e91d27dc329a00a45e697c6a47bd3"
+          },
+          {
+            "width": 256,
+            "height": 256,
+            "sha256": "960328b31219a8a46902d16ca4a6e9ab2e35a866b39edc1b173ab33cdeb02759"
+          }
+        ]
+      }
+    ],
+    "runtime": {
+      "appVersion": "1.1.1",
+      "appPath": "C:\\Users\\ttt45\\Workspace\\personal\\passport\\release\\checks\\20261002T170934Z-34c4851-win-x64-local-release\\nsis\\resources\\app.asar",
+      "handle": "3737622",
+      "visible": true,
+      "focused": true
+    },
+    "nativeReport": [
+      {
+        "pixelsSha256": "99e3fa47ba8c228518b723bee0a153b6286466ef8b31bb417878d5252fd850d6",
+        "width": 24,
+        "kind": 0,
+        "height": 24,
+        "window": "3737622"
+      },
+      {
+        "pixelsSha256": "fad810ae12f9704e67f3e2d2c546dbd428fe2115c247ddb02b5c5e180a8fb37f",
+        "width": 48,
+        "kind": 1,
+        "height": 48,
+        "window": "3737622"
+      }
+    ],
+    "taskbarCapture": "final-taskbar-icons.png",
+    "taskbarRequiresVisualReview": true,
+    "profileIsolated": true,
+    "userInstallationAndDatabaseModified": false,
+    "taskbarVisualReview": "Passport icon visible",
+    "visualReviewAt": "2026-10-02T17:20:53.155Z"
+  },
+  "sourceTaskbarVerification": {
+    "checkedAt": "2026-10-02T17:20:39.244Z",
+    "sourceCommit": "34c4851fa5f0f71bf8bde0d5426a0777533d2503",
+    "platform": "win-x64",
+    "mode": "desktop",
+    "runtime": {
+      "execPath": "C:\\Users\\ttt45\\Workspace\\personal\\passport\\node_modules\\electron\\dist\\electron.exe",
+      "name": "Passport",
+      "title": "Passport",
+      "visible": true
+    },
+    "productionAppId": "io.passport.desktop",
+    "shortcutsBeforeAndAfter": "absent",
+    "taskbarCapture": "source-taskbar-icon.png",
+    "requiresVisualReview": true,
+    "profileIsolated": true,
+    "taskbarVisualReview": "Passport icon visible",
+    "visualReviewAt": "2026-10-02T17:20:53.154Z"
+  },
+  "publication": {
+    "mode": "publish",
+    "tag": "v1.1.1",
+    "sourceCommit": "34c4851fa5f0f71bf8bde0d5426a0777533d2503",
+    "sourceTag": "v1.1.1-win-x64-icon-fix",
+    "releaseCommit": "f4497cc2a337c5f5aa73d5834a2b99f06013020d",
+    "targets": [
+      "win-x64"
+    ],
+    "upload": [
+      "Passport-1.1.1-win-x64.exe"
+    ],
+    "replace": [
+      {
+        "id": 605898019,
+        "name": "Passport-1.1.1-win-x64.exe",
+        "digest": "sha256:9a3c69c68da8283378561a5074524fd926a7cfca1627d69082d7cb25a37d1fcf"
+      }
+    ],
+    "preserve": [
+      "Passport-1.1.1-mac-arm64.dmg"
+    ],
+    "updateChecksums": true,
+    "createDraft": false,
+    "publishDraft": false,
+    "status": "published-and-download-verified",
+    "url": "https://github.com/poyal/passport/releases/tag/v1.1.1",
+    "finishedAt": "2026-10-02T17:23:15.223Z"
+  },
+  "publicDownload": {
+    "createdAt": "2026-10-02T17:23:56.629Z",
+    "purpose": "Unauthenticated public Windows installer download and combined checksum verification",
+    "sourceCommit": "34c4851fa5f0f71bf8bde0d5426a0777533d2503",
+    "platform": "win-x64",
+    "status": "passed",
+    "url": "https://github.com/poyal/passport/releases/download/v1.1.1/Passport-1.1.1-win-x64.exe",
+    "assetId": 606109067,
+    "bytes": 203809896,
+    "sha256": "252b152ed90b29ddd311d245b2db4ed25a70da80ceef5b9b876241e4d527c206",
+    "combinedChecksums": "0820760270d00b9e02deded76ec73a9eb08c22c61cb8601d7eb470d00e9df187  Passport-1.1.1-mac-arm64.dmg\n252b152ed90b29ddd311d245b2db4ed25a70da80ceef5b9b876241e4d527c206  Passport-1.1.1-win-x64.exe\n",
+    "preservedMac": {
+      "id": 605237202,
+      "name": "Passport-1.1.1-mac-arm64.dmg",
+      "size": 169143903,
+      "digest": "sha256:0820760270d00b9e02deded76ec73a9eb08c22c61cb8601d7eb470d00e9df187"
+    },
+    "userInstallationAndDatabaseChanged": false
+  },
+  "remote": {
+    "releaseUrl": "https://github.com/poyal/passport/releases/tag/v1.1.1",
+    "releaseId": 401677355,
+    "stableLatest": true,
+    "assets": [
+      {
+        "id": 605237202,
+        "name": "Passport-1.1.1-mac-arm64.dmg",
+        "size": 169143903,
+        "digest": "sha256:0820760270d00b9e02deded76ec73a9eb08c22c61cb8601d7eb470d00e9df187",
+        "updated_at": "2026-10-02T09:14:46Z",
+        "browser_download_url": "https://github.com/poyal/passport/releases/download/v1.1.1/Passport-1.1.1-mac-arm64.dmg"
+      },
+      {
+        "id": 606109067,
+        "name": "Passport-1.1.1-win-x64.exe",
+        "size": 203809896,
+        "digest": "sha256:252b152ed90b29ddd311d245b2db4ed25a70da80ceef5b9b876241e4d527c206",
+        "updated_at": "2026-10-02T17:23:06Z",
+        "browser_download_url": "https://github.com/poyal/passport/releases/download/v1.1.1/Passport-1.1.1-win-x64.exe"
+      },
+      {
+        "id": 606110446,
+        "name": "SHA256SUMS.txt",
+        "size": 188,
+        "digest": "sha256:9cb296a917d729abec3a258e0afb4dcce23ff0e4384a3692e8c5d7b5dbc75067",
+        "updated_at": "2026-10-02T17:23:12Z",
+        "browser_download_url": "https://github.com/poyal/passport/releases/download/v1.1.1/SHA256SUMS.txt"
+      }
+    ],
+    "preservedMacAssetId": 605237202,
+    "originalMacTag": {
+      "sha": "bfb6335d6f993b804342fe3b796955a5b068449c",
+      "type": "tag",
+      "url": "https://api.github.com/repos/poyal/passport/git/tags/bfb6335d6f993b804342fe3b796955a5b068449c"
+    },
+    "originalWindowsTag": {
+      "sha": "48a19d24dbf137c04512768a85a5612af740f533",
+      "type": "tag",
+      "url": "https://api.github.com/repos/poyal/passport/git/tags/48a19d24dbf137c04512768a85a5612af740f533"
+    },
+    "activeActionsRuns": [
+      {
+        "status": "queued",
+        "count": 0
+      },
+      {
+        "status": "in_progress",
+        "count": 0
+      },
+      {
+        "status": "waiting",
+        "count": 0
+      },
+      {
+        "status": "requested",
+        "count": 0
+      },
+      {
+        "status": "pending",
+        "count": 0
+      }
+    ],
+    "manualOnlyWorkflow": [
+      {
+        "id": 369898876,
+        "node_id": "W_kwDOUxcglc4WDDV8",
+        "name": "Desktop verification (manual diagnostics)",
+        "path": ".github/workflows/desktop.yml",
+        "state": "active",
+        "created_at": "2026-09-29T16:38:19.000+09:00",
+        "updated_at": "2026-10-02T18:05:12.000+09:00",
+        "url": "https://api.github.com/repos/poyal/passport/actions/workflows/369898876",
+        "html_url": "https://github.com/poyal/passport/blob/main/.github/workflows/desktop.yml",
+        "badge_url": "https://github.com/poyal/passport/workflows/Desktop%20verification%20(manual%20diagnostics)/badge.svg"
+      }
+    ]
+  },
+  "initialFailuresAndSupplementalDiagnostics": [
+    {
+      "path": "release/checks/20261002T161852Z-6036eeb-win-x64-local-release",
+      "status": "failed-dependencies",
+      "reason": "CRLF checkout patch failed git apply; fixed by verified LF normalization"
+    },
+    {
+      "path": "release/checks/20261002T162211Z-053eaf9-win-x64-local-release",
+      "status": "formal-verification-passed",
+      "limitation": "Native icons passed; actual taskbar group remained Electron until test shortcut conflict was diagnosed; not published"
+    },
+    {
+      "path": "release/checks/20261002T170129Z-053eaf9-dirty-win-x64-e2e-desktop",
+      "status": "failed-fixture-probe",
+      "reason": "Electron public Notification export is read-only"
+    },
+    {
+      "path": "release/checks/20261002T170407Z-053eaf9-dirty-win-x64-e2e-desktop",
+      "status": "failed-fixture-probe",
+      "reason": "Native binding replacement after module load could not replace cached constructor"
+    },
+    {
+      "path": "release/checks/20261002T170542Z-053eaf9-dirty-win-x64-e2e-desktop",
+      "status": "policy-passed-but-isolation-insufficient",
+      "reason": "Windows shortcut uses executable product name despite app.setName; probe resources backed up and removed"
+    },
+    {
+      "path": "release/checks/20261002T170801Z-053eaf9-dirty-win-x64-e2e-desktop",
+      "status": "adapter-policy-passed",
+      "reason": "Existing OS shortcut SHA-256 unchanged before/after"
+    },
+    {
+      "path": "release/checks/20261002T160429Z-3ac0b6f-win-x64-icon-fix",
+      "status": "supplemental-diagnostics",
+      "reason": "Initial PE inspection corrected ICO 0=256 and NSIS group ordering; duplicate wx output and absent probe registry cleanup reported harness errors separately from product results"
+    }
+  ],
+  "limitations": [
+    "Physical IME, OS notifications, real AI services, upgrade installation, and optional Docker/long stress tests are separate checks.",
+    "Windows installer UI/scope and extracted payload are checked; installing/uninstalling into a user account is a separate check.",
+    "Known preexisting repeated-reconnect diagnostic can leave Bash/OpenConsole children after app exit; preserved original repro records and no guarantee of all child-process cleanup",
+    "No user-account installation/upgrade or Explorer-wide cache deletion/restart performed"
+  ],
+  "storage": {
+    "build": "release/builds/20261002T170934Z-34c4851-win-x64-local-release",
+    "checks": "release/checks/20261002T170934Z-34c4851-win-x64-local-release",
+    "diagnostics": "release/checks/20261002T160429Z-3ac0b6f-win-x64-icon-fix",
+    "newPublicPackage": "release/packages/v1.1.1/local/win-x64/icon-fix-34c4851",
+    "supersededPublicPackage": "release/packages/v1.1.1/github/win-x64",
+    "shortcutRecovery": "release/backups/20261002T165123Z-053eaf9-win-x64-test-shortcuts",
+    "userDatabaseModified": false,
+    "verificationOwnedStartMenuShortcuts": "Both verification-owned Passport/Electron links backed up and removed; no actual installed app replaced",
+    "retention": "Keep latest two successful builds, current and superseded public installers, raw unresolved child-process repros and KEEP-marked shortcut backup. Same-day failures/diagnostics not yet 7-day cleanup candidates. No release artifacts deleted."
+  }
+}

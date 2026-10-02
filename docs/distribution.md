@@ -6,7 +6,7 @@
 
 ## 현재 상태
 
-현재 Mac Apple Silicon과 Windows x64 공개 버전은 **1.1.1**이다. [릴리즈 목록](releases/README.md)에서 다운로드한다. Windows 11 x64에서 소스·최종 설치본을 로컬 검증한 EXE를 재빌드 없이 기존 릴리즈에 추가했고 Mac DMG와 기존 태그는 보존했다. Windows 버그픽스 소스 태그는 `v1.1.1-win-x64`다. 자세한 출처·해시·허용 예외와 별도 확인 범위는 [Windows 게시 요약](benchmarks/github-release-windows-v1.1.1.json)을 따른다. Windows ARM64는 이번에 배포하지 않았다.
+현재 Mac Apple Silicon과 Windows x64 공개 버전은 **1.1.1**이다. [릴리즈 목록](releases/README.md)에서 다운로드한다. Windows 11 x64에서 소스·최종 설치본을 로컬 검증한 아이콘 수정 EXE를 재빌드 없이 기존 릴리즈에 교체 게시했고 Mac DMG와 기존 태그는 보존했다. 현재 Windows 소스 태그는 `v1.1.1-win-x64-icon-fix`이며 최초 Windows 태그 `v1.1.1-win-x64`도 유지한다. 자세한 출처·해시·사용자가 승인한 같은 버전 교체와 별도 확인 범위는 [아이콘 수정 게시 요약](benchmarks/github-release-windows-v1.1.1-icon-fix.json)을 따른다. Windows ARM64는 이번에 배포하지 않았다.
 
 Mac 설치본은 ad-hoc 서명이며 Developer ID 서명·Apple 공증을 포함하지 않는다. `codesign` 무결성 검사 통과는 Apple 공증이나 Gatekeeper의 실행 허용을 뜻하지 않는다. 현재 결과와 DMG 해시는 [검증 기록](verification.md)에 보관한다.
 
