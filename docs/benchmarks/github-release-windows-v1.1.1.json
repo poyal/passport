@@ -1,0 +1,1676 @@
+{
+  "version": "1.1.1",
+  "platform": "win-x64",
+  "publishedAt": "2026-10-02T15:30:46.485Z",
+  "sourceCommit": "62457a0f85d858354472212bdf4595e397b7eb91",
+  "sourceFingerprint": "55727d2b768d3d889ddd52172dcba6a67c79eeae1345a63ba99e6655547fa4cf",
+  "sourceTag": "v1.1.1-win-x64",
+  "originalMacTag": "v1.1.1",
+  "originalMacCommit": "f4497cc2a337c5f5aa73d5834a2b99f06013020d",
+  "authorization": "User explicitly authorized test corrections and bug fixes for previously unpublished Windows 1.1.1; existing Mac tag and installer preserved.",
+  "formalVerification": "release/checks/20261002T151552Z-62457a0-win-x64-local-release/verification.json",
+  "environment": {
+    "platform": "win32",
+    "arch": "x64",
+    "os": "10.0.26200",
+    "node": "v24.14.0",
+    "npm": "11.20.0",
+    "cargo": "cargo 1.99.0 (5f94df478 2026-08-27)",
+    "electron": "44.4.5"
+  },
+  "verificationDurationSeconds": 678.274,
+  "checks": [
+    {
+      "name": "dependencies",
+      "status": "passed",
+      "startedAt": "2026-10-02T15:15:52.130Z",
+      "finishedAt": "2026-10-02T15:17:29.058Z"
+    },
+    {
+      "name": "ftp-fixtures",
+      "status": "passed",
+      "startedAt": "2026-10-02T15:17:29.061Z",
+      "finishedAt": "2026-10-02T15:17:35.587Z"
+    },
+    {
+      "name": "windows-tools",
+      "status": "passed",
+      "startedAt": "2026-10-02T15:17:35.589Z",
+      "finishedAt": "2026-10-02T15:17:36.001Z"
+    },
+    {
+      "name": "build",
+      "status": "passed",
+      "startedAt": "2026-10-02T15:17:36.004Z",
+      "finishedAt": "2026-10-02T15:17:40.063Z"
+    },
+    {
+      "name": "unit",
+      "status": "passed",
+      "startedAt": "2026-10-02T15:17:40.065Z",
+      "finishedAt": "2026-10-02T15:18:26.704Z"
+    },
+    {
+      "name": "release-tests",
+      "status": "passed",
+      "startedAt": "2026-10-02T15:18:26.707Z",
+      "finishedAt": "2026-10-02T15:18:36.954Z"
+    },
+    {
+      "name": "source-gui",
+      "status": "passed",
+      "startedAt": "2026-10-02T15:18:36.957Z",
+      "tests": {
+        "startTime": "2026-10-02T15:18:38.080Z",
+        "duration": 117567.071,
+        "expected": 58,
+        "skipped": 4,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "mode": "hidden",
+      "report": "release/checks/20261002T151552Z-62457a0-win-x64-local-release/source-gui.json",
+      "coverage": {
+        "policyHash": "15bd745576aee859a8c01aeed93e06487fd0bcc53311709015a4ce718171f294",
+        "platform": "win32",
+        "mode": "hidden",
+        "optional": [],
+        "passed": 58,
+        "skipped": 4,
+        "tests": [
+          {
+            "id": "advanced.broadcast-uses-physical-keys-only-explicit-execution-records-hist",
+            "file": "advanced.spec.ts",
+            "title": "broadcast uses physical keys only, explicit execution records history, logs start automatically",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "advanced.moves-a-live-split-workspace-to-another-native-window-and-back-wi",
+            "file": "advanced.spec.ts",
+            "title": "moves a live split workspace to another native window and back with scrollback intact",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "advanced.opens-and-keeps-a-local-tab-active-when-ownership-events-arrive-a",
+            "file": "advanced.spec.ts",
+            "title": "opens and keeps a local tab active when ownership events arrive after the save reply",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "advanced.bulk-host-edits-change-only-checked-fields",
+            "file": "advanced.spec.ts",
+            "title": "bulk host edits change only checked fields",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "advanced.500-host-list-and-expanded-host-settings-scroll-independently-ins",
+            "file": "advanced.spec.ts",
+            "title": "500-host list and expanded host settings scroll independently inside a small window",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "app.host-crud-live-ssh-split-session-preservation-themes-and-persiste",
+            "file": "app.spec.ts",
+            "title": "host CRUD, live SSH, split session preservation, themes, and persistence",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "app.independent-file-panels-context-menus-local-copy-and-queue",
+            "file": "app.spec.ts",
+            "title": "independent file panels, context menus, local copy and queue",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "app.long-file-lists-stay-above-the-queue-and-scroll-independently-at",
+            "file": "app.spec.ts",
+            "title": "long file lists stay above the queue and scroll independently at both window sizes",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "app.opening-the-app-never-requests-access-to-the-operating-system-sec",
+            "file": "app.spec.ts",
+            "title": "opening the app never requests access to the operating system secret store",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "background.isolated-windows-accept-terminal-input-and-move-workspaces-withou",
+            "file": "background.spec.ts",
+            "title": "isolated windows accept terminal input and move workspaces without native focus",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "docker-ssh.real-docker-ssh-and-sftp-through-the-desktop-application",
+            "file": "docker-ssh.spec.ts",
+            "title": "real Docker SSH and SFTP through the desktop application",
+            "status": "skipped",
+            "required": false,
+            "skipReason": "optional feature not requested: docker"
+          },
+          {
+            "id": "file-colors.file-types-follow-every-theme-while-server-ansi-input-and-output",
+            "file": "file-colors.spec.ts",
+            "title": "file types follow every theme while server ANSI, input and output text stay intact",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "layout-drag.nested-horizontal-groups-fill-the-available-space-even-when-minim",
+            "file": "layout-drag.spec.ts",
+            "title": "nested horizontal groups fill the available space even when minimum panel sizes constrain a track",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "layout-drag.nested-vertical-groups-fill-the-available-space-even-when-minimum",
+            "file": "layout-drag.spec.ts",
+            "title": "nested vertical groups fill the available space even when minimum panel sizes constrain a track",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "layout-drag.grouped-tabs-can-reorder-but-cannot-merge-their-individual-panels",
+            "file": "layout-drag.spec.ts",
+            "title": "grouped tabs can reorder but cannot merge; their individual panels can still move",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "legacy.legacy-ssh-works-without-a-host-option-for-terminal-and-sftp-and",
+            "file": "legacy.spec.ts",
+            "title": "legacy SSH works without a host option for terminal and SFTP, and first-key confirmation can be disabled",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "local-colors.local-cli-colors-survive-a-colorless-app-launcher-plain",
+            "file": "local-colors.spec.ts",
+            "title": "local CLI colors survive a colorless app launcher: plain",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "local-colors.local-cli-colors-survive-a-colorless-app-launcher-ai-profile",
+            "file": "local-colors.spec.ts",
+            "title": "local CLI colors survive a colorless app launcher: ai-profile",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "local-colors.local-cli-colors-survive-a-colorless-app-launcher-explicit-no-col",
+            "file": "local-colors.spec.ts",
+            "title": "local CLI colors survive a colorless app launcher: explicit-no-color",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "local-workspace.an-unavailable-default-shell-leaves-a-retryable-local-tab",
+            "file": "local-workspace.spec.ts",
+            "title": "an unavailable default shell leaves a retryable local tab",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "local-workspace.creates-mixed-local-ssh-workspaces-previews-profiles-routes-alert",
+            "file": "local-workspace.spec.ts",
+            "title": "creates mixed local/SSH workspaces, previews profiles, routes alerts and restores without executing",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "local-workspace.edits-several-startup-profiles-and-notification-preferences-witho",
+            "file": "local-workspace.spec.ts",
+            "title": "edits several startup profiles and notification preferences without touching live shells",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "scroll-workspaces.file-action-triggers-toggle-dismiss-restore-focus-and-stay-in-bou",
+            "file": "scroll-workspaces.spec.ts",
+            "title": "file action triggers toggle, dismiss, restore focus and stay in bounds while scrolling",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "scroll-workspaces.log-list-and-output-fit-and-scroll-independently-at-both-themes-a",
+            "file": "scroll-workspaces.spec.ts",
+            "title": "log list and output fit and scroll independently at both themes and window sizes",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "scroll-workspaces.plus-opens-a-local-tab-immediately-using-defaults-and-focuses-inp",
+            "file": "scroll-workspaces.spec.ts",
+            "title": "plus opens a local tab immediately using defaults and focuses input",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "scroll-workspaces.workspace-save-button-preserves-only-that-tab-focus-and-splits-te",
+            "file": "scroll-workspaces.spec.ts",
+            "title": "workspace save button preserves only that tab, focus and splits; templates open directly and persist",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "scroll-workspaces.saving-the-selected-tab-refuses-a-closed-source",
+            "file": "scroll-workspaces.spec.ts",
+            "title": "saving the selected tab refuses a closed source",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "scroll-workspaces.long-workspace-libraries-scroll-without-moving-controls-and-refus",
+            "file": "scroll-workspaces.spec.ts",
+            "title": "long workspace libraries scroll without moving controls and refuse to exceed terminal capacity",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "settings-tools.export-explains-short-passwords-and-writes-decryptable-credential",
+            "file": "settings-tools.spec.ts",
+            "title": "export explains short passwords and writes decryptable credentials once the minimum is met",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "settings-tools.imports-ask-after-file-selection-allow-password-retry-cancel-tick",
+            "file": "settings-tools.spec.ts",
+            "title": "imports ask after file selection, allow password retry, cancel tickets, and bypass the prompt for plain files",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "settings-tools.settings-use-accessible-switches-merge-themes-and-expose-only-the",
+            "file": "settings-tools.spec.ts",
+            "title": "settings use accessible switches, merge themes, and expose only the confirmed About links",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "settings-tools.log-viewer-removes-terminal-controls-and-hyperlinks-while-the-ori",
+            "file": "settings-tools.spec.ts",
+            "title": "log viewer removes terminal controls and hyperlinks while the original export stays intact",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "settings-tools.terminal-search-counts-matches-scrolls-on-enter-wraps-highlights",
+            "file": "settings-tools.spec.ts",
+            "title": "terminal search counts matches, scrolls on Enter, wraps, highlights, and consumes no terminal input",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "shutdown.quits-normally-with-four-active-native-ptys",
+            "file": "shutdown.spec.ts",
+            "title": "quits normally with four active native PTYs",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "shutdown.quits-normally-with-four-closed-native-ptys",
+            "file": "shutdown.spec.ts",
+            "title": "quits normally with four closed native PTYs",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "shutdown.quits-normally-with-four-reopened-native-ptys",
+            "file": "shutdown.spec.ts",
+            "title": "quits normally with four reopened native PTYs",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "shutdown.shares-one-instance-per-data-directory-and-allows-isolated-data-d",
+            "file": "shutdown.spec.ts",
+            "title": "shares one instance per data directory and allows isolated data directories",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "shutdown.closes-live-terminals-without-parsing-externally-changed-settings",
+            "file": "shutdown.spec.ts",
+            "title": "closes live terminals without parsing externally changed settings",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "stress.16-visible-terminals-process-100-kib-s-each-for-ten-minutes",
+            "file": "stress.spec.ts",
+            "title": "16 visible terminals process 100 KiB/s each for ten minutes",
+            "status": "skipped",
+            "required": false,
+            "skipReason": "optional feature not requested: stress"
+          },
+          {
+            "id": "throughput.large-terminal-text-remains-interactive-and-bounded-through-1-gib",
+            "file": "throughput.spec.ts",
+            "title": "large terminal text remains interactive and bounded through 1 GiB",
+            "status": "skipped",
+            "required": false,
+            "skipReason": "optional feature not requested: throughput"
+          },
+          {
+            "id": "updates.about-checks-updates-directs-downloads-to-the-correct-installer-a",
+            "file": "updates.spec.ts",
+            "title": "About checks updates, directs downloads to the correct installer, and shows a persistent About shortcut",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "updates.an-ahead-of-release-installation-never-offers-a-downgrade",
+            "file": "updates.spec.ts",
+            "title": "an ahead-of-release installation never offers a downgrade",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "updates.an-offline-check-stays-inside-about-while-the-host-screen-remains",
+            "file": "updates.spec.ts",
+            "title": "an offline check stays inside About while the host screen remains usable",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "updates.a-release-without-an-installer-offers-notes-without-a-broken-down",
+            "file": "updates.spec.ts",
+            "title": "a release without an installer offers notes without a broken download button",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "usability.new-hosts-start-empty-saved-credentials-collapse-account-fields-a",
+            "file": "usability.spec.ts",
+            "title": "new hosts start empty, saved credentials collapse account fields, and group edits live in settings",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "usability.sftp-parent-row-reaches-root-with-one-click-file-errors-alert-and",
+            "file": "usability.spec.ts",
+            "title": "SFTP parent row reaches root with one click, file errors alert, and host pickers stay bounded",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "usability.all-main-screens-and-settings-tabs-fit-light-and-dark-themes-at-w",
+            "file": "usability.spec.ts",
+            "title": "all main screens and settings tabs fit light and dark themes at wide, desktop, and minimum window sizes",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "usability.direct-passwords-become-reusable-protected-profiles-instead-of-ho",
+            "file": "usability.spec.ts",
+            "title": "direct passwords become reusable protected profiles instead of host metadata",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "usability.background-host-metadata-updates-preserve-unsaved-host-edits",
+            "file": "usability.spec.ts",
+            "title": "background host metadata updates preserve unsaved host edits",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "usability.settings-tabs-preserve-drafts-and-keyboard-navigation-manual-icon",
+            "file": "usability.spec.ts",
+            "title": "settings tabs preserve drafts and keyboard navigation; manual icons override detection",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "windows-credentials.windows-dpapi-protects-stored-credentials-and-reconnects-after-re",
+            "file": "windows-credentials.spec.ts",
+            "title": "Windows DPAPI protects stored credentials and reconnects after restart",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "windows-files.windows-drive-root-remains-browsable-around-protected-system-file",
+            "file": "windows-files.spec.ts",
+            "title": "Windows drive root remains browsable around protected system files",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "windows-shells.windows-passport-bash-applies-a-startup-profile-and-accepts-termi",
+            "file": "windows-shells.spec.ts",
+            "title": "Windows passport-bash applies a startup profile and accepts terminal input",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "windows-shells.windows-cmd-applies-a-startup-profile-and-accepts-terminal-input",
+            "file": "windows-shells.spec.ts",
+            "title": "Windows cmd applies a startup profile and accepts terminal input",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "windows-shells.windows-windows-powershell-applies-a-startup-profile-and-accepts",
+            "file": "windows-shells.spec.ts",
+            "title": "Windows windows-powershell applies a startup profile and accepts terminal input",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "windows-shells.windows-pwsh-applies-a-startup-profile-and-accepts-terminal-input",
+            "file": "windows-shells.spec.ts",
+            "title": "Windows pwsh applies a startup profile and accepts terminal input",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "terminal-experience.independent-windows",
+            "file": "terminal-experience.spec.ts",
+            "title": "local shortcuts create independent windows exactly once and preserve existing terminals",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "terminal-experience.bundled-fonts",
+            "file": "terminal-experience.spec.ts",
+            "title": "bundled terminal fonts load offline and preserve settings and aligned output",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "terminal-experience.read-focus-contract",
+            "file": "terminal-experience.spec.ts",
+            "title": "terminal alert acknowledgements validate ownership and native focus without displaying windows",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "paste.literal-text-files-no-duplicate",
+            "file": "paste.spec.ts",
+            "title": "terminal paste preserves literal text and file paths without duplicate input or Enter",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "paste.image-and-original-pane",
+            "file": "paste.spec.ts",
+            "title": "image paste saves readable PNG and pending paste stays with its original connected pane",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "paste.finder-native-full-paths",
+            "file": "paste.spec.ts",
+            "title": "Finder app and folder copy inserts absolute paths when Electron exposes only names",
+            "status": "skipped",
+            "required": false,
+            "skipReason": "not applicable on win32"
+          }
+        ]
+      },
+      "finishedAt": "2026-10-02T15:20:35.669Z"
+    },
+    {
+      "name": "source-desktop",
+      "status": "passed",
+      "startedAt": "2026-10-02T15:20:35.672Z",
+      "tests": {
+        "startTime": "2026-10-02T15:20:36.673Z",
+        "duration": 11001.354,
+        "expected": 4,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "mode": "desktop",
+      "report": "release/checks/20261002T151552Z-62457a0-win-x64-local-release/source-desktop.json",
+      "coverage": {
+        "policyHash": "15bd745576aee859a8c01aeed93e06487fd0bcc53311709015a4ce718171f294",
+        "platform": "win32",
+        "mode": "desktop",
+        "optional": [],
+        "passed": 4,
+        "skipped": 0,
+        "tests": [
+          {
+            "id": "advanced.saves-custom-colors-and-shortcuts-and-applies-highlights-without",
+            "file": "advanced.spec.ts",
+            "title": "saves custom colors and shortcuts and applies highlights without changing terminal text",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "local-workspace.manually-launched-cli-wrappers-deliver-completion-and-input-alert",
+            "file": "local-workspace.spec.ts",
+            "title": "manually launched CLI wrappers deliver completion and input alerts and respect foreground policy",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "usability.profile-account-connects-paste-is-immediate-and-literal-automatic",
+            "file": "usability.spec.ts",
+            "title": "profile account connects, paste is immediate and literal, automatic logs capture output and auth failures alert",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "terminal-experience.read-on-view",
+            "file": "terminal-experience.spec.ts",
+            "title": "viewing a foreground terminal reads only its alerts and preserves history",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          }
+        ]
+      },
+      "finishedAt": "2026-10-02T15:20:47.691Z"
+    },
+    {
+      "name": "package",
+      "status": "passed",
+      "startedAt": "2026-10-02T15:20:47.695Z",
+      "finishedAt": "2026-10-02T15:24:38.843Z"
+    },
+    {
+      "name": "installer",
+      "status": "passed",
+      "startedAt": "2026-10-02T15:24:39.319Z",
+      "finishedAt": "2026-10-02T15:24:56.966Z"
+    },
+    {
+      "name": "packaged-smoke",
+      "status": "passed",
+      "startedAt": "2026-10-02T15:24:56.969Z",
+      "finishedAt": "2026-10-02T15:25:01.248Z"
+    },
+    {
+      "name": "packaged-gui",
+      "status": "passed",
+      "startedAt": "2026-10-02T15:25:01.252Z",
+      "tests": {
+        "startTime": "2026-10-02T15:25:02.248Z",
+        "duration": 115963.539,
+        "expected": 58,
+        "skipped": 4,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "mode": "hidden",
+      "report": "release/checks/20261002T151552Z-62457a0-win-x64-local-release/packaged-gui.json",
+      "coverage": {
+        "policyHash": "15bd745576aee859a8c01aeed93e06487fd0bcc53311709015a4ce718171f294",
+        "platform": "win32",
+        "mode": "hidden",
+        "optional": [],
+        "passed": 58,
+        "skipped": 4,
+        "tests": [
+          {
+            "id": "advanced.broadcast-uses-physical-keys-only-explicit-execution-records-hist",
+            "file": "advanced.spec.ts",
+            "title": "broadcast uses physical keys only, explicit execution records history, logs start automatically",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "advanced.moves-a-live-split-workspace-to-another-native-window-and-back-wi",
+            "file": "advanced.spec.ts",
+            "title": "moves a live split workspace to another native window and back with scrollback intact",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "advanced.opens-and-keeps-a-local-tab-active-when-ownership-events-arrive-a",
+            "file": "advanced.spec.ts",
+            "title": "opens and keeps a local tab active when ownership events arrive after the save reply",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "advanced.bulk-host-edits-change-only-checked-fields",
+            "file": "advanced.spec.ts",
+            "title": "bulk host edits change only checked fields",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "advanced.500-host-list-and-expanded-host-settings-scroll-independently-ins",
+            "file": "advanced.spec.ts",
+            "title": "500-host list and expanded host settings scroll independently inside a small window",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "app.host-crud-live-ssh-split-session-preservation-themes-and-persiste",
+            "file": "app.spec.ts",
+            "title": "host CRUD, live SSH, split session preservation, themes, and persistence",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "app.independent-file-panels-context-menus-local-copy-and-queue",
+            "file": "app.spec.ts",
+            "title": "independent file panels, context menus, local copy and queue",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "app.long-file-lists-stay-above-the-queue-and-scroll-independently-at",
+            "file": "app.spec.ts",
+            "title": "long file lists stay above the queue and scroll independently at both window sizes",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "app.opening-the-app-never-requests-access-to-the-operating-system-sec",
+            "file": "app.spec.ts",
+            "title": "opening the app never requests access to the operating system secret store",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "background.isolated-windows-accept-terminal-input-and-move-workspaces-withou",
+            "file": "background.spec.ts",
+            "title": "isolated windows accept terminal input and move workspaces without native focus",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "docker-ssh.real-docker-ssh-and-sftp-through-the-desktop-application",
+            "file": "docker-ssh.spec.ts",
+            "title": "real Docker SSH and SFTP through the desktop application",
+            "status": "skipped",
+            "required": false,
+            "skipReason": "optional feature not requested: docker"
+          },
+          {
+            "id": "file-colors.file-types-follow-every-theme-while-server-ansi-input-and-output",
+            "file": "file-colors.spec.ts",
+            "title": "file types follow every theme while server ANSI, input and output text stay intact",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "layout-drag.nested-horizontal-groups-fill-the-available-space-even-when-minim",
+            "file": "layout-drag.spec.ts",
+            "title": "nested horizontal groups fill the available space even when minimum panel sizes constrain a track",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "layout-drag.nested-vertical-groups-fill-the-available-space-even-when-minimum",
+            "file": "layout-drag.spec.ts",
+            "title": "nested vertical groups fill the available space even when minimum panel sizes constrain a track",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "layout-drag.grouped-tabs-can-reorder-but-cannot-merge-their-individual-panels",
+            "file": "layout-drag.spec.ts",
+            "title": "grouped tabs can reorder but cannot merge; their individual panels can still move",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "legacy.legacy-ssh-works-without-a-host-option-for-terminal-and-sftp-and",
+            "file": "legacy.spec.ts",
+            "title": "legacy SSH works without a host option for terminal and SFTP, and first-key confirmation can be disabled",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "local-colors.local-cli-colors-survive-a-colorless-app-launcher-plain",
+            "file": "local-colors.spec.ts",
+            "title": "local CLI colors survive a colorless app launcher: plain",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "local-colors.local-cli-colors-survive-a-colorless-app-launcher-ai-profile",
+            "file": "local-colors.spec.ts",
+            "title": "local CLI colors survive a colorless app launcher: ai-profile",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "local-colors.local-cli-colors-survive-a-colorless-app-launcher-explicit-no-col",
+            "file": "local-colors.spec.ts",
+            "title": "local CLI colors survive a colorless app launcher: explicit-no-color",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "local-workspace.an-unavailable-default-shell-leaves-a-retryable-local-tab",
+            "file": "local-workspace.spec.ts",
+            "title": "an unavailable default shell leaves a retryable local tab",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "local-workspace.creates-mixed-local-ssh-workspaces-previews-profiles-routes-alert",
+            "file": "local-workspace.spec.ts",
+            "title": "creates mixed local/SSH workspaces, previews profiles, routes alerts and restores without executing",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "local-workspace.edits-several-startup-profiles-and-notification-preferences-witho",
+            "file": "local-workspace.spec.ts",
+            "title": "edits several startup profiles and notification preferences without touching live shells",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "scroll-workspaces.file-action-triggers-toggle-dismiss-restore-focus-and-stay-in-bou",
+            "file": "scroll-workspaces.spec.ts",
+            "title": "file action triggers toggle, dismiss, restore focus and stay in bounds while scrolling",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "scroll-workspaces.log-list-and-output-fit-and-scroll-independently-at-both-themes-a",
+            "file": "scroll-workspaces.spec.ts",
+            "title": "log list and output fit and scroll independently at both themes and window sizes",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "scroll-workspaces.plus-opens-a-local-tab-immediately-using-defaults-and-focuses-inp",
+            "file": "scroll-workspaces.spec.ts",
+            "title": "plus opens a local tab immediately using defaults and focuses input",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "scroll-workspaces.workspace-save-button-preserves-only-that-tab-focus-and-splits-te",
+            "file": "scroll-workspaces.spec.ts",
+            "title": "workspace save button preserves only that tab, focus and splits; templates open directly and persist",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "scroll-workspaces.saving-the-selected-tab-refuses-a-closed-source",
+            "file": "scroll-workspaces.spec.ts",
+            "title": "saving the selected tab refuses a closed source",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "scroll-workspaces.long-workspace-libraries-scroll-without-moving-controls-and-refus",
+            "file": "scroll-workspaces.spec.ts",
+            "title": "long workspace libraries scroll without moving controls and refuse to exceed terminal capacity",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "settings-tools.export-explains-short-passwords-and-writes-decryptable-credential",
+            "file": "settings-tools.spec.ts",
+            "title": "export explains short passwords and writes decryptable credentials once the minimum is met",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "settings-tools.imports-ask-after-file-selection-allow-password-retry-cancel-tick",
+            "file": "settings-tools.spec.ts",
+            "title": "imports ask after file selection, allow password retry, cancel tickets, and bypass the prompt for plain files",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "settings-tools.settings-use-accessible-switches-merge-themes-and-expose-only-the",
+            "file": "settings-tools.spec.ts",
+            "title": "settings use accessible switches, merge themes, and expose only the confirmed About links",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "settings-tools.log-viewer-removes-terminal-controls-and-hyperlinks-while-the-ori",
+            "file": "settings-tools.spec.ts",
+            "title": "log viewer removes terminal controls and hyperlinks while the original export stays intact",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "settings-tools.terminal-search-counts-matches-scrolls-on-enter-wraps-highlights",
+            "file": "settings-tools.spec.ts",
+            "title": "terminal search counts matches, scrolls on Enter, wraps, highlights, and consumes no terminal input",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "shutdown.quits-normally-with-four-active-native-ptys",
+            "file": "shutdown.spec.ts",
+            "title": "quits normally with four active native PTYs",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "shutdown.quits-normally-with-four-closed-native-ptys",
+            "file": "shutdown.spec.ts",
+            "title": "quits normally with four closed native PTYs",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "shutdown.quits-normally-with-four-reopened-native-ptys",
+            "file": "shutdown.spec.ts",
+            "title": "quits normally with four reopened native PTYs",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "shutdown.shares-one-instance-per-data-directory-and-allows-isolated-data-d",
+            "file": "shutdown.spec.ts",
+            "title": "shares one instance per data directory and allows isolated data directories",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "shutdown.closes-live-terminals-without-parsing-externally-changed-settings",
+            "file": "shutdown.spec.ts",
+            "title": "closes live terminals without parsing externally changed settings",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "stress.16-visible-terminals-process-100-kib-s-each-for-ten-minutes",
+            "file": "stress.spec.ts",
+            "title": "16 visible terminals process 100 KiB/s each for ten minutes",
+            "status": "skipped",
+            "required": false,
+            "skipReason": "optional feature not requested: stress"
+          },
+          {
+            "id": "throughput.large-terminal-text-remains-interactive-and-bounded-through-1-gib",
+            "file": "throughput.spec.ts",
+            "title": "large terminal text remains interactive and bounded through 1 GiB",
+            "status": "skipped",
+            "required": false,
+            "skipReason": "optional feature not requested: throughput"
+          },
+          {
+            "id": "updates.about-checks-updates-directs-downloads-to-the-correct-installer-a",
+            "file": "updates.spec.ts",
+            "title": "About checks updates, directs downloads to the correct installer, and shows a persistent About shortcut",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "updates.an-ahead-of-release-installation-never-offers-a-downgrade",
+            "file": "updates.spec.ts",
+            "title": "an ahead-of-release installation never offers a downgrade",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "updates.an-offline-check-stays-inside-about-while-the-host-screen-remains",
+            "file": "updates.spec.ts",
+            "title": "an offline check stays inside About while the host screen remains usable",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "updates.a-release-without-an-installer-offers-notes-without-a-broken-down",
+            "file": "updates.spec.ts",
+            "title": "a release without an installer offers notes without a broken download button",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "usability.new-hosts-start-empty-saved-credentials-collapse-account-fields-a",
+            "file": "usability.spec.ts",
+            "title": "new hosts start empty, saved credentials collapse account fields, and group edits live in settings",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "usability.sftp-parent-row-reaches-root-with-one-click-file-errors-alert-and",
+            "file": "usability.spec.ts",
+            "title": "SFTP parent row reaches root with one click, file errors alert, and host pickers stay bounded",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "usability.all-main-screens-and-settings-tabs-fit-light-and-dark-themes-at-w",
+            "file": "usability.spec.ts",
+            "title": "all main screens and settings tabs fit light and dark themes at wide, desktop, and minimum window sizes",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "usability.direct-passwords-become-reusable-protected-profiles-instead-of-ho",
+            "file": "usability.spec.ts",
+            "title": "direct passwords become reusable protected profiles instead of host metadata",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "usability.background-host-metadata-updates-preserve-unsaved-host-edits",
+            "file": "usability.spec.ts",
+            "title": "background host metadata updates preserve unsaved host edits",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "usability.settings-tabs-preserve-drafts-and-keyboard-navigation-manual-icon",
+            "file": "usability.spec.ts",
+            "title": "settings tabs preserve drafts and keyboard navigation; manual icons override detection",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "windows-credentials.windows-dpapi-protects-stored-credentials-and-reconnects-after-re",
+            "file": "windows-credentials.spec.ts",
+            "title": "Windows DPAPI protects stored credentials and reconnects after restart",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "windows-files.windows-drive-root-remains-browsable-around-protected-system-file",
+            "file": "windows-files.spec.ts",
+            "title": "Windows drive root remains browsable around protected system files",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "windows-shells.windows-passport-bash-applies-a-startup-profile-and-accepts-termi",
+            "file": "windows-shells.spec.ts",
+            "title": "Windows passport-bash applies a startup profile and accepts terminal input",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "windows-shells.windows-cmd-applies-a-startup-profile-and-accepts-terminal-input",
+            "file": "windows-shells.spec.ts",
+            "title": "Windows cmd applies a startup profile and accepts terminal input",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "windows-shells.windows-windows-powershell-applies-a-startup-profile-and-accepts",
+            "file": "windows-shells.spec.ts",
+            "title": "Windows windows-powershell applies a startup profile and accepts terminal input",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "windows-shells.windows-pwsh-applies-a-startup-profile-and-accepts-terminal-input",
+            "file": "windows-shells.spec.ts",
+            "title": "Windows pwsh applies a startup profile and accepts terminal input",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "terminal-experience.independent-windows",
+            "file": "terminal-experience.spec.ts",
+            "title": "local shortcuts create independent windows exactly once and preserve existing terminals",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "terminal-experience.bundled-fonts",
+            "file": "terminal-experience.spec.ts",
+            "title": "bundled terminal fonts load offline and preserve settings and aligned output",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "terminal-experience.read-focus-contract",
+            "file": "terminal-experience.spec.ts",
+            "title": "terminal alert acknowledgements validate ownership and native focus without displaying windows",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "paste.literal-text-files-no-duplicate",
+            "file": "paste.spec.ts",
+            "title": "terminal paste preserves literal text and file paths without duplicate input or Enter",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "paste.image-and-original-pane",
+            "file": "paste.spec.ts",
+            "title": "image paste saves readable PNG and pending paste stays with its original connected pane",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "paste.finder-native-full-paths",
+            "file": "paste.spec.ts",
+            "title": "Finder app and folder copy inserts absolute paths when Electron exposes only names",
+            "status": "skipped",
+            "required": false,
+            "skipReason": "not applicable on win32"
+          }
+        ]
+      },
+      "finishedAt": "2026-10-02T15:26:58.232Z"
+    },
+    {
+      "name": "packaged-desktop",
+      "status": "passed",
+      "startedAt": "2026-10-02T15:26:58.236Z",
+      "tests": {
+        "startTime": "2026-10-02T15:26:59.239Z",
+        "duration": 10839.13,
+        "expected": 4,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "mode": "desktop",
+      "report": "release/checks/20261002T151552Z-62457a0-win-x64-local-release/packaged-desktop.json",
+      "coverage": {
+        "policyHash": "15bd745576aee859a8c01aeed93e06487fd0bcc53311709015a4ce718171f294",
+        "platform": "win32",
+        "mode": "desktop",
+        "optional": [],
+        "passed": 4,
+        "skipped": 0,
+        "tests": [
+          {
+            "id": "advanced.saves-custom-colors-and-shortcuts-and-applies-highlights-without",
+            "file": "advanced.spec.ts",
+            "title": "saves custom colors and shortcuts and applies highlights without changing terminal text",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "local-workspace.manually-launched-cli-wrappers-deliver-completion-and-input-alert",
+            "file": "local-workspace.spec.ts",
+            "title": "manually launched CLI wrappers deliver completion and input alerts and respect foreground policy",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "usability.profile-account-connects-paste-is-immediate-and-literal-automatic",
+            "file": "usability.spec.ts",
+            "title": "profile account connects, paste is immediate and literal, automatic logs capture output and auth failures alert",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          },
+          {
+            "id": "terminal-experience.read-on-view",
+            "file": "terminal-experience.spec.ts",
+            "title": "viewing a foreground terminal reads only its alerts and preserves history",
+            "status": "passed",
+            "required": true,
+            "skipReason": null
+          }
+        ]
+      },
+      "finishedAt": "2026-10-02T15:27:10.096Z"
+    }
+  ],
+  "unit": {
+    "passed": 129,
+    "skipped": 6
+  },
+  "releaseTests": {
+    "passed": 63,
+    "skipped": 1
+  },
+  "gui": [
+    {
+      "name": "source-gui",
+      "mode": "hidden",
+      "status": "passed",
+      "report": "release/checks/20261002T151552Z-62457a0-win-x64-local-release/source-gui.json",
+      "passed": 58,
+      "skipped": 4,
+      "policyHash": "15bd745576aee859a8c01aeed93e06487fd0bcc53311709015a4ce718171f294"
+    },
+    {
+      "name": "source-desktop",
+      "mode": "desktop",
+      "status": "passed",
+      "report": "release/checks/20261002T151552Z-62457a0-win-x64-local-release/source-desktop.json",
+      "passed": 4,
+      "skipped": 0,
+      "policyHash": "15bd745576aee859a8c01aeed93e06487fd0bcc53311709015a4ce718171f294"
+    },
+    {
+      "name": "packaged-gui",
+      "mode": "hidden",
+      "status": "passed",
+      "report": "release/checks/20261002T151552Z-62457a0-win-x64-local-release/packaged-gui.json",
+      "passed": 58,
+      "skipped": 4,
+      "policyHash": "15bd745576aee859a8c01aeed93e06487fd0bcc53311709015a4ce718171f294"
+    },
+    {
+      "name": "packaged-desktop",
+      "mode": "desktop",
+      "status": "passed",
+      "report": "release/checks/20261002T151552Z-62457a0-win-x64-local-release/packaged-desktop.json",
+      "passed": 4,
+      "skipped": 0,
+      "policyHash": "15bd745576aee859a8c01aeed93e06487fd0bcc53311709015a4ce718171f294"
+    }
+  ],
+  "artifact": {
+    "name": "Passport-1.1.1-win-x64.exe",
+    "path": "release/builds/20261002T151552Z-62457a0-win-x64-local-release/Passport-1.1.1-win-x64.exe",
+    "bytes": 203717724,
+    "sha256": "9a3c69c68da8283378561a5074524fd926a7cfca1627d69082d7cb25a37d1fcf",
+    "assetId": 605898019,
+    "downloadURL": "https://github.com/poyal/passport/releases/download/v1.1.1/Passport-1.1.1-win-x64.exe",
+    "archivedAt": "release/packages/v1.1.1/local/win-x64/Passport-1.1.1-win-x64.exe",
+    "archivedChecksums": "release/packages/v1.1.1/local/win-x64/SHA256SUMS.txt"
+  },
+  "publication": {
+    "mode": "publish",
+    "tag": "v1.1.1",
+    "sourceCommit": "62457a0f85d858354472212bdf4595e397b7eb91",
+    "sourceTag": "v1.1.1-win-x64",
+    "releaseCommit": "f4497cc2a337c5f5aa73d5834a2b99f06013020d",
+    "targets": [
+      "win-x64"
+    ],
+    "upload": [
+      "Passport-1.1.1-win-x64.exe"
+    ],
+    "preserve": [
+      "Passport-1.1.1-mac-arm64.dmg"
+    ],
+    "updateChecksums": true,
+    "createDraft": false,
+    "publishDraft": false,
+    "status": "published-and-download-verified",
+    "url": "https://github.com/poyal/passport/releases/tag/v1.1.1",
+    "finishedAt": "2026-10-02T15:30:46.485Z"
+  },
+  "preservedMac": {
+    "url": "https://api.github.com/repos/poyal/passport/releases/assets/605237202",
+    "id": 605237202,
+    "node_id": "RA_kwDOUxcglc4kEy_S",
+    "name": "Passport-1.1.1-mac-arm64.dmg",
+    "label": "",
+    "uploader": {
+      "login": "poyal",
+      "id": 13713269,
+      "node_id": "MDQ6VXNlcjEzNzEzMjY5",
+      "avatar_url": "https://avatars.githubusercontent.com/u/13713269?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/poyal",
+      "html_url": "https://github.com/poyal",
+      "followers_url": "https://api.github.com/users/poyal/followers",
+      "following_url": "https://api.github.com/users/poyal/following{/other_user}",
+      "gists_url": "https://api.github.com/users/poyal/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/poyal/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/poyal/subscriptions",
+      "organizations_url": "https://api.github.com/users/poyal/orgs",
+      "repos_url": "https://api.github.com/users/poyal/repos",
+      "events_url": "https://api.github.com/users/poyal/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/poyal/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "content_type": "application/octet-stream",
+    "state": "uploaded",
+    "size": 169143903,
+    "digest": "sha256:0820760270d00b9e02deded76ec73a9eb08c22c61cb8601d7eb470d00e9df187",
+    "download_count": 2,
+    "created_at": "2026-10-02T09:14:35Z",
+    "updated_at": "2026-10-02T09:14:46Z",
+    "browser_download_url": "https://github.com/poyal/passport/releases/download/v1.1.1/Passport-1.1.1-mac-arm64.dmg"
+  },
+  "releaseURL": "https://github.com/poyal/passport/releases/tag/v1.1.1",
+  "priorAttempts": {
+    "localFailures": [
+      {
+        "path": "release/checks/20261002T112813Z-f4497cc-win-x64-local-release/verification.json",
+        "error": "node.exe failed (exit 1, signal null)",
+        "failedCheck": "dependencies"
+      },
+      {
+        "path": "release/checks/20261002T132846Z-f4497cc-win-x64-local-release/verification.json",
+        "error": "node.exe failed (exit 1, signal null)",
+        "failedCheck": "source-gui"
+      },
+      {
+        "path": "release/checks/20261002T133725Z-f4497cc-win-x64-local-release/verification.json",
+        "error": "ENOENT: no such file or directory, scandir 'C:\\Users\\ttt45\\Workspace\\personal\\passport\\release\\checks\\20261002T133725Z-f4497cc-win-x64-local-release\\nsis\\$PLUGINSDIR'",
+        "failedCheck": "installer"
+      },
+      {
+        "path": "release/checks/20261002T135056Z-f4497cc-win-x64-local-release/verification.json",
+        "error": "node.exe failed (exit 1, signal null)",
+        "failedCheck": "source-gui"
+      },
+      {
+        "path": "release/checks/20261002T135949Z-f4497cc-win-x64-local-release/verification.json",
+        "error": "node.exe failed (exit 4294963248, signal null)",
+        "failedCheck": "dependencies"
+      },
+      {
+        "path": "release/checks/20261002T140056Z-f4497cc-win-x64-local-release/verification.json",
+        "error": "node.exe failed (exit 1, signal null)",
+        "failedCheck": "source-gui"
+      },
+      {
+        "path": "release/checks/20261002T144855Z-190ea9c-win-x64-local-release/verification.json",
+        "error": "node.exe failed (exit 1, signal null)",
+        "failedCheck": "packaged-smoke"
+      }
+    ],
+    "remoteFailedRuns": [
+      37001618705,
+      37002896990,
+      37004400850,
+      37005572610,
+      37007304005
+    ],
+    "remoteCanceledRuns": [
+      37008554822,
+      37008892064,
+      37009527923
+    ],
+    "evidence": "release/checks/20261002T112404Z-f4497cc-win-x64-tooling"
+  },
+  "changes": [
+    "Windows Bash first input byte after resize is preserved using per-session prompt/command markers. The primer stays out of child CLI input; regression checks 30 resizes and exact child input bytes, including an unrelated standard OSC prompt marker.",
+    "ConPTY device/focus reports remain forwarded, but are excluded from the paste fixture user-input count. Shell tests expect escaped display and still execute paths to verify exact content.",
+    "Mixed workspace fixture uses the actual keyboard path, interactive prompt and execution marker; notification, ownership and restore assertions remain.",
+    "Hidden Windows E2E rendering flags and one Windows unit worker are in shared tests. Minimal 7za direct NSIS app extraction is supported without dropping payload checks. Windows ASAR reads use native separators and packaged GUI launches receive the same hidden rendering/screenshot switches that Playwright injects for source launches.",
+    "Initial win-x64 1.1.1 publication requires a matching Windows source tag, the original Mac tag/asset and an allowlisted source diff. All original verification/evidence gates remain.",
+    "Backported microsoft/node-pty#922 to pinned 1.1.0; exact native source hashes are checked, source compilation is forced, and the fixed module is copied to every loader fallback for this architecture. Existing normal shutdown assertions remain."
+  ],
+  "diagnostics": {
+    "firstByteReproduction": "release/checks/20261002T112404Z-f4497cc-win-x64-tooling/mixed-input-trace-1790950693901",
+    "resizeReproduction": "release/checks/20261002T112404Z-f4497cc-win-x64-tooling/fast-focus-no-focus-1790951220977",
+    "primerComparison": "release/checks/20261002T112404Z-f4497cc-win-x64-tooling/fast-focus-nul-1790951652740",
+    "mixedWorkspaceTenPasses": "release/checks/20261002T112404Z-f4497cc-win-x64-tooling/local-source-gui-1790951957216",
+    "consoleCleanup": [
+      "release/checks/20261002T112404Z-f4497cc-win-x64-tooling/orphan-test-console-11916.json",
+      "release/checks/20261002T112404Z-f4497cc-win-x64-tooling/orphan-test-console-17796.json",
+      "release/checks/20261002T112404Z-f4497cc-win-x64-tooling/orphan-test-console-19616.json",
+      "release/checks/20261002T112404Z-f4497cc-win-x64-tooling/orphan-test-console-22204.json",
+      "release/checks/20261002T112404Z-f4497cc-win-x64-tooling/orphan-test-console-24316.json",
+      "release/checks/20261002T112404Z-f4497cc-win-x64-tooling/orphan-test-console-25576.json",
+      "release/checks/20261002T112404Z-f4497cc-win-x64-tooling/orphan-test-console-25728.json",
+      "release/checks/20261002T112404Z-f4497cc-win-x64-tooling/orphan-test-console-27204.json",
+      "release/checks/20261002T112404Z-f4497cc-win-x64-tooling/orphan-test-console-28424.json"
+    ],
+    "conptyUpgrade": "Official stable 1.24 ConPTY comparison also reproduced the bug; original dependency restored before formal npm ci.",
+    "packagedDiagnoses": [
+      {
+        "directory": "release/checks/20261002T112404Z-f4497cc-win-x64-tooling/asar-native-path-1790953173944",
+        "createdAt": "2026-10-02T14:59:34.116Z",
+        "purpose": "Extracted installer diagnosis after native ASAR path correction",
+        "sourceCommit": "190ea9cb9ebb3498f41033a7f5ebf6a7abab7d6b",
+        "dirty": true,
+        "platform": "win-x64",
+        "installer": "release/builds/20261002T144855Z-190ea9c-win-x64-local-release/Passport-1.1.1-win-x64.exe",
+        "status": "failed",
+        "notFormalReleaseEvidence": true,
+        "error": "node.exe failed (exit 1, signal null)",
+        "finishedAt": "2026-10-02T15:00:21.380Z"
+      },
+      {
+        "directory": "release/checks/20261002T112404Z-f4497cc-win-x64-tooling/asar-native-path-1790953309906",
+        "createdAt": "2026-10-02T15:01:50.073Z",
+        "purpose": "Extracted installer diagnosis after native ASAR path correction",
+        "sourceCommit": "190ea9cb9ebb3498f41033a7f5ebf6a7abab7d6b",
+        "dirty": true,
+        "platform": "win-x64",
+        "installer": "release/builds/20261002T144855Z-190ea9c-win-x64-local-release/Passport-1.1.1-win-x64.exe",
+        "status": "failed",
+        "notFormalReleaseEvidence": true,
+        "error": "node.exe failed (exit 1, signal null)",
+        "finishedAt": "2026-10-02T15:02:56.039Z"
+      },
+      {
+        "directory": "release/checks/20261002T112404Z-f4497cc-win-x64-tooling/asar-native-path-1790953941164",
+        "createdAt": "2026-10-02T15:12:21.344Z",
+        "purpose": "Packaged rendering and native PTY diagnosis",
+        "sourceCommit": "190ea9cb9ebb3498f41033a7f5ebf6a7abab7d6b",
+        "dirty": true,
+        "sourceFingerprint": "1d1a211e0154f27e1736529908a7b002720c8b0afb1f29eab5a8f9cd5ea025ea",
+        "platform": "win-x64",
+        "executable": "C:\\Users\\ttt45\\Workspace\\personal\\passport\\release\\builds\\20261003T0016KST-win-x64-conpty-preview\\win-unpacked\\Passport.exe",
+        "status": "passed",
+        "notFormalReleaseEvidence": true,
+        "finishedAt": "2026-10-02T15:15:32.740Z"
+      }
+    ],
+    "finalProcesses": {
+      "createdAt": "2026-10-02T15:31:38.9540992Z",
+      "purpose": "Test-owned process state after final release verification",
+      "sourceCommit": "62457a0f85d858354472212bdf4595e397b7eb91",
+      "platform": "win-x64",
+      "status": "checked",
+      "processes": [],
+      "userProcessesTerminated": false,
+      "queryScope": "Electron, Passport and OpenConsole only; prior diagnostic Bash descendants are recorded separately."
+    },
+    "orphanShellCleanup": {
+      "createdAt": "2026-10-02T15:43:24.8712463Z",
+      "purpose": "Completed isolated diagnostics left Bash descendants after the launcher exited",
+      "platform": "win-x64",
+      "source": "local",
+      "status": "cleaned-owned-processes",
+      "processes": [
+        {
+          "ProcessId": 27332,
+          "ParentProcessId": 20520,
+          "ExecutablePath": "C:\\Users\\ttt45\\Workspace\\personal\\passport\\resources\\terminal\\runtime\\x64\\bin\\..\\usr\\bin\\bash.exe",
+          "CommandLine": "\"C:\\Users\\ttt45\\Workspace\\personal\\passport\\resources\\terminal\\runtime\\x64\\bin\\..\\usr\\bin\\bash.exe\" --rcfile /c/Users/ttt45/AppData/Local/Temp/passport-shell-error-rpwmlV/shell-sessions/9e2c8b99-93f7-40e3-98c9-e8daec1dc768/startup.bash -i",
+          "CreationDate": "/Date(1790949505383)/"
+        },
+        {
+          "ProcessId": 25852,
+          "ParentProcessId": 18216,
+          "ExecutablePath": "C:\\Users\\ttt45\\Workspace\\personal\\passport\\release\\builds\\20261003T0016KST-win-x64-conpty-preview\\win-unpacked\\resources\\terminal\\runtime\\x64\\bin\\..\\usr\\bin\\bash.exe",
+          "CommandLine": "\"C:\\Users\\ttt45\\Workspace\\personal\\passport\\release\\builds\\20261003T0016KST-win-x64-conpty-preview\\win-unpacked\\resources\\terminal\\runtime\\x64\\bin\\..\\usr\\bin\\bash.exe\" --rcfile /c/Users/ttt45/AppData/Local/Temp/passport-quit-KnGbte/shell-sessions/c6ef03b4-b9e6-4c17-aa76-6b8dd03568a3/startup.bash -i",
+          "CreationDate": "/Date(1790954073622)/"
+        },
+        {
+          "ProcessId": 24540,
+          "ParentProcessId": 28156,
+          "ExecutablePath": "C:\\Users\\ttt45\\Workspace\\personal\\passport\\release\\builds\\20261003T0016KST-win-x64-conpty-preview\\win-unpacked\\resources\\terminal\\runtime\\x64\\bin\\..\\usr\\bin\\bash.exe",
+          "CommandLine": "\"C:\\Users\\ttt45\\Workspace\\personal\\passport\\release\\builds\\20261003T0016KST-win-x64-conpty-preview\\win-unpacked\\resources\\terminal\\runtime\\x64\\bin\\..\\usr\\bin\\bash.exe\" --rcfile /c/Users/ttt45/AppData/Local/Temp/passport-quit-ujOlHA/shell-sessions/1b426297-049a-4b4a-bd80-fa912d549f08/startup.bash -i",
+          "CreationDate": "/Date(1790954107451)/"
+        },
+        {
+          "ProcessId": 26348,
+          "ParentProcessId": 22992,
+          "ExecutablePath": "C:\\Users\\ttt45\\Workspace\\personal\\passport\\release\\builds\\20261003T0016KST-win-x64-conpty-preview\\win-unpacked\\resources\\terminal\\runtime\\x64\\bin\\..\\usr\\bin\\bash.exe",
+          "CommandLine": "\"C:\\Users\\ttt45\\Workspace\\personal\\passport\\release\\builds\\20261003T0016KST-win-x64-conpty-preview\\win-unpacked\\resources\\terminal\\runtime\\x64\\bin\\..\\usr\\bin\\bash.exe\" --rcfile /c/Users/ttt45/AppData/Local/Temp/passport-quit-mgNg4x/shell-sessions/f7f9fd14-cf1b-4485-b1d5-26d346833e8c/startup.bash -i",
+          "CreationDate": "/Date(1790954113849)/"
+        },
+        {
+          "ProcessId": 18392,
+          "ParentProcessId": 11676,
+          "ExecutablePath": "C:\\Users\\ttt45\\Workspace\\personal\\passport\\release\\builds\\20261003T0016KST-win-x64-conpty-preview\\win-unpacked\\resources\\terminal\\runtime\\x64\\bin\\..\\usr\\bin\\bash.exe",
+          "CommandLine": "\"C:\\Users\\ttt45\\Workspace\\personal\\passport\\release\\builds\\20261003T0016KST-win-x64-conpty-preview\\win-unpacked\\resources\\terminal\\runtime\\x64\\bin\\..\\usr\\bin\\bash.exe\" --rcfile /c/Users/ttt45/AppData/Local/Temp/passport-quit-F8yErS/shell-sessions/9f5e3cc6-587c-4bd4-b432-267087cf7a35/startup.bash -i",
+          "CreationDate": "/Date(1790954117970)/"
+        },
+        {
+          "ProcessId": 23956,
+          "ParentProcessId": 18388,
+          "ExecutablePath": "C:\\Users\\ttt45\\Workspace\\personal\\passport\\release\\builds\\20261003T0016KST-win-x64-conpty-preview\\win-unpacked\\resources\\terminal\\runtime\\x64\\bin\\..\\usr\\bin\\bash.exe",
+          "CommandLine": "\"C:\\Users\\ttt45\\Workspace\\personal\\passport\\release\\builds\\20261003T0016KST-win-x64-conpty-preview\\win-unpacked\\resources\\terminal\\runtime\\x64\\bin\\..\\usr\\bin\\bash.exe\" --rcfile /c/Users/ttt45/AppData/Local/Temp/passport-quit-bjM1zc/shell-sessions/47eecdda-6dd5-4812-beb3-471a644a4874/startup.bash -i",
+          "CreationDate": "/Date(1790954127164)/"
+        }
+      ],
+      "userProcessesIncluded": false,
+      "unresolvedDescendantLifetime": true,
+      "finishedAt": "2026-10-02T15:49:31.797Z"
+    },
+    "afterCleanup": {
+      "createdAt": "2026-10-02T15:46:43.0093923Z",
+      "purpose": "Product and bundled shell processes after isolated diagnostic cleanup",
+      "sourceCommit": "62457a0f85d858354472212bdf4595e397b7eb91",
+      "platform": "win-x64",
+      "processes": [],
+      "status": "checked",
+      "userProcessesTerminated": false
+    },
+    "previewRelocation": {
+      "createdAt": "2026-10-02T15:44:07.7648050Z",
+      "purpose": "Normalize task-owned preview name to UTC, source commit and dirty state",
+      "sourceCommit": "190ea9cb9ebb3498f41033a7f5ebf6a7abab7d6b",
+      "platform": "win-x64",
+      "from": "release/builds/20261003T0016KST-win-x64-conpty-preview",
+      "to": "release/builds/20261002T151221Z-190ea9c-dirty-win-x64-conpty-preview",
+      "executableSha256": "23581a8912067f79698210d9381c7cc0c3a48cb30beb7c2ea31bccbc9276d1f6",
+      "status": "moved-and-hash-verified",
+      "historicalReportsPreserved": true
+    }
+  },
+  "limitations": [
+    "Physical IME, OS notifications, real AI services, upgrade installation, and optional Docker/long stress tests are separate checks.",
+    "Windows installer UI/scope and extracted payload are checked; installing/uninstalling into a user account is a separate check.",
+    "Repeated reconnection diagnostics can leave Bash/OpenConsole descendants after the launcher exits. Isolated leftovers were identity-checked and cleaned; normal app exit is not proof that every descendant lifetime path is resolved."
+  ],
+  "retention": {
+    "protectedBuild": "release/builds/20261002T151552Z-62457a0-win-x64-local-release",
+    "checks": "release/checks/20261002T151552Z-62457a0-win-x64-local-release",
+    "packageDirectory": "release/packages/v1.1.1/local/win-x64",
+    "tooling": "release/checks/20261002T112404Z-f4497cc-win-x64-tooling",
+    "existingArtifactsDeleted": false,
+    "userPassportInstallationAndDatabaseChanged": false,
+    "reviewResolvedDiagnosticsAfter": "2026-10-10",
+    "unresolvedReproductionAndToolRecoveryEvidenceProtected": true,
+    "artifacts": [
+      {
+        "path": "release/builds/20261002T151552Z-62457a0-win-x64-local-release",
+        "bytes": 1136268188,
+        "MiB": 1084,
+        "protected": true
+      },
+      {
+        "path": "release/checks/20261002T151552Z-62457a0-win-x64-local-release",
+        "bytes": 985141018,
+        "MiB": 940,
+        "protected": true
+      },
+      {
+        "path": "release/packages/v1.1.1/local/win-x64",
+        "bytes": 203719351,
+        "MiB": 194,
+        "protected": true
+      },
+      {
+        "path": "release/checks/20261002T112404Z-f4497cc-win-x64-tooling",
+        "bytes": 2960883848,
+        "MiB": 2824,
+        "protected": true
+      },
+      {
+        "path": "release/builds/20261002T151221Z-190ea9c-dirty-win-x64-conpty-preview",
+        "bytes": 932430606,
+        "MiB": 889,
+        "protected": true
+      }
+    ],
+    "cleanupCandidates": {
+      "reviewAfter": "2026-10-10",
+      "scope": "Resolved input, ASAR, hidden rendering and native crash diagnostics plus failed rehearsals, after retaining the latest two successful builds.",
+      "exclude": "Published installer, checksums, unresolved descendant lifetime reproduction, KEEP-marked folders, active processes and recovery tools.",
+      "deletionPerformed": false
+    }
+  },
+  "nativeFix": {
+    "upstream": "https://github.com/microsoft/node-pty/pull/922",
+    "upstreamCommit": "004a99cd1e5c58353e9f957eaa68f7351a088357",
+    "originalNormalizedSourceSha256": "52c893b689ab3210c0961e2a6aa805a82350003767b21069b164926b5becd4e2",
+    "fixedNormalizedSourceSha256": "a000a53daa90506662e4747c6585a403b93431d1fe46f99895aa6d58faaa9082",
+    "sourceBuildSha256": "e1e10677f23cc928df5f3e3dcf641c1b241149082ea79ed39eff5355640fe6e1",
+    "extractedBuildSha256": "e1e10677f23cc928df5f3e3dcf641c1b241149082ea79ed39eff5355640fe6e1",
+    "extractedFallbackSha256": "e1e10677f23cc928df5f3e3dcf641c1b241149082ea79ed39eff5355640fe6e1"
+  },
+  "actionsAudit": "release/checks/20261002T112404Z-f4497cc-win-x64-tooling/prepublication-tag-audit.json",
+  "publicDownloadVerification": {
+    "createdAt": "2026-10-02T15:32:58.586Z",
+    "purpose": "Unauthenticated public Windows installer download and combined checksum verification",
+    "sourceCommit": "62457a0f85d858354472212bdf4595e397b7eb91",
+    "platform": "win-x64",
+    "status": "passed",
+    "url": "https://github.com/poyal/passport/releases/download/v1.1.1/Passport-1.1.1-win-x64.exe",
+    "assetId": 605898019,
+    "bytes": 203717724,
+    "sha256": "9a3c69c68da8283378561a5074524fd926a7cfca1627d69082d7cb25a37d1fcf",
+    "combinedChecksums": "0820760270d00b9e02deded76ec73a9eb08c22c61cb8601d7eb470d00e9df187  Passport-1.1.1-mac-arm64.dmg\n9a3c69c68da8283378561a5074524fd926a7cfca1627d69082d7cb25a37d1fcf  Passport-1.1.1-win-x64.exe\n",
+    "preservedMac": {
+      "id": 605237202,
+      "name": "Passport-1.1.1-mac-arm64.dmg",
+      "size": 169143903,
+      "digest": "sha256:0820760270d00b9e02deded76ec73a9eb08c22c61cb8601d7eb470d00e9df187"
+    },
+    "userInstallationAndDatabaseChanged": false
+  },
+  "postPublicationDocumentation": {
+    "createdAt": "2026-10-02T15:36:46.151Z",
+    "purpose": "Post-publication repository documentation links, status and provenance verification",
+    "sourceCommit": "62457a0f85d858354472212bdf4595e397b7eb91",
+    "platform": "win-x64",
+    "status": "passed",
+    "files": [
+      "README.md",
+      "docs/releases/README.md",
+      "docs/releases/v1.1.1.md",
+      "docs/distribution.md",
+      "docs/local-release-guide.md",
+      "docs/windows-paste-release.md",
+      "docs/verification.md"
+    ],
+    "localLinks": 135,
+    "absentHistoricalArtifacts": [
+      {
+        "file": "docs/verification.md",
+        "target": "../release/checks/20260930T090706Z-legacy-mac-arm64-recheck-spaces-v1.0.2/index.html"
+      },
+      {
+        "file": "docs/verification.md",
+        "target": "../release/checks/20260930T075331Z-legacy-mac-arm64-recheck-updates-v1.0.1/updates-dark-1440.png"
+      },
+      {
+        "file": "docs/verification.md",
+        "target": "../release/checks/20260930T064037Z-legacy-mac-arm64-recheck-ui-v1.0.1/index.html"
+      },
+      {
+        "file": "docs/verification.md",
+        "target": "../release/checks/20260930T044927Z-legacy-mac-arm64-recheck-ui-v0.3.4/index.html"
+      }
+    ],
+    "note": "Ignored historical release artifacts from other machines are recorded separately from repository links.",
+    "buildRepeated": false,
+    "notesOnlyChangesAfterVerification": true
+  }
+}

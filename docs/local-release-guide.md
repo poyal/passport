@@ -2,13 +2,17 @@
 
 이 문서는 데스크톱 앱 등에서 수정할 때마다 원격 CI의 설치·빌드·패키징을 반복하는 비용을 줄이는 방법을 설명한다. 각 대상 OS에서 배포할 파일을 만들고 검사한 뒤, 그 파일을 다시 빌드하지 않고 게시한다. 다른 프로젝트에 적용할 원칙과 Passport의 실제 명령을 함께 정리했다.
 
+## Windows 1.1.1 x64 로컬 배포 완료 — 2026-10-03
+
+소스·최종 설치본의 숨김 GUI는 각각 58개 통과·허용 생략 4개, 데스크톱 검사는 각각 4개 통과했다. Windows 입력 버그픽스를 `v1.1.1-win-x64` 소스로 검증하고 기존 릴리즈에 재빌드 없이 게시했다. Mac 파일과 기존 태그는 보존했다. 이번 미게시 Windows 버전의 변경은 사용자가 승인했으며 아래의 제한된 소스 예외를 따른다. 상세 해시·실패 기록·검증 범위는 [Windows 게시 요약](benchmarks/github-release-windows-v1.1.1.json)과 [검증 기록](verification.md)에 있다.
+
 ## 1.1.1 Mac 로컬 배포 완료 — 2026-10-02
 
 소스 `f4497cc2a337c5f5aa73d5834a2b99f06013020d`의 Mac DMG를 정식 로컬 절차로 검증한 뒤 동일 바이트로 게시했다. 단위·통합 131개, 배포 회귀 61개, 소스/최종 DMG의 숨김 GUI 각 53개와 실제 포커스 각 4개를 통과했다. 허용 생략은 단위 3개와 GUI 각 9개이며 최종 실패·재시도는 없다. 공개 파일 다운로드 해시도 확인했다. 사용자 Finder 전체 경로·이미지 첨부 표시도 확인했으며 Windows 실기·배포는 별도다.
 
 `release/builds/Passport.app`은 검증한 1.1.1 앱을 가리킨다. Mac은 Playwright 기본 정상 종료 뒤 실제 프로세스 종료를 확인하며 Windows는 기존 종료 순서를 유지한다. 초기 실패·검사 보완·검증 범위는 저장소 `docs/verification.md`와 `docs/benchmarks/github-release-v1.1.1.json`에 기록했다. README 작성 규칙은 `docs/README-작성-가이드.md`와 `AGENTS.md`에 연결했다.
 
-기존 Mac/Windows 게시 Actions를 비활성화하고 수동 진단만 남겼다. 이후 Windows 게시에는 `v1.1.1` 태그의 같은 소스를 사용한다. 아래는 앞선 개발 단계별 기록이며 당시 미완료 항목을 현재 상태와 혼동하지 않는다.
+기존 Mac/Windows 게시 Actions를 비활성화하고 수동 진단만 남겼다. 초기 Windows 1.1.1은 사용자 승인에 따라 버그픽스 소스 태그 `v1.1.1-win-x64`를 사용했다. 아래는 앞선 개발 단계별 기록이며 당시 미완료 항목을 현재 상태와 혼동하지 않는다.
 
 ## Finder 전체 경로 후속 수정 — 2026-10-02
 
@@ -147,7 +151,7 @@ Passport의 `release:verify`와 `release:publish`는 **동일 작업 폴더**의
 
 ## Passport 사용법
 
-Node.js 24 이상, npm, Rust cargo, macOS의 Xcode Command Line Tools 또는 Windows의 MSVC C++ 빌드 도구를 준비한다. Windows는 Python·OpenSSL·Windows PowerShell·PowerShell 7이 필요하다. `openssl`이 PATH에 없으면 Git for Windows의 `usr/bin`을 추가한다. Mac은 Python 3과 OpenSSL이 필요하다. `PASSPORT_CARGO`로 cargo 위치를 지정할 수 있다.
+Node.js 24 이상, npm, Rust cargo, macOS의 Xcode Command Line Tools 또는 Windows의 MSVC C++ 빌드 도구와 Spectre 완화 라이브러리를 준비한다. Windows는 Python·OpenSSL·Windows PowerShell·PowerShell 7이 필요하다. `openssl`이 PATH에 없으면 Git for Windows의 `usr/bin`을 추가한다. Mac은 Python 3과 OpenSSL이 필요하다. `PASSPORT_CARGO`로 cargo 위치를 지정할 수 있다.
 
 `npm ci`를 수행하는 배포 검증은 Electron용 네이티브 의존성과 Rust helper를 새로 준비한다. FTP/FTPS용 Python 가상 환경은 해당 검증 폴더에 만들며, 준비된 별도 Python이 있으면 `FTP_TEST_PYTHON`을 지정할 수 있다. Cargo는 프로젝트가 지정한 MSVC 또는 Apple Silicon 대상을 사용한다. 실행된 Node·npm·cargo·Electron 버전은 기록된다. 현재 스크립트는 Node의 최소 버전을 검사하며 Node·Rust의 패치 버전까지 강제하지는 않는다.
 

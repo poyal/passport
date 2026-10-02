@@ -6,7 +6,7 @@
 
 ## 현재 상태
 
-현재 Mac Apple Silicon 공개 버전은 **1.1.1**, Windows x64는 **1.1.0**이다. [릴리즈 목록](releases/README.md)에서 플랫폼별 다운로드를 확인한다. 1.1.1은 로컬에서 검증한 Mac DMG와 그 체크섬만 게시했으며, Windows 1.1.1은 사용자가 Windows PC에서 별도로 검증·게시한다. 기존 1.1.0의 Mac·Windows 설치 파일과 체크섬은 유지한다. Windows ARM64의 실제 설치·실행은 아직 확인하지 않았다. 공개 파일 해시와 시험 범위는 [검증 기록](verification.md)을 따른다.
+현재 Mac Apple Silicon과 Windows x64 공개 버전은 **1.1.1**이다. [릴리즈 목록](releases/README.md)에서 다운로드한다. Windows 11 x64에서 소스·최종 설치본을 로컬 검증한 EXE를 재빌드 없이 기존 릴리즈에 추가했고 Mac DMG와 기존 태그는 보존했다. Windows 버그픽스 소스 태그는 `v1.1.1-win-x64`다. 자세한 출처·해시·허용 예외와 별도 확인 범위는 [Windows 게시 요약](benchmarks/github-release-windows-v1.1.1.json)을 따른다. Windows ARM64는 이번에 배포하지 않았다.
 
 Mac 설치본은 ad-hoc 서명이며 Developer ID 서명·Apple 공증을 포함하지 않는다. `codesign` 무결성 검사 통과는 Apple 공증이나 Gatekeeper의 실행 허용을 뜻하지 않는다. 현재 결과와 DMG 해시는 [검증 기록](verification.md)에 보관한다.
 
@@ -29,6 +29,8 @@ Mac 최소 버전 목표는 14이며 macOS 27 로컬 환경과 macOS 15 GitHub A
 Windows의 `npm ci`는 네이티브 재컴파일 후 [ConPTY 배치 스크립트](../scripts/prepare-node-pty.mjs)로 DLL·OpenConsole을 실제 네이티브 모듈 옆에 복사한다. 패키징의 [afterPack](../scripts/after-pack.mjs)에서도 다시 배치한다. electron-builder 재컴파일이 node-pty의 원래 postinstall 복사 결과를 지워도 패키지에 필요한 파일을 포함하도록 한다.
 
 같은 스크립트는 node-pty 1.1.0의 Windows 종료 경로도 보완한다. 마지막 출력 뒤 조용한 PTY를 닫으면 추가 데이터 이벤트가 없어 출력 worker 정리를 시작하지 않던 경우에 정리를 예약한다. 출력 배출 대기는 유지하며 소스 의존성과 실제 패키지 양쪽에 적용한다. 의존성 버전이나 해당 코드가 바뀌면 패치를 자동 추정하지 않고 빌드를 중단해 검토한다.
+
+여러 PTY를 닫고 다시 열 때의 네이티브 충돌에는 [공식 동시 접근 수정](https://github.com/microsoft/node-pty/pull/922)을 적용한다. 패치 전후 C++ 소스 해시를 고정하고 Windows `postinstall`에서 소스 컴파일을 강제한다. 해당 아키텍처의 기본·대체 로더 경로에는 같은 수정 모듈을 배치한다. Windows 개발 환경에는 Git과 MSVC Spectre 완화 라이브러리도 필요하다.
 
 Windows NSIS 설치본은 [설치 스크립트](../build/installer.nsh)에서 현재 사용자 전용으로 고정한다. 사용자 범위 선택 화면을 생략하고 설치 폴더 선택은 유지한다. 관리자 권한 상승과 `/allusers` 재정의를 허용하지 않는다. 생성된 설치본의 첫 화면과 명령줄 재정의를 검사하려면 다음을 실행한다. 검사 결과 JSON은 설치본과 같은 폴더에 저장된다.
 
