@@ -6,6 +6,7 @@ import type { AppEvent, LocalShell } from "../shared/model";
 import { shellPaths } from "./shells";
 export { shellPaths, availableShells } from "./shells";
 import type { LaunchSpec } from "./startup";
+import { bashPromptMarkers } from "./startup";
 import { localTerminalEnv } from "./terminal-env";
 type LocalSession = {
   pty: pty.IPty;
@@ -17,6 +18,9 @@ type LocalSession = {
   killTimer?: ReturnType<typeof setTimeout>;
   launch?: LaunchSpec;
   startupTimer?: ReturnType<typeof setTimeout>;
+  bashPrompt?: boolean;
+  bashProtocolTail?: string;
+  primeBashInput?: boolean;
 };
 export class LocalSessions {
   // A closed tab may still own a native exit callback. Keep tracking that
@@ -69,6 +73,17 @@ export class LocalSessions {
     this.sessions.set(id, entry);
     entry.dataListener = terminal.onData((data) => {
       if (this.sessions.get(id) !== entry) return;
+      if (
+        process.platform === "win32" &&
+        launch?.snapshot.shell === "passport-bash"
+      ) {
+        const protocol = (entry.bashProtocolTail || "") + data;
+        const markers = bashPromptMarkers(launch.snapshot.sessionInstanceId);
+        const prompt = protocol.lastIndexOf(markers.prompt);
+        const command = protocol.lastIndexOf(markers.command);
+        if (prompt >= 0 || command >= 0) entry.bashPrompt = prompt > command;
+        entry.bashProtocolTail = protocol.slice(-(markers.prompt.length - 1));
+      }
       entry.queue += data;
       if (Buffer.byteLength(entry.queue) + entry.inFlight >= 262144)
         terminal.pause();
@@ -158,11 +173,32 @@ export class LocalSessions {
   input(id: string, data: string) {
     const s = this.sessions.get(id);
     if (!s?.alive) throw new Error("로컬 터미널이 종료되었습니다.");
+    if (
+      s.primeBashInput &&
+      s.bashPrompt &&
+      data &&
+      !["\x1b[I", "\x1b[O", "\x1b[?1;2c"].includes(data)
+    ) {
+      // NUL is Readline's non-printing set-mark command. It absorbs the stale
+      // resize read instead of losing the user's first byte. Prompt markers
+      // and Enter tracking keep this out of child CLI/TUI input.
+      data = "\x00" + data;
+      s.primeBashInput = false;
+    }
+    if (data.includes("\r") || data.includes("\n")) s.bashPrompt = false;
     s.pty.write(data);
   }
   resize(id: string, cols: number, rows: number) {
     const s = this.sessions.get(id);
-    if (s?.alive) s.pty.resize(cols, rows);
+    if (s?.alive) {
+      if (s.pty.cols === cols && s.pty.rows === rows) return;
+      s.pty.resize(cols, rows);
+      if (
+        process.platform === "win32" &&
+        s.launch?.snapshot.shell === "passport-bash"
+      )
+        s.primeBashInput = true;
+    }
   }
   ack(id: string, bytes: number) {
     const s = this.sessions.get(id);

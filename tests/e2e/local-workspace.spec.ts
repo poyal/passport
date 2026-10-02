@@ -82,6 +82,16 @@ test("an unavailable default shell leaves a retryable local tab", async () => {
         ),
       )
       .toBe("connected");
+    await expect
+      .poll(() =>
+        page.evaluate(
+          async () =>
+            (await window.passport.call("bootstrap", undefined))
+              .sessionStates[0]?.environment?.status,
+        ),
+      )
+      .toBe("ready");
+    await expect(page.locator(".xterm-rows")).toContainText(/\$\s*$/);
   } finally {
     await closeCleanly(application);
     await fs.rm(directory, { recursive: true, force: true });
@@ -197,13 +207,29 @@ test("creates mixed local/SSH workspaces, previews profiles, routes alerts and r
           (s) => s.environment,
         )?.environment?.sessionInstanceId,
     );
+    await expect(
+      page.locator(`.terminal-pane[data-pane-id="${local}"] .xterm-rows`),
+    ).toContainText(/\$\s*$/);
     // A terminal OSC can request attention, but cannot claim authenticated approval.
-    await page.evaluate(async (id) => {
-      await window.passport.call("session.input", {
-        id: id!,
-        data: "printf '\\033]9;attention\\007'\r",
-      });
-    }, local);
+    const localInput = page.locator(
+      `.terminal-pane[data-pane-id="${local}"] .xterm-helper-textarea`,
+    );
+    await localInput.focus();
+    await expect(localInput).toBeFocused();
+    await page.evaluate(
+      () =>
+        new Promise((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(resolve)),
+        ),
+    );
+    await page.keyboard.type(
+      "printf '\\033]9;attention\\007\\nOSC_%s\\n' COMMAND_DONE",
+      { delay: 20 },
+    );
+    await page.keyboard.press("Enter");
+    await expect(
+      page.locator(`.terminal-pane[data-pane-id="${local}"] .xterm-rows`),
+    ).toContainText("OSC_COMMAND_DONE");
     await expect
       .poll(async () =>
         page.evaluate(

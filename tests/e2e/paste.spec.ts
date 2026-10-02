@@ -66,6 +66,12 @@ test.beforeEach(async () => {
     const original = handlers.get("passport:call");
     ipcMain.removeHandler("passport:call");
     handle("passport:call", (event, name, input) => {
+      if (
+        name === "session.input" &&
+        process.platform === "win32" &&
+        ["\x1b[?1;2c", "\x1b[I", "\x1b[O"].includes(input.data)
+      )
+        return original(event, name, input);
       if (name === "session.input") {
         state.__pasteInputs.push(input);
         return { ok: true, value: undefined };

@@ -26,6 +26,10 @@ export const bashFile = (file: string) =>
           (_, drive: string) => `/${drive.toLowerCase()}`,
         )
     : file;
+export const bashPromptMarkers = (instance: string) => ({
+  prompt: `\x1b]133;A;passport=${instance}\x07`,
+  command: `\x1b]133;C;passport=${instance}\x07`,
+});
 export type LaunchSpec = {
   executable: string;
   args: string[] | string;
@@ -201,6 +205,11 @@ export function prepareLaunch(
   if (snapshot.shell === "passport-bash") {
     env.MSYSTEM = process.arch === "arm64" ? "CLANGARM64" : "MINGW64";
     env.CHERE_INVOKING = "1";
+    // Track the Bash prompt separately from child TUIs. A pending ConPTY size
+    // event can consume Readline's next input byte (including after a long idle).
+    env.PROMPT_COMMAND = `${env.PROMPT_COMMAND ? env.PROMPT_COMMAND + "; " : ""}printf '\\033]133;A;passport=${snapshot.sessionInstanceId}\\007'`;
+    env.PS0 =
+      bashPromptMarkers(snapshot.sessionInstanceId).command + (env.PS0 || "");
   }
   if (!profiles.length && !config.agent) {
     // A plain shell needs no loader or execution-policy exception. In particular,
@@ -282,6 +291,13 @@ export function prepareLaunch(
     const helperUnix = bashFile(helper);
     const q = shQuote;
     let body = unixEntries(profiles, helperUnix) + "\n";
+    if (shell === "passport-bash") {
+      // User startup may replace PROMPT_COMMAND/PS0. Preserve string and array
+      // hooks, and avoid duplicating the inherited marker.
+      const prompt = `printf '\\033]133;A;passport=${snapshot.sessionInstanceId}\\007'`;
+      const command = `\\e]133;C;passport=${snapshot.sessionInstanceId}\\a`;
+      body += `if [[ "\${PROMPT_COMMAND[*]}" != *"133;A;passport=${snapshot.sessionInstanceId}"* ]]; then\nif [[ $(declare -p PROMPT_COMMAND 2>/dev/null) == 'declare -a '* ]]; then PROMPT_COMMAND+=(${shQuote(prompt)}); else PROMPT_COMMAND="\${PROMPT_COMMAND:+$PROMPT_COMMAND; }${prompt}"; fi\nfi\nif [[ "$PS0" != *$'${command}'* ]]; then PS0=$'${command}'"$PS0"; fi\n`;
+    }
     for (const agent of ["claude", "codex"] as const)
       if (integration && notifications[agent])
         body += `unalias ${agent} 2>/dev/null\nfunction ${agent}() { ${q(helperUnix)} run ${agent} "$@"; }\n`;

@@ -5,7 +5,81 @@ import path from "node:path";
 import { Store } from "../src/main/store";
 import { SessionLogs } from "../src/main/logs";
 import { LocalSessions, availableShells } from "../src/main/local";
+import {
+  prepareLaunch,
+  bashFile,
+  shQuote,
+  bashPromptMarkers,
+} from "../src/main/startup";
+import {
+  defaultTerminalSettings,
+  notificationSettingsSchema,
+} from "../src/shared/terminal-config";
 import type { AppEvent } from "../src/shared/model";
+
+it.skipIf(process.platform !== "win32")(
+  "preserves the first Bash input byte after repeated resizes without priming a child CLI",
+  async () => {
+    const dir = await fs.mkdtemp(
+      path.join(os.tmpdir(), "passport-bash-resize-"),
+    );
+    let output = "";
+    const local = new LocalSessions((event) => {
+      if (event.kind === "output") {
+        output += event.data;
+        local.ack(event.id, event.bytes);
+      }
+    });
+    try {
+      const config = {
+        shell: "passport-bash" as const,
+        cwd: dir,
+        profiles: { mode: "none" as const, ids: [] },
+      };
+      const launch = prepareLaunch(
+        config,
+        defaultTerminalSettings("win32"),
+        notificationSettingsSchema.parse({}),
+        undefined,
+        dir,
+        {},
+      );
+      launch.env.ELECTRON_RUN_AS_NODE = "1";
+      local.open("bash", config, launch);
+      await expect
+        .poll(() => output, { timeout: 10000 })
+        .toContain(bashPromptMarkers(launch.snapshot.sessionInstanceId).prompt);
+      for (let index = 0; index < 30; index++) {
+        local.resize("bash", index % 2 ? 80 : 60, 25);
+        local.input("bash", "p");
+        await new Promise((resolve) => setTimeout(resolve, 30));
+        local.input("bash", `rintf 'RESIZE_%s\\n' ${index}\r`);
+        await expect.poll(() => output).toContain(`RESIZE_${index}\r\n`);
+        await expect
+          .poll(() => local.sessions.get("bash")?.bashPrompt)
+          .toBe(true);
+      }
+      const child = path.join(dir, "child.cjs");
+      await fs.writeFile(
+        child,
+        "process.stdin.setRawMode(true); process.stdout.write('\\x1b]133;A\\x07CHILD_READY\\n'); process.stdin.once('data', data => { process.stdout.write('CHILD_' + data.toString('hex') + '\\n'); process.exit(0); });",
+      );
+      const node = process.env.npm_node_execpath || process.execPath;
+      local.input(
+        "bash",
+        `${shQuote(bashFile(node))} ${shQuote(bashFile(child))}\r`,
+      );
+      await expect.poll(() => output).toContain("CHILD_READY\r\n");
+      local.resize("bash", 70, 27);
+      local.input("bash", "Q");
+      await expect.poll(() => output).toContain("CHILD_51\r\n");
+      expect(output).not.toContain("rintf: command not found");
+    } finally {
+      await local.shutdown();
+      await fs.rm(dir, { recursive: true, force: true });
+    }
+  },
+);
 
 it("records only opted-in output, searches across chunks, persists bookmarks, exports, and enforces retention", async () => {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), "passport-logs-"));

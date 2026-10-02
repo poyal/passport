@@ -44,7 +44,15 @@ export const electron = {
     const env = electronLaunchEnv(options.env);
     if (mode !== "desktop")
       await assertBackgroundCapable(options.executablePath);
-    return _electron.launch({ ...options, env });
+    // Hidden Windows windows otherwise deliver animation frames at 1 Hz,
+    // delaying Playwright stability checks. Keep this in the shared test launcher.
+    const args = [
+      ...(options.args || []),
+      ...(process.platform === "win32"
+        ? ["--disable-frame-rate-limit", "--disable-gpu-vsync"]
+        : []),
+    ];
+    return _electron.launch({ ...options, args, env });
   },
 };
 

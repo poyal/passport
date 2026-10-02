@@ -11,6 +11,8 @@ import {
   parseArguments,
   withReleaseLock,
   writeJSON,
+  initialWindowsRelease,
+  usesInitialWindowsSource,
 } from "./release-core.mjs";
 
 const installerPattern =
@@ -119,8 +121,17 @@ export async function publicationPlan(client, receipts) {
     );
   }
   const tag = `v${version}`;
+  const releaseCommit = await tagCommit(client, tag);
+  const initialWindows = receipts.every(usesInitialWindowsSource);
+  const sourceTag = initialWindows ? initialWindowsRelease.sourceTag : tag;
+  if (initialWindows)
+    assert.equal(
+      releaseCommit,
+      initialWindowsRelease.releaseCommit,
+      "Existing Mac 1.1.1 tag changed; stop publication",
+    );
   assert.equal(
-    await tagCommit(client, tag),
+    sourceTag === tag ? releaseCommit : await tagCommit(client, sourceTag),
     source.commit,
     "Remote tag differs from the verified commit. Push the matching tag; never move an existing release tag.",
   );
@@ -130,6 +141,21 @@ export async function publicationPlan(client, receipts) {
     "A stable release cannot update a prerelease",
   );
   const assets = release ? await client.getAssets(release.id) : [];
+  if (initialWindows) {
+    assert.ok(
+      release && !release.draft,
+      "Windows 1.1.1 must extend the existing public Mac release",
+    );
+    const mac = assets.find(
+      (asset) => asset.name === initialWindowsRelease.macAsset.name,
+    );
+    for (const [key, value] of Object.entries(initialWindowsRelease.macAsset))
+      assert.equal(
+        mac?.[key],
+        value,
+        "Existing Mac 1.1.1 installer changed; stop publication",
+      );
+  }
   assert.equal(
     new Set(assets.map((asset) => asset.name)).size,
     assets.length,
@@ -205,7 +231,17 @@ export async function publicationPlan(client, receipts) {
     !release?.immutable || (!uploads.length && !updateSums),
     "This release is immutable; use a new version.",
   );
-  return { tag, release, assets, uploads, sums, existingSums, updateSums };
+  return {
+    tag,
+    sourceTag,
+    releaseCommit,
+    release,
+    assets,
+    uploads,
+    sums,
+    existingSums,
+    updateSums,
+  };
 }
 
 export async function publishVerified({
@@ -223,6 +259,8 @@ export async function publishVerified({
     mode: execute ? "publish" : "dry-run",
     tag: plan.tag,
     sourceCommit: state.commit,
+    sourceTag: plan.sourceTag,
+    releaseCommit: plan.releaseCommit,
     targets: receipts.map((receipt) => receipt.target),
     upload: plan.uploads,
     preserve: plan.assets
@@ -306,9 +344,14 @@ export async function publishVerified({
   // A retry reconstructs checksums from verified GitHub asset digests.
   for (const receipt of receipts) await validateReceipt(root, receipt);
   assert.equal(
-    await tagCommit(client, plan.tag),
+    await tagCommit(client, plan.sourceTag),
     state.commit,
     "Remote tag changed during publication; keep the draft and investigate.",
+  );
+  assert.equal(
+    await tagCommit(client, plan.tag),
+    plan.releaseCommit,
+    "Existing release tag changed during publication",
   );
   if (release.draft)
     release = await client.update(release.id, {

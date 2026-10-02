@@ -362,22 +362,34 @@ async function verify() {
           `-o${archive}`,
           installer,
         ]);
-        const payloads = (
-          await fs.readdir(path.join(archive, "$PLUGINSDIR"))
-        ).filter((file) => /^app-.*\.7z$/.test(file));
-        assert.equal(
-          payloads.length,
-          1,
-          "Expected exactly one installer payload",
-        );
-        const payload = path.join(checks, "installed-payload");
-        await command("payload-extract", unzip, [
-          "x",
-          "-y",
-          `-o${payload}`,
-          path.join(archive, "$PLUGINSDIR", payloads[0]),
-        ]);
-        executable = path.join(payload, "Passport.exe");
+        // The minimal 7za tool extracts the embedded app archive directly.
+        // A full NSIS-capable 7-Zip may expose the separate payload archive.
+        const directExecutable = path.join(archive, "Passport.exe");
+        if (
+          await fs.access(directExecutable).then(
+            () => true,
+            () => false,
+          )
+        ) {
+          executable = directExecutable;
+        } else {
+          const payloads = (
+            await fs.readdir(path.join(archive, "$PLUGINSDIR"))
+          ).filter((file) => /^app-.*\.7z$/.test(file));
+          assert.equal(
+            payloads.length,
+            1,
+            "Expected exactly one installer payload",
+          );
+          const payload = path.join(checks, "installed-payload");
+          await command("payload-extract", unzip, [
+            "x",
+            "-y",
+            `-o${payload}`,
+            path.join(archive, "$PLUGINSDIR", payloads[0]),
+          ]);
+          executable = path.join(payload, "Passport.exe");
+        }
       }
       await fs.access(executable);
     });

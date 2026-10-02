@@ -15,6 +15,7 @@ import {
   validateReceipt,
   parseArguments,
   withReleaseLock,
+  initialWindowsRelease,
 } from "../scripts/release-core.mjs";
 import {
   publicationPlan,
@@ -692,6 +693,81 @@ test("annotated tags resolve to the verified commit", async () => {
     ),
     "verified",
   );
+});
+
+async function initialWindowsFixture(t) {
+  const { receipt } = await fixture(t, "win-x64");
+  receipt.version = "1.1.1";
+  receipt.artifact.name = installerName(receipt.version, receipt.target);
+  const { client, state } = fakeGitHub(receipt.source.commit);
+  client.getTag = async (tag) => ({
+    object: {
+      type: "commit",
+      sha:
+        tag === initialWindowsRelease.sourceTag
+          ? receipt.source.commit
+          : initialWindowsRelease.releaseCommit,
+    },
+  });
+  state.release = { id: 1, draft: false, prerelease: false, immutable: false };
+  state.assets.push({
+    ...initialWindowsRelease.macAsset,
+    state: "uploaded",
+    updated_at: "2026-10-02T00:00:00Z",
+  });
+  return { receipt, client, state };
+}
+test("initial Windows 1.1.1 uses its matching source tag while preserving the original Mac release", async (t) => {
+  const { receipt, client, state } = await initialWindowsFixture(t);
+  const plan = await publicationPlan(client, [receipt]);
+  assert.equal(plan.tag, "v1.1.1");
+  assert.equal(plan.sourceTag, "v1.1.1-win-x64");
+  assert.equal(plan.releaseCommit, initialWindowsRelease.releaseCommit);
+  assert.deepEqual(plan.uploads, [receipt.artifact.name]);
+  assert.ok(
+    plan.sums
+      .toString()
+      .includes(initialWindowsRelease.macAsset.digest.slice(7)),
+  );
+  assert.deepEqual(state.mutations, []);
+});
+test("initial Windows publication rejects changed source tags, Mac tags and Mac installer bytes", async (t) => {
+  const { receipt, client, state } = await initialWindowsFixture(t);
+  const getTag = client.getTag;
+  client.getTag = async (tag) =>
+    tag === initialWindowsRelease.sourceTag
+      ? { object: { type: "commit", sha: "0".repeat(40) } }
+      : getTag(tag);
+  await assert.rejects(
+    publicationPlan(client, [receipt]),
+    /Remote tag differs/,
+  );
+  client.getTag = async (tag) =>
+    tag === "v1.1.1"
+      ? { object: { type: "commit", sha: "0".repeat(40) } }
+      : getTag(tag);
+  await assert.rejects(
+    publicationPlan(client, [receipt]),
+    /Existing Mac 1.1.1 tag changed/,
+  );
+  client.getTag = getTag;
+  state.assets[0].digest = "sha256:" + "0".repeat(64);
+  await assert.rejects(
+    publicationPlan(client, [receipt]),
+    /Existing Mac 1.1.1 installer changed/,
+  );
+});
+test("the initial Windows source exception cannot publish another platform or version", async (t) => {
+  const { receipt, client } = await initialWindowsFixture(t);
+  for (const replacement of [
+    { target: "win-arm64" },
+    { target: "mac-arm64" },
+    { version: "1.1.2" },
+  ])
+    await assert.rejects(
+      publicationPlan(client, [{ ...receipt, ...replacement }]),
+      /Remote tag differs/,
+    );
 });
 
 test("new releases stay draft until uploaded bytes and checksums are verified", async (t) => {

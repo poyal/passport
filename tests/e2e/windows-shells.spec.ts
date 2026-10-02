@@ -175,7 +175,16 @@ for (const shell of [
         );
         await page.keyboard.press("Control+Shift+v");
         await expect(page.locator(".xterm-rows")).toContainText(
-          path.basename(file),
+          path
+            .basename(file)
+            .replaceAll(
+              "'",
+              shell === "passport-bash"
+                ? "'\\''"
+                : shell === "cmd"
+                  ? "'"
+                  : "''",
+            ),
         );
         await page.keyboard.press("Enter");
         await expect(page.locator(".xterm-rows")).toContainText(

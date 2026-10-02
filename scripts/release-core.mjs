@@ -12,6 +12,28 @@ import {
 } from "./release-gui-policy.mjs";
 
 export const repository = "poyal/passport";
+// Approved for the previously unpublished Windows 1.1.1 installer only.
+// The existing Mac release tag and installer remain immutable inputs.
+export const initialWindowsRelease = Object.freeze({
+  version: "1.1.1",
+  target: "win-x64",
+  releaseCommit: "f4497cc2a337c5f5aa73d5834a2b99f06013020d",
+  sourceTag: "v1.1.1-win-x64",
+  macAsset: {
+    id: 605237202,
+    name: "Passport-1.1.1-mac-arm64.dmg",
+    size: 169143903,
+    digest:
+      "sha256:0820760270d00b9e02deded76ec73a9eb08c22c61cb8601d7eb470d00e9df187",
+  },
+});
+export function usesInitialWindowsSource(receipt) {
+  return (
+    receipt.version === initialWindowsRelease.version &&
+    receipt.target === initialWindowsRelease.target &&
+    receipt.source.commit !== initialWindowsRelease.releaseCommit
+  );
+}
 export const schemaVersion = 3;
 export const targets = {
   "mac-arm64": { platform: "darwin", arch: "arm64", extension: "dmg" },
@@ -165,6 +187,47 @@ export async function validateReceipt(root, receipt, state) {
   assert.equal(receipt.source.dirty, false, "Dirty builds cannot be published");
   assert.equal(state.dirty, false, "Commit local changes before publishing");
   assertSameSource(receipt.source, state);
+  if (usesInitialWindowsSource(receipt)) {
+    execFileSync(
+      "git",
+      [
+        "merge-base",
+        "--is-ancestor",
+        initialWindowsRelease.releaseCommit,
+        state.commit,
+      ],
+      { cwd: root, stdio: "pipe" },
+    );
+    const allowed = new Set([
+      "src/main/local.ts",
+      "src/main/startup.ts",
+      "scripts/e2e-electron.mjs",
+      "scripts/release-core.mjs",
+      "scripts/release-publish.mjs",
+      "scripts/release-verify.mjs",
+      "tests/e2e/local-workspace.spec.ts",
+      "tests/e2e/paste.spec.ts",
+      "tests/e2e/windows-shells.spec.ts",
+      "tests/runtime.test.ts",
+      "tests/release.test.mjs",
+      "vitest.config.ts",
+    ]);
+    const changed = git(
+      root,
+      "diff",
+      "--name-only",
+      initialWindowsRelease.releaseCommit,
+      state.commit,
+    )
+      .split(/\r?\n/)
+      .filter(Boolean);
+    assert.ok(
+      changed.every(
+        (file) => allowed.has(file) || /^docs\/.*\.(md|json)$/.test(file),
+      ),
+      "Windows 1.1.1 source includes changes outside the approved bugfix, tests, verification and documentation scope",
+    );
+  }
   const pkg = JSON.parse(
     await fs.readFile(path.join(root, "package.json"), "utf8"),
   );
