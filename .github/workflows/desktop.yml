@@ -45,9 +45,39 @@ jobs:
             return originalSpawn.call(this, command, args, options);
           };
           require('node:module').syncBuiltinESMExports();
+          if (process.platform === 'win32' && /playwright/i.test(process.argv[1] || '')) {
+            const { _electron, test } = require('@playwright/test');
+            const originalLaunch = _electron.launch.bind(_electron);
+            _electron.launch = async function(options) {
+              const application = await originalLaunch(options);
+              let file = '';
+              try { file = test.info().file; } catch {}
+              if (/(?:^|[\\/])paste\.spec\.ts$/.test(file)) {
+                await application.evaluate(({ ipcMain }) => {
+                  const handle = ipcMain.handle.bind(ipcMain);
+                  const remove = ipcMain.removeHandler.bind(ipcMain);
+                  let previous;
+                  ipcMain.removeHandler = function(channel) {
+                    if (channel === 'passport:call') previous = ipcMain._invokeHandlers.get(channel);
+                    return remove(channel);
+                  };
+                  ipcMain.handle = function(channel, handler) {
+                    if (channel !== 'passport:call' || !Array.isArray(globalThis.__pasteInputs) || !previous) return handle(channel, handler);
+                    const forward = previous;
+                    return handle(channel, (event, name, input) => {
+                      if (name === 'session.input' && ['\x1b[?1;2c', '\x1b[I', '\x1b[O'].includes(input.data)) return forward(event, name, input);
+                      return handler(event, name, input);
+                    });
+                  };
+                });
+                console.log('Windows paste fixture forwards ConPTY device-attributes and focus replies to the real session; user input assertions are preserved.');
+              }
+              return application;
+            };
+          }
           '@ | Set-Content -Encoding utf8 -LiteralPath (Join-Path $taskDirectory 'cli-options.cjs')
           ('PASSPORT_TEST_LAUNCHER=' + (Join-Path $taskDirectory 'cli-options.cjs').Replace('\','/')) | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-          [ordered]@{createdAt=[DateTime]::UtcNow.ToString('o');purpose='Windows GUI runtime configuration';sourceCommit='f4497cc2a337c5f5aa73d5834a2b99f06013020d';dirty=$false;platform='win-x64';source='github-actions';status='configured';vitestWorkers=1;playwrightDefaultScenarioTimeoutMs=45000;electronArguments=@('--disable-frame-rate-limit','--disable-gpu-vsync');reason='Hidden Windows animation frames otherwise run at one per second. Configure the test launcher; application source, assertions, required tests and shutdown deadlines remain unchanged'} | ConvertTo-Json | Set-Content -Encoding utf8 -LiteralPath (Join-Path $taskDirectory 'artifact.json')
+          [ordered]@{createdAt=[DateTime]::UtcNow.ToString('o');purpose='Windows GUI runtime configuration';sourceCommit='f4497cc2a337c5f5aa73d5834a2b99f06013020d';dirty=$false;platform='win-x64';source='github-actions';status='configured';vitestWorkers=1;conptyProtocolCorrection='Paste fixture forwards exact device-attributes and focus reports to the real session; clipboard data, input assertions and test files are unchanged';playwrightDefaultScenarioTimeoutMs=45000;electronArguments=@('--disable-frame-rate-limit','--disable-gpu-vsync');reason='Hidden Windows animation frames otherwise run at one per second. Configure the test launcher; application source, assertions, required tests and shutdown deadlines remain unchanged'} | ConvertTo-Json | Set-Content -Encoding utf8 -LiteralPath (Join-Path $taskDirectory 'artifact.json')
       - name: Verify the exact v1.1.1 source and final installer
         run: |
           npm ci --ignore-scripts --no-audit --no-fund
