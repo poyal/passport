@@ -6,7 +6,7 @@
 
 ## 현재 상태
 
-공개 버전과 준비 중인 버전은 [릴리즈 목록](releases/README.md)에서 확인한다. 1.1.0은 Apple Silicon Mac용 DMG와 Windows x64 EXE를 공개했다. `SHA256SUMS.txt`에는 두 설치 파일의 체크섬을 포함한다. Windows 1.1.0의 셸·PTY·DPAPI·GUI·설치·제거와 공개 파일 검증을 별도로 수행했다. Windows ARM64의 실제 설치·실행은 아직 확인하지 않았다. 공개 파일 해시와 버전별 시험 범위는 [검증 기록](verification.md)을 따른다.
+현재 Mac Apple Silicon 공개 버전은 **1.1.1**, Windows x64는 **1.1.0**이다. [릴리즈 목록](releases/README.md)에서 플랫폼별 다운로드를 확인한다. 1.1.1은 로컬에서 검증한 Mac DMG와 그 체크섬만 게시했으며, Windows 1.1.1은 사용자가 Windows PC에서 별도로 검증·게시한다. 기존 1.1.0의 Mac·Windows 설치 파일과 체크섬은 유지한다. Windows ARM64의 실제 설치·실행은 아직 확인하지 않았다. 공개 파일 해시와 시험 범위는 [검증 기록](verification.md)을 따른다.
 
 Mac 설치본은 ad-hoc 서명이며 Developer ID 서명·Apple 공증을 포함하지 않는다. `codesign` 무결성 검사 통과는 Apple 공증이나 Gatekeeper의 실행 허용을 뜻하지 않는다. 현재 결과와 DMG 해시는 [검증 기록](verification.md)에 보관한다.
 
@@ -130,7 +130,7 @@ npm run release:publish -- --manifest release/checks/<실행 ID>/verification.js
 
 ## 선택적 원격 진단
 
-[Desktop verification](../.github/workflows/desktop.yml)의 로컬 변경은 수동으로 같은 `npm run release:verify -- --desktop`을 Windows x64·ARM64와 Mac ARM64의 전용 runner에서 실행한다. 읽기 권한만 가지며 검사 자료를 Actions artifact로 보관하고 공개 게시하지 않는다. 태그 push의 Mac 게시와 별도 Windows 원격 게시 YAML은 로컬에서 제거했으나, 2026-10-02 원격 조회에서는 두 게시 워크플로가 여전히 활성 상태였다.
+[Desktop verification](../.github/workflows/desktop.yml)은 수동 진단용이며 같은 로컬 검증 명령을 실행하고 공개 게시하지 않는다. 2026-10-02에 기존 Mac·Windows 게시 워크플로를 명시적으로 비활성화하고 `disabled_manually` 상태·진행/대기 작업 없음과 새 태그의 YAML을 확인한 뒤 로컬 게시로 전환했다. 당시 ID와 결과는 [1.1.1 검증 기록](benchmarks/github-release-v1.1.1.json)에 남겼다.
 
 원격 전환 시 기존 게시 워크플로를 명시적으로 비활성화하고 실행·대기 작업의 처리 결과를 확인한다. 기본 브랜치의 YAML 삭제만으로 과거 태그/ref의 실행까지 막았다고 판단하지 않는다. 전환 변경을 원격에 반영하고 새 태그 대상 커밋의 실제 YAML도 검토한 뒤 태그를 push한다. 상태 확인·전환 명령과 운영 범위는 [로컬 배포 안내](local-release-guide.md#actions-운영)를 따른다.
 
