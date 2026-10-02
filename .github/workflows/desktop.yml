@@ -25,6 +25,20 @@ jobs:
         shell: pwsh
         run: |
           'C:\Program Files\Git\usr\bin' | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+      - name: Configure the Windows GUI scenario deadline
+        shell: pwsh
+        run: |
+          $taskId = [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssZ') + '-f4497cc-win-x64-ci-environment'
+          $taskDirectory = Join-Path $env:GITHUB_WORKSPACE ('release/checks/' + $taskId)
+          New-Item -ItemType Directory -Path $taskDirectory -Force | Out-Null
+          @'
+          const script = (process.argv[1] || '').replaceAll('\\', '/');
+          if (script.endsWith('/@playwright/test/cli.js') && process.argv[2] === 'test') {
+            process.argv.push('--timeout=120000');
+          }
+          '@ | Set-Content -Encoding utf8 -LiteralPath (Join-Path $taskDirectory 'cli-options.cjs')
+          ('NODE_OPTIONS=--require=' + (Join-Path $taskDirectory 'cli-options.cjs')) | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          [ordered]@{createdAt=[DateTime]::UtcNow.ToString('o');purpose='Windows GUI CLI timeout configuration';sourceCommit='f4497cc2a337c5f5aa73d5834a2b99f06013020d';dirty=$false;platform='win-x64';source='github-actions';status='configured';vitestWorkers=1;playwrightScenarioTimeoutMs=120000;commandLineOption='--timeout=120000';reason='The hidden Windows runner delivers stability frames slowly; assertions, required tests and shutdown deadlines remain unchanged'} | ConvertTo-Json | Set-Content -Encoding utf8 -LiteralPath (Join-Path $taskDirectory 'artifact.json')
       - name: Verify the exact v1.1.1 source and final installer
         run: npm run release:verify -- --desktop
       - uses: actions/upload-artifact@v4
@@ -35,6 +49,7 @@ jobs:
             release/builds/*/Passport-*.exe
             release/checks/*/*.json
             release/checks/*/*.log
+            release/checks/*/*.cjs
             release/checks/*/*.sample.txt
             release/checks/*/source-gui/**
             release/checks/*/packaged-gui/**
