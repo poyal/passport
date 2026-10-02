@@ -1,3 +1,4 @@
+import { FontPicker } from "./FontPicker";
 import { useEffect, useRef, useState, type DragEvent } from "react";
 import {
   Terminal as TerminalIcon,
@@ -1292,31 +1293,10 @@ export function AppearancePanel({
       )}
       {section !== "themes" && (
         <div className="appearance-fields">
-          <label>
-            글꼴
-            <input
-              list="terminal-fonts"
-              value={appearance.font}
-              onChange={(e) =>
-                change({ font: e.target.value || "JetBrains Mono" })
-              }
-            />
-            <datalist id="terminal-fonts">
-              {[
-                ...new Set([
-                  "JetBrains Mono",
-                  "Menlo",
-                  "Monaco",
-                  "Consolas",
-                  "Cascadia Mono",
-                  "Courier New",
-                  ...app.boot.fonts,
-                ]),
-              ].map((f) => (
-                <option key={f} value={f} />
-              ))}
-            </datalist>
-          </label>
+          <FontPicker
+            value={appearance.font}
+            onChange={(font) => change({ font })}
+          />
           <label>
             글자 크기 <span>{appearance.fontSize}px</span>
             <input

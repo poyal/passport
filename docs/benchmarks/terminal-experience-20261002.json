@@ -1,0 +1,237 @@
+{
+  "date": "2026-10-02",
+  "completedAt": "2026-10-02T07:02:52.889Z",
+  "sourceCommit": "2c6049681d9be1a93a62c121a5535e4a0737965d",
+  "dirty": true,
+  "platform": "mac-arm64",
+  "status": "implemented-and-locally-verified",
+  "changes": {
+    "notifications": "Read all alerts for the viewed terminal in the foreground owner window; preserve activity history and approval resolution; close tracked read banners.",
+    "shortcuts": {
+      "newTab": "Mod+N",
+      "newWindow": "Mod+Shift+N",
+      "defaultMigration": true,
+      "preserveCustomBindings": true,
+      "newWindowStartsOneLocalTerminal": true,
+      "totalTerminalLimit": 32
+    },
+    "fonts": {
+      "bundled": [
+        "JetBrains Mono",
+        "Cascadia Mono",
+        "Cascadia Code",
+        "Fira Code",
+        "Source Code Pro",
+        "IBM Plex Mono",
+        "D2Coding"
+      ],
+      "installedOSRecommendations": true,
+      "searchAndPreview": true,
+      "koreanFallback": "D2Coding",
+      "fontsourceVersion": "5.3.0",
+      "d2Coding": {
+        "family": "D2Coding",
+        "version": "1.3.3",
+        "source": "https://github.com/naver/d2-coding-font/releases/download/VER1.3.3/D2Coding-Ver1.3.3-20260725.zip",
+        "archiveSha256": "c2a6e364d4102eb2c4de52ffe3d76317c1f4c045e3737e022e69ee0be47f31e2",
+        "files": {
+          "src/renderer/fonts/D2Coding-Regular.ttf": {
+            "bytes": 4185500,
+            "sha256": "c064f343b5cfc131f083377ba606b748f9b61a5bbd89708e4010b9066dff5a24"
+          },
+          "src/renderer/fonts/D2Coding-Bold.ttf": {
+            "bytes": 4359628,
+            "sha256": "770afd3304d03924a05744335315f9dbb51f30870a3e24b05ffba9abd2f9400f"
+          },
+          "licenses/fonts/D2Coding-OFL.txt": {
+            "bytes": 4511,
+            "sha256": "1807e8dec4d65f474cbf9be39f5e2254ecb81702babc320749e272ea66ffcc69"
+          }
+        }
+      }
+    }
+  },
+  "validation": {
+    "typesAndBuild": "passed",
+    "unit": {
+      "passed": 123,
+      "skipped": 3,
+      "failed": 0
+    },
+    "focusedUnit": {
+      "passed": 26,
+      "failed": 0
+    },
+    "releaseRegression": {
+      "passed": 60,
+      "failed": 0
+    },
+    "fullHiddenGui": {
+      "startTime": "2026-10-02T06:51:42.923Z",
+      "duration": 96523.372,
+      "expected": 50,
+      "skipped": 9,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "finalFontGui": {
+      "startTime": "2026-10-02T06:57:25.990Z",
+      "duration": 4935.192,
+      "expected": 1,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "initialFocusedGui": {
+      "passed": 2
+    },
+    "inventory": {
+      "hidden": 59,
+      "desktop": 4,
+      "policyHash": "b5a0ce2f7980777c6f53451cbf2b292ae2ddf9ff3f78651dbc4b92699196e49a"
+    },
+    "hiddenWindowAudit": "Every executed hidden app teardown required native shown=0 and focused=0.",
+    "fontChecks": [
+      "Seven regular and bold font faces load locally without remote font requests",
+      "ASCII fixed-width metrics match",
+      "D2Coding Hangul takes exactly two ASCII cells",
+      "Missing font status and fallback preview",
+      "Persistent choice and actual terminal font-family",
+      "Live PTY emits Korean and box-drawing characters"
+    ],
+    "fontFollowUp": "After full hidden regression, corrected inherited missing-font preview and border token; rebuilt and reran the affected font E2E successfully.",
+    "notificationTest": "Hidden integration replaces only BrowserWindow isFocused/isVisible queries; uses actual IPC, ownership, ActivityService, SQLite and PTY. It does not prove native OS focus or notification-center removal."
+  },
+  "limitations": [
+    "Windows hardware execution was not performed.",
+    "Four native desktop checks were listed, not executed, to avoid interfering with user work.",
+    "Real OS Notification Center removal and notifications delivered before app restart are not verified here.",
+    "No new installer or publishable release receipt was created.",
+    "Earlier foreground Electron shutdown reproduction evidence remains protected."
+  ],
+  "processesAfter": {
+    "checkedAt": "2026-10-02T06:59:40.042061+00:00",
+    "matchingProcesses": [
+      "4136 /Applications/Passport.app/Contents/MacOS/Passport",
+      "4155 /Applications/Passport.app/Contents/Frameworks/Passport Helper.app/Contents/MacOS/Passport Helper",
+      "4156 /Applications/Passport.app/Contents/Frameworks/Passport Helper.app/Contents/MacOS/Passport Helper"
+    ],
+    "testElectronRemaining": 0
+  },
+  "sourceFileHashes": {
+    "src/main/index.ts": "2cc6beb6aa9848d3c54b35bffdc8917b68dacb10b4fc49143d982ffbc927161e",
+    "src/main/activity.ts": "2079da623fbd3f3fd8cce4d5966b1e8afcb75721b1afa4808084c9588dd0953d",
+    "src/main/activity-banners.ts": "3e50681d5cffd174772bcd8373b1b7008d309724f39e7b051d4365148945c0d3",
+    "src/shared/model.ts": "abd8c79e68b95a03737470f05c3d3d17994f5b0132951e38f7b1a11372eb4b3f",
+    "src/shared/shortcuts.ts": "f69f56a4f82d20d9a6725684ffc5ad5fe8671573f2e94761bd7ccaf4355ef20a",
+    "src/shared/local-workspace.ts": "96ee9176ccbf5c59b4e8eca81ba738e615a20bae2591b4f9c7d719b77153b061",
+    "src/shared/fonts.ts": "98a2703bfb8170f3d6148e0127fdd6b62a0bfa98a1604a9394539437c7019a2a",
+    "src/preload/index.ts": "12157c4dfb09c2f6686d2faf05e7d2dee514ddddbbf55ee7b0e706b40efde4c2",
+    "src/renderer/App.tsx": "3b64949d19ce02d03f9fc83caf279df49ff56a134384344bbc7f5a353d7a3de1",
+    "src/renderer/components.tsx": "9f4a7d252fcddbb584dca4be7cb0e736861d1c810becd353d7c45df146d159c6",
+    "src/renderer/Advanced.tsx": "d309ddf733d09823a79eb665690c4a9b8d5a406aef2cf6613110e022319aca99",
+    "src/renderer/FontPicker.tsx": "f6153cf91ed5ac41ec15145604ed5d2afbadbc6b7ae4f4723ad26822e5d913ae",
+    "src/renderer/fonts.ts": "05360aece5ee32322e6f65761230f4436f9beedec24ee728e8ac4b1fc4b226d6",
+    "src/renderer/terminals.ts": "c24eb6919638b73c3a208f9d192af770e5edb374eb8155d9982bbd116eb1d6b3",
+    "src/renderer/Workspaces.tsx": "1a7adb8763813dfb68742bb1c52816a038a7817ae6e8f8b6632dfdf9ca54897f",
+    "src/renderer/Hosts.tsx": "3741ed8a647fd72e18f0ce43abe39e05cf30b17c6801a75e6cef144cead5d94b",
+    "src/renderer/styles.css": "a570c3fc680270743d9f330658781992a22d4b8a98d282b8364c301f9fa3a0f8",
+    "src/renderer/fonts/fonts.css": "28c87c19d13eed212380dc5968f84126f7640e8bd506bfea45e6ab1c0187d1f1",
+    "src/renderer/fonts/sources.json": "70c7fa65922dbfb7a925c64d4a560952c239e91053d4d0bb1cfa4e566eff3eb4",
+    "scripts/notices.mjs": "1a9f207a5fbcfac74f054f75a577a8fa76462c6df0795034daa994bec9245cab",
+    "tests/terminal-experience.test.ts": "e1d31f3aa730141933f4b6838e4d47fe3196527a0e5d7581dfa7fb6236ea8423",
+    "tests/e2e/terminal-experience.spec.ts": "1882825b4460fb24819434765e1875f73f8bd2be7c65708e1facd12c1226c060",
+    "tests/e2e/release-policy.json": "8f3d21ee4aaf997245d35970c5385d3e09c310e62cf71d2d9c499df37f6bbe7d",
+    "package.json": "80d5f88591825c54675de9bd5c2e1b142cf635a6b0389704990221d5b3496df0",
+    "package-lock.json": "a60979bc3d90667f0508ad64f3461f6682d2cd702548cecdb03e6b53ff096c72"
+  },
+  "evidence": [
+    {
+      "path": "release/checks/20261002-terminal-experience/build-final.log",
+      "sha256": "416049b13d3c7a43636d74f532dd4930dcfd54e78494592db60d446474e53f28"
+    },
+    {
+      "path": "release/checks/20261002-terminal-experience/unit-focused.log",
+      "sha256": "e84cce5718128ce6eb16b572eb165cf0ec1ccba4cb2621a89542b0495d3fb27d"
+    },
+    {
+      "path": "release/checks/20261002-terminal-experience/unit-all.log",
+      "sha256": "341acbee6b78c696f8e4d646448263f3baa361a863330bd20738f0ccf58057ea"
+    },
+    {
+      "path": "release/checks/20261002-terminal-experience/release-tests.log",
+      "sha256": "cc269d281c144399c1c65ad227fa3d98b21bef51f54c9c2971d0f73a741df416"
+    },
+    {
+      "path": "release/checks/20261002-terminal-experience/e2e-focused.log",
+      "sha256": "8097aaaf1e9ff8dac4a2e9a2fdd2900073ba5e6117644f62341b1c577ba5762b"
+    },
+    {
+      "path": "release/checks/20261002-terminal-experience/e2e-all.log",
+      "sha256": "826b73c65cb846e18b240e8b58b14ad26f3f6191f3106c53b240cd134d15be4a"
+    },
+    {
+      "path": "release/checks/20261002-terminal-experience/e2e-font-final.log",
+      "sha256": "b454894becfec6a599087d0ccf896a9c3cf549131c93904ebd52106555d5f21c"
+    },
+    {
+      "path": "release/checks/20261002-terminal-experience/format-check.log",
+      "sha256": "17aa973d3f004560237d9a95171210b0671deff23d61628eecf7322ff5938f20"
+    },
+    {
+      "path": "release/checks/20261002-terminal-experience/full-gui-policy-coverage.json",
+      "sha256": "2f4b4089730406ce9180f10dfbe85edf5680e37dfed247a47d0a08bb5a4989ec"
+    },
+    {
+      "path": "release/checks/20261002-terminal-experience/discovery-summary.json",
+      "sha256": "c1a40184058c820872951e1819416629f32c2cfe68962a32a12f6a045071237d"
+    },
+    {
+      "path": "release/checks/20261002-terminal-experience/hidden-discovery.json",
+      "sha256": "680241d50d274bca04f6514987d57910f112f4127b053a0ac003648e4d6baf6b"
+    },
+    {
+      "path": "release/checks/20261002-terminal-experience/desktop-discovery.json",
+      "sha256": "ef85c03deed8cf3fdc59d5dbf2e84d98cf49400e5e7e239646d59f627e5fa6ca"
+    },
+    {
+      "path": "release/checks/20261002-terminal-experience/processes.json",
+      "sha256": "bffb83b76b052d619ab7db9cf4189a9309f9f693c7d2e1e66bb52cfd6268f3b1"
+    },
+    {
+      "path": "release/checks/20261002T065142Z-2c60496-dirty-mac-arm64-e2e-hidden/report.json",
+      "sha256": "3384a6c0c13e6234804a7643221cfef83ffd08600dba6c5ff12aa1262698478f"
+    },
+    {
+      "path": "release/checks/20261002T065725Z-2c60496-dirty-mac-arm64-e2e-hidden/report.json",
+      "sha256": "9b5e6b8469dcbb7f06bbc6832db737d16bae746096216bdf07926e15c2e1c440"
+    },
+    {
+      "path": "release/checks/20261002T064735Z-2c60496-dirty-mac-arm64-e2e-hidden/report.json",
+      "sha256": "c6cae69ba03ef541f5df7da50f1be0d315af745a422f51b3497dc74eba03e180"
+    }
+  ],
+  "guide": {
+    "repositoryPath": "docs/local-release-guide.md",
+    "downloadPath": "/Users/poyal/Downloads/로컬-검증-후-배포-운영-가이드.md",
+    "sha256": "ed1061345a146fc69493cd28a6fa0efbf42a242d0b1ecf62462e91be4a1355c7",
+    "identicalCopies": true
+  },
+  "artifacts": {
+    "directory": "release/checks/20261002-terminal-experience",
+    "guiDirectories": [
+      "release/checks/20261002T064735Z-2c60496-dirty-mac-arm64-e2e-hidden",
+      "release/checks/20261002T065142Z-2c60496-dirty-mac-arm64-e2e-hidden",
+      "release/checks/20261002T065725Z-2c60496-dirty-mac-arm64-e2e-hidden"
+    ],
+    "previewLink": "20261001T100100Z-42563e5-mac-arm64-v1.1.0/mac-arm64/Passport.app",
+    "previewLinkChanged": false,
+    "newInstaller": false,
+    "installedApplicationReplaced": false,
+    "userDatabaseChanged": false,
+    "remotePushOrPublication": false,
+    "deletedExistingArtifacts": false,
+    "cleanupCandidatesNow": [],
+    "retentionReview": "2026-10-09; preserve unresolved evidence and original licensed source assets"
+  }
+}

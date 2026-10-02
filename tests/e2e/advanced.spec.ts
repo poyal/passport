@@ -1,7 +1,7 @@
+import { electron } from "../../scripts/e2e-electron.mjs";
 import {
   test,
   expect,
-  _electron as electron,
   type ElectronApplication,
   type Page,
 } from "@playwright/test";
@@ -275,7 +275,7 @@ test("opens and keeps a local tab active when ownership events arrive after the 
   }
 });
 
-test("saves custom colors and shortcuts and applies highlights without changing terminal text", async () => {
+test("saves custom colors and shortcuts and applies highlights without changing terminal text @desktop", async () => {
   await page.getByRole("button", { name: "설정", exact: true }).click();
   await page.getByRole("tab", { name: "테마", exact: true }).click();
   await page
@@ -288,7 +288,9 @@ test("saves custom colors and shortcuts and applies highlights without changing 
     page.locator(".profile-row").filter({ hasText: "검증 테마" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "단축키", exact: true }).click();
-  await page.getByLabel("새 탭", { exact: true }).fill("Mod+Shift+Y");
+  await page
+    .getByLabel("새 탭 · 로컬 터미널", { exact: true })
+    .fill("Mod+Shift+Y");
   await page.getByRole("button", { name: "단축키 저장", exact: true }).click();
   await expect
     .poll(
@@ -396,7 +398,7 @@ test("bulk host edits change only checked fields", async () => {
   await page.getByLabel("일괄 태그", { exact: true }).fill("운영, 테스트");
   await page
     .getByRole("dialog")
-    .screenshot({ path: "test-results/bulk-spacing.png" });
+    .screenshot({ path: test.info().outputPath("bulk-spacing.png") });
   await page
     .getByRole("dialog")
     .getByRole("button", { name: "선택 항목 적용", exact: true })
@@ -482,5 +484,5 @@ test("500-host list and expanded host settings scroll independently inside a sma
     .toBeGreaterThan(1000);
   expect(await detail.evaluate((e) => e.scrollTop)).toBe(position);
   await expect(page.locator(".bulk-toolbar")).toBeInViewport();
-  await page.screenshot({ path: "test-results/host-scroll.png" });
+  await page.screenshot({ path: test.info().outputPath("host-scroll.png") });
 });

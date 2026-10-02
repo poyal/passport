@@ -141,7 +141,14 @@ export function Modal({
         "input:not(:disabled),textarea:not(:disabled),select:not(:disabled)",
       ) ?? ref.current?.querySelector<HTMLElement>("button:not(:disabled)");
     first?.focus();
-    return () => previous?.focus();
+    window.dispatchEvent(new Event("passport-view-changed"));
+    return () => {
+      previous?.focus();
+      // React's effect cleanup can run before the dialog leaves the DOM.
+      requestAnimationFrame(() =>
+        window.dispatchEvent(new Event("passport-view-changed")),
+      );
+    };
   }, []);
   return (
     <div

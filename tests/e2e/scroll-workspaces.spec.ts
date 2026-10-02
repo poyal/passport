@@ -1,7 +1,7 @@
+import { electron } from "../../scripts/e2e-electron.mjs";
 import {
   test,
   expect,
-  _electron as electron,
   type ElectronApplication,
   type Page,
 } from "@playwright/test";

@@ -128,6 +128,7 @@ export class ActivityService {
       workspace: (paneId: string) => string | undefined;
       changed: (items: Activity[]) => void;
       notify: (item: Activity) => void;
+      viewed?: (paneId: string) => boolean;
       ready: (paneId: string, generation: string, result?: string) => void;
       error: (message: string) => void;
     },
@@ -342,12 +343,12 @@ export class ActivityService {
       generation: entry.generation,
       workspaceId,
       created: Date.now(),
-      read: false,
+      read: this.callbacks.viewed?.(entry.paneId) ?? false,
       resolved: event.kind !== "permission",
     };
     this.rows.unshift(item);
     this.persist();
-    this.callbacks.notify(item);
+    if (!item.read) this.callbacks.notify(item);
   }
   list() {
     this.prune();
@@ -357,8 +358,19 @@ export class ActivityService {
     }));
   }
   read(id?: string) {
-    for (const row of this.rows) if (!id || row.id === id) row.read = true;
-    this.persist();
+    this.markRead((row) => !id || row.id === id);
+  }
+  readPane(paneId: string) {
+    this.markRead((row) => row.paneId === paneId);
+  }
+  private markRead(matches: (row: Activity) => boolean) {
+    let changed = false;
+    for (const row of this.rows)
+      if (!row.read && matches(row)) {
+        row.read = true;
+        changed = true;
+      }
+    if (changed) this.persist();
   }
   clear() {
     this.rows = [];

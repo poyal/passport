@@ -1,7 +1,7 @@
+import { electron } from "../../scripts/e2e-electron.mjs";
 import {
   test,
   expect,
-  _electron as electron,
   type ElectronApplication,
   type Page,
 } from "@playwright/test";
@@ -200,7 +200,7 @@ test("SFTP parent row reaches root with one click, file errors alert, and host p
   await expect(page.getByRole("tooltip")).toHaveText("새로고침");
 });
 
-test("profile account connects, paste is immediate and literal, automatic logs capture output and auth failures alert", async () => {
+test("profile account connects, paste is immediate and literal, automatic logs capture output and auth failures alert @desktop", async () => {
   await page.getByRole("button", { name: "호스트", exact: true }).click();
   await page
     .locator(".host-row")

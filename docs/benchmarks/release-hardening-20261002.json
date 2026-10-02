@@ -1,0 +1,153 @@
+{
+  "date": "2026-10-02",
+  "checkedAt": "2026-10-02T05:53:07.318Z",
+  "purpose": "Perilog review follow-up: required GUI inventory, publication report validation, lock scope and operating guide",
+  "sourceCommit": "2c6049681d9be1a93a62c121a5535e4a0737965d",
+  "dirty": true,
+  "platform": "mac-arm64",
+  "status": "scoped-checks-passed",
+  "receiptSchemaVersion": 3,
+  "validation": {
+    "releaseRegression": {
+      "passed": 60,
+      "failed": 0,
+      "skipped": 0,
+      "previousCount": 36,
+      "added": 24
+    },
+    "discovery": {
+      "hidden": 56,
+      "desktop": 3,
+      "launchesElectron": false
+    },
+    "historicalReport": {
+      "path": "release/checks/20261002T052358Z-2c60496-dirty-darwin-arm64-e2e-hidden/report.json",
+      "sha256": "4af198531c1f0bce8eafa44380ca7c3659e0b649ffb1b5cd96ac411046594ce1",
+      "passed": 47,
+      "skipped": 9,
+      "platformExclusions": 6,
+      "optionalNotRequested": 3,
+      "replayedAgainstNewPolicy": true,
+      "newGuiExecution": false
+    },
+    "policy": {
+      "path": "tests/e2e/release-policy.json",
+      "sha256": "ecab9037b226330f1d830c718330c2d33a9d32505f26a9aac838d90666b2d45a",
+      "hashMethod": "SHA-256 of JSON.stringify(parsed policy)",
+      "inventoryCount": 59
+    },
+    "syntax": true,
+    "format": true,
+    "gitDiffCheck": true
+  },
+  "remoteAudit": {
+    "checkedAt": "2026-10-02T05:46:59.998Z",
+    "method": "Read-only unauthenticated public GitHub REST API; GitHub CLI is not installed",
+    "workflows": [
+      {
+        "id": 369898876,
+        "name": "Desktop verification",
+        "path": ".github/workflows/desktop.yml",
+        "state": "active"
+      },
+      {
+        "id": 371212218,
+        "name": "Publish Windows release",
+        "path": ".github/workflows/release-windows.yml",
+        "state": "active"
+      },
+      {
+        "id": 370814382,
+        "name": "Publish Mac release",
+        "path": ".github/workflows/release.yml",
+        "state": "active"
+      }
+    ],
+    "unfinishedByStatus": {
+      "queued": 0,
+      "in_progress": 0,
+      "waiting": 0,
+      "pending": 0,
+      "requested": 0
+    },
+    "paginated": true,
+    "remoteStateChanged": false
+  },
+  "lockScope": "One working directory; different clones/worktrees/computers still require one designated publication owner/session",
+  "limitations": [
+    "No new GUI, native desktop, package, Windows hardware or full release verification was executed.",
+    "Historical hidden GUI acceptance verifies report-policy compatibility only; it is not a new release verification.",
+    "Real publication writes were tested only through a fake GitHub API.",
+    "Legacy remote publication workflows remain active; explicit transition, unfinished-run handling and tag-ref inspection are still required.",
+    "Local JSON records are a mistake-prevention mechanism, not an independent cryptographic attestation.",
+    "Previously observed foreground Electron shutdown hangs remain unresolved; protected reproduction evidence was preserved."
+  ],
+  "references": [
+    {
+      "path": "/Users/poyal/Downloads/페리로그-로컬-검증-후-배포-운영-가이드.md",
+      "sha256": "89a0ca253253cbe5f94604b0bff214ab0a062a912fe6ec1ebcc3fec6ec18497d",
+      "modified": false
+    },
+    {
+      "path": "/Users/poyal/Downloads/로컬-검증-후-배포-운영-가이드-전달사항.md",
+      "sha256": "6ba70ada36a0b1290ec31aae338ce254496283bf98cb0e62508763f2b785174a",
+      "modified": false
+    }
+  ],
+  "sourceFileHashes": {
+    "scripts/release-core.mjs": "11d420e332e8abf80a67607f90464c6616d7baee27fff32327087d4ed08761cc",
+    "scripts/release-gui-policy.mjs": "877f0facfbc530258b346af7578b923c9c1d168e2117d535c8587978b194f8a0",
+    "scripts/release-verify.mjs": "2174f716b66f727f2eaa5f6a6739f752ba4839b308da15d8b8d9ea53605a9843",
+    "scripts/release-publish.mjs": "e6996382047ccd25f814ca32476fb8304497199c47e7efb6ee823535560ec5f9",
+    "tests/release.test.mjs": "2882163d004e25512d7e3e5b2df3e7ec9d5c8234f27965ca86f03a5836b69845",
+    "tests/e2e/release-policy.json": "4261a9d4666dd04bdaefc7dfb32cd81d2e30d46e2f5e4d22f4595712f763c065",
+    "playwright.config.ts": "cfecb410ff5a71b79444663755676ab0a216dbc0699ffcb506f720438e22d6cc"
+  },
+  "evidence": [
+    {
+      "path": "release/checks/20261002-2c60496-mac-arm64-release-hardening/release-tests.log",
+      "sha256": "3b1cfc1457d9cb7bc8aef3802fd3f09e1e801491ff5af992ddb13254ec363a6d"
+    },
+    {
+      "path": "release/checks/20261002-2c60496-mac-arm64-release-hardening/discovery-summary.json",
+      "sha256": "9b13b7c6e4be5d10d7385fc55ed8b6f3ec6d096f7a0d72c4d31c014ee8fc301c"
+    },
+    {
+      "path": "release/checks/20261002-2c60496-mac-arm64-release-hardening/configured-hidden-discovery.json",
+      "sha256": "de6d1cb5e272a5707c73136431d53fafd8b7d05db7252b4fc5f11f964b65b34d"
+    },
+    {
+      "path": "release/checks/20261002-2c60496-mac-arm64-release-hardening/configured-desktop-discovery.json",
+      "sha256": "6eafcb94010004f14cf5b8bcaf6b1d5b98f567a0728662926c9f496b04ca623c"
+    },
+    {
+      "path": "release/checks/20261002-2c60496-mac-arm64-release-hardening/previous-hidden-report-coverage.json",
+      "sha256": "ec4ece4f119138d9ae75a4f4499b72f0373a6f23f06d75103ddd1ee4ee7879e8"
+    },
+    {
+      "path": "release/checks/20261002-2c60496-mac-arm64-release-hardening/actions-readonly.json",
+      "sha256": "d05f2f7aef9d0aef66b83bc8c6804668017728ec071ef046f87dfce790f4696b"
+    },
+    {
+      "path": "release/checks/20261002-2c60496-mac-arm64-release-hardening/static-checks.json",
+      "sha256": "56d689e25a4038f069f5bc4531daab43eb81705346c59cd13f4e26a390f6888b"
+    }
+  ],
+  "guide": {
+    "repositoryPath": "docs/local-release-guide.md",
+    "downloadPath": "/Users/poyal/Downloads/로컬-검증-후-배포-운영-가이드.md",
+    "sha256": "77abfd6adb3e845576b193b37e8cb5753a081f8dd318a74993a2f8929c2fd9b8",
+    "identicalCopies": true
+  },
+  "artifacts": {
+    "directory": "release/checks/20261002-2c60496-mac-arm64-release-hardening",
+    "newPackages": false,
+    "previewSymlinkChanged": false,
+    "installedApplicationReplaced": false,
+    "userDataChanged": false,
+    "deletedExistingArtifacts": false,
+    "cleanupCandidatesNow": [],
+    "retentionReview": "2026-10-09; follow distribution retention rules and preserve unresolved evidence"
+  },
+  "remotePushOrPublication": false
+}

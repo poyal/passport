@@ -1,4 +1,5 @@
-import { test, expect, _electron as electron } from "@playwright/test";
+import { electron, electronLaunchEnv } from "../../scripts/e2e-electron.mjs";
+import { test, expect } from "@playwright/test";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -97,7 +98,10 @@ test("shares one instance per data directory and allows isolated data directorie
       });
       return process.execPath;
     });
-    second = spawn(executable, args, { env, stdio: "ignore" });
+    second = spawn(executable, args, {
+      env: electronLaunchEnv(env),
+      stdio: "ignore",
+    });
     const [code, signal] = await once(second, "exit");
     expect({ code, signal }).toEqual({ code: 0, signal: null });
     await expect

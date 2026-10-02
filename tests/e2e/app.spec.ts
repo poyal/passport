@@ -1,7 +1,7 @@
+import { electron } from "../../scripts/e2e-electron.mjs";
 import {
   test,
   expect,
-  _electron as electron,
   type ElectronApplication,
   type Page,
 } from "@playwright/test";
@@ -170,14 +170,14 @@ test("host CRUD, live SSH, split session preservation, themes, and persistence",
     2,
   );
   expect(server.shells.length).toBe(2);
-  await page.screenshot({ path: "test-results/terminal.png" });
+  await page.screenshot({ path: test.info().outputPath("terminal.png") });
   await page.getByRole("button", { name: "설정", exact: true }).click();
   await page.getByRole("button", { name: "라이트", exact: true }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   await page.getByRole("button", { name: "다크", exact: true }).click();
   await page.getByRole("button", { name: "호스트", exact: true }).click();
   await expect(page.locator(".host-row")).toHaveCount(1);
-  await page.screenshot({ path: "test-results/hosts.png" });
+  await page.screenshot({ path: test.info().outputPath("hosts.png") });
   await page.reload();
   await expect(page.locator(".host-row")).toHaveCount(1);
   await expect(page.locator(".workspace-tab")).toHaveCount(1);
@@ -259,7 +259,7 @@ test("independent file panels, context menus, local copy and queue", async () =>
     })
     .toBe("actual local transfer");
   await expect(page.locator(".transfer-row.completed")).toHaveCount(1);
-  await page.screenshot({ path: "test-results/files.png" });
+  await page.screenshot({ path: test.info().outputPath("files.png") });
 });
 test("long file lists stay above the queue and scroll independently at both window sizes", async () => {
   const folder = path.join(directory, "scroll-files");
@@ -350,7 +350,7 @@ test("long file lists stay above the queue and scroll independently at both wind
       .getByRole("button", { name: "전송 목록 펼치기", exact: true })
       .click();
   }
-  await page.screenshot({ path: "test-results/file-scroll.png" });
+  await page.screenshot({ path: test.info().outputPath("file-scroll.png") });
 });
 test("opening the app never requests access to the operating system secret store", async () => {
   const probe = await application.evaluateHandle(({ safeStorage }) => {

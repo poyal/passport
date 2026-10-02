@@ -5,6 +5,7 @@ import {
   dialog,
   safeStorage,
   nativeTheme,
+  nativeImage,
   session,
   clipboard,
   protocol,
@@ -55,6 +56,9 @@ import {
 } from "./portable";
 import { LocalSessions, availableShells } from "./local";
 import { ActivityService } from "./activity";
+import { ActivityBanners } from "./activity-banners";
+import { prepareTerminalClipboard } from "./terminal-clipboard";
+import { readMacClipboardFiles } from "./clipboard-files";
 import { prepareLaunch, previewEnvironment } from "./startup";
 import { selectedProfiles } from "../shared/terminal-config";
 import { SessionLogs } from "./logs";
@@ -66,10 +70,33 @@ import {
   validateShortcuts,
 } from "../shared/advanced";
 import { panes } from "../shared/layout";
+import { bundledFonts } from "../shared/fonts";
+import {
+  assertTerminalCapacity,
+  localWorkspace,
+} from "../shared/local-workspace";
 import { about } from "../shared/about";
 import { UpdateChecker } from "./updates";
+import {
+  testWindowMode,
+  testWindowOptions,
+  presentWindow,
+} from "./test-window";
 
 app.setName("Passport");
+const e2eWindowMode = testWindowMode(process.env);
+if (e2eWindowMode && process.platform === "darwin")
+  app.setActivationPolicy("accessory");
+const e2eWindowAudit = {
+  mode: e2eWindowMode,
+  created: 0,
+  shown: 0,
+  focused: 0,
+};
+if (e2eWindowMode) {
+  Object.assign(globalThis, { __passportE2EWindowAudit: e2eWindowAudit });
+  app.on("browser-window-focus", () => e2eWindowAudit.focused++);
+}
 if (process.platform === "win32") app.setAppUserModelId("io.passport.desktop");
 if (process.env.PASSPORT_DATA_DIR)
   app.setPath("userData", path.resolve(process.env.PASSPORT_DATA_DIR));
@@ -100,16 +127,15 @@ let updates: UpdateChecker;
 let locals: LocalSessions, logs: SessionLogs, tunnels: Tunnels;
 let activity: ActivityService;
 const focusedPanes = new Map<number, string | null>();
-const banners = new Set<Notification>();
+const banners = new ActivityBanners<Notification>();
 function trackBanner(banner: Notification) {
-  if (banners.size >= 20) {
-    const oldest = banners.values().next().value!;
-    banners.delete(oldest);
-    oldest.close();
-  }
-  banners.add(banner);
+  banners.track(banner);
 }
 const windows = new Map<number, BrowserWindow>();
+const initialTerminals = new Map<
+  number,
+  { workspaceId: string; paneId: string }
+>();
 const owners = new Map<string, number>();
 const states = new Map<string, SessionState>();
 const endpointOwners = new Map<string, number>();
@@ -130,6 +156,17 @@ const workspaceFor = (id: string) =>
     panes(w.root).some((p) => p.id === id),
   );
 const ownerOf = (id: string) => owners.get(workspaceFor(id)?.id || "");
+function isPaneViewed(paneId: string) {
+  const owner = windows.get(ownerOf(paneId) ?? -1);
+  return (
+    !!owner &&
+    !owner.isDestroyed() &&
+    owner.isFocused() &&
+    owner.isVisible() &&
+    !owner.isMinimized() &&
+    focusedPanes.get(owner.id) === paneId
+  );
+}
 function publishDocument(document = store.read()) {
   documentCache = document;
   for (const id of owners.keys())
@@ -238,15 +275,13 @@ async function openActivity(id: string) {
   const target = windows.get(ownerOf(item.paneId) ?? -1);
   if (!workspace || !target || target.isDestroyed())
     throw new Error("터미널 창을 찾을 수 없습니다.");
-  if (target.isMinimized()) target.restore();
-  target.show();
-  target.focus();
+  presentWindow(target, e2eWindowMode);
   target.webContents.send("passport:event", {
     kind: "activate-pane",
     workspaceId: workspace.id,
     paneId: item.paneId,
   } satisfies AppEvent);
-  activity.read(id);
+  // Acknowledge after the target renderer actually selects and focuses the pane.
 }
 function desktopActivity(item: Activity) {
   const settings = store.read().settings.notifications;
@@ -265,13 +300,12 @@ function desktopActivity(item: Activity) {
     body: settings.preview ? item.body : "Passport에서 터미널을 확인하세요.",
     silent: !settings.sound,
   });
-  trackBanner(banner);
+  banners.track(banner, item.id);
   banner.on("click", () => {
     void openActivity(item.id).catch((error) =>
       emit({ kind: "notice", message: String(error) }),
     );
   });
-  banner.on("close", () => banners.delete(banner));
   banner.on("failed", () => {
     banners.delete(banner);
     emit({
@@ -298,20 +332,25 @@ const confirm: TrustPrompt = async (host, fingerprint) => {
   );
   return result.response === 1;
 };
-const bootstrap = (caller = window!): Bootstrap => ({
-  document: store.read(),
-  appVersion: app.getVersion(),
-  updateState: updates.state,
-  profiles: store.profiles(),
-  platform: process.platform,
-  home: os.homedir(),
-  fonts,
-  windowId: caller.id,
-  workspaceOwners: ownerRecord(),
-  sessionStates: [...states.values()],
-  tunnelStates: [...tunnels.states.values()],
-  shells: availableShells(),
-});
+const bootstrap = (caller = window!): Bootstrap => {
+  const initialTerminal = initialTerminals.get(caller.id);
+  initialTerminals.delete(caller.id);
+  return {
+    document: store.read(),
+    appVersion: app.getVersion(),
+    updateState: updates.state,
+    profiles: store.profiles(),
+    platform: process.platform,
+    home: os.homedir(),
+    fonts,
+    windowId: caller.id,
+    initialTerminal,
+    workspaceOwners: ownerRecord(),
+    sessionStates: [...states.values()],
+    tunnelStates: [...tunnels.states.values()],
+    shells: availableShells(),
+  };
+};
 const pathSchema = z
   .string()
   .max(4096)
@@ -321,6 +360,8 @@ const pathSchema = z
   );
 const idObject = z.object({ id: idSchema });
 const schemas: Record<Call, z.ZodType> = {
+  "terminal.create": z.undefined(),
+  "window.create": z.undefined(),
   "terminal.folder": z.undefined(),
   "terminal.preview": z.object({
     local: localShellSchema,
@@ -468,6 +509,7 @@ const schemas: Record<Call, z.ZodType> = {
     name: z.string().regex(/^\d{4}-\d{2}-\d{2}\.json$/),
   }),
   "clipboard.read": z.undefined(),
+  "clipboard.terminal": idObject,
   "clipboard.write": z.object({ text: z.string().max(4 * 1024 * 1024) }),
   "external.open": z.object({
     target: z.enum(["github", "issues", "releases", "email"]),
@@ -494,7 +536,7 @@ function preview(
   ).length;
   if (data.document.hosts.some((h) => h.startPath))
     warnings.push("가져온 시작 경로를 서버에서 확인해 주세요.");
-  const availableFonts = new Set(["JetBrains Mono", ...fonts]);
+  const availableFonts = new Set([...bundledFonts, ...fonts]);
   if (!availableFonts.has(data.document.settings.appearance.font)) {
     warnings.push(
       `설치되지 않은 글꼴 ${data.document.settings.appearance.font}을 JetBrains Mono로 대체합니다.`,
@@ -601,6 +643,10 @@ async function call<K extends Call>(
       const workspace = document.workspaces.find((w) => w.id === i.workspaceId);
       return previewEnvironment(i.local, document.settings.terminal, workspace);
     }
+    case "terminal.create":
+      return addLocalTerminal(caller);
+    case "window.create":
+      return (await createWindow(true)).id;
     case "activity.list":
       return activity.list();
     case "activity.read":
@@ -614,6 +660,7 @@ async function call<K extends Call>(
     case "activity.focus":
       if (i.paneId) assertOwned(i.paneId, caller);
       focusedPanes.set(caller.id, i.paneId);
+      if (i.paneId && isPaneViewed(i.paneId)) activity.readPane(i.paneId);
       return;
     case "activity.settings":
       if (process.platform === "darwin")
@@ -897,8 +944,41 @@ async function call<K extends Call>(
     }
     case "clipboard.read":
       return clipboard.readText();
+    case "clipboard.terminal": {
+      assertOwned(i.id, caller);
+      const local = locals.sessions.get(i.id);
+      const remote = sessions.sessions.get(i.id);
+      const check = () => {
+        assertOwned(i.id, caller);
+        if (
+          states.get(i.id)?.status !== "connected" ||
+          (local
+            ? locals.sessions.get(i.id) !== local || !local.alive
+            : !remote || sessions.sessions.get(i.id) !== remote)
+        )
+          throw new Error("붙여넣기 대상 터미널 연결이 변경되었습니다.");
+      };
+      return prepareTerminalClipboard({
+        read: () => clipboard.read(),
+        readNativeFiles:
+          process.platform === "darwin" ? readMacClipboardFiles : undefined,
+        toPNG: (bytes) => {
+          const image = nativeImage.createFromBuffer(bytes);
+          const size = image.getSize();
+          if (image.isEmpty() || size.width * size.height > 64_000_000)
+            throw new Error(
+              "이미지가 손상되었거나 6400만 픽셀을 초과했습니다.",
+            );
+          return image.toPNG();
+        },
+        userData: app.getPath("userData"),
+        platform: process.platform,
+        shell: local?.launch?.snapshot.shell,
+        check,
+      });
+    }
     case "clipboard.write":
-      clipboard.writeText(i.text);
+      await clipboard.writeText(i.text);
       return;
     case "external.open":
       await shell.openExternal(
@@ -1269,7 +1349,7 @@ async function call<K extends Call>(
       }
       for (const event of moving.events)
         target.webContents.send("passport:event", event);
-      target.focus();
+      if (!e2eWindowMode) target.focus();
       return;
     }
 
@@ -1279,8 +1359,27 @@ async function call<K extends Call>(
       return preview(store.readBackup(i.name));
   }
 }
-async function createWindow() {
+function addLocalTerminal(caller: BrowserWindow) {
+  if (moves.size) throw new Error("창 이동이 완료된 후 다시 시도해 주세요.");
+  const doc = store.read(),
+    workspaceId = randomUUID(),
+    paneId = randomUUID();
+  const workspace = localWorkspace(doc, os.homedir(), workspaceId, paneId);
+  const saved = store.save({
+    ...doc,
+    workspaces: [...doc.workspaces, workspace],
+  });
+  owners.set(workspaceId, caller.id);
+  publishDocument(saved);
+  return { workspaceId, paneId };
+}
+async function createWindow(withLocalTerminal = false) {
+  if (withLocalTerminal) {
+    assertTerminalCapacity(store.read());
+    if (moves.size) throw new Error("창 이동이 완료된 후 다시 시도해 주세요.");
+  }
   const win = new BrowserWindow({
+    ...testWindowOptions(e2eWindowMode),
     width: 1440,
     height: 900,
     minWidth: 1024,
@@ -1296,8 +1395,17 @@ async function createWindow() {
       nodeIntegration: false,
       sandbox: true,
       webSecurity: true,
+      backgroundThrottling: !e2eWindowMode,
     },
   });
+  if (e2eWindowMode) {
+    e2eWindowAudit.created++;
+    win.on("show", () => e2eWindowAudit.shown++);
+    if (e2eWindowMode === "passive")
+      win.once("ready-to-show", () => {
+        if (!win.isDestroyed()) win.showInactive();
+      });
+  }
   windows.set(win.id, win);
   if (!window) window = win;
   for (const w of store.read().workspaces)
@@ -1367,6 +1475,8 @@ async function createWindow() {
     }
   });
   win.on("closed", () => {
+    focusedPanes.delete(win.id);
+    initialTerminals.delete(win.id);
     for (const [token, pending] of encryptedImports)
       if (pending.owner === win.id) encryptedImports.delete(token);
     releaseConnections();
@@ -1381,14 +1491,40 @@ async function createWindow() {
   });
   const dev =
     !app.isPackaged && process.env.PASSPORT_DEV_URL === "http://127.0.0.1:5173";
+  let createdTerminal: { workspaceId: string; paneId: string } | undefined;
   try {
+    if (withLocalTerminal) {
+      createdTerminal = addLocalTerminal(win);
+      initialTerminals.set(win.id, createdTerminal);
+    }
     await win.loadURL(
       dev ? "http://127.0.0.1:5173" : "passport://app/index.html",
     );
   } catch (error) {
+    if (
+      !quitting &&
+      createdTerminal &&
+      owners.get(createdTerminal.workspaceId) === win.id
+    ) {
+      closeSession(createdTerminal.paneId);
+      const doc = store.read();
+      const saved = store.save({
+        ...doc,
+        workspaces: doc.workspaces.filter(
+          (workspace) => workspace.id !== createdTerminal!.workspaceId,
+        ),
+      });
+      owners.delete(createdTerminal.workspaceId);
+      publishDocument(saved);
+    }
     // Closing a window during its initial navigation rejects loadURL as well.
-    if (!quitting && !win.isDestroyed()) throw error;
+    if (!quitting && !win.isDestroyed()) {
+      win.destroy();
+      throw error;
+    }
   }
+  if (withLocalTerminal && !win.isDestroyed())
+    presentWindow(win, e2eWindowMode);
   return win;
 }
 void app
@@ -1410,8 +1546,12 @@ void app
     locals = new LocalSessions(emit);
     activity = new ActivityService(store.db, {
       workspace: (paneId) => workspaceFor(paneId)?.id,
-      changed: (items) => emit({ kind: "activity", items }),
+      changed: (items) => {
+        banners.sync(items);
+        emit({ kind: "activity", items });
+      },
       notify: desktopActivity,
+      viewed: isPaneViewed,
       ready: (id, generation, result) => locals.ready(id, generation, result),
       error: (message) => emit({ kind: "notice", message }),
     });
@@ -1572,18 +1712,18 @@ void app
     app.on("second-instance", () => {
       const target = BrowserWindow.getFocusedWindow() ?? window;
       if (target) {
-        if (target.isMinimized()) target.restore();
-        target.show();
-        target.focus();
+        presentWindow(target, e2eWindowMode);
       } else void createWindow();
     });
   })
   .catch((error) => {
     if (quitting) return;
-    dialog.showErrorBox(
-      "Passport 시작 실패",
-      error instanceof Error ? error.message : "앱을 시작할 수 없습니다.",
-    );
+    if (e2eWindowMode) console.error("Passport 시작 실패", error);
+    else
+      dialog.showErrorBox(
+        "Passport 시작 실패",
+        error instanceof Error ? error.message : "앱을 시작할 수 없습니다.",
+      );
     app.quit();
   });
 app.on("window-all-closed", () => {
@@ -1605,7 +1745,7 @@ app.on("will-quit", (event) => {
     transfers?.cancelAll();
     files?.closeAll();
     await locals?.shutdown();
-    for (const banner of banners) banner.close();
+    banners.close();
     await activity?.close();
     store?.close();
     shutdownComplete = true;

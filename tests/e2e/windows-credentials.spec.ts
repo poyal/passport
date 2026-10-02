@@ -1,9 +1,5 @@
-import {
-  test,
-  expect,
-  _electron as electron,
-  type ElectronApplication,
-} from "@playwright/test";
+import { electron } from "../../scripts/e2e-electron.mjs";
+import { test, expect, type ElectronApplication } from "@playwright/test";
 import Database from "better-sqlite3";
 import fs from "node:fs/promises";
 import os from "node:os";

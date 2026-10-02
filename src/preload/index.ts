@@ -7,6 +7,8 @@ import type {
   Result,
 } from "../shared/model";
 const names: Call[] = [
+  "terminal.create",
+  "window.create",
   "terminal.folder",
   "terminal.preview",
   "activity.list",
@@ -61,6 +63,7 @@ const names: Call[] = [
   "backup.list",
   "backup.preview",
   "clipboard.read",
+  "clipboard.terminal",
   "clipboard.write",
   "external.open",
 ];

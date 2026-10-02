@@ -52,7 +52,7 @@ CSC_NAME='Developer ID Application: Your Name (ABCDEFGHIJ)' npm run dist:mac:sig
 
 `CSC_NAME`에는 위 명령에 표시된 인증서의 전체 이름을 넣는다. [서명 빌드 설정](../electron-builder.mac-signed.cjs)은 기존 패키지 리소스와 번들 ID를 유지하고 `forceCodeSigning: true`로 인증서가 없거나 사용할 수 없으면 빌드를 실패시킨다. 임시 서명으로 자동 전환하지 않는다. CI에서 키체인을 새로 준비해야 하면 electron-builder의 `CSC_LINK`·`CSC_KEY_PASSWORD`를 비밀 환경 변수로 공급할 수 있다. 이 경우에도 같은 `CSC_NAME`을 사용한다.
 
-Developer ID 서명과 Apple 공증은 별도다. 이 명령만으로 공증 완료를 보장하지 않는다. 공증에 필요한 인증 정보는 electron-builder가 지원하는 `APPLE_KEYCHAIN_PROFILE` 등으로 따로 준비한다. 인증서 발급 전에는 기존 `dist:mac`·`pack` 및 CI 명령이 여전히 ad-hoc 설치본을 만든다. 공개 릴리즈를 정식 서명으로 전환할 때에는 릴리즈 워크플로의 패키징 단계에도 `--config electron-builder.mac-signed.cjs`와 인증서 환경 변수를 적용해야 한다.
+Developer ID 서명과 Apple 공증은 별도다. 이 명령만으로 공증 완료를 보장하지 않는다. 공증에 필요한 인증 정보는 electron-builder가 지원하는 `APPLE_KEYCHAIN_PROFILE` 등으로 따로 준비한다. 인증서 발급 전에는 기존 `dist:mac`·`pack` 및 CI 명령이 여전히 ad-hoc 설치본을 만든다. 공개 릴리즈를 정식 서명으로 전환할 때에는 로컬 검증 스크립트의 패키징 단계에도 `--config electron-builder.mac-signed.cjs`와 인증서 환경 변수를 적용해야 한다.
 
 처음 ad-hoc 설치본에서 Developer ID 설치본으로 전환할 때에는 권한 확인이 다시 필요할 수 있다. 이후 두 버전을 번갈아 `/Applications/Passport.app`에 덮어쓰지 않는다. 권한 취소나 새 접근 대상에 대한 확인까지 없애는 것은 아니다. 검증은 같은 설치본의 터미널 재연결·앱 재실행, 이후 동일한 개발자 서명을 사용한 두 빌드 사이의 업데이트를 각각 구분해 수행한다. 인증서가 없는 환경에서는 업데이트 간 권한 유지 검증을 완료한 것으로 기록하지 않는다.
 
@@ -99,19 +99,42 @@ node scripts/updates-smoke.mjs release/mac-arm64/Passport.app/Contents/MacOS/Pas
 
 Windows에서는 실제 `Passport.exe` 경로를 전달한다. 세 번째 인수로 화면 저장 폴더를 지정할 수 있으며 새 수동 검증은 `release/checks/<실행 ID>/updates`를 사용한다. 생략하면 기존 명령과의 호환을 위해 `release/recheck-updates-v<버전>`에 저장한다.
 
-## 수동 CI
+## 로컬 검증과 게시
 
-[Desktop verification](../.github/workflows/desktop.yml)은 `workflow_dispatch`로만 실행한다. Windows x64, Windows ARM64, Mac ARM64 작업에서 검사·GUI·패키징·패키지 실행 확인을 수행하고 설치 파일을 Actions artifact로 보관한다. Windows는 현재 사용자 설치 범위·보호 파일이 있는 드라이브 루트 목록·패키지 GUI·실제 DPAPI·네이티브 PTY 종료까지 추가로 확인한다. `--publish never`를 사용하므로 공개 Release를 게시하지 않는다.
+기본 배포는 각 대상 OS의 로컬 검증 결과를 사용한다. [공통 운영 안내](local-release-guide.md)에 다른 프로젝트에도 적용할 계약, 환경 준비, 재시도와 검증 한계를 정리했다.
 
-Docker 매트릭스와 장시간 부하, 별도 Python 환경을 요구하는 FTP/FTPS 검사는 기본 CI만으로 모두 수행되지 않는다. [개발 안내](development.md)의 명령으로 따로 실행하고 건너뛴 시험을 기록한다. 실제 CI 실행 여부는 검증 기록에 남긴다.
+```sh
+npm run release:check
+npm run release:verify -- --preview
+```
 
-## GitHub Release 게시
+`release:check`는 빠른 타입·단위·배포 스크립트 검사다. `--preview`는 커밋하지 않은 코드의 숨김 모드 리허설이며 OS 포커스 검사를 제외한 게시 불가 기록을 만든다. `--preview --desktop`은 별도 데스크톱에서 OS 포커스 검사까지 포함한다. 정식 후보는 버전·릴리즈 노트를 포함한 변경을 모두 커밋한 뒤 `npm run release:verify -- --desktop`으로 검사한다. `--desktop` 없는 정식 검증은 창을 띄우기 전에 거부한다.
 
-[Publish Mac release](../.github/workflows/release.yml)은 `v*.*.*` 태그 push에서 실행한다. 태그와 `package.json`의 버전이 같아야 하고 `docs/releases/v<버전>.md`가 있어야 한다. ARM64 Mac runner에서 기본 검사·GUI·DMG·패키지 실행과 구형 SSH/파일 색상을 확인하고 모든 단계가 통과하면 해당 버전의 GitHub Release에 DMG와 `SHA256SUMS.txt`를 게시한다. Windows 게시를 자동으로 시작하지 않는다. 게시 권한은 해당 작업의 저장소 contents로 한정한다. [GitHub ARM64 runner 공식 안내](https://docs.github.com/en/actions/reference/runners/github-hosted-runners).
+검증은 잠금 파일 기반 의존성 설치, FTP/FTPS fixture 준비, Rust helper·앱 빌드, 단위·배포 스크립트·소스 GUI, 설치본 생성과 실제 설치본 페이로드의 smoke·전체 GUI·정상 종료까지 수행한다. Mac은 읽기 전용으로 마운트한 DMG 안의 앱을 실행하고, Windows는 NSIS 설치 범위와 EXE에서 추출한 앱을 검사한다. 기존 사용자 설치본을 교체하지 않는다. 실제 설치·제거·업그레이드와 물리 IME·OS 알림·AI 서비스는 별도 확인한다.
 
-[Publish Windows release](../.github/workflows/release-windows.yml)은 수동 `workflow_dispatch`로만 실행한다. 일반 브랜치 푸시나 Mac 게시로 설치본을 재배포하지 않는다. Windows x64 runner에서 Python FTP/FTPS fixture, Rust helper와 내장 Bash를 준비하고 `npm ci`·기본 검사·EXE 빌드·현재 사용자 설치 범위·실제 패키지 GUI를 검증한다. 통과하면 [게시 스크립트](../scripts/publish-windows-release.mjs)가 `package.json`과 같은 버전의 기존 정식 릴리즈에 EXE를 추가한다. 기존 Mac DMG와 체크섬을 검증·보존하고 합본 체크섬·Windows 소스 커밋을 게시한 뒤 공개 EXE를 다시 다운로드해 해시를 확인한다. 다른 바이트의 같은 이름 EXE가 이미 있거나 릴리즈가 불변 상태면 게시를 중단한다.
+설치 파일은 `release/builds/<실행 ID>/`, 검증 기록·로그는 `release/checks/<실행 ID>/`에 남는다. 기록에는 소스 커밋·지문, 플랫폼·도구 버전, 단계별 결과, 설치본과 증거 파일의 SHA-256이 들어간다. 실패·preview·변경된 소스·변경된 파일은 게시할 수 없다.
 
-공개 배포 검증과 설치 파일 해시는 [검증 기록](verification.md)과 버전별 `docs/benchmarks/github-release-*.json`에 보관한다. 로컬 파일과 runner에서 만든 파일은 별도 빌드이므로 각각의 해시를 사용한다. Mac 배포 소스는 해당 버전 태그이며 Windows 수동 추가 게시 소스는 해당 `main` 빌드 커밋이다. Windows 게시 때문에 기존 릴리즈 태그를 옮기지 않고 게시 후 문서를 `main`에 반영한다.
+GUI는 [명시적 검사 정책](../tests/e2e/release-policy.json)과 실행 전 목록·실행 후 개별 결과를 대조한다. 필수 검사 생략·누락·재시도는 실패이며 Windows 필수 셸의 미탐지도 허용하지 않는다. 플랫폼 외 검사와 요청하지 않은 Docker·장시간 부하만 사유를 기록해 생략한다. 게시 단계에서도 소스와 패키지의 원본 보고서를 재검사하며 형식 3 기록을 요구한다. 잠금은 동일 작업 폴더에만 적용되므로 다른 clone/worktree·컴퓨터의 게시 담당자는 별도로 하나로 정한다.
+
+동일한 커밋과 `v<버전>` 태그를 원격에 올린 다음 게시 계획을 확인한다. 게시 명령은 소스나 태그를 push하지 않는다.
+
+```sh
+npm run release:publish -- --manifest release/checks/<실행 ID>/verification.json
+# 실제 공개 게시가 필요할 때만 실행
+npm run release:publish -- --manifest release/checks/<실행 ID>/verification.json --execute
+```
+
+기본 명령은 조회만 수행한다. `--execute`는 `gh auth login`의 인증 또는 `GH_TOKEN`을 사용해 검증한 파일 그대로 게시한다. 새 릴리즈는 초안으로 만든 뒤 업로드·다운로드 해시를 확인하고 공개한다. 기존 릴리즈의 다른 플랫폼 파일은 보존하고 `SHA256SUMS.txt`를 합친다. 동일 이름의 다른 파일이나 다른 커밋의 태그는 거절한다. 업로드 실패 시 같은 명령을 재실행하며 빌드하지 않는다. 공유 체크섬 갱신을 위해 동일 버전의 게시를 여러 컴퓨터에서 동시에 실행하지 않는다.
+
+여러 플랫폼의 새 설치본은 같은 커밋에서 검증한다. 각 OS에서 순서대로 게시하거나 빌드·검증 폴더를 상대 경로 그대로 모아 `--manifest`를 여러 번 지정한다. 불변 릴리즈는 공개 후 자산 추가가 불가능하므로 모든 플랫폼을 한 번에 게시한다. 기존 1.1.0의 별도 Windows 소스·태그 기록은 변경하지 않는다.
+
+## 선택적 원격 진단
+
+[Desktop verification](../.github/workflows/desktop.yml)의 로컬 변경은 수동으로 같은 `npm run release:verify -- --desktop`을 Windows x64·ARM64와 Mac ARM64의 전용 runner에서 실행한다. 읽기 권한만 가지며 검사 자료를 Actions artifact로 보관하고 공개 게시하지 않는다. 태그 push의 Mac 게시와 별도 Windows 원격 게시 YAML은 로컬에서 제거했으나, 2026-10-02 원격 조회에서는 두 게시 워크플로가 여전히 활성 상태였다.
+
+원격 전환 시 기존 게시 워크플로를 명시적으로 비활성화하고 실행·대기 작업의 처리 결과를 확인한다. 기본 브랜치의 YAML 삭제만으로 과거 태그/ref의 실행까지 막았다고 판단하지 않는다. 전환 변경을 원격에 반영하고 새 태그 대상 커밋의 실제 YAML도 검토한 뒤 태그를 push한다. 상태 확인·전환 명령과 운영 범위는 [로컬 배포 안내](local-release-guide.md#actions-운영)를 따른다.
+
+Docker·장시간 부하·물리 기기 검사는 기본 파이프라인과 구분해 수행한다. 실제 실행 여부와 생략 항목은 [검증 기록](verification.md)에 남긴다.
 
 ## 배포 갱신 순서
 

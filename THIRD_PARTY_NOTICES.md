@@ -41,3 +41,5 @@ Windows Passport Bash는 [Git for Windows Portable 2.56.0.windows.1](https://git
 Passport 변경: `etc/profile.d/bash_profile.sh`의 사용자 `.bash_profile` 자동 생성 동작을 비활성화했다. 같은 위치의 `.passport-original` 파일에 원본을 보존하고 런타임 manifest에 변경을 기록한다. 사용자 홈 파일에는 패치하지 않는다.
 
 Rust helper는 잠금 파일 `native/helper/Cargo.lock`을 사용한다. 빌드 시 각 의존성의 이름·버전·라이선스 및 제공된 라이선스 원문을 `terminal/helper/<platform>-<arch>/licenses/`에 포함한다.
+
+터미널 내장 글꼴: Cascadia Mono / Cascadia Code (Microsoft), Fira Code (Nikita Prokopov), Source Code Pro (Adobe), IBM Plex Mono (IBM)는 각 @fontsource 패키지의 SIL Open Font License 1.1과 저작권 고지를 `dist/licenses/`에 포함합니다. D2Coding 1.3.3 (NAVER Corporation)은 공식 배포의 원본 TTF 일반/굵게 파일을 변경 없이 사용하며 `licenses/fonts/D2Coding-OFL.txt`를 함께 배포합니다. 폰트 출처와 해시는 `src/renderer/fonts/sources.json`에 기록합니다. OS에 설치된 Menlo·Monaco·Consolas 등의 파일은 앱에 복사하지 않습니다.

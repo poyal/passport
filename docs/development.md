@@ -81,7 +81,18 @@ npm run check
 npm run test:e2e
 ```
 
-`check`는 타입과 단위·통합 검사를, `test:e2e`는 빌드 후 Electron GUI 검사를 실행한다. 네이티브 모듈이 포함된 시험은 `scripts/test.mjs`가 실행 환경을 맞추므로 직접 일반 Node.js에서 Vitest를 실행하지 않는다. GUI 시험에는 데스크톱 세션이 필요하다. 시험은 localhost 서버 사용 가능 여부를 먼저 확인한다. 로컬 네트워크나 macOS 앱 등록을 제한하는 실행 샌드박스에서는 실행 권한을 허용한 뒤 검사해야 한다.
+`check`는 타입과 단위·통합 검사를, `test:e2e`는 빌드 후 창을 숨긴 Electron GUI 검사를 실행한다. 기본 모드는 네이티브 창 표시·포커스를 차단하며 DOM 입력·스크린샷·실제 PTY는 검사한다. 실제 OS 포커스와 클립보드를 쓰는 `@desktop` 검사는 기본 실행에서 제외한다.
+
+```sh
+npm run test:e2e                           # 숨김, 포커스 없음
+npm run test:e2e:show                      # 창만 표시, 포커스 없음
+npm run test:e2e:desktop                   # OS 포커스·클립보드 검사만, 다른 작업과 분리
+npm run test:e2e -- tests/e2e/shutdown.spec.ts
+```
+
+결과는 `release/checks/<실행 ID>/`의 로그·JSON·스크린샷에 남는다. 이미 빌드했다면 `node scripts/e2e.mjs <파일>`로 재빌드 없이 필요한 검사만 실행한다. `npx playwright test`도 기본 숨김 모드를 사용한다. 예전 빌드나 설치본이 숨김 모드를 지원하지 않으면 창을 열기 전에 거부하므로 먼저 새 소스로 빌드한다. 정상 사용 앱의 창 동작은 그대로이며 테스트는 별도 데이터 폴더를 사용한다.
+
+네이티브 모듈이 포함된 시험은 `scripts/test.mjs`가 실행 환경을 맞추므로 직접 일반 Node.js에서 Vitest를 실행하지 않는다. 숨김 모드도 Electron 실행을 위한 데스크톱 세션은 필요하다. 시험은 localhost 서버 사용 가능 여부를 먼저 확인한다. 로컬 네트워크나 macOS 앱 등록을 제한하는 실행 샌드박스에서는 실행 권한을 허용한 뒤 검사해야 한다.
 
 종료 회귀 시험만 반복하려면:
 
@@ -90,6 +101,16 @@ npx playwright test tests/e2e/shutdown.spec.ts --repeat-each=3
 ```
 
 GUI 종료 검사는 Electron 종료 코드 0과 시그널 없음을 확인해야 하며 창이 닫힌 것만으로 성공으로 보지 않는다.
+
+알림·새 창·폰트 회귀는 `tests/terminal-experience.test.ts`와 `tests/e2e/terminal-experience.spec.ts`에 있다. 숨김 시험은 실제 IPC·DB·PTY 경로와 창 표시/포커스 0회를 검사한다. 읽음 통합 시나리오에서는 네이티브 창 상태 조회만 대체하므로 실제 OS 포커스·알림 센터 검증을 대신하지 않는다. 실제 전경 읽음 시나리오는 `@desktop`으로 분리한다. 필수 GUI 목록은 숨김 62개·데스크톱 4개이며 목록 변경 시 `tests/e2e/release-policy.json`도 검토해 갱신한다.
+
+파일·이미지 붙여넣기는 `clipboard.terminal({ id })` IPC에서 처리한다. 메인 프로세스가 소유권·연결 세대를 검사하고 Electron 44의 `clipboard.read()` 결과를 파일·이미지·텍스트로 구분한다. macOS 파일 URL/파일 목록 plist, Windows Unicode CF_HDROP/탐색기 파일 목록과 표준 파일 URL 목록을 처리한다. Windows FileNameW만 노출되면 고정 PowerShell 코드로 전체 목록을 읽고 첫 경로가 원래 스냅샷과 같은지 확인한다. 이 보조 프로세스는 창을 숨기고 3초 제한을 적용한다. 이미지 파일은 사용자 데이터에 보관하며 renderer에는 경로만 전달한다.
+
+`tests/paste.test.ts`는 파일 형식·셸 인용·저장 실패·비동기 순서/취소를 검사한다. `tests/e2e/paste.spec.ts`는 Electron 클립보드 읽기와 최종 입력 수신만 대체하고 실제 앱 키 처리·IPC·이미지 저장을 확인한다. 사용자 OS 클립보드는 수정하지 않는다. `windows-shells.spec.ts`는 각 실제 Windows 셸에서 붙인 경로로 파일을 읽는 검증도 포함한다. Finder/탐색기에서 직접 복사한 데이터와 실제 Claude/Codex의 이미지 해석은 별도 수동 확인 대상이며 [Windows 인계 문서](windows-paste-release.md)에 절차가 있다.
+
+Mac은 Electron이 Finder 파일 이름만 노출하는 경우를 처리하기 위해 AppKit의 `NSPasteboard` 파일 URL 읽기를 추가로 사용한다. 고정된 JXA 코드를 비동기 `osascript`로 실행하며 셸에 파일 경로를 삽입해 실행하지 않는다. 3초 제한과 clipboard generation 검사를 적용한다. Mac 회귀 검사는 고유 이름의 별도 pasteboard에 실제 NSURL 목록을 쓰고 읽으며 일반 사용자 클립보드는 변경하지 않는다. 숨김 E2E도 이 별도 pasteboard로 네이티브 읽기만 연결하고 Electron에는 이름 텍스트만 주입해 원래 실패를 재현한다. macOS가 반환한 분해형 한글 경로는 유지하고 실제 파일 접근 가능 여부를 검사한다.
+
+공개 폰트는 고정 버전의 Fontsource 의존성과 원본 D2Coding TTF를 포함한다. D2Coding 출처·파일 해시는 `src/renderer/fonts/sources.json`, 라이선스는 `licenses/fonts/`에 둔다. `scripts/notices.mjs`가 폰트 라이선스도 최종 앱에 복사한다. OS 소유 폰트는 설치된 것을 조회하며 파일을 배포하지 않는다.
 
 ## FTP·FTPS 통합 시험
 
@@ -165,3 +186,7 @@ npx playwright test tests/e2e/stress.spec.ts tests/e2e/throughput.spec.ts --outp
 `npm run build`는 Rust helper를 현재 대상에 맞게 빌드하고 라이선스를 모은다. `PASSPORT_CARGO`로 cargo 실행 파일을 지정할 수 있다. 대상은 darwin-arm64, win32-x64, win32-arm64이며 Windows 설치본은 같은 대상의 Windows 빌드 환경을 사용한다. `npm run prepare:runtime -- x64` 또는 `-- arm64`는 고정된 공식 Portable Git을 내려받고 SHA-256을 확인해 시작 파일 패치를 적용한다. 생성된 바이너리·런타임은 Git에 넣지 않는다. `npm run dist:win`과 `dist:win:arm64`는 준비 단계를 포함한다.
 
 프로파일과 알림 구조·수동 검증 한계는 [로컬 AI 작업 안내](local-ai-workspaces.md)를 따른다.
+
+## 로컬 배포 검증
+
+개발 중 빠른 검사는 `npm run release:check`, 숨김 모드 배포 리허설은 `npm run release:verify -- --preview`를 사용한다. OS 포커스 검사까지 포함하려면 작업을 방해하지 않는 데스크톱에서 `--desktop`을 추가한다. 정식 후보는 모든 변경을 커밋한 뒤 `npm run release:verify -- --desktop`으로 검사한다. OS 포커스 검사를 생략한 결과는 게시할 수 없다. 게시 단계는 검사한 설치 파일과 기록만 사용하며 재빌드하지 않는다. [운영 안내](local-release-guide.md)와 [배포 명령](distribution.md#로컬-검증과-게시)을 따른다.

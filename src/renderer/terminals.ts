@@ -8,6 +8,9 @@ import { SearchAddon } from "@xterm/addon-search";
 import type { Appearance } from "../shared/model";
 import { getTheme } from "../shared/themes";
 import { api } from "./api";
+import { availableFont, terminalFontFamily } from "../shared/fonts";
+import { loadTerminalFont } from "./fonts";
+import { PasteQueue } from "../shared/paste";
 type Entry = {
   term: Terminal;
   fit: FitAddon;
@@ -15,6 +18,7 @@ type Entry = {
   element: HTMLDivElement;
   resize?: ResizeObserver;
   connected: boolean;
+  connectionRevision: number;
   serialize: SerializeAddon;
   appearance?: Appearance;
   appearanceKey?: string;
@@ -27,6 +31,11 @@ type Entry = {
 };
 export const terminals = new Map<string, Entry>();
 let settings: PassportDocument["settings"] | undefined;
+let installedFonts: string[] = [];
+const warnedFonts = new Set<string>();
+export function setTerminalFonts(fonts: string[]) {
+  installedFonts = fonts;
+}
 let broadcast: string[] = [];
 export function setBroadcast(ids: string[]) {
   broadcast = ids;
@@ -78,6 +87,7 @@ export function ensureTerminal(id: string) {
     serialize,
     element,
     connected: false,
+    connectionRevision: 0,
     backspace: "DEL",
     composing: false,
   };
@@ -132,6 +142,24 @@ export function ensureTerminal(id: string) {
   term.onResize(({ cols, rows }) => {
     void api.call("session.resize", { id, cols, rows }).catch(errorHandler);
   });
+  const pasteQueue = new PasteQueue();
+  const readPaste = () => {
+    if (!entry.connected || entry.hydrating) return;
+    const revision = entry.connectionRevision;
+    void pasteQueue.enqueue(
+      () => api.call("clipboard.terminal", { id }),
+      () =>
+        terminals.get(id) === entry &&
+        entry.connected &&
+        !entry.hydrating &&
+        entry.connectionRevision === revision,
+      (value) => {
+        if (value.kind !== "empty") pasteHandler(value.text, [id]);
+      },
+      errorHandler,
+    );
+  };
+  let suppressNativePaste = false;
   term.attachCustomKeyEventHandler((event) => {
     const mac = navigator.platform.includes("Mac");
     const copy = shortcutMatch(
@@ -154,18 +182,53 @@ export function ensureTerminal(id: string) {
       }
       return false;
     }
-    if (paste) {
+    const windowsPaste =
+      !mac &&
+      event.ctrlKey &&
+      !event.altKey &&
+      !event.metaKey &&
+      !event.shiftKey &&
+      event.code === "KeyV";
+    if (paste || windowsPaste) {
       event.preventDefault();
       event.stopPropagation();
-      if (event.type === "keydown")
+      if (event.type === "keydown" && !event.repeat) {
+        suppressNativePaste = true;
+        setTimeout(() => {
+          suppressNativePaste = false;
+        }, 0);
+        readPaste();
+      }
+      return false;
+    }
+    // CLI image shortcuts go only to this pane, including during broadcast.
+    if (
+      (mac &&
+        event.ctrlKey &&
+        !event.metaKey &&
+        !event.altKey &&
+        !event.shiftKey &&
+        event.code === "KeyV") ||
+      (!mac &&
+        event.altKey &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.shiftKey &&
+        event.code === "KeyV")
+    ) {
+      event.preventDefault();
+      event.stopPropagation();
+      if (
+        event.type === "keydown" &&
+        !event.repeat &&
+        entry.connected &&
+        !entry.hydrating
+      )
         void api
-          .call("clipboard.read", undefined)
-          .then((text) => pasteHandler(text, [id]))
+          .call("session.input", { id, data: mac ? "\x16" : "\x1bv" })
           .catch(errorHandler);
       return false;
     }
-    // Route browser paste through the same clipboard handling on Windows.
-    if (event.ctrlKey && event.code === "KeyV") return false;
     return true;
   });
   element.addEventListener(
@@ -173,8 +236,7 @@ export function ensureTerminal(id: string) {
     (event) => {
       event.preventDefault();
       event.stopImmediatePropagation();
-      const text = event.clipboardData?.getData("text/plain");
-      if (text !== undefined) pasteHandler(text, [id]);
+      if (!suppressNativePaste) readPaste();
     },
     true,
   );
@@ -222,7 +284,8 @@ export function applyAppearance(id: string, a: Appearance) {
   const e = terminals.get(id);
   if (!e) return;
   const theme = getTheme(a.theme, settings?.customThemes).theme;
-  const appearanceKey = JSON.stringify([a, theme]);
+  const family = availableFont(a.font, installedFonts);
+  const appearanceKey = JSON.stringify([a, theme, family]);
   e.appearance = a;
   if (e.appearanceKey === appearanceKey) return;
   e.appearanceKey = appearanceKey;
@@ -233,9 +296,31 @@ export function applyAppearance(id: string, a: Appearance) {
   e.term.options.cursorStyle = a.cursorStyle;
   e.term.options.cursorBlink = a.cursorBlink;
   e.highlights?.refresh();
-  e.term.options.fontFamily = `"${a.font.replace(/["\\]/g, "")}", "JetBrains Mono", monospace`;
-  e.term.options.fontSize = a.fontSize;
-  if (e.element.clientWidth > 50 && e.element.clientHeight > 50) e.fit.fit();
+  if (
+    family.toLowerCase() !== a.font.toLowerCase() &&
+    !warnedFonts.has(a.font)
+  ) {
+    warnedFonts.add(a.font);
+    errorHandler(`설치되지 않은 글꼴 ${a.font} 대신 ${family}를 사용합니다.`);
+  }
+  const applyFont = (loadedFamily: string) => {
+    if (terminals.get(id) !== e || e.appearanceKey !== appearanceKey) return;
+    e.term.options.fontFamily = terminalFontFamily(loadedFamily);
+    e.term.options.fontSize = a.fontSize;
+    if (e.element.clientWidth > 50 && e.element.clientHeight > 50) e.fit.fit();
+    e.term.refresh(0, e.term.rows - 1);
+  };
+  void loadTerminalFont(family, a.fontWeight === "bold")
+    .then(() => applyFont(family))
+    .catch(() => {
+      applyFont("JetBrains Mono");
+      if (!warnedFonts.has(family)) {
+        warnedFonts.add(family);
+        errorHandler(
+          new Error(`${family} 글꼴을 불러오지 못해 기본 글꼴을 사용합니다.`),
+        );
+      }
+    });
 }
 export function disposeMissing(ids: Set<string>) {
   for (const [id, e] of terminals) {

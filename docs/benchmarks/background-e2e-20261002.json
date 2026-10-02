@@ -1,0 +1,192 @@
+{
+  "recordedAt": "2026-10-02T05:33:28.652470+00:00",
+  "purpose": "E2E background execution without native focus interruption",
+  "sourceCommit": "2c6049681d9be1a93a62c121a5535e4a0737965d",
+  "dirty": true,
+  "platform": "mac-arm64",
+  "source": "local",
+  "status": "passed within tested scope",
+  "behavior": {
+    "default": "hidden windows; native focus disabled",
+    "showOption": "visible windows via showInactive with focusable false",
+    "desktopOption": "explicit @desktop suite only; native focus and clipboard use permitted",
+    "oldBuilds": "refused before launch if background support is absent",
+    "normalApplication": "unchanged native presentation when test environment is absent",
+    "fullRelease": "schema version 2 requires source-desktop and packaged-desktop checks; formal verify requires explicit --desktop; background preview cannot be published"
+  },
+  "validation": {
+    "build": "passed",
+    "typescript": "passed",
+    "windowPolicyUnitTests": 2,
+    "releaseAndInterruptionTests": 36,
+    "nativeDesktopSelection": 3,
+    "nativeDesktopExecuted": false,
+    "oldInstalledAppGuard": "/Applications/Passport.app was refused without launch",
+    "formalReleaseWithoutDesktopFlag": "exit 1 before starting apps",
+    "syntaxAndFormatting": "passed",
+    "guiRuns": [
+      {
+        "directory": "release/checks/20261002T052242Z-2c60496-dirty-darwin-arm64-e2e-hidden",
+        "stats": {
+          "startTime": "2026-10-02T05:22:42.593Z",
+          "duration": 3521.4959999999996,
+          "expected": 1,
+          "skipped": 0,
+          "unexpected": 0,
+          "flaky": 0
+        },
+        "nativeWindowStates": [
+          {
+            "audit": {
+              "mode": "hidden",
+              "created": 2,
+              "shown": 0,
+              "focused": 0
+            },
+            "windows": [
+              {
+                "visible": false,
+                "focused": false,
+                "focusable": false
+              },
+              {
+                "visible": false,
+                "focused": false,
+                "focusable": false
+              }
+            ]
+          }
+        ],
+        "reportSha256": "aa3201619bd924c26e52d72be7fa1ce40fba981424a9509048f65f232f8a06cc"
+      },
+      {
+        "directory": "release/checks/20261002T052358Z-2c60496-dirty-darwin-arm64-e2e-hidden",
+        "stats": {
+          "startTime": "2026-10-02T05:23:58.758Z",
+          "duration": 81431.2,
+          "expected": 47,
+          "skipped": 9,
+          "unexpected": 0,
+          "flaky": 0
+        },
+        "nativeWindowStates": [
+          {
+            "audit": {
+              "mode": "hidden",
+              "created": 2,
+              "shown": 0,
+              "focused": 0
+            },
+            "windows": [
+              {
+                "visible": false,
+                "focused": false,
+                "focusable": false
+              },
+              {
+                "visible": false,
+                "focused": false,
+                "focusable": false
+              }
+            ]
+          }
+        ],
+        "reportSha256": "4af198531c1f0bce8eafa44380ca7c3659e0b649ffb1b5cd96ac411046594ce1"
+      },
+      {
+        "directory": "release/checks/20261002T052700Z-2c60496-dirty-darwin-arm64-e2e-passive",
+        "stats": {
+          "startTime": "2026-10-02T05:27:01.233Z",
+          "duration": 3510.914,
+          "expected": 1,
+          "skipped": 0,
+          "unexpected": 0,
+          "flaky": 0
+        },
+        "nativeWindowStates": [
+          {
+            "audit": {
+              "mode": "passive",
+              "created": 2,
+              "shown": 2,
+              "focused": 0
+            },
+            "windows": [
+              {
+                "visible": true,
+                "focused": false,
+                "focusable": false
+              },
+              {
+                "visible": true,
+                "focused": false,
+                "focusable": false
+              }
+            ]
+          }
+        ],
+        "reportSha256": "df7388965bceb365af36c97fcbd828d7f812b1c3819faff21e85bb95f4e2d07c"
+      }
+    ]
+  },
+  "limitations": [
+    "Windows hidden/passive execution was not tested on hardware.",
+    "A new final installer was not built or tested in this task.",
+    "Native desktop suite was listed but not run to avoid interrupting user work.",
+    "Earlier foreground Electron shutdown hangs remain unexplained; hidden suite success is not proof of their root-cause resolution.",
+    "Playwright renderer focus emulation is separate from actual OS focus."
+  ],
+  "processesAfterValidation": {
+    "testElectronRemaining": 0,
+    "userPassportPidPreserved": 4136,
+    "userDataChanged": false,
+    "installedApplicationReplaced": false
+  },
+  "sourceFileHashes": {
+    "src/main/index.ts": "d81e801b96691f363e5dfba844b420c2f8e65fa6abf223411b7afe6018157658",
+    "src/main/test-window.ts": "49cbdf94bfce0ad6ce9404371a5e424bce00ef2c86e7cf843849726f7bcd9eb6",
+    "scripts/e2e.mjs": "9d54ec990e1c9537fcf1efe75da345f2ef73a78329cb43cd6c802dd933cad8c7",
+    "scripts/e2e-mode.mjs": "a529dcd41bb5bacf2b0ffd74cf080df523a776fa47380a742da212c8af6804e4",
+    "scripts/e2e-electron.mjs": "36d5a6fb00ce4b61ebd055128c3d59cb5b54ec48ed0e59254eb1084f1d843ade",
+    "scripts/packaged-smoke.mjs": "6a79a94e095be9cc1aeeaba57feaca738e9a59cdb4a8848ba9377d51a6750dfc",
+    "scripts/release-core.mjs": "816c8378d34d613f7f73cd5bf7dba8cb5d1fa59bbc71818e351b27375679a923",
+    "scripts/release-verify.mjs": "70c7108599de9fd65d535ae8eb185a4dc23a9b55e00071bfc2058d5f400379d1",
+    "scripts/release-publish.mjs": "e6996382047ccd25f814ca32476fb8304497199c47e7efb6ee823535560ec5f9",
+    "tests/fixtures/electron-exit.ts": "ce985b20c95c51901d0408b1b4d7850fc31ca5c8c8aef8b27fc0316c4b12d73a",
+    "tests/e2e/background.spec.ts": "0b7fa65d062912d8d4936c2b94d2e1afd8be4e7ff566acc125b084fc924a4b06",
+    "playwright.config.ts": "cfecb410ff5a71b79444663755676ab0a216dbc0699ffcb506f720438e22d6cc"
+  },
+  "evidence": [
+    {
+      "path": "release/checks/20261002-2c60496-mac-arm64-background-e2e/build.log",
+      "sha256": "d0850c1c6f07ab66a3243b7f759323f659336d16626976249e0029e3108dc22d"
+    },
+    {
+      "path": "release/checks/20261002-2c60496-mac-arm64-background-e2e/unit-window.log",
+      "sha256": "533c1c4a4fdb90aabdfe64f15dfc09f290529b78f103ef0a48512a6071805d5b"
+    },
+    {
+      "path": "release/checks/20261002-2c60496-mac-arm64-background-e2e/release-tests-final.log",
+      "sha256": "04768b6539253afa7532ef4d65d61fd24dd68ad98663177d863d9bd72d1ee702"
+    }
+  ],
+  "artifacts": {
+    "directory": "release/checks/20261002-2c60496-mac-arm64-background-e2e",
+    "guiDirectories": [
+      "20261002T052242Z-2c60496-dirty-darwin-arm64-e2e-hidden",
+      "20261002T052358Z-2c60496-dirty-darwin-arm64-e2e-hidden",
+      "20261002T052700Z-2c60496-dirty-darwin-arm64-e2e-passive"
+    ],
+    "newPackages": false,
+    "previewSymlinkChanged": false,
+    "retention": "Successful evidence is eligible after 7 days (2026-10-09); existing unresolved reproduction evidence remains protected. No current new cleanup candidates.",
+    "deletedExistingArtifacts": false
+  },
+  "guide": {
+    "repositoryPath": "docs/local-release-guide.md",
+    "downloadPath": "/Users/poyal/Downloads/로컬-검증-후-배포-운영-가이드.md",
+    "sha256": "bf158fe9a2a0de95cd1da3c2ac270c23051eab20cefde453beafad4b8c3adc31",
+    "identicalCopies": true
+  },
+  "remotePushOrPublication": false
+}

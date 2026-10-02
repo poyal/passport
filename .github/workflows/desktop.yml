@@ -1,4 +1,4 @@
-name: Desktop verification
+name: Desktop verification (manual diagnostics)
 on:
   workflow_dispatch:
 permissions:
@@ -10,60 +10,42 @@ jobs:
       matrix:
         include:
           - os: windows-2025
-            target: win
-            arch: x64
+            target: win-x64
           - os: windows-11-arm
-            target: win
-            arch: arm64
+            target: win-arm64
           - os: macos-15
-            target: mac
-            arch: arm64
+            target: mac-arm64
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-    env:
-      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
           cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
       - uses: dtolnay/rust-toolchain@stable
-      - run: npm ci
-      - run: npm run build:helper
-      - if: matrix.target == 'win'
-        run: npm run prepare:runtime -- ${{ matrix.arch }}
-      - run: npm run check
-      - run: npm run build
-      - run: npx playwright test
-      - run: npx electron-builder --${{ matrix.target }} --${{ matrix.arch }} --publish never
-      - name: Verify Windows current-user installer scope
-        if: matrix.target == 'win'
+      - name: Expose Windows OpenSSL
+        if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $version = node -p "require('./package.json').version"
-          ./scripts/windows-installer-smoke.ps1 -InstallerPath "release/Passport-$version-win-${{ matrix.arch }}.exe"
-      - if: matrix.target == 'mac'
-        run: node scripts/packaged-smoke.mjs release/mac-arm64/Passport.app/Contents/MacOS/Passport
-      - if: matrix.target == 'win' && matrix.arch == 'x64'
-        run: node scripts/packaged-smoke.mjs release/win-unpacked/Passport.exe
-      - if: matrix.target == 'win' && matrix.arch == 'arm64'
-        run: node scripts/packaged-smoke.mjs release/win-arm64-unpacked/Passport.exe
-      - name: Verify Windows packaged GUI and native PTY shutdown
-        if: matrix.target == 'win'
-        env:
-          PASSPORT_DISABLE_UPDATE_CHECK: "1"
-          PASSPORT_E2E_EXECUTABLE: ${{ github.workspace }}/release/win${{ matrix.arch == 'arm64' && '-arm64' || '' }}-unpacked/Passport.exe
-        run: npx playwright test
+          'C:\Program Files\Git\usr\bin' | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+      - name: Run the same verification as a local release
+        run: npm run release:verify -- --desktop
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: passport-${{ matrix.target }}-${{ matrix.arch }}
+          name: verification-${{ matrix.target }}
           path: |
-            release/*.dmg
-            release/*.exe
-          if-no-files-found: error
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: test-results-${{ matrix.target }}-${{ matrix.arch }}
-          path: test-results/
+            release/builds/*/Passport-*.dmg
+            release/builds/*/Passport-*.exe
+            release/checks/*/*.json
+            release/checks/*/*.log
+            release/checks/*/*.sample.txt
+            release/checks/*/source-gui/**
+            release/checks/*/packaged-gui/**
+            release/checks/*/source-desktop/**
+            release/checks/*/packaged-desktop/**
+          if-no-files-found: warn

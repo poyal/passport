@@ -1,9 +1,5 @@
-import {
-  test,
-  expect,
-  _electron as electron,
-  type Page,
-} from "@playwright/test";
+import { electron } from "../../scripts/e2e-electron.mjs";
+import { test, expect, type Page } from "@playwright/test";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";

@@ -1,4 +1,5 @@
-import { test, expect, _electron as electron } from "@playwright/test";
+import { electron } from "../../scripts/e2e-electron.mjs";
+import { test, expect } from "@playwright/test";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -371,7 +372,7 @@ test("edits several startup profiles and notification preferences without touchi
   }
 });
 
-test("manually launched CLI wrappers deliver completion and input alerts and respect foreground policy", async () => {
+test("manually launched CLI wrappers deliver completion and input alerts and respect foreground policy @desktop", async () => {
   const directory = await fs.mkdtemp(
     path.join(os.tmpdir(), "passport-notify-e2e-"),
   );

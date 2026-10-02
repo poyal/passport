@@ -1,0 +1,364 @@
+{
+  "schemaVersion": 1,
+  "description": "Explicit release test inventory. IDs remain stable when titles are deliberately updated. Entries without overrides are required on macOS and Windows in hidden mode.",
+  "tests": [
+    {
+      "id": "advanced.broadcast-uses-physical-keys-only-explicit-execution-records-hist",
+      "file": "advanced.spec.ts",
+      "title": "broadcast uses physical keys only, explicit execution records history, logs start automatically"
+    },
+    {
+      "id": "advanced.moves-a-live-split-workspace-to-another-native-window-and-back-wi",
+      "file": "advanced.spec.ts",
+      "title": "moves a live split workspace to another native window and back with scrollback intact"
+    },
+    {
+      "id": "advanced.opens-and-keeps-a-local-tab-active-when-ownership-events-arrive-a",
+      "file": "advanced.spec.ts",
+      "title": "opens and keeps a local tab active when ownership events arrive after the save reply"
+    },
+    {
+      "id": "advanced.bulk-host-edits-change-only-checked-fields",
+      "file": "advanced.spec.ts",
+      "title": "bulk host edits change only checked fields"
+    },
+    {
+      "id": "advanced.500-host-list-and-expanded-host-settings-scroll-independently-ins",
+      "file": "advanced.spec.ts",
+      "title": "500-host list and expanded host settings scroll independently inside a small window"
+    },
+    {
+      "id": "app.host-crud-live-ssh-split-session-preservation-themes-and-persiste",
+      "file": "app.spec.ts",
+      "title": "host CRUD, live SSH, split session preservation, themes, and persistence"
+    },
+    {
+      "id": "app.independent-file-panels-context-menus-local-copy-and-queue",
+      "file": "app.spec.ts",
+      "title": "independent file panels, context menus, local copy and queue"
+    },
+    {
+      "id": "app.long-file-lists-stay-above-the-queue-and-scroll-independently-at",
+      "file": "app.spec.ts",
+      "title": "long file lists stay above the queue and scroll independently at both window sizes"
+    },
+    {
+      "id": "app.opening-the-app-never-requests-access-to-the-operating-system-sec",
+      "file": "app.spec.ts",
+      "title": "opening the app never requests access to the operating system secret store"
+    },
+    {
+      "id": "background.isolated-windows-accept-terminal-input-and-move-workspaces-withou",
+      "file": "background.spec.ts",
+      "title": "isolated windows accept terminal input and move workspaces without native focus"
+    },
+    {
+      "id": "docker-ssh.real-docker-ssh-and-sftp-through-the-desktop-application",
+      "file": "docker-ssh.spec.ts",
+      "title": "real Docker SSH and SFTP through the desktop application",
+      "optional": "docker"
+    },
+    {
+      "id": "file-colors.file-types-follow-every-theme-while-server-ansi-input-and-output",
+      "file": "file-colors.spec.ts",
+      "title": "file types follow every theme while server ANSI, input and output text stay intact"
+    },
+    {
+      "id": "layout-drag.nested-horizontal-groups-fill-the-available-space-even-when-minim",
+      "file": "layout-drag.spec.ts",
+      "title": "nested horizontal groups fill the available space even when minimum panel sizes constrain a track"
+    },
+    {
+      "id": "layout-drag.nested-vertical-groups-fill-the-available-space-even-when-minimum",
+      "file": "layout-drag.spec.ts",
+      "title": "nested vertical groups fill the available space even when minimum panel sizes constrain a track"
+    },
+    {
+      "id": "layout-drag.grouped-tabs-can-reorder-but-cannot-merge-their-individual-panels",
+      "file": "layout-drag.spec.ts",
+      "title": "grouped tabs can reorder but cannot merge; their individual panels can still move"
+    },
+    {
+      "id": "legacy.legacy-ssh-works-without-a-host-option-for-terminal-and-sftp-and",
+      "file": "legacy.spec.ts",
+      "title": "legacy SSH works without a host option for terminal and SFTP, and first-key confirmation can be disabled"
+    },
+    {
+      "id": "local-colors.local-cli-colors-survive-a-colorless-app-launcher-plain",
+      "file": "local-colors.spec.ts",
+      "title": "local CLI colors survive a colorless app launcher: plain"
+    },
+    {
+      "id": "local-colors.local-cli-colors-survive-a-colorless-app-launcher-ai-profile",
+      "file": "local-colors.spec.ts",
+      "title": "local CLI colors survive a colorless app launcher: ai-profile"
+    },
+    {
+      "id": "local-colors.local-cli-colors-survive-a-colorless-app-launcher-explicit-no-col",
+      "file": "local-colors.spec.ts",
+      "title": "local CLI colors survive a colorless app launcher: explicit-no-color"
+    },
+    {
+      "id": "local-workspace.an-unavailable-default-shell-leaves-a-retryable-local-tab",
+      "file": "local-workspace.spec.ts",
+      "title": "an unavailable default shell leaves a retryable local tab"
+    },
+    {
+      "id": "local-workspace.creates-mixed-local-ssh-workspaces-previews-profiles-routes-alert",
+      "file": "local-workspace.spec.ts",
+      "title": "creates mixed local/SSH workspaces, previews profiles, routes alerts and restores without executing"
+    },
+    {
+      "id": "local-workspace.edits-several-startup-profiles-and-notification-preferences-witho",
+      "file": "local-workspace.spec.ts",
+      "title": "edits several startup profiles and notification preferences without touching live shells"
+    },
+    {
+      "id": "scroll-workspaces.file-action-triggers-toggle-dismiss-restore-focus-and-stay-in-bou",
+      "file": "scroll-workspaces.spec.ts",
+      "title": "file action triggers toggle, dismiss, restore focus and stay in bounds while scrolling"
+    },
+    {
+      "id": "scroll-workspaces.log-list-and-output-fit-and-scroll-independently-at-both-themes-a",
+      "file": "scroll-workspaces.spec.ts",
+      "title": "log list and output fit and scroll independently at both themes and window sizes"
+    },
+    {
+      "id": "scroll-workspaces.plus-opens-a-local-tab-immediately-using-defaults-and-focuses-inp",
+      "file": "scroll-workspaces.spec.ts",
+      "title": "plus opens a local tab immediately using defaults and focuses input"
+    },
+    {
+      "id": "scroll-workspaces.workspace-save-button-preserves-only-that-tab-focus-and-splits-te",
+      "file": "scroll-workspaces.spec.ts",
+      "title": "workspace save button preserves only that tab, focus and splits; templates open directly and persist"
+    },
+    {
+      "id": "scroll-workspaces.saving-the-selected-tab-refuses-a-closed-source",
+      "file": "scroll-workspaces.spec.ts",
+      "title": "saving the selected tab refuses a closed source"
+    },
+    {
+      "id": "scroll-workspaces.long-workspace-libraries-scroll-without-moving-controls-and-refus",
+      "file": "scroll-workspaces.spec.ts",
+      "title": "long workspace libraries scroll without moving controls and refuse to exceed terminal capacity"
+    },
+    {
+      "id": "settings-tools.export-explains-short-passwords-and-writes-decryptable-credential",
+      "file": "settings-tools.spec.ts",
+      "title": "export explains short passwords and writes decryptable credentials once the minimum is met"
+    },
+    {
+      "id": "settings-tools.imports-ask-after-file-selection-allow-password-retry-cancel-tick",
+      "file": "settings-tools.spec.ts",
+      "title": "imports ask after file selection, allow password retry, cancel tickets, and bypass the prompt for plain files"
+    },
+    {
+      "id": "settings-tools.settings-use-accessible-switches-merge-themes-and-expose-only-the",
+      "file": "settings-tools.spec.ts",
+      "title": "settings use accessible switches, merge themes, and expose only the confirmed About links"
+    },
+    {
+      "id": "settings-tools.log-viewer-removes-terminal-controls-and-hyperlinks-while-the-ori",
+      "file": "settings-tools.spec.ts",
+      "title": "log viewer removes terminal controls and hyperlinks while the original export stays intact"
+    },
+    {
+      "id": "settings-tools.terminal-search-counts-matches-scrolls-on-enter-wraps-highlights",
+      "file": "settings-tools.spec.ts",
+      "title": "terminal search counts matches, scrolls on Enter, wraps, highlights, and consumes no terminal input"
+    },
+    {
+      "id": "shutdown.quits-normally-with-four-active-native-ptys",
+      "file": "shutdown.spec.ts",
+      "title": "quits normally with four active native PTYs"
+    },
+    {
+      "id": "shutdown.quits-normally-with-four-closed-native-ptys",
+      "file": "shutdown.spec.ts",
+      "title": "quits normally with four closed native PTYs"
+    },
+    {
+      "id": "shutdown.quits-normally-with-four-reopened-native-ptys",
+      "file": "shutdown.spec.ts",
+      "title": "quits normally with four reopened native PTYs"
+    },
+    {
+      "id": "shutdown.shares-one-instance-per-data-directory-and-allows-isolated-data-d",
+      "file": "shutdown.spec.ts",
+      "title": "shares one instance per data directory and allows isolated data directories"
+    },
+    {
+      "id": "shutdown.closes-live-terminals-without-parsing-externally-changed-settings",
+      "file": "shutdown.spec.ts",
+      "title": "closes live terminals without parsing externally changed settings"
+    },
+    {
+      "id": "stress.16-visible-terminals-process-100-kib-s-each-for-ten-minutes",
+      "file": "stress.spec.ts",
+      "title": "16 visible terminals process 100 KiB/s each for ten minutes",
+      "optional": "stress"
+    },
+    {
+      "id": "throughput.large-terminal-text-remains-interactive-and-bounded-through-1-gib",
+      "file": "throughput.spec.ts",
+      "title": "large terminal text remains interactive and bounded through 1 GiB",
+      "optional": "throughput"
+    },
+    {
+      "id": "updates.about-checks-updates-directs-downloads-to-the-correct-installer-a",
+      "file": "updates.spec.ts",
+      "title": "About checks updates, directs downloads to the correct installer, and shows a persistent About shortcut"
+    },
+    {
+      "id": "updates.an-ahead-of-release-installation-never-offers-a-downgrade",
+      "file": "updates.spec.ts",
+      "title": "an ahead-of-release installation never offers a downgrade"
+    },
+    {
+      "id": "updates.an-offline-check-stays-inside-about-while-the-host-screen-remains",
+      "file": "updates.spec.ts",
+      "title": "an offline check stays inside About while the host screen remains usable"
+    },
+    {
+      "id": "updates.a-release-without-an-installer-offers-notes-without-a-broken-down",
+      "file": "updates.spec.ts",
+      "title": "a release without an installer offers notes without a broken download button"
+    },
+    {
+      "id": "usability.new-hosts-start-empty-saved-credentials-collapse-account-fields-a",
+      "file": "usability.spec.ts",
+      "title": "new hosts start empty, saved credentials collapse account fields, and group edits live in settings"
+    },
+    {
+      "id": "usability.sftp-parent-row-reaches-root-with-one-click-file-errors-alert-and",
+      "file": "usability.spec.ts",
+      "title": "SFTP parent row reaches root with one click, file errors alert, and host pickers stay bounded"
+    },
+    {
+      "id": "usability.all-main-screens-and-settings-tabs-fit-light-and-dark-themes-at-w",
+      "file": "usability.spec.ts",
+      "title": "all main screens and settings tabs fit light and dark themes at wide, desktop, and minimum window sizes"
+    },
+    {
+      "id": "usability.direct-passwords-become-reusable-protected-profiles-instead-of-ho",
+      "file": "usability.spec.ts",
+      "title": "direct passwords become reusable protected profiles instead of host metadata"
+    },
+    {
+      "id": "usability.background-host-metadata-updates-preserve-unsaved-host-edits",
+      "file": "usability.spec.ts",
+      "title": "background host metadata updates preserve unsaved host edits"
+    },
+    {
+      "id": "usability.settings-tabs-preserve-drafts-and-keyboard-navigation-manual-icon",
+      "file": "usability.spec.ts",
+      "title": "settings tabs preserve drafts and keyboard navigation; manual icons override detection"
+    },
+    {
+      "id": "windows-credentials.windows-dpapi-protects-stored-credentials-and-reconnects-after-re",
+      "file": "windows-credentials.spec.ts",
+      "title": "Windows DPAPI protects stored credentials and reconnects after restart",
+      "platforms": [
+        "win32"
+      ]
+    },
+    {
+      "id": "windows-files.windows-drive-root-remains-browsable-around-protected-system-file",
+      "file": "windows-files.spec.ts",
+      "title": "Windows drive root remains browsable around protected system files",
+      "platforms": [
+        "win32"
+      ]
+    },
+    {
+      "id": "windows-shells.windows-passport-bash-applies-a-startup-profile-and-accepts-termi",
+      "file": "windows-shells.spec.ts",
+      "title": "Windows passport-bash applies a startup profile and accepts terminal input",
+      "platforms": [
+        "win32"
+      ]
+    },
+    {
+      "id": "windows-shells.windows-cmd-applies-a-startup-profile-and-accepts-terminal-input",
+      "file": "windows-shells.spec.ts",
+      "title": "Windows cmd applies a startup profile and accepts terminal input",
+      "platforms": [
+        "win32"
+      ]
+    },
+    {
+      "id": "windows-shells.windows-windows-powershell-applies-a-startup-profile-and-accepts",
+      "file": "windows-shells.spec.ts",
+      "title": "Windows windows-powershell applies a startup profile and accepts terminal input",
+      "platforms": [
+        "win32"
+      ]
+    },
+    {
+      "id": "windows-shells.windows-pwsh-applies-a-startup-profile-and-accepts-terminal-input",
+      "file": "windows-shells.spec.ts",
+      "title": "Windows pwsh applies a startup profile and accepts terminal input",
+      "platforms": [
+        "win32"
+      ]
+    },
+    {
+      "id": "advanced.saves-custom-colors-and-shortcuts-and-applies-highlights-without",
+      "file": "advanced.spec.ts",
+      "title": "saves custom colors and shortcuts and applies highlights without changing terminal text",
+      "mode": "desktop"
+    },
+    {
+      "id": "local-workspace.manually-launched-cli-wrappers-deliver-completion-and-input-alert",
+      "file": "local-workspace.spec.ts",
+      "title": "manually launched CLI wrappers deliver completion and input alerts and respect foreground policy",
+      "mode": "desktop"
+    },
+    {
+      "id": "usability.profile-account-connects-paste-is-immediate-and-literal-automatic",
+      "file": "usability.spec.ts",
+      "title": "profile account connects, paste is immediate and literal, automatic logs capture output and auth failures alert",
+      "mode": "desktop"
+    },
+    {
+      "id": "terminal-experience.independent-windows",
+      "file": "terminal-experience.spec.ts",
+      "title": "local shortcuts create independent windows exactly once and preserve existing terminals"
+    },
+    {
+      "id": "terminal-experience.bundled-fonts",
+      "file": "terminal-experience.spec.ts",
+      "title": "bundled terminal fonts load offline and preserve settings and aligned output"
+    },
+    {
+      "id": "terminal-experience.read-on-view",
+      "file": "terminal-experience.spec.ts",
+      "title": "viewing a foreground terminal reads only its alerts and preserves history",
+      "mode": "desktop"
+    },
+    {
+      "id": "terminal-experience.read-focus-contract",
+      "file": "terminal-experience.spec.ts",
+      "title": "terminal alert acknowledgements validate ownership and native focus without displaying windows"
+    },
+    {
+      "id": "paste.literal-text-files-no-duplicate",
+      "file": "paste.spec.ts",
+      "title": "terminal paste preserves literal text and file paths without duplicate input or Enter"
+    },
+    {
+      "id": "paste.image-and-original-pane",
+      "file": "paste.spec.ts",
+      "title": "image paste saves readable PNG and pending paste stays with its original connected pane"
+    },
+    {
+      "id": "paste.finder-native-full-paths",
+      "file": "paste.spec.ts",
+      "title": "Finder app and folder copy inserts absolute paths when Electron exposes only names",
+      "platforms": [
+        "darwin"
+      ]
+    }
+  ]
+}

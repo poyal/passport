@@ -1,3 +1,4 @@
+import { FontPicker } from "./FontPicker";
 import { useState, useEffect, useRef, type FormEvent } from "react";
 import {
   Server,
@@ -744,22 +745,19 @@ export function Hosts() {
                   ))}
                 </select>
               </label>
-              <label>
-                글꼴
-                <input
-                  placeholder="전체 설정 사용"
-                  value={draft.appearance.font ?? ""}
-                  onChange={(e) =>
-                    setDraft({
-                      ...draft,
-                      appearance: {
-                        ...draft.appearance,
-                        font: e.target.value || undefined,
-                      },
-                    })
-                  }
-                />
-              </label>
+              <FontPicker
+                inherit
+                value={draft.appearance.font ?? ""}
+                onChange={(font) =>
+                  setDraft({
+                    ...draft,
+                    appearance: {
+                      ...draft.appearance,
+                      font: font || undefined,
+                    },
+                  })
+                }
+              />
               <label>
                 글자 크기
                 <input

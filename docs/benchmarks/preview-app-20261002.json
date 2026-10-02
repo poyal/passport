@@ -1,0 +1,427 @@
+{
+  "createdAt": "2026-10-02T07:50:30.374Z",
+  "purpose": "Preview app with terminal alerts, windows, fonts and clipboard paste changes",
+  "source": "local",
+  "sourceCommit": "2c6049681d9be1a93a62c121a5535e4a0737965d",
+  "dirty": true,
+  "sourceFingerprint": "29d77fbd9aa85fd13f9ef748e33d75576a78247c8552f746650bef47218b3b18",
+  "changedFiles": [
+    {
+      "status": " M",
+      "path": ".github/workflows/desktop.yml"
+    },
+    {
+      "status": " D",
+      "path": ".github/workflows/release-windows.yml"
+    },
+    {
+      "status": " D",
+      "path": ".github/workflows/release.yml"
+    },
+    {
+      "status": " M",
+      "path": "README.md"
+    },
+    {
+      "status": " M",
+      "path": "THIRD_PARTY_NOTICES.md"
+    },
+    {
+      "status": " M",
+      "path": "docs/README.md"
+    },
+    {
+      "status": " M",
+      "path": "docs/development.md"
+    },
+    {
+      "status": " M",
+      "path": "docs/distribution.md"
+    },
+    {
+      "status": " M",
+      "path": "docs/local-ai-workspaces.md"
+    },
+    {
+      "status": " M",
+      "path": "docs/user-guide.md"
+    },
+    {
+      "status": " M",
+      "path": "docs/verification.md"
+    },
+    {
+      "status": " M",
+      "path": "package-lock.json"
+    },
+    {
+      "status": " M",
+      "path": "package.json"
+    },
+    {
+      "status": " M",
+      "path": "playwright.config.ts"
+    },
+    {
+      "status": " M",
+      "path": "scripts/notices.mjs"
+    },
+    {
+      "status": " M",
+      "path": "scripts/packaged-smoke.mjs"
+    },
+    {
+      "status": " D",
+      "path": "scripts/publish-windows-release.mjs"
+    },
+    {
+      "status": " M",
+      "path": "src/main/activity.ts"
+    },
+    {
+      "status": " M",
+      "path": "src/main/index.ts"
+    },
+    {
+      "status": " M",
+      "path": "src/preload/index.ts"
+    },
+    {
+      "status": " M",
+      "path": "src/renderer/Advanced.tsx"
+    },
+    {
+      "status": " M",
+      "path": "src/renderer/App.tsx"
+    },
+    {
+      "status": " M",
+      "path": "src/renderer/Hosts.tsx"
+    },
+    {
+      "status": " M",
+      "path": "src/renderer/Workspaces.tsx"
+    },
+    {
+      "status": " M",
+      "path": "src/renderer/components.tsx"
+    },
+    {
+      "status": " M",
+      "path": "src/renderer/styles.css"
+    },
+    {
+      "status": " M",
+      "path": "src/renderer/terminals.ts"
+    },
+    {
+      "status": " M",
+      "path": "src/shared/model.ts"
+    },
+    {
+      "status": " M",
+      "path": "tests/e2e/advanced.spec.ts"
+    },
+    {
+      "status": " M",
+      "path": "tests/e2e/app.spec.ts"
+    },
+    {
+      "status": " M",
+      "path": "tests/e2e/docker-ssh.spec.ts"
+    },
+    {
+      "status": " M",
+      "path": "tests/e2e/file-colors.spec.ts"
+    },
+    {
+      "status": " M",
+      "path": "tests/e2e/layout-drag.spec.ts"
+    },
+    {
+      "status": " M",
+      "path": "tests/e2e/legacy.spec.ts"
+    },
+    {
+      "status": " M",
+      "path": "tests/e2e/local-colors.spec.ts"
+    },
+    {
+      "status": " M",
+      "path": "tests/e2e/local-workspace.spec.ts"
+    },
+    {
+      "status": " M",
+      "path": "tests/e2e/scroll-workspaces.spec.ts"
+    },
+    {
+      "status": " M",
+      "path": "tests/e2e/settings-tools.spec.ts"
+    },
+    {
+      "status": " M",
+      "path": "tests/e2e/shutdown.spec.ts"
+    },
+    {
+      "status": " M",
+      "path": "tests/e2e/stress.spec.ts"
+    },
+    {
+      "status": " M",
+      "path": "tests/e2e/throughput.spec.ts"
+    },
+    {
+      "status": " M",
+      "path": "tests/e2e/updates.spec.ts"
+    },
+    {
+      "status": " M",
+      "path": "tests/e2e/usability.spec.ts"
+    },
+    {
+      "status": " M",
+      "path": "tests/e2e/windows-credentials.spec.ts"
+    },
+    {
+      "status": " M",
+      "path": "tests/e2e/windows-files.spec.ts"
+    },
+    {
+      "status": " M",
+      "path": "tests/e2e/windows-shells.spec.ts"
+    },
+    {
+      "status": " M",
+      "path": "tests/fixtures/electron-exit.ts"
+    },
+    {
+      "status": " M",
+      "path": "tests/store.test.ts"
+    },
+    {
+      "status": "??",
+      "path": "docs/benchmarks/background-e2e-20261002.json"
+    },
+    {
+      "status": "??",
+      "path": "docs/benchmarks/clipboard-paste-20261002.json"
+    },
+    {
+      "status": "??",
+      "path": "docs/benchmarks/local-release-20261002.json"
+    },
+    {
+      "status": "??",
+      "path": "docs/benchmarks/release-hardening-20261002.json"
+    },
+    {
+      "status": "??",
+      "path": "docs/benchmarks/terminal-experience-20261002.json"
+    },
+    {
+      "status": "??",
+      "path": "docs/local-release-guide.md"
+    },
+    {
+      "status": "??",
+      "path": "docs/windows-paste-release.md"
+    },
+    {
+      "status": "??",
+      "path": "licenses/fonts/D2Coding-OFL.txt"
+    },
+    {
+      "status": "??",
+      "path": "scripts/e2e-electron.d.mts"
+    },
+    {
+      "status": "??",
+      "path": "scripts/e2e-electron.mjs"
+    },
+    {
+      "status": "??",
+      "path": "scripts/e2e-mode.d.mts"
+    },
+    {
+      "status": "??",
+      "path": "scripts/e2e-mode.mjs"
+    },
+    {
+      "status": "??",
+      "path": "scripts/e2e.mjs"
+    },
+    {
+      "status": "??",
+      "path": "scripts/release-core.mjs"
+    },
+    {
+      "status": "??",
+      "path": "scripts/release-gui-policy.mjs"
+    },
+    {
+      "status": "??",
+      "path": "scripts/release-process.mjs"
+    },
+    {
+      "status": "??",
+      "path": "scripts/release-publish.mjs"
+    },
+    {
+      "status": "??",
+      "path": "scripts/release-verify.mjs"
+    },
+    {
+      "status": "??",
+      "path": "src/main/activity-banners.ts"
+    },
+    {
+      "status": "??",
+      "path": "src/main/clipboard-files.ts"
+    },
+    {
+      "status": "??",
+      "path": "src/main/terminal-clipboard.ts"
+    },
+    {
+      "status": "??",
+      "path": "src/main/test-window.ts"
+    },
+    {
+      "status": "??",
+      "path": "src/renderer/FontPicker.tsx"
+    },
+    {
+      "status": "??",
+      "path": "src/renderer/fonts.ts"
+    },
+    {
+      "status": "??",
+      "path": "src/renderer/fonts/D2Coding-Bold.ttf"
+    },
+    {
+      "status": "??",
+      "path": "src/renderer/fonts/D2Coding-Regular.ttf"
+    },
+    {
+      "status": "??",
+      "path": "src/renderer/fonts/fonts.css"
+    },
+    {
+      "status": "??",
+      "path": "src/renderer/fonts/sources.json"
+    },
+    {
+      "status": "??",
+      "path": "src/shared/fonts.ts"
+    },
+    {
+      "status": "??",
+      "path": "src/shared/local-workspace.ts"
+    },
+    {
+      "status": "??",
+      "path": "src/shared/paste.ts"
+    },
+    {
+      "status": "??",
+      "path": "src/shared/shortcuts.ts"
+    },
+    {
+      "status": "??",
+      "path": "tests/e2e/background.spec.ts"
+    },
+    {
+      "status": "??",
+      "path": "tests/e2e/paste.spec.ts"
+    },
+    {
+      "status": "??",
+      "path": "tests/e2e/release-policy.json"
+    },
+    {
+      "status": "??",
+      "path": "tests/e2e/terminal-experience.spec.ts"
+    },
+    {
+      "status": "??",
+      "path": "tests/paste.test.ts"
+    },
+    {
+      "status": "??",
+      "path": "tests/release.test.mjs"
+    },
+    {
+      "status": "??",
+      "path": "tests/terminal-experience.test.ts"
+    },
+    {
+      "status": "??",
+      "path": "tests/test-window.test.ts"
+    }
+  ],
+  "platform": "mac-arm64",
+  "status": "verified-preview",
+  "previousPreview": "20261001T100100Z-42563e5-mac-arm64-v1.1.0/mac-arm64/Passport.app",
+  "finishedAt": "2026-10-02T07:55:35.901360+00:00",
+  "appPath": "release/builds/20261002T075030Z-2c60496-dirty-mac-arm64-preview/mac-arm64/Passport.app",
+  "verification": {
+    "codesign": "passed --verify --deep --strict; ad-hoc signature",
+    "smoke": {
+      "packagedSmoke": "passed",
+      "localPTY": "passed",
+      "bundledHelper": "passed",
+      "shutdown": "passed",
+      "exitCode": 0,
+      "appVersion": "1.1.0",
+      "arch": "arm64",
+      "platform": "darwin",
+      "hosts": 0,
+      "fonts": 247,
+      "version": 2,
+      "nodeAvailable": false
+    },
+    "focusedGUI": {
+      "startTime": "2026-10-02T07:54:08.190Z",
+      "duration": 8133.237,
+      "expected": 5,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "guiPath": "release/checks/20261002T075407Z-2c60496-dirty-mac-arm64-e2e-hidden",
+    "hiddenShown": 0,
+    "hiddenFocused": 0,
+    "shellEnvironment": "isolated ZDOTDIR; user startup not exercised",
+    "packagedSourceMatches": [
+      "dist/main/index.cjs",
+      "dist/preload/index.cjs",
+      "dist/renderer/index.html"
+    ]
+  },
+  "files": {
+    "release/builds/20261002T075030Z-2c60496-dirty-mac-arm64-preview/mac-arm64/Passport.app/Contents/Resources/app.asar": "8a8843b4e92667a2e47ff956455a7803741e346f861ae35aac1926bc5aaf5a06",
+    "release/builds/20261002T075030Z-2c60496-dirty-mac-arm64-preview/mac-arm64/Passport.app/Contents/MacOS/Passport": "28e42557b24fabe59c8c28895410b530aec746f883354a18b1c942bf4c3417ae",
+    "release/builds/20261002T075030Z-2c60496-dirty-mac-arm64-preview/mac-arm64/Passport.app/Contents/Info.plist": "82d34e295dd75c53d838cde055cefadd541ef895d664f07ecdfcc6b8c9e13898"
+  },
+  "evidence": {
+    "release/checks/20261002T075030Z-2c60496-dirty-mac-arm64-preview/pack.log": "7e07ce8984eb70f072ec2041518093b9c30d3690a6c968e32a4ca26124603024",
+    "release/checks/20261002T075030Z-2c60496-dirty-mac-arm64-preview/pack-local-electron.log": "2de3b91429f0fec4d9724b021ea0b9ecfb7a7bb2d861ca317d83fe9cee7698ae",
+    "release/checks/20261002T075030Z-2c60496-dirty-mac-arm64-preview/codesign.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "release/checks/20261002T075030Z-2c60496-dirty-mac-arm64-preview/smoke.log": "33d73427c099f96a23cb4258070859d69d3a5c0c1530d215585cc7cd67e891f9",
+    "release/checks/20261002T075030Z-2c60496-dirty-mac-arm64-preview/smoke-final.log": "f232eb6bc4c4f38ed32783a0e3c9b59b5cad9126d7c6e6b5cf1d92be799acb81",
+    "release/checks/20261002T075407Z-2c60496-dirty-mac-arm64-e2e-hidden/report.json": "594b988cb92240acea0738b80b4a75d0c0dae4084a90ab1efc5e9757bc0493ff"
+  },
+  "limitations": [
+    "Not notarized; local preview only",
+    "Not a publishable release receipt",
+    "Native Finder/CLI image attachment still needs manual confirmation",
+    "Windows verification and release owned by user"
+  ],
+  "verificationHarnessFix": "Cache child process before closeCleanly; do not access disposed Playwright app",
+  "verificationHarnessSHA256": "6eaf87885aa6acbfe0b5ddbd782f2710289808f527cef05c74ada5953c5d62ad",
+  "retention": {
+    "protectedBy": "release/builds/Passport.app",
+    "previousPreviewRetained": true,
+    "deletions": []
+  }
+}

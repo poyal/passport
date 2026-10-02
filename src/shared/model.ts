@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { defaultShortcuts, migrateShortcuts } from "./shortcuts";
 import {
   shellIdSchema,
   profileSelectionSchema,
@@ -257,19 +258,7 @@ export const settingsSchema = z.object({
   confirmNewHostKeys: z.boolean().default(true),
   customThemes: z.array(customThemeSchema).max(100).default([]),
   shortcuts: z.preprocess(
-    (raw) => {
-      if (!raw || typeof raw !== "object") return raw;
-      const bindings = raw as Record<string, string>;
-      return {
-        activity: Object.values(bindings).includes("Mod+Shift+I")
-          ? ""
-          : "Mod+Shift+I",
-        recentActivity: Object.values(bindings).includes("Mod+Shift+U")
-          ? ""
-          : "Mod+Shift+U",
-        ...bindings,
-      };
-    },
+    migrateShortcuts,
     z
       .record(
         z.enum([
@@ -279,21 +268,13 @@ export const settingsSchema = z.object({
           "nextPane",
           "previousPane",
           "newTab",
+          "newWindow",
           "activity",
           "recentActivity",
         ]),
         z.string().max(80),
       )
-      .default({
-        copy: "Platform+C",
-        paste: "Platform+V",
-        search: "Mod+Shift+F",
-        nextPane: "Alt+ArrowRight",
-        previousPane: "Alt+ArrowLeft",
-        newTab: "Mod+Shift+T",
-        activity: "Mod+Shift+I",
-        recentActivity: "Mod+Shift+U",
-      }),
+      .default(defaultShortcuts),
   ),
   autoLog: z.boolean().default(true),
   logRetentionDays: z
@@ -470,6 +451,7 @@ export type Bootstrap = {
   home: string;
   fonts: string[];
   windowId: number;
+  initialTerminal?: { workspaceId: string; paneId: string };
   workspaceOwners: Record<string, number>;
   sessionStates: SessionState[];
   tunnelStates: TunnelState[];
@@ -584,6 +566,11 @@ export type ImportPasswordRequest = {
 export type Result<T> = { ok: true; value: T } | { ok: false; error: string };
 
 export interface Calls {
+  "terminal.create": {
+    input: undefined;
+    output: { workspaceId: string; paneId: string };
+  };
+  "window.create": { input: undefined; output: number };
   "terminal.folder": { input: undefined; output: string | null };
   "terminal.preview": {
     input: { local: LocalShell; workspaceId?: string };
@@ -716,6 +703,10 @@ export interface Calls {
   "backup.list": { input: undefined; output: string[] };
   "backup.preview": { input: { name: string }; output: ImportPreview };
   "clipboard.read": { input: undefined; output: string };
+  "clipboard.terminal": {
+    input: { id: string };
+    output: import("./paste").TerminalClipboard;
+  };
   "clipboard.write": { input: { text: string }; output: void };
   "external.open": {
     input: { target: "github" | "issues" | "releases" | "email" };

@@ -1,4 +1,5 @@
-import { _electron as electron, expect } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { electron, focusTerminalPage } from "./e2e-electron.mjs";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -102,7 +103,7 @@ try {
     );
   }
   phase = "terminal input";
-  await page.bringToFront();
+  await focusTerminalPage(page);
   await page.locator(".view:not([hidden]) .xterm-helper-textarea").focus();
   await expect(
     page.locator(".view:not([hidden]) .xterm-helper-textarea"),
@@ -122,9 +123,10 @@ try {
       ?.textContent?.includes("PACKAGED_PTY_OK"),
   );
   phase = "shutdown";
+  const child = app.process();
   await closeCleanly(app);
-  const exitCode = app.process().exitCode;
   app = undefined;
+  const exitCode = child.exitCode;
   console.log(
     JSON.stringify({
       packagedSmoke: "passed",

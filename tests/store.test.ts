@@ -226,7 +226,7 @@ it("upgrades v0.1 metadata without losing hosts and rejects a future database ve
     expect(store.read().hosts[0].name).toBe("기존 서버");
     expect(store.read().hosts[0].icon).toBe("auto");
     expect(store.read().tunnels).toEqual([]);
-    expect(store.read().settings.shortcuts.newTab).toBe("Mod+Shift+T");
+    expect(store.read().settings.shortcuts.newTab).toBe("Mod+N");
     store.close();
     const future = new Database(path.join(dir, "passport.sqlite"));
     future.pragma("user_version=6");

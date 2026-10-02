@@ -1,4 +1,5 @@
-import { test, expect, _electron as electron } from "@playwright/test";
+import { electron } from "../../scripts/e2e-electron.mjs";
+import { test, expect } from "@playwright/test";
 import fs from "node:fs/promises";
 import { createReadStream } from "node:fs";
 import os from "node:os";

@@ -44,6 +44,7 @@ import {
   hydrateTerminals,
   setBroadcast,
   setTerminalSettings,
+  setTerminalFonts,
 } from "./terminals";
 import {
   LOCAL_HOST_ID,
@@ -73,6 +74,8 @@ export function App() {
   const [boot, setBoot] = useState<Bootstrap | null>(null),
     [active, setActive] = useState("home"),
     [activePane, setActivePane] = useState(""),
+    [initialTerminal, setInitialTerminal] =
+      useState<Bootstrap["initialTerminal"]>(),
     [localFocus, setLocalFocus] = useState<{
       workspaceId: string;
       paneId: string;
@@ -107,7 +110,9 @@ export function App() {
     queue = useRef<Promise<unknown>>(Promise.resolve()),
     toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined),
     tabHover = useRef<ReturnType<typeof setTimeout> | undefined>(undefined),
-    statusRef = useRef(states);
+    statusRef = useRef(states),
+    creatingWindow = useRef(false),
+    startedInitialTerminal = useRef<string | undefined>(undefined);
   bootRef.current = boot;
   statusRef.current = states;
   const notify = useCallback((error: unknown) => {
@@ -130,8 +135,10 @@ export function App() {
   const refresh = useCallback(async () => {
     const data = await api.call("bootstrap", undefined);
     if (updateRef.current) data.updateState = updateRef.current;
+    setTerminalFonts(data.fonts);
     bootRef.current = data;
     setBoot(data);
+    if (data.initialTerminal) setInitialTerminal(data.initialTerminal);
     void api.call("activity.list", undefined).then(setActivities).catch(notify);
     setStates(Object.fromEntries(data.sessionStates.map((s) => [s.id, s])));
     if (!selectionRestored.current) {
@@ -195,6 +202,8 @@ export function App() {
         );
         if (!known && !terminals.has(event.state.id)) return;
         const entry = ensureTerminal(event.state.id);
+        if (entry.connected !== (event.state.status === "connected"))
+          entry.connectionRevision++;
         entry.connected = event.state.status === "connected";
         if (event.state.status === "error")
           notify(new Error(event.state.message || "서버 연결에 실패했습니다."));
@@ -450,7 +459,7 @@ export function App() {
       }
     }
     if (failures.length) notify(new Error([...new Set(failures)].join("\n")));
-    terminals.get(activePane)?.term.focus();
+    if (ids.includes(activePane)) terminals.get(activePane)?.term.focus();
   };
   const paste = (text: string, ids: string[]) => {
     const connected = [...new Set(ids)].filter(
@@ -482,10 +491,24 @@ export function App() {
       const shortcuts = bootRef.current?.document.settings.shortcuts;
       if (!shortcuts) return;
       const mac = bootRef.current?.platform === "darwin";
+      if (shortcutMatch(e, shortcuts.newWindow, mac)) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!e.repeat && !creatingWindow.current) {
+          creatingWindow.current = true;
+          void api
+            .call("window.create", undefined)
+            .catch(notify)
+            .finally(() => {
+              creatingWindow.current = false;
+            });
+        }
+        return;
+      }
       if (shortcutMatch(e, shortcuts.newTab, mac)) {
         e.preventDefault();
         e.stopPropagation();
-        void openLocalTerminal();
+        if (!e.repeat) void openLocalTerminal();
         return;
       }
       if (shortcutMatch(e, shortcuts.activity, mac)) {
@@ -561,10 +584,12 @@ export function App() {
     window.addEventListener("focus", focus);
     window.addEventListener("blur", focus);
     window.addEventListener("focusin", focus);
+    window.addEventListener("passport-view-changed", focus);
     return () => {
       window.removeEventListener("focus", focus);
       window.removeEventListener("blur", focus);
       window.removeEventListener("focusin", focus);
+      window.removeEventListener("passport-view-changed", focus);
     };
   }, [active, activePane, templateEditor, requests.length]);
   useEffect(() => {
@@ -614,45 +639,34 @@ export function App() {
     });
     return () => cancelAnimationFrame(frame);
   }, [localFocus, active, boot?.document, boot?.workspaceOwners]);
+  const activateLocalTerminal = async (target: {
+    workspaceId: string;
+    paneId: string;
+  }) => {
+    await refresh();
+    setActive(target.workspaceId);
+    setActivePane(target.paneId);
+    setLocalFocus(target);
+    await connectPane(target.paneId, LOCAL_HOST_ID);
+  };
   const openLocalTerminal = async () => {
-    const current = bootRef.current;
-    if (!current) return;
-    const id = uuid(),
-      paneId = uuid();
-    const ok = await update((d) => {
-      if (d.workspaces.flatMap((w) => panes(w.root)).length >= 32)
-        throw new Error(
-          "전체 터미널은 최대 32개입니다. 사용하지 않는 탭을 닫아 주세요.",
-        );
-      return {
-        ...d,
-        workspaces: [
-          ...d.workspaces,
-          {
-            id,
-            name: "로컬 터미널",
-            project: { cwd: current.home },
-            root: {
-              kind: "pane",
-              id: paneId,
-              hostId: LOCAL_HOST_ID,
-              local: {
-                shell: d.settings.terminal.shell,
-                cwd: current.home,
-                profiles: { mode: "inherit", ids: [] },
-              },
-            },
-          },
-        ],
-      };
-    });
-    if (ok) {
-      setActive(id);
-      setActivePane(paneId);
-      setLocalFocus({ workspaceId: id, paneId });
-      await connectPane(paneId, LOCAL_HOST_ID);
+    try {
+      const target = await api.call("terminal.create", undefined);
+      await activateLocalTerminal(target);
+    } catch (error) {
+      notify(error);
     }
   };
+  useEffect(() => {
+    if (
+      !initialTerminal ||
+      startedInitialTerminal.current === initialTerminal.paneId
+    )
+      return;
+    startedInitialTerminal.current = initialTerminal.paneId;
+    setInitialTerminal(undefined);
+    void activateLocalTerminal(initialTerminal).catch(notify);
+  }, [initialTerminal]);
   const closeTab = async (id: string) => {
     const w = bootRef.current?.document.workspaces.find((w) => w.id === id);
     if (!w) return;

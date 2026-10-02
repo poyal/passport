@@ -1,0 +1,107 @@
+{
+  "createdAt": "2026-10-02T07:47:24.000445+00:00",
+  "source": "local",
+  "sourceCommit": "2c6049681d9be1a93a62c121a5535e4a0737965d",
+  "dirty": true,
+  "platform": "mac-arm64",
+  "status": "passed-scoped-validation",
+  "purpose": "Mac and Windows file/image terminal paste implementation; Windows validation/release handed to user",
+  "checks": {
+    "typecheck": "passed",
+    "build": "passed",
+    "focusedUnit": {
+      "passed": 17
+    },
+    "unit": {
+      "passed": 129,
+      "skipped": 3,
+      "environment": "isolated empty ZDOTDIR; private startup scripts excluded"
+    },
+    "hiddenGUI": {
+      "passed": 52,
+      "skipped": 9,
+      "unexpected": 0,
+      "flaky": 0,
+      "shown": 0,
+      "focused": 0,
+      "environment": "isolated empty ZDOTDIR"
+    },
+    "releaseRegression": {
+      "passed": 60
+    },
+    "inventory": {
+      "hidden": 61,
+      "desktop": 4
+    }
+  },
+  "unverified": [
+    "Windows native clipboard and four real Windows shells; user will validate and release",
+    "Finder/Explorer real copy",
+    "Claude Code/Codex attachment UI and model image interpretation",
+    "native desktop suite",
+    "installer and publishing"
+  ],
+  "initialFailures": [
+    {
+      "path": "release/checks/20261002T072940Z-2c60496-dirty-mac-arm64-paste/unit-full.log",
+      "detail": "Two pre-existing local PTY tests timed out after 5s; nvm npm prefix warning observed"
+    },
+    {
+      "path": "release/checks/20261002T072940Z-2c60496-dirty-mac-arm64-paste/unit-clean-env.log",
+      "detail": "Same two PTY startup timeouts without npm environment"
+    },
+    {
+      "path": "release/checks/20261002T073947Z-2c60496-dirty-mac-arm64-e2e-hidden",
+      "detail": "Existing local terminal GUI startup timeout"
+    },
+    {
+      "path": "release/checks/20261002T073236Z-2c60496-dirty-mac-arm64-e2e-hidden",
+      "detail": "Invalid inline PNG test fixture replaced by native bitmap-generated PNG"
+    }
+  ],
+  "retention": {
+    "noDeletionPerformed": true,
+    "successfulEvidenceReviewAfter": "2026-10-09",
+    "unresolvedShellStartupEvidence": "preserve until resolved"
+  },
+  "processAudit": {
+    "existingPassportPid": 4136,
+    "existingHelpers": [
+      4155,
+      4156
+    ],
+    "testElectronRemaining": 0
+  },
+  "sourceFiles": {
+    "src/shared/paste.ts": "ba8984eea936e543ee4824e07ae1ab2843a98ccb5e4663cf41216e8a2cd68d87",
+    "src/main/clipboard-files.ts": "1640c54f226213408b81f82d9db5c5616f293b8d614b6c13eed34964a4a13b20",
+    "src/main/terminal-clipboard.ts": "11c2e53550b627ea90948b04ea351c35e63dfab5ae7638e4a7c9dd94ee78084d",
+    "src/main/index.ts": "e3e07399af7a870c3244abaeb88f54cbe35279643ba993d2eeb5c49e5c0a1c54",
+    "src/shared/model.ts": "1ad89620c9ba2a8df11bb6ddf2776c96e52d3d1f380c41f0bba62dd73e3af05c",
+    "src/preload/index.ts": "0d0bcb85cb2ea24ba3f8b0239e3125f892d72f43cd3a26667e39f3bf0575175c",
+    "src/renderer/terminals.ts": "a21ff59ee6713bb15b988d7bfa6d93d8a804b0c2d87954a5d76125f2d3512cac",
+    "src/renderer/App.tsx": "a1a321954c8f01bddba923fda9f80554baba88de48e8fd9de8a6f292ba6b473b",
+    "tests/paste.test.ts": "0ed109f91083fbf2866d820ea24b043b7724dbb8d0e00be00458b9647528a5b0",
+    "tests/e2e/paste.spec.ts": "3f27bca9fa1d286d5705bb08da6f044054c7193c53435072a071400e74ba1691",
+    "tests/e2e/windows-shells.spec.ts": "227a377644169d3d3251064defedf330a1079d2f07cb9ad4b2595cd7b1a6ae4a",
+    "tests/e2e/release-policy.json": "d20e19d2d4b54ec05e9bd425baf2052d14c5121f68a42ab18f124051acba3d5a",
+    "tests/release.test.mjs": "89bd4e919775dc3099811f6e395e2bfda05a09bbd7f5a5430fc4beb7301c15a2",
+    "docs/user-guide.md": "889c488ace2c765e23836ff8f94069bc2cffcd8b1a0a8682a66ea0cb7115ae9a",
+    "docs/development.md": "6cf8da019def78f1fd1fea78b58dd235a041d2426de62c6012a2e835fbeeb41d",
+    "docs/windows-paste-release.md": "1ecdfff6f6ed1b3129acc17a5316b6f544ef4b61e775c1d893e1dcee34ef9960",
+    "docs/local-release-guide.md": "454333e986bfb8bbdef01b3c2b44e001f67a693d50acf16d89fc8546c4e54b8d",
+    "docs/verification.md": "9a35cc37a1df56435066d329f5d79412ffa9873957bc58acba25be7db3555701"
+  },
+  "evidenceFiles": {
+    "release/checks/20261002T072940Z-2c60496-dirty-mac-arm64-paste/build.log": "4fe88dd5a96419a0515c9a11047c810cd0e17a408060e4d84e4fa2284f663191",
+    "release/checks/20261002T072940Z-2c60496-dirty-mac-arm64-paste/unit-focused.log": "9cab1366c2bbc3389e1496742eb7b171ab4f6f18e16b5fd115494e9af8e8a4d0",
+    "release/checks/20261002T072940Z-2c60496-dirty-mac-arm64-paste/unit-full.log": "8da9b2b300dfb80827882e0323283b77b195bb16df1f4e4650e004601bfb1ab5",
+    "release/checks/20261002T072940Z-2c60496-dirty-mac-arm64-paste/unit-clean-env.log": "410a4af0e12c981100ca6bca4c6bfbf30910193e0cc961afd9774a3f42ab1d2e",
+    "release/checks/20261002T072940Z-2c60496-dirty-mac-arm64-paste/unit-isolated-shell.log": "89424d65b0d35a840e63855141977fcb48fcafa152f5516208524447b66c9a4a",
+    "release/checks/20261002T072940Z-2c60496-dirty-mac-arm64-paste/release-tests.log": "d03d8a130c98a581b643040ed5481cfee04799c22528570f09dd63f90b2e0d02",
+    "release/checks/20261002T072940Z-2c60496-dirty-mac-arm64-paste/gui-coverage.json": "a5d555cf4513e981a7db9562111cda6d3c02828c7b958f9b0525306021ee324c",
+    "release/checks/20261002T074206Z-2c60496-dirty-mac-arm64-e2e-hidden/artifact.json": "8c7dbf977a313c38e7f8e4a8ebcb53a28357ef6ce0f73e0fc1e1c561a953f329",
+    "release/checks/20261002T074206Z-2c60496-dirty-mac-arm64-e2e-hidden/report.json": "31a9744aa9e0688bb74da66e5de4621e0a406bfebecd06627809c3b42a5c653a",
+    "release/checks/20261002T074206Z-2c60496-dirty-mac-arm64-e2e-hidden/e2e.log": "88c2db914a28eb058dfff781699e8cda542942587f52c4da1b0c832e8557861e"
+  }
+}

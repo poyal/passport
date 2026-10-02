@@ -20,6 +20,10 @@
 | [최신 검증 기록](verification.md)                    | 탭별 템플릿·스크롤·설정·업데이트·구형 SSH와 패키지 실행, 이전 성능 시험 |
 | [스크린샷 안내](screenshots.md)                      | README 이미지의 예제 데이터와 재촬영 방법                               |
 
+[로컬 검증 후 배포 운영 안내](local-release-guide.md): 다른 프로젝트에 적용할 구조와 Passport의 검증·게시 명령.
+
+[Windows 붙여넣기 검증·릴리즈 인계](windows-paste-release.md): 집의 Windows PC에서 수행할 셸·탐색기·Claude/Codex 확인과 정식 게시 순서.
+
 ## 기획과 디자인
 
 - [제품 전환과 신규 기능 계획](../plan.md): 로컬 AI·SSH 작업 화면, Windows·macOS 셸 선택과 시작 프로파일, Windows 내장 Bash, 프로젝트 실행·배치 저장, 작업 알림. 사전 검토와 후속 구현 선택·대상별 검증 조건을 함께 기록한다.

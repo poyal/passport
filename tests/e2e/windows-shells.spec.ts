@@ -1,7 +1,9 @@
-import { test, expect, _electron as electron } from "@playwright/test";
+import { electron, focusTerminalPage } from "../../scripts/e2e-electron.mjs";
+import { test, expect } from "@playwright/test";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import { closeCleanly } from "../fixtures/electron-exit";
 
 for (const shell of [
@@ -116,7 +118,7 @@ for (const shell of [
         shell === "passport-bash" ? /\$\s*$/ : />\s*$/,
         { timeout: 15000 },
       );
-      await page.bringToFront();
+      await focusTerminalPage(page);
       await page.locator(".xterm-helper-textarea").focus();
       await expect(page.locator(".xterm-helper-textarea")).toBeFocused();
       await page.waitForFunction(() => document.hasFocus());
@@ -146,6 +148,40 @@ for (const shell of [
       expect(state.environment?.profiles.map((item) => item.id)).toEqual([
         "shell-probe",
       ]);
+      // Exercise the actual Windows shell with paths from the clipboard IPC.
+      // The OS clipboard is not changed by this hidden test.
+      const pastedFiles = [
+        path.join(project, "붙여 넣기.txt"),
+        path.join(project, "quote ' & file.txt"),
+      ];
+      for (const [index, file] of pastedFiles.entries())
+        await fs.writeFile(file, `WINDOWS_PASTE_CONTENT_${index}\n`);
+      for (const [index, file] of pastedFiles.entries()) {
+        await application.evaluate(({ clipboard }, url) => {
+          clipboard.read = async () =>
+            [
+              {
+                types: ["text/uri-list"],
+                getType: async () => new Blob([url]),
+              },
+            ] as unknown as Electron.ClipboardItem[];
+        }, pathToFileURL(file).href);
+        await page.keyboard.type(
+          shell === "passport-bash"
+            ? "cat "
+            : shell === "cmd"
+              ? "type "
+              : "Get-Content -LiteralPath ",
+        );
+        await page.keyboard.press("Control+Shift+v");
+        await expect(page.locator(".xterm-rows")).toContainText(
+          path.basename(file),
+        );
+        await page.keyboard.press("Enter");
+        await expect(page.locator(".xterm-rows")).toContainText(
+          `WINDOWS_PASTE_CONTENT_${index}`,
+        );
+      }
     } finally {
       await closeCleanly(application);
       await fs.rm(directory, { recursive: true, force: true });

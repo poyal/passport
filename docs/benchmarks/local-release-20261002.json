@@ -1,0 +1,203 @@
+{
+  "recordedAt": "2026-10-02T05:03:23.815114+00:00",
+  "purpose": "Local verification and exact-installer publication migration; runtime shutdown investigation",
+  "sourceCommit": "2c6049681d9be1a93a62c121a5535e4a0737965d",
+  "dirty": true,
+  "platform": "mac-arm64",
+  "source": "local",
+  "status": "partial; full release pipeline not verified",
+  "environment": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "os": "27.0.0",
+    "node": "v25.6.0",
+    "npm": "11.8.0",
+    "cargo": "cargo 1.99.0 (5f94df478 2026-08-27)",
+    "electron": "44.4.5"
+  },
+  "implementation": {
+    "commands": [
+      "release:check",
+      "release:verify",
+      "release:publish"
+    ],
+    "publication": "No rebuild. Requires clean matching source, verified native-platform receipt, matching remote tag, and installer/evidence hashes. Default is read-only.",
+    "remoteActions": "Local workflow files changed to manual verification, contents read only. Changes have not been pushed.",
+    "timeout": "Normal Electron quit deadline 10 seconds; optional bounded sample capture and termination of the test-owned process tree; timeout is a failure.",
+    "dirtyProvenance": "Future preview receipts also record changed paths and statuses, in addition to the source fingerprint.",
+    "sourceFileHashes": {
+      "scripts/release-core.mjs": "2a9c0329b72103ed4a524ad7c404fb597b17677377fdf43502ff0eb049997184",
+      "scripts/release-process.mjs": "0f60a0baba33e843d3d07dcf27995b8a4c4c91f6eda947e4df18f4e5992b16fe",
+      "scripts/release-verify.mjs": "8c479851451c62a8b6db2bfd0121acb80919ab5e0096b30b0d70e80e2eaa9e2b",
+      "scripts/release-publish.mjs": "88be494ee0fdd7fc1d912ea82f3698649cd5a6682db4dcee24792f447ffb6f38",
+      "tests/release.test.mjs": "198b3df948aba5e8f4afd0daf563bff22fc02d1e2bde4e1275bc0fb8a9a281c7",
+      "tests/fixtures/electron-exit.ts": "2333f32345e5155f427638c26eab0596a7262684e65c799f9739eff8b4a2f342",
+      "playwright.config.ts": "d890f3554905d5275dda5e4925f0e2f848889505ba592d54e275a00ed8a6157f",
+      ".github/workflows/desktop.yml": "c69708cef46204414619d8d8354d9ab840c6fc402d76db23a692ad253bf9a7ac",
+      "package.json": "a27bbc762c9d31b753b0e4221d3892a420884ce4a0dca642088a432bfdceabd2"
+    }
+  },
+  "validation": {
+    "freshDependenciesAndBuild": {
+      "status": "passed",
+      "receipt": "release/checks/20261002T044608Z-2c60496-dirty-mac-arm64-local-release/verification.json"
+    },
+    "unitAndProtocol": {
+      "passed": 116,
+      "skipped": 3,
+      "failed": 0,
+      "log": "release/checks/20261002T044608Z-2c60496-dirty-mac-arm64-local-release/unit.log"
+    },
+    "releaseLogic": {
+      "passed": 32,
+      "skipped": 0,
+      "failed": 0,
+      "remoteWrites": "Fake API only",
+      "log": "release/checks/20261002-2c60496-local-release-final/release-tests-32.log"
+    },
+    "focusedGui": {
+      "files": [
+        "advanced.spec.ts",
+        "layout-drag.spec.ts",
+        "shutdown.spec.ts"
+      ],
+      "stats": {
+        "startTime": "2026-10-02T04:54:47.905Z",
+        "duration": 33015.653,
+        "expected": 14,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "report": "release/checks/20261002-2c60496-local-release-final/gui.json"
+    },
+    "staticChecks": {
+      "typescript": "passed",
+      "moduleSyntax": "4 scripts passed",
+      "workflow": "parsed; manual trigger only, read-only contents",
+      "format": "all changed code files passed",
+      "diffWhitespace": "passed"
+    },
+    "githubReadOnlyPlan": {
+      "checkedAt": "2026-10-02T05:01:49.421Z",
+      "scope": "Read-only publicationPlan using metadata of an already published installer; not a new local verification receipt",
+      "tag": "v1.1.0",
+      "remoteCommit": "42563e5e2131d554ab1251921141c98e3bf4a64b",
+      "upload": [],
+      "updateChecksums": false,
+      "preservesWindows": true,
+      "remoteMutations": 0
+    },
+    "failedReceiptPublication": {
+      "exitCode": 1,
+      "error": "Only a completed release verification can be published",
+      "remoteMutations": 0,
+      "log": "release/checks/20261002-2c60496-local-release-final/failed-receipt-refusal.log"
+    },
+    "fullPreviewAttempts": [
+      {
+        "receipt": "release/checks/20261002T043438Z-2c60496-dirty-mac-arm64-local-release/verification.json",
+        "status": "failed",
+        "failedStage": "source-gui",
+        "reason": "node failed (timeout or interruption)",
+        "sourceFingerprint": "d468e54e78214bcd2908f2336f739337049a0d30c9006d56c836e735ffa990c6",
+        "followingPackagingStages": "not run"
+      },
+      {
+        "receipt": "release/checks/20261002T044608Z-2c60496-dirty-mac-arm64-local-release/verification.json",
+        "status": "failed",
+        "failedStage": "source-gui",
+        "reason": "node failed (exit 1, signal null)",
+        "sourceFingerprint": "3e0675395c7aff107ef53c27ce0385ba9937706684557459172f6160ab9c2338",
+        "followingPackagingStages": "not run"
+      }
+    ]
+  },
+  "unresolved": [
+    "Intermittent Mac Electron normal shutdown hang. A diagnostic run reached app quit with only PipeWrap resources visible but the process remained alive. Root cause is not established.",
+    "Final focused GUI success does not supersede the failed full pipeline attempts.",
+    "No final DMG or EXE was produced by the new pipeline; installer payload, packaged smoke and complete packaged GUI stages are not validated end to end.",
+    "New Windows x64/ARM64 pipeline has not run on Windows hardware.",
+    "Real publication writes and account installation/uninstallation/upgrade are not tested in this task."
+  ],
+  "userApplication": {
+    "installedApp": "/Applications/Passport.app",
+    "observedPid": 4136,
+    "action": "preserved; no install replacement or user data changes",
+    "testElectronProcessesRemaining": 0
+  },
+  "artifacts": {
+    "checks": [
+      "release/checks/20261002T043438Z-2c60496-dirty-mac-arm64-local-release",
+      "release/checks/20261002T044608Z-2c60496-dirty-mac-arm64-local-release",
+      "release/checks/20261002-2c60496-mac-arm64-shutdown-regression",
+      "release/checks/20261002-2c60496-local-release-final",
+      "release/checks/20261002-2c60496-mac-arm64-release-toolchain"
+    ],
+    "builds": [
+      "release/builds/20261002T043438Z-2c60496-dirty-mac-arm64-local-release",
+      "release/builds/20261002T044608Z-2c60496-dirty-mac-arm64-local-release"
+    ],
+    "buildContents": "Failed-run metadata only; no installer.",
+    "previewSymlink": "release/builds/Passport.app",
+    "previewSymlinkTarget": "20261001T100100Z-42563e5-mac-arm64-v1.1.0/mac-arm64/Passport.app",
+    "previewSymlinkChanged": false,
+    "toolchain": "Isolated Rust under release/checks/20261002-2c60496-mac-arm64-release-toolchain; global PATH and shell configuration unchanged.",
+    "retention": {
+      "protectedBy": "KEEP.md",
+      "reason": "unresolved shutdown reproduction and comparison evidence",
+      "reviewOn": "2026-10-09",
+      "currentNewCleanupCandidates": [],
+      "existingArtifactsDeleted": false
+    },
+    "evidence": [
+      {
+        "path": "release/checks/20261002-2c60496-local-release-final/release-tests-32.log",
+        "sha256": "17d5fa92d0a823d4a5222be5ba0e991aeeea3f8a586e33204db3a5f9c68792b8"
+      },
+      {
+        "path": "release/checks/20261002-2c60496-local-release-final/gui.json",
+        "sha256": "c0efa8f54d4aab38f5923785456dab341dc3f71c015ef451964ab6614ccfed57"
+      },
+      {
+        "path": "release/checks/20261002-2c60496-local-release-final/failed-receipt-refusal.log",
+        "sha256": "d26ec3b510bf085ba440d688211365e20dd3e4b5667f72f62552b6b841f17335"
+      },
+      {
+        "path": "release/checks/20261002-2c60496-local-release-final/github-read-only-plan.json",
+        "sha256": "d4bf5dc74644ad7a98aedd8dfbe08084880365864575b0f11e6db843204f4966"
+      },
+      {
+        "path": "release/checks/20261002T044608Z-2c60496-dirty-mac-arm64-local-release/unit.log",
+        "sha256": "a378c305354ae4872c2a32444d8340ac74f0593946cbbd4fb79b8a4dff85d47d"
+      },
+      {
+        "path": "release/checks/20261002T044608Z-2c60496-dirty-mac-arm64-local-release/source-gui.log",
+        "sha256": "66d6c17c8f03be2894a1eb9bcafef9a079bda1c0893dfd84373d7f03795c2bfb"
+      },
+      {
+        "path": "release/checks/20261002T044608Z-2c60496-dirty-mac-arm64-local-release/shutdown-33792.sample.txt",
+        "sha256": "2ab5b9cd7fda1f2866d5e2b6961e64b8918e76015b50e36a04eea5a52f3ad6a5"
+      }
+    ]
+  },
+  "reusableGuide": {
+    "repositoryPath": "docs/local-release-guide.md",
+    "downloadPath": "/Users/poyal/Downloads/로컬-검증-후-배포-운영-가이드.md",
+    "sha256": "a9cbb1b88612912b9b110486a6cda1f37c79375f0cfd681925070947e101fe45",
+    "identicalCopies": true,
+    "previousSha256": "f421bf0bf9bebfe8c99f078fed696a233124c236ded0dc36a7f06f134e9ad1f1",
+    "updatedAt": "2026-10-02T05:07:23.552532+00:00",
+    "updateReason": "Synced final validation counts, unresolved shutdown issue, and unverified stages into both standalone guide copies. No tests rerun for this documentation-only update."
+  },
+  "remoteChanges": {
+    "sourcePush": false,
+    "tagMutation": false,
+    "draftCreated": false,
+    "releasePublished": false
+  },
+  "followUp": {
+    "record": "docs/benchmarks/background-e2e-20261002.json",
+    "description": "Hidden/passive E2E implemented and tested; current guide refreshed. Original full-release limitations remain."
+  }
+}
