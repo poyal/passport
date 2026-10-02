@@ -49,7 +49,17 @@ jobs:
           ('NODE_OPTIONS=--require=' + (Join-Path $taskDirectory 'cli-options.cjs').Replace('\','/')) | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           [ordered]@{createdAt=[DateTime]::UtcNow.ToString('o');purpose='Windows GUI runtime configuration';sourceCommit='f4497cc2a337c5f5aa73d5834a2b99f06013020d';dirty=$false;platform='win-x64';source='github-actions';status='configured';vitestWorkers=1;playwrightDefaultScenarioTimeoutMs=45000;electronArguments=@('--disable-frame-rate-limit','--disable-gpu-vsync');reason='Hidden Windows animation frames otherwise run at one per second. Configure the test launcher; application source, assertions, required tests and shutdown deadlines remain unchanged'} | ConvertTo-Json | Set-Content -Encoding utf8 -LiteralPath (Join-Path $taskDirectory 'artifact.json')
       - name: Verify the exact v1.1.1 source and final installer
-        run: npm run release:verify -- --desktop
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node scripts/prepare-runtime.mjs x64
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $taskEnvironment = Get-ChildItem release/checks -Directory | Where-Object Name -like '*-ci-environment' | Select-Object -First 1
+          $env:MSYSTEM = 'MINGW64'
+          & ./resources/terminal/runtime/x64/bin/bash.exe --login -c 'printf "PASSPORT_CI_BASH_READY\n"' | Tee-Object -FilePath (Join-Path $taskEnvironment.FullName 'bash-first-start.log')
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Remove-Item Env:MSYSTEM
+          npm run release:verify -- --desktop
       - uses: actions/upload-artifact@v4
         if: always()
         with:
