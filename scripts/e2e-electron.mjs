@@ -26,7 +26,7 @@ export async function assertBackgroundCapable(executable) {
     const { extractFile } = await import("@electron/asar");
     main = extractFile(
       path.join(resources, "app.asar"),
-      "dist/main/index.cjs",
+      path.join("dist", "main", "index.cjs"),
     ).toString();
   } else
     main = await fs.readFile(path.join(root, "dist/main/index.cjs"), "utf8");
@@ -50,6 +50,18 @@ export const electron = {
       ...(options.args || []),
       ...(process.platform === "win32"
         ? ["--disable-frame-rate-limit", "--disable-gpu-vsync"]
+        : []),
+      // Playwright's Electron loader adds these for source launches, but is
+      // omitted for executablePath. Keep hidden packaged rendering equivalent.
+      ...(process.platform === "win32" && options.executablePath
+        ? [
+            "--disable-background-timer-throttling",
+            "--disable-backgrounding-occluded-windows",
+            "--disable-renderer-backgrounding",
+            ...(!process.env.PLAYWRIGHT_LEGACY_SCREENSHOT
+              ? ["--enable-features=CDPScreenshotNewSurface"]
+              : []),
+          ]
         : []),
     ];
     return _electron.launch({ ...options, args, env });

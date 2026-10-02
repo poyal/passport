@@ -202,6 +202,8 @@ export async function validateReceipt(root, receipt, state) {
       "src/main/local.ts",
       "src/main/startup.ts",
       "scripts/e2e-electron.mjs",
+      "scripts/prepare-node-pty.mjs",
+      "scripts/patches/node-pty-conpty-race.patch",
       "scripts/release-core.mjs",
       "scripts/release-publish.mjs",
       "scripts/release-verify.mjs",
