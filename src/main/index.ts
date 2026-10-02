@@ -100,6 +100,20 @@ if (e2eWindowMode) {
 if (process.platform === "win32") app.setAppUserModelId("io.passport.desktop");
 if (process.env.PASSPORT_DATA_DIR)
   app.setPath("userData", path.resolve(process.env.PASSPORT_DATA_DIR));
+const desktopNotifications = {
+  isSupported: () => Notification.isSupported(),
+  create: (options: Electron.NotificationConstructorOptions) =>
+    new Notification(options),
+};
+// Delivery-policy E2E must not register native OS shortcuts or toast handlers.
+// Expose the adapter only when that fixture explicitly uses an isolated DB.
+if (
+  process.env.PASSPORT_E2E_NOTIFICATIONS === "1" &&
+  process.env.PASSPORT_DATA_DIR
+)
+  Object.assign(globalThis, {
+    __passportE2ENotifications: desktopNotifications,
+  });
 // Share one process across app copies using the same settings directory. Separate
 // test/development data directories still have independent instances.
 const ownsDataDirectory = app.requestSingleInstanceLock();
@@ -292,10 +306,10 @@ function desktopActivity(item: Activity) {
     (settings.desktop === "unfocused" &&
       focused &&
       focusedPanes.get(focused.id) === item.paneId) ||
-    !Notification.isSupported()
+    !desktopNotifications.isSupported()
   )
     return;
-  const banner = new Notification({
+  const banner = desktopNotifications.create({
     title: item.title,
     body: settings.preview ? item.body : "Passport에서 터미널을 확인하세요.",
     silent: !settings.sound,
@@ -672,8 +686,8 @@ async function call<K extends Call>(
       else throw new Error("운영체제의 알림 설정을 직접 열어 주세요.");
       return;
     case "activity.test": {
-      if (!Notification.isSupported()) return false;
-      const banner = new Notification({
+      if (!desktopNotifications.isSupported()) return false;
+      const banner = desktopNotifications.create({
         title: "Passport 알림 테스트",
         body: "Passport 데스크톱 테스트 알림입니다.",
         silent: !store.read().settings.notifications.sound,
@@ -1378,20 +1392,22 @@ async function createWindow(withLocalTerminal = false) {
     assertTerminalCapacity(store.read());
     if (moves.size) throw new Error("창 이동이 완료된 후 다시 시도해 주세요.");
   }
+  const windowIcon =
+    process.platform === "win32"
+      ? app.isPackaged
+        ? path.join(process.resourcesPath, "icon.ico")
+        : path.join(app.getAppPath(), "build/icon.ico")
+      : path.join(app.getAppPath(), "build/icon.png");
   const win = new BrowserWindow({
     ...testWindowOptions(e2eWindowMode),
+    ...(process.platform === "win32" ? { show: false } : {}),
     width: 1440,
     height: 900,
     minWidth: 1024,
     minHeight: 680,
     title: "Passport",
     backgroundColor: "#171b20",
-    icon:
-      process.platform === "win32"
-        ? app.isPackaged
-          ? path.join(process.resourcesPath, "icon.ico")
-          : path.join(app.getAppPath(), "build/icon.ico")
-        : path.join(app.getAppPath(), "build/icon.png"),
+    icon: windowIcon,
     titleBarStyle: process.platform === "darwin" ? "hiddenInset" : "default",
     trafficLightPosition: { x: 16, y: 14 },
     webPreferences: {
@@ -1403,6 +1419,18 @@ async function createWindow(withLocalTerminal = false) {
       backgroundThrottling: !e2eWindowMode,
     },
   });
+  if (process.platform === "win32") {
+    win.setAppDetails({
+      appId: "io.passport.desktop",
+      appIconPath: windowIcon,
+      appIconIndex: 0,
+      relaunchCommand: app.isPackaged
+        ? `"${process.execPath}"`
+        : `"${process.execPath}" "${app.getAppPath()}"`,
+      relaunchDisplayName: "Passport",
+    });
+    if (!e2eWindowMode) win.once("ready-to-show", () => win.show());
+  }
   if (e2eWindowMode) {
     e2eWindowAudit.created++;
     win.on("show", () => e2eWindowAudit.shown++);

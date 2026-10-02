@@ -447,23 +447,32 @@ console.log('CLI_FIXTURE_FINISHED');
       ...process.env,
       PASSPORT_DATA_DIR: path.join(directory, "data"),
       PASSPORT_DISABLE_UPDATE_CHECK: "1",
+      PASSPORT_E2E_NOTIFICATIONS: "1",
     },
   });
   try {
     const page = await application.firstWindow();
     await page.waitForSelector(".home-view");
-    await application.evaluate(({ dialog, Notification }) => {
+    await application.evaluate(({ dialog }) => {
       dialog.showMessageBox = async () => ({
         response: 1,
         checkboxChecked: false,
       });
       (globalThis as any).notificationTitles = [];
-      Notification.prototype.show = function () {
-        (globalThis as any).notificationTitles.push(this.title);
-      };
-      // This fixture records delivery decisions without sending OS banners.
-      // Do not close an OS notification that its mocked show never created.
-      Notification.prototype.close = function () {};
+      // Native isSupported()/construction register Windows shortcuts even when
+      // show is mocked. Replace the isolated fixture adapter before either call.
+      const adapter = (globalThis as any).__passportE2ENotifications;
+      if (!adapter) throw new Error("Missing isolated notification fixture");
+      const { EventEmitter } = process.getBuiltinModule("node:events");
+      adapter.isSupported = () => true;
+      adapter.create = ({ title }: { title: string }) =>
+        Object.assign(new EventEmitter(), {
+          title,
+          show() {
+            (globalThis as any).notificationTitles.push(title);
+          },
+          close() {},
+        });
     });
     await page.evaluate(
       async ({ bin, directory }) => {

@@ -44,6 +44,8 @@
 
 Windows 회귀 검사는 실제 HWND의 `WM_GETICON`에서 큰 아이콘과 작은 아이콘을 읽고, 같은 크기로 로드한 Passport ICO와 픽셀 해시를 대조한다. 새 창·작업 공간 이동 창을 포함해 소스와 최종 설치본에서 실행한다. 아이콘 원본 디자인은 변경하지 않는다. [Electron의 Windows ICO 안내](https://www.electronjs.org/docs/latest/api/native-image).
 
+Windows 창은 처음 표시하기 전에 `setAppDetails`로 기존 앱 ID, ICO 경로, 재실행 명령과 Passport 이름을 지정한다. 작업표시줄 그룹 아이콘은 창 아이콘과 별도로 실제 화면에서도 확인한다. 같은 앱 ID의 오래된 Electron 개발용 바로가기는 잘못된 그룹 아이콘을 만들 수 있다. 알림 정책 E2E는 격리 DB에서만 노출되는 알림 어댑터를 대체하여 네이티브 `isSupported()`·생성자의 시작 메뉴/COM 등록을 실행하지 않는다. [Windows 작업표시줄 그룹 아이콘 속성](https://learn.microsoft.com/en-us/windows/win32/properties/props-system-appusermodel-relaunchiconresource).
+
 원본 이미지와 생성 프롬프트는 앱에서 참조하는 `design/icons/`에 보관한다. 문서용 실제 앱 화면은 [스크린샷 안내](screenshots.md)를 참고한다.
 
 ## 서버 운영체제 아이콘
