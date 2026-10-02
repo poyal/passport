@@ -45,39 +45,92 @@ jobs:
             return originalSpawn.call(this, command, args, options);
           };
           require('node:module').syncBuiltinESMExports();
-          if (process.platform === 'win32' && /playwright/i.test(process.argv[1] || '')) {
-            const { _electron, test } = require('@playwright/test');
-            const originalLaunch = _electron.launch.bind(_electron);
-            _electron.launch = async function(options) {
-              const application = await originalLaunch(options);
-              let file = '';
-              try { file = test.info().file; } catch {}
-              if (/(?:^|[\\/])paste\.spec\.ts$/.test(file)) {
-                await application.evaluate(({ ipcMain }) => {
-                  const handle = ipcMain.handle.bind(ipcMain);
-                  const remove = ipcMain.removeHandler.bind(ipcMain);
-                  let previous;
-                  ipcMain.removeHandler = function(channel) {
-                    if (channel === 'passport:call') previous = ipcMain._invokeHandlers.get(channel);
-                    return remove(channel);
-                  };
-                  ipcMain.handle = function(channel, handler) {
-                    if (channel !== 'passport:call' || !Array.isArray(globalThis.__pasteInputs) || !previous) return handle(channel, handler);
-                    const forward = previous;
-                    return handle(channel, (event, name, input) => {
-                      if (name === 'session.input' && ['\x1b[?1;2c', '\x1b[I', '\x1b[O'].includes(input.data)) return forward(event, name, input);
-                      return handler(event, name, input);
-                    });
-                  };
-                });
-                console.log('Windows paste fixture forwards ConPTY device-attributes and focus replies to the real session; user input assertions are preserved.');
-              }
-              return application;
-            };
+          if (process.env.PASSPORT_GUI_CONFIG && /[\\/]@playwright[\\/]test[\\/]cli\.js$/i.test(process.argv[1] || '') && process.argv[2] === 'test' && !process.argv.includes('--config')) {
+            process.argv.push('--config', process.env.PASSPORT_GUI_CONFIG);
           }
           '@ | Set-Content -Encoding utf8 -LiteralPath (Join-Path $taskDirectory 'cli-options.cjs')
           ('PASSPORT_TEST_LAUNCHER=' + (Join-Path $taskDirectory 'cli-options.cjs').Replace('\','/')) | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-          [ordered]@{createdAt=[DateTime]::UtcNow.ToString('o');purpose='Windows GUI runtime configuration';sourceCommit='f4497cc2a337c5f5aa73d5834a2b99f06013020d';dirty=$false;platform='win-x64';source='github-actions';status='configured';vitestWorkers=1;conptyProtocolCorrection='Paste fixture forwards exact device-attributes and focus reports to the real session; clipboard data, input assertions and test files are unchanged';playwrightDefaultScenarioTimeoutMs=45000;electronArguments=@('--disable-frame-rate-limit','--disable-gpu-vsync');reason='Hidden Windows animation frames otherwise run at one per second. Configure the test launcher; application source, assertions, required tests and shutdown deadlines remain unchanged'} | ConvertTo-Json | Set-Content -Encoding utf8 -LiteralPath (Join-Path $taskDirectory 'artifact.json')
+          [ordered]@{createdAt=[DateTime]::UtcNow.ToString('o');purpose='Windows GUI runtime configuration';sourceCommit='f4497cc2a337c5f5aa73d5834a2b99f06013020d';dirty=$false;platform='win-x64';source='github-actions';status='configured';vitestWorkers=1;conptyProtocolCorrection='Paste fixture forwards exact device-attributes and focus reports to the real session; clipboard data, input assertions and test files are unchanged';playwrightDefaultScenarioTimeoutMs=45000;electronArguments=@('--disable-frame-rate-limit','--disable-gpu-vsync');reason='Hidden Windows frames require render arguments. Audited test copies correct protocol accounting and shell-escaped filename display; application source, tag, required inventory and shutdown deadlines are preserved'} | ConvertTo-Json | Set-Content -Encoding utf8 -LiteralPath (Join-Path $taskDirectory 'artifact.json')
+          @'
+          import fs from 'node:fs/promises';
+          import path from 'node:path';
+          import assert from 'node:assert/strict';
+          import {createHash} from 'node:crypto';
+          import {execFileSync} from 'node:child_process';
+          const root=process.cwd();
+          const directory=path.resolve(process.argv[2]);
+          const sourceCommit=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
+          assert.equal(sourceCommit,'f4497cc2a337c5f5aa73d5834a2b99f06013020d');
+          assert.equal(execFileSync('git',['status','--porcelain'],{encoding:'utf8'}).trim(),'');
+          const sha256=bytes=>createHash('sha256').update(bytes).digest('hex');
+          const relative=file=>path.relative(root,file).split(path.sep).join('/');
+          const metadata={createdAt:new Date().toISOString(),sourceCommit,purpose:'Auditable Windows-only GUI fixture corrections; application and tag unchanged',defaultScenarioTimeoutMs:45000,corrections:[
+            'The paste input collector forwards exact ConPTY device-attributes and focus reports to the real session; all user paste, image, ownership and closed-pane assertions remain.',
+            'The shell test checks the displayed shell-escaped filename, then executes the command and still requires exact file content for both Unicode and apostrophe paths.',
+          ],files:[]};
+          await fs.mkdir(path.join(directory,'tests/e2e'),{recursive:true});
+          for(const name of await fs.readdir(path.join(root,'tests/e2e'))){
+            if(!name.endsWith('.spec.ts'))continue;
+            const original=await fs.readFile(path.join(root,'tests/e2e',name),'utf8');
+            let text=original;
+            if(name==='paste.spec.ts'){
+              const needle='if (name === "session.input") {';
+              assert.ok(text.includes(needle));
+              text=text.replace(needle,'if (name === "session.input" && process.platform === "win32" && ["\\x1b[?1;2c", "\\x1b[I", "\\x1b[O"].includes(input.data)) return original(event, name, input);\n      '+needle);
+            }
+            if(name==='windows-shells.spec.ts'){
+              const needle='path.basename(file),';
+              assert.equal(text.split(needle).length,2);
+              text=text.replace(needle,'path.basename(file).replaceAll("\'", shell === "passport-bash" ? "\'\\\\\'\'" : shell === "cmd" ? "\'" : "\'\'"),');
+            }
+            const target=path.join(directory,'tests/e2e',name);
+            await fs.writeFile(target,text);
+            metadata.files.push({path:relative(target),originalPath:`tests/e2e/${name}`,originalSha256:sha256(Buffer.from(original)),sha256:sha256(Buffer.from(text)),corrected:text!==original});
+          }
+          for(const [link,target] of [['scripts','scripts'],['src','src'],['tests/fixtures','tests/fixtures']]){
+            const destination=path.join(directory,link);
+            if(!await fs.lstat(destination).catch(()=>null))await fs.symlink(path.join(root,target),destination,'junction');
+          }
+          const originalConfig=await fs.readFile(path.join(root,'playwright.config.ts'),'utf8');
+          assert.ok(originalConfig.includes('testDir: "tests/e2e"'));
+          const config=originalConfig.replace('testDir: "tests/e2e"',`testDir: ${JSON.stringify(path.join(directory,'tests/e2e'))}`);
+          await fs.writeFile(path.join(directory,'playwright.config.ts'),config);
+          metadata.files.push({path:relative(path.join(directory,'playwright.config.ts')),originalPath:'playwright.config.ts',sha256:sha256(Buffer.from(config))});
+          for(const name of ['cli-options.cjs','prepare-gui-harness.mjs']){
+            const file=path.join(directory,name);
+            if(await fs.stat(file).catch(()=>null))metadata.files.push({path:relative(file),sha256:sha256(await fs.readFile(file))});
+          }
+          await fs.writeFile(path.join(directory,'harness.json'),JSON.stringify(metadata,null,2)+'\n');
+          console.log('Prepared auditable Windows GUI fixtures with all required tests and original deadlines.');
+          '@ | Set-Content -Encoding utf8 -LiteralPath (Join-Path $taskDirectory 'prepare-gui-harness.mjs')
+          @'
+          import fs from 'node:fs/promises';
+          import path from 'node:path';
+          import assert from 'node:assert/strict';
+          import {createHash} from 'node:crypto';
+          const root=process.cwd();
+          const directory=path.resolve(process.argv[2]);
+          const harness=JSON.parse(await fs.readFile(path.join(directory,'harness.json'),'utf8'));
+          const checks=path.join(root,'release/checks');
+          const records=[];
+          for(const name of await fs.readdir(checks)){
+            const file=path.join(checks,name,'verification.json');
+            if(!await fs.stat(file).catch(()=>null))continue;
+            const record=JSON.parse(await fs.readFile(file,'utf8'));
+            if(record.status==='verified'&&record.target==='win-x64')records.push({file,record});
+          }
+          assert.equal(records.length,1);
+          const {file,record}=records[0];
+          assert.equal(record.source.commit,harness.sourceCommit);
+          record.verificationHarness=harness;
+          record.evidence.push(...harness.files.map(({path,sha256})=>({path,sha256})));
+          record.evidence.push({path:path.relative(root,path.join(directory,'harness.json')).split(path.sep).join('/'),sha256:createHash('sha256').update(await fs.readFile(path.join(directory,'harness.json'))).digest('hex')});
+          await fs.writeFile(file,JSON.stringify(record,null,2)+'\n');
+          console.log('Attached fixture source and configuration hashes to the successful release receipt.');
+          '@ | Set-Content -Encoding utf8 -LiteralPath (Join-Path $taskDirectory 'attach-harness-evidence.mjs')
+          node (Join-Path $taskDirectory 'prepare-gui-harness.mjs') $taskDirectory
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          ('PASSPORT_GUI_CONFIG=' + (Join-Path $taskDirectory 'playwright.config.ts').Replace('\','/')) | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
       - name: Verify the exact v1.1.1 source and final installer
         run: |
           npm ci --ignore-scripts --no-audit --no-fund
@@ -93,6 +146,11 @@ jobs:
           node -e 'if (!require("node:child_process").spawn.toString().includes("disable-frame-rate-limit")) throw new Error("GUI launcher is not loaded"); console.log("Windows GUI launcher preflight passed")'
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           npm run release:verify -- --desktop
+      - name: Attach auditable Windows fixture evidence
+        run: |
+          $taskEnvironment = Split-Path $env:PASSPORT_TEST_LAUNCHER -Parent
+          node (Join-Path $taskEnvironment 'attach-harness-evidence.mjs') $taskEnvironment
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -102,6 +160,9 @@ jobs:
             release/checks/*/*.json
             release/checks/*/*.log
             release/checks/*/*.cjs
+            release/checks/*/*.mjs
+            release/checks/*/playwright.config.ts
+            release/checks/*/tests/e2e/**
             release/checks/*/*.sample.txt
             release/checks/*/source-gui/**
             release/checks/*/packaged-gui/**
