@@ -33,18 +33,33 @@ export async function patchWindowsConpty(root) {
   );
   // Backport microsoft/node-pty#922 (004a99cd), preserving its MIT attribution.
   // Serialize vector access and baton lifetime across JS and exit watcher threads.
+  // Windows checkouts can convert the tracked patch to CRLF while npm's C++
+  // source retains LF. Apply normalized bytes; the exact source hashes below
+  // still reject changed context or changed patch output.
+  const sourceFile = path.join(root, "src/win/conpty.cc");
+  await fs.writeFile(
+    sourceFile,
+    (await fs.readFile(sourceFile, "utf8")).replaceAll("\r\n", "\n"),
+  );
+  const patch = (
+    await fs.readFile(
+      fileURLToPath(
+        new URL("./patches/node-pty-conpty-race.patch", import.meta.url),
+      ),
+      "utf8",
+    )
+  ).replaceAll("\r\n", "\n");
   const args = [
     "apply",
     `--directory=${directory.split(path.sep).join("/")}`,
-    fileURLToPath(
-      new URL("./patches/node-pty-conpty-race.patch", import.meta.url),
-    ),
+    "-",
   ];
   execFileSync("git", [...args.slice(0, 1), "--check", ...args.slice(1)], {
     cwd: project,
     windowsHide: true,
+    input: patch,
   });
-  execFileSync("git", args, { cwd: project, windowsHide: true });
+  execFileSync("git", args, { cwd: project, windowsHide: true, input: patch });
   assert.equal(await conptySourceHash(root), fixedConptySource);
   console.log("node-pty: upstream Windows ConPTY race fix applied");
 }
