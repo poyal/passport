@@ -890,11 +890,10 @@ test("Electron teardown checks actual process exit after the platform's graceful
     process: () => child,
     evaluate: async () => {
       cleanupFinished = true;
-      child.exitCode = 0;
-      child.emit("exit", 0, null);
     },
     close: async () => {
       assert.equal(cleanupFinished, true);
+      assert.equal(child.exitCode, null);
       child.exitCode = 0;
       child.emit("exit", 0, null);
     },
@@ -912,7 +911,7 @@ test("Electron teardown rejects a stalled quit instead of waiting indefinitely",
   let closed = false;
   const app = {
     process: () => child,
-    evaluate: async () => {},
+    evaluate: async () => new Promise(() => {}),
     close: async () => {
       closed = true;
     },
@@ -920,6 +919,54 @@ test("Electron teardown rejects a stalled quit instead of waiting indefinitely",
   await assert.rejects(closeCleanly(app, 50), /normal shutdown exceeded/);
   assert.equal(closed, false);
   child.emit("exit", 0, null);
+});
+
+test("Electron teardown holds the final quit until cleanup and debugger close are ordered", async () => {
+  const child = Object.assign(new EventEmitter(), {
+    exitCode: null,
+    signalCode: null,
+    stderr: new PassThrough(),
+  });
+  let cleaned = false;
+  let debuggerClosed = false;
+  const nativeApp = Object.assign(new EventEmitter(), {
+    quit() {
+      const event = {
+        defaultPrevented: false,
+        preventDefault() {
+          this.defaultPrevented = true;
+        },
+      };
+      nativeApp.emit("will-quit", event);
+      if (!event.defaultPrevented) {
+        assert.equal(cleaned, true);
+        assert.equal(debuggerClosed, true);
+        child.exitCode = 0;
+        child.emit("exit", 0, null);
+      }
+    },
+  });
+  nativeApp.on("will-quit", (event) => {
+    if (cleaned) return;
+    event.preventDefault();
+    setTimeout(() => {
+      cleaned = true;
+      nativeApp.quit();
+    }, 5);
+  });
+  const application = {
+    process: () => child,
+    evaluate: (fn) => fn({ app: nativeApp, dialog: {} }),
+    close: async () => {
+      assert.equal(cleaned, true);
+      assert.equal(child.exitCode, null);
+      debuggerClosed = true;
+      nativeApp.quit();
+    },
+  };
+  await closeCleanly(application, 1000);
+  assert.equal(child.exitCode, 0);
+  assert.equal(nativeApp.listenerCount("will-quit"), 1);
 });
 
 test("a forced Electron exit is never accepted as a normal shutdown", async () => {

@@ -101,7 +101,7 @@ export async function closeCleanly(
         let windowAudit:
           { mode: string; shown: number; focused: number } | undefined;
         if (child.exitCode === null && child.signalCode === null) {
-          windowAudit = await application.evaluate(({ app, dialog }) => {
+          windowAudit = await application.evaluate(async ({ app, dialog }) => {
             if (process.env.PASSPORT_SHUTDOWN_DIAGNOSTICS) {
               for (const event of [
                 "before-quit",
@@ -122,13 +122,25 @@ export async function closeCleanly(
               response: 1,
               checkboxChecked: false,
             });
-            // Preserve the established graceful quit path, including native
-            // PTY cleanup. A timeout is a failure, never a successful close.
+            // Let Passport finish its asynchronous will-quit cleanup first.
+            // Hold only the final, uncancelled will-quit so Playwright can
+            // disconnect the debugger before Node waits for it at exit.
+            // Closing the debugger before PTY cleanup finishes is unsafe;
+            // waiting for process exit before closing it can deadlock.
+            const cleaned = new Promise<void>((resolve) => {
+              const onWillQuit = (event: Electron.Event) => {
+                if (event.defaultPrevented) return;
+                event.preventDefault();
+                app.removeListener("will-quit", onWillQuit);
+                resolve();
+              };
+              app.on("will-quit", onWillQuit);
+            });
             setTimeout(() => app.quit(), 0);
+            await cleaned;
             return (globalThis as any).__passportE2EWindowAudit;
           });
         }
-        await exited;
         if (deadlineExpired) return;
         await application.close();
         const [code, signal] = await exited;
