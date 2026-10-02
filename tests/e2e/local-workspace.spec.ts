@@ -435,6 +435,9 @@ console.log('CLI_FIXTURE_FINISHED');
       Notification.prototype.show = function () {
         (globalThis as any).notificationTitles.push(this.title);
       };
+      // This fixture records delivery decisions without sending OS banners.
+      // Do not close an OS notification that its mocked show never created.
+      Notification.prototype.close = function () {};
     });
     await page.evaluate(
       async ({ bin, directory }) => {
@@ -492,6 +495,11 @@ console.log('CLI_FIXTURE_FINISHED');
       )
       .toBe(true);
     await page.locator(".xterm-helper-textarea").focus();
+    // Native activation and renderer focus arrive separately on macOS.
+    // Wait for both before a foreground notification policy assertion.
+    await expect
+      .poll(() => page.evaluate(() => document.hasFocus()))
+      .toBe(true);
     await page.keyboard.type(
       "claude; printf '\\nPASSPORT_%s\\n' CLAUDE_RETURNED",
     );

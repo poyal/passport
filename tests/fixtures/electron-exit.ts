@@ -138,6 +138,14 @@ export async function closeCleanly(
             });
             setTimeout(() => app.quit(), 0);
             await cleaned;
+            // Playwright calls app.quit() inside an inspector evaluation.
+            // Finish that evaluation before entering Electron's native quit
+            // loop; all Passport cleanup has already completed above.
+            const quit = app.quit.bind(app);
+            app.quit = () => {
+              app.quit = quit;
+              setTimeout(quit, 0);
+            };
             return (globalThis as any).__passportE2EWindowAudit;
           });
         }
