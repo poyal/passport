@@ -5,20 +5,12 @@ permissions:
   contents: read
 jobs:
   desktop:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: windows-2025
-            target: win-x64
-          - os: windows-11-arm
-            target: win-arm64
-          - os: macos-15
-            target: mac-arm64
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-2025
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: v1.1.1
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
@@ -28,18 +20,16 @@ jobs:
           python-version: "3.13"
       - uses: dtolnay/rust-toolchain@stable
       - name: Expose Windows OpenSSL
-        if: runner.os == 'Windows'
         shell: pwsh
         run: |
           'C:\Program Files\Git\usr\bin' | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
-      - name: Run the same verification as a local release
+      - name: Verify the exact v1.1.1 source and final installer
         run: npm run release:verify -- --desktop
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: verification-${{ matrix.target }}
+          name: verification-win-x64
           path: |
-            release/builds/*/Passport-*.dmg
             release/builds/*/Passport-*.exe
             release/checks/*/*.json
             release/checks/*/*.log
