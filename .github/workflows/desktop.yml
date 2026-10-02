@@ -25,20 +25,29 @@ jobs:
         shell: pwsh
         run: |
           'C:\Program Files\Git\usr\bin' | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
-      - name: Configure the Windows GUI scenario deadline
+      - name: Configure the Windows GUI runtime
         shell: pwsh
         run: |
           $taskId = [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssZ') + '-f4497cc-win-x64-ci-environment'
           $taskDirectory = Join-Path $env:GITHUB_WORKSPACE ('release/checks/' + $taskId)
           New-Item -ItemType Directory -Path $taskDirectory -Force | Out-Null
           @'
-          const script = (process.argv[1] || '').replaceAll('\\', '/');
-          if (script.endsWith('/@playwright/test/cli.js') && process.argv[2] === 'test') {
-            process.argv.push('--timeout=120000');
-          }
+          const childProcess = require('node:child_process');
+          const originalSpawn = childProcess.spawn;
+          childProcess.spawn = function(command, args, options) {
+            const environment = options?.env || process.env;
+            if (process.platform === 'win32' && typeof command === 'string' && /(?:electron|Passport)\.exe$/i.test(command) && Array.isArray(args) && environment.ELECTRON_RUN_AS_NODE !== '1') {
+              args = [...args, '--disable-frame-rate-limit', '--disable-gpu-vsync'];
+            }
+            if (process.platform === 'win32' && options?.shell && typeof command === 'string' && /^"[^"\r\n]*(?:electron|Passport)\.exe"/i.test(command) && command.includes('--remote-debugging-port')) {
+              command += ' "--disable-frame-rate-limit" "--disable-gpu-vsync"';
+            }
+            return originalSpawn.call(this, command, args, options);
+          };
+          require('node:module').syncBuiltinESMExports();
           '@ | Set-Content -Encoding utf8 -LiteralPath (Join-Path $taskDirectory 'cli-options.cjs')
-          ('NODE_OPTIONS=--require=' + (Join-Path $taskDirectory 'cli-options.cjs')) | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-          [ordered]@{createdAt=[DateTime]::UtcNow.ToString('o');purpose='Windows GUI CLI timeout configuration';sourceCommit='f4497cc2a337c5f5aa73d5834a2b99f06013020d';dirty=$false;platform='win-x64';source='github-actions';status='configured';vitestWorkers=1;playwrightScenarioTimeoutMs=120000;commandLineOption='--timeout=120000';reason='The hidden Windows runner delivers stability frames slowly; assertions, required tests and shutdown deadlines remain unchanged'} | ConvertTo-Json | Set-Content -Encoding utf8 -LiteralPath (Join-Path $taskDirectory 'artifact.json')
+          ('NODE_OPTIONS=--require=' + (Join-Path $taskDirectory 'cli-options.cjs').Replace('\','/')) | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          [ordered]@{createdAt=[DateTime]::UtcNow.ToString('o');purpose='Windows GUI runtime configuration';sourceCommit='f4497cc2a337c5f5aa73d5834a2b99f06013020d';dirty=$false;platform='win-x64';source='github-actions';status='configured';vitestWorkers=1;playwrightDefaultScenarioTimeoutMs=45000;electronArguments=@('--disable-frame-rate-limit','--disable-gpu-vsync');reason='Hidden Windows animation frames otherwise run at one per second. Configure the test launcher; application source, assertions, required tests and shutdown deadlines remain unchanged'} | ConvertTo-Json | Set-Content -Encoding utf8 -LiteralPath (Join-Path $taskDirectory 'artifact.json')
       - name: Verify the exact v1.1.1 source and final installer
         run: npm run release:verify -- --desktop
       - uses: actions/upload-artifact@v4
