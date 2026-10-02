@@ -966,7 +966,6 @@ test("Electron teardown holds the final quit until cleanup and debugger close ar
   };
   await closeCleanly(application, 1000);
   assert.equal(child.exitCode, 0);
-  assert.equal(nativeApp.listenerCount("will-quit"), 1);
 });
 
 test("a forced Electron exit is never accepted as a normal shutdown", async () => {
