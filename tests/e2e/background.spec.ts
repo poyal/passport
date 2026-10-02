@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
 import { electron } from "../../scripts/e2e-electron.mjs";
 import { e2eMode } from "../../scripts/e2e-mode.mjs";
 import { closeCleanly } from "../fixtures/electron-exit";
@@ -76,6 +77,35 @@ test("isolated windows accept terminal input and move workspaces without native 
       body: JSON.stringify(await state(), null, 2),
       contentType: "application/json",
     });
+    if (process.platform === "win32") {
+      const icons = await application.evaluate(({ app, BrowserWindow }) => ({
+        path: app.isPackaged
+          ? `${process.resourcesPath}/icon.ico`
+          : `${app.getAppPath()}/build/icon.ico`,
+        handles: BrowserWindow.getAllWindows()
+          .map((win) =>
+            win.getNativeWindowHandle().readBigUInt64LE().toString(),
+          )
+          .join(","),
+      }));
+      const report = execFileSync(
+        "powershell.exe",
+        [
+          "-NoProfile",
+          "-File",
+          "scripts/windows-icon-smoke.ps1",
+          "-IconPath",
+          icons.path,
+          "-WindowHandles",
+          icons.handles,
+        ],
+        { encoding: "utf8", windowsHide: true, timeout: 15000 },
+      );
+      await info.attach("native-window-icons", {
+        body: report,
+        contentType: "application/json",
+      });
+    }
   } finally {
     try {
       await closeCleanly(application);

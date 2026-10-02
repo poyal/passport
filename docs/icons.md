@@ -40,7 +40,9 @@
 - 4번은 Passport라는 이름과 터미널 기능을 함께 담는다.
 - 5번은 접속과 파일 전송을 추상적인 연결 심벌로 표현한다.
 
-확정 원본은 v2 PNG다. [빌드 스크립트](../scripts/build.mjs)가 이 파일을 `build/icon.png`로 복사하며 앱 화면과 패키징에 사용한다. Mac 설치본에 적용했고, Windows 설치본과 작업표시줄 표시는 Windows 실환경 검증이 남아 있다.
+확정 원본은 v2 PNG다. [빌드 스크립트](../scripts/build.mjs)가 이 파일을 `build/icon.png`로 복사하며 앱 화면과 Mac 패키징에 사용한다. Windows 빌드는 같은 원본에서 `build/icon.ico`를 생성한다. 실행 파일·NSIS 바로가기와 실행 중인 창이 같은 ICO를 사용하며, 창에서는 ASAR 밖의 `resources/icon.ico`를 읽는다. 원본 크기의 PNG를 Windows 창 아이콘으로 전달하지 않는다.
+
+Windows 회귀 검사는 실제 HWND의 `WM_GETICON`에서 큰 아이콘과 작은 아이콘을 읽고, 같은 크기로 로드한 Passport ICO와 픽셀 해시를 대조한다. 새 창·작업 공간 이동 창을 포함해 소스와 최종 설치본에서 실행한다. 아이콘 원본 디자인은 변경하지 않는다. [Electron의 Windows ICO 안내](https://www.electronjs.org/docs/latest/api/native-image).
 
 원본 이미지와 생성 프롬프트는 앱에서 참조하는 `design/icons/`에 보관한다. 문서용 실제 앱 화면은 [스크린샷 안내](screenshots.md)를 참고한다.
 

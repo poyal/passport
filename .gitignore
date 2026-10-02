@@ -10,6 +10,7 @@ playwright-report/
 .env
 coverage/
 build/icon.png
+build/icon.ico
 build/runtime-downloads/
 native/helper/target/
 resources/terminal/helper/

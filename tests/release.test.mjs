@@ -16,10 +16,12 @@ import {
   parseArguments,
   withReleaseLock,
   initialWindowsRelease,
+  windowsIconReplacement,
 } from "../scripts/release-core.mjs";
 import {
   publicationPlan,
   publishVerified,
+  replaceVerifiedInstaller,
   tagCommit,
   githubClient,
 } from "../scripts/release-publish.mjs";
@@ -236,6 +238,12 @@ function fakeGitHub(commit) {
     remove: async (id) => {
       state.mutations.push(["remove", id]);
       state.assets = state.assets.filter((asset) => asset.id !== id);
+    },
+    renameAsset: async (id, name) => {
+      state.mutations.push(["rename", id, name]);
+      const asset = state.assets.find((item) => item.id === id);
+      asset.name = name;
+      return copy(asset);
     },
     update: async (_, data) => {
       state.mutations.push(["update", data]);
@@ -768,6 +776,177 @@ test("the initial Windows source exception cannot publish another platform or ve
       publicationPlan(client, [{ ...receipt, ...replacement }]),
       /Remote tag differs/,
     );
+});
+
+async function windowsIconFixture(t) {
+  const { receipt, client, state } = await initialWindowsFixture(t);
+  client.getTag = async (tag) => ({
+    object: {
+      type: "commit",
+      sha:
+        tag === windowsIconReplacement.sourceTag
+          ? receipt.source.commit
+          : tag === initialWindowsRelease.sourceTag
+            ? windowsIconReplacement.previousCommit
+            : initialWindowsRelease.releaseCommit,
+    },
+  });
+  state.assets.push({
+    ...windowsIconReplacement.asset,
+    state: "uploaded",
+    updated_at: "2026-10-02T15:30:00Z",
+  });
+  return { receipt, client, state };
+}
+
+test("Windows icon replacement requires the explicit option and pins both source tags", async (t) => {
+  const { receipt, client, state } = await windowsIconFixture(t);
+  await assert.rejects(
+    publicationPlan(client, [receipt]),
+    /Remote tag differs/,
+  );
+  const plan = await publicationPlan(client, [receipt], {
+    replaceWindowsIcon: true,
+  });
+  assert.equal(plan.sourceTag, windowsIconReplacement.sourceTag);
+  assert.deepEqual(
+    plan.replacements.map((asset) => asset.id),
+    [windowsIconReplacement.asset.id],
+  );
+  assert.deepEqual(plan.uploads, [receipt.artifact.name]);
+  assert.deepEqual(state.mutations, []);
+  const original = client.getTag;
+  client.getTag = async (tag) =>
+    tag === initialWindowsRelease.sourceTag
+      ? { object: { type: "commit", sha: "0".repeat(40) } }
+      : original(tag);
+  await assert.rejects(
+    publicationPlan(client, [receipt], { replaceWindowsIcon: true }),
+    /Original Windows source tag changed/,
+  );
+});
+
+test("Windows icon replacement refuses any other installer, Mac asset or target", async (t) => {
+  const { receipt, client, state } = await windowsIconFixture(t);
+  const windows = state.assets.at(-1);
+  for (const key of ["id", "size", "digest"]) {
+    const previous = windows[key];
+    windows[key] = key === "digest" ? "sha256:" + "0".repeat(64) : previous + 1;
+    await assert.rejects(
+      publicationPlan(client, [receipt], { replaceWindowsIcon: true }),
+      /explicitly approved replacement/,
+    );
+    windows[key] = previous;
+  }
+  state.assets[0].digest = "sha256:" + "0".repeat(64);
+  await assert.rejects(
+    publicationPlan(client, [receipt], { replaceWindowsIcon: true }),
+    /Existing Mac 1.1.1 installer changed/,
+  );
+  for (const target of ["win-arm64", "mac-arm64"])
+    await assert.rejects(
+      publicationPlan(client, [{ ...receipt, target }], {
+        replaceWindowsIcon: true,
+      }),
+      /only authorized/,
+    );
+  assert.deepEqual(state.mutations, []);
+});
+
+test("an already published matching icon fix needs no installer replacement on resume", async (t) => {
+  const { receipt, client, state } = await windowsIconFixture(t);
+  Object.assign(state.assets.at(-1), {
+    id: 123456,
+    size: receipt.artifact.bytes,
+    digest: "sha256:" + receipt.artifact.sha256,
+  });
+  const plan = await publicationPlan(client, [receipt], {
+    replaceWindowsIcon: true,
+  });
+  assert.deepEqual(plan.replacements, []);
+  assert.deepEqual(plan.uploads, []);
+  assert.deepEqual(state.mutations, []);
+});
+
+test("installer replacement verifies staged bytes before deleting the old asset and preserves a backup", async (t) => {
+  const { root, receipt, bytes } = await fixture(t, "win-x64");
+  const { client, state, add } = fakeGitHub(receipt.source.commit);
+  const oldBytes = Buffer.from("previous verified installer");
+  const old = add(receipt.artifact.name, oldBytes);
+  const asset = await replaceVerifiedInstaller({
+    root,
+    client,
+    release: { id: 1 },
+    receipt,
+    old,
+    bytes,
+    originalAssets: [old],
+  });
+  assert.equal(asset.name, receipt.artifact.name);
+  assert.equal(asset.digest, "sha256:" + receipt.artifact.sha256);
+  assert.deepEqual(
+    state.mutations.map((item) => item[0]),
+    ["upload", "remove", "rename"],
+  );
+  assert.deepEqual(
+    await fs.readFile(
+      path.join(root, "release/packages/v2.0.0/github/win-x64", old.name),
+    ),
+    oldBytes,
+  );
+  assert.equal(state.assets.length, 1);
+});
+
+test("a corrupt staged replacement never removes the original installer", async (t) => {
+  const { root, receipt, bytes } = await fixture(t, "win-x64");
+  const { client, state, add } = fakeGitHub(receipt.source.commit);
+  const old = add(
+    receipt.artifact.name,
+    Buffer.from("previous verified installer"),
+  );
+  const download = client.download;
+  client.download = async (asset) =>
+    asset.id === old.id ? download(asset) : Buffer.from("corrupt");
+  await assert.rejects(
+    replaceVerifiedInstaller({
+      root,
+      client,
+      release: { id: 1 },
+      receipt,
+      old,
+      bytes,
+      originalAssets: [old],
+    }),
+    /Staged installer download hash differs/,
+  );
+  assert.ok(state.assets.some((asset) => asset.id === old.id));
+  assert.ok(!state.mutations.some((item) => item[0] === "remove"));
+});
+
+test("failed replacement promotion restores the prior public filename and exact bytes", async (t) => {
+  const { root, receipt, bytes } = await fixture(t, "win-x64");
+  const { client, state, add, blobs } = fakeGitHub(receipt.source.commit);
+  const oldBytes = Buffer.from("previous verified installer");
+  const old = add(receipt.artifact.name, oldBytes);
+  client.renameAsset = async () => {
+    throw new Error("promotion failed");
+  };
+  await assert.rejects(
+    replaceVerifiedInstaller({
+      root,
+      client,
+      release: { id: 1 },
+      receipt,
+      old,
+      bytes,
+      originalAssets: [old],
+    }),
+    /promotion failed/,
+  );
+  assert.deepEqual(
+    blobs.get(state.assets.find((asset) => asset.name === old.name).id),
+    oldBytes,
+  );
 });
 
 test("new releases stay draft until uploaded bytes and checksums are verified", async (t) => {

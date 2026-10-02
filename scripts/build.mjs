@@ -6,6 +6,15 @@ import "./patch-ssh2.mjs";
 import "./build-helper.mjs";
 await mkdir("build", { recursive: true });
 await copyFile("design/icons/04-passport-terminal-v2.png", "build/icon.png");
+if (process.platform === "win32") {
+  const { runIconsTool } =
+    await import("app-builder-lib/out/toolsets/icons.js");
+  await runIconsTool({
+    inputFile: "build/icon.png",
+    outputFormat: "ico",
+    outDir: "build",
+  });
+}
 await build({
   entryPoints: ["src/main/index.ts"],
   outfile: "dist/main/index.cjs",

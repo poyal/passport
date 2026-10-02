@@ -30,7 +30,9 @@ if (options.help) {
   );
 } else {
   assert.ok(
-    !options.execute && !options.manifests.length,
+    !options.execute &&
+      !options.manifests.length &&
+      !options["replace-windows-icon"],
     "Verification accepts --preview, --desktop, or --help",
   );
   await withReleaseLock(root, verify).catch((error) => {

@@ -62,6 +62,8 @@ Developer ID 서명과 Apple 공증은 별도다. 이 명령만으로 공증 완
 
 [확정한 v2 아이콘](icons.md)을 `scripts/build.mjs`가 `build/icon.png`로 복사한다. electron-builder가 해당 원본을 패키지 아이콘으로 사용한다. 원본 경로는 `design/icons/04-passport-terminal-v2.png`다.
 
+Windows에서는 같은 원본으로 여러 크기의 `build/icon.ico`를 생성하고 EXE·NSIS·창에 함께 사용한다. 실행 중인 창은 ASAR 밖의 `resources/icon.ico`를 읽는다. Windows 1.1.1 아이콘 수정본의 동일 버전 교체는 [사용자가 요청한 제한적 교체 절차](local-release-guide.md#사용자-요청에-따른-windows-111-아이콘-수정본-교체)를 따른다.
+
 루트의 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)는 설치본 포함 파일이므로 유지한다. `scripts/notices.mjs`는 의존성별 원본 라이선스와 테마 라이선스를 `dist/licenses/`에 준비한다. 문서 정리 시 이 패키징 경로를 누락하지 않는다.
 
 ## 패키지 실행 확인

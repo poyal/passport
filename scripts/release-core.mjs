@@ -27,6 +27,19 @@ export const initialWindowsRelease = Object.freeze({
       "sha256:0820760270d00b9e02deded76ec73a9eb08c22c61cb8601d7eb470d00e9df187",
   },
 });
+// User explicitly requested replacing the published Windows icon bugfix in
+// 1.1.1. Pin the superseded installer and use a new source tag; keep Mac intact.
+export const windowsIconReplacement = Object.freeze({
+  sourceTag: "v1.1.1-win-x64-icon-fix",
+  previousCommit: "62457a0f85d858354472212bdf4595e397b7eb91",
+  asset: {
+    id: 605898019,
+    name: "Passport-1.1.1-win-x64.exe",
+    size: 203717724,
+    digest:
+      "sha256:9a3c69c68da8283378561a5074524fd926a7cfca1627d69082d7cb25a37d1fcf",
+  },
+});
 export function usesInitialWindowsSource(receipt) {
   return (
     receipt.version === initialWindowsRelease.version &&
@@ -199,6 +212,12 @@ export async function validateReceipt(root, receipt, state) {
       { cwd: root, stdio: "pipe" },
     );
     const allowed = new Set([
+      ".gitignore",
+      "README.md",
+      "package.json",
+      "scripts/build.mjs",
+      "scripts/windows-icon-smoke.ps1",
+      "src/main/index.ts",
       "src/main/local.ts",
       "src/main/startup.ts",
       "scripts/e2e-electron.mjs",
@@ -208,6 +227,7 @@ export async function validateReceipt(root, receipt, state) {
       "scripts/release-publish.mjs",
       "scripts/release-verify.mjs",
       "tests/e2e/local-workspace.spec.ts",
+      "tests/e2e/background.spec.ts",
       "tests/e2e/paste.spec.ts",
       "tests/e2e/windows-shells.spec.ts",
       "tests/runtime.test.ts",
@@ -346,7 +366,15 @@ export function parseArguments(args) {
   };
   for (let index = 0; index < args.length; index++) {
     const arg = args[index];
-    if (["--preview", "--desktop", "--execute", "--help"].includes(arg))
+    if (
+      [
+        "--preview",
+        "--desktop",
+        "--execute",
+        "--help",
+        "--replace-windows-icon",
+      ].includes(arg)
+    )
       options[arg.slice(2)] = true;
     else if (arg === "--manifest") {
       const value = args[++index];

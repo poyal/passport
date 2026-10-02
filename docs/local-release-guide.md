@@ -77,6 +77,17 @@ Passport에는 `release:check`, `release:verify`, `release:publish`와 수동 �
 
 깨끗한 현재 소스와 검증 기록의 커밋·지문 일치, 모든 필수 검사, 설치본·증거 해시, 다운로드 재검증은 그대로 적용한다. 실패 기록이나 다른 Windows 파일을 덮어쓰는 예외는 없다. 이후 릴리즈와 다른 플랫폼은 기존 동일 태그·소스 계약을 따른다.
 
+### 사용자 요청에 따른 Windows 1.1.1 아이콘 수정본 교체
+
+2026-10-03 사용자가 이미 게시한 Windows 1.1.1의 Electron 기본 아이콘 문제를 수정하고 같은 버전의 설치 파일을 갱신하도록 명시적으로 요청했다. 이 요청에는 기존 Windows EXE 교체가 포함되므로 위의 최초 게시 규칙과 구분한다. `--replace-windows-icon`은 Windows x64 1.1.1에만 적용한다. 기존 Windows 파일의 ID·크기·SHA-256과 `v1.1.1-win-x64` 커밋을 고정하고, 새 후보에는 `v1.1.1-win-x64-icon-fix` 태그를 사용한다. 기존 태그는 이동하지 않는다.
+
+전체 검증 기록을 다시 확인하고 새 파일을 임시 자산으로 업로드·다운로드 검증한 뒤 기존 이름으로 교체한다. 기존 공개 파일은 `release/packages/v1.1.1/github/win-x64/`에 해시와 출처를 남겨 보관한다. 수정본의 로컬 보관 위치는 `release/packages/v1.1.1/local/win-x64/icon-fix-<커밋>/`다. Mac 파일은 보존하고 합본 체크섬을 갱신한다. 기본 게시 명령의 다른 바이트 덮어쓰기 거부와 실패·재시도·증거 해시 검사는 유지한다. 교체 뒤 같은 버전의 새 버전 알림은 없으므로 사용자는 EXE를 다시 내려받아 설치한다.
+
+```powershell
+npm.cmd run release:publish -- --manifest release/checks/<실행 ID>/verification.json --replace-windows-icon
+npm.cmd run release:publish -- --manifest release/checks/<실행 ID>/verification.json --replace-windows-icon --execute
+```
+
 개발 중에는 빠른 검사와 실패한 시나리오를 반복한다. 배포 후보가 정해지면 전체 검사를 한 번 수행한다. 게시 명령은 통과한 검증 기록과 설치본을 입력으로 받으며 빌드를 실행하지 않는다.
 
 ```text

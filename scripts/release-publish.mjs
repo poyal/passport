@@ -13,6 +13,7 @@ import {
   writeJSON,
   initialWindowsRelease,
   usesInitialWindowsSource,
+  windowsIconReplacement,
 } from "./release-core.mjs";
 
 const installerPattern =
@@ -84,6 +85,11 @@ export function githubClient(token, fetcher = fetch) {
       request(`${base}/releases/${id}`, { method: "PATCH", body: data }),
     remove: (id) =>
       request(`${base}/releases/assets/${id}`, { method: "DELETE" }),
+    renameAsset: (id, name) =>
+      request(`${base}/releases/assets/${id}`, {
+        method: "PATCH",
+        body: { name },
+      }),
     upload: (release, name, bytes) =>
       request(
         `${release.upload_url.replace(/\{.*$/, "")}?name=${encodeURIComponent(name)}`,
@@ -100,7 +106,11 @@ export async function tagCommit(client, tag) {
   return object.sha;
 }
 
-export async function publicationPlan(client, receipts) {
+export async function publicationPlan(
+  client,
+  receipts,
+  { replaceWindowsIcon = false } = {},
+) {
   assert.ok(receipts.length, "At least one verification receipt is required");
   const { version, source } = receipts[0];
   assert.equal(
@@ -123,7 +133,22 @@ export async function publicationPlan(client, receipts) {
   const tag = `v${version}`;
   const releaseCommit = await tagCommit(client, tag);
   const initialWindows = receipts.every(usesInitialWindowsSource);
-  const sourceTag = initialWindows ? initialWindowsRelease.sourceTag : tag;
+  if (replaceWindowsIcon) {
+    assert.ok(
+      initialWindows && receipts.length === 1,
+      "Icon replacement is only authorized for Windows x64 1.1.1",
+    );
+    assert.equal(
+      await tagCommit(client, initialWindowsRelease.sourceTag),
+      windowsIconReplacement.previousCommit,
+      "Original Windows source tag changed",
+    );
+  }
+  const sourceTag = replaceWindowsIcon
+    ? windowsIconReplacement.sourceTag
+    : initialWindows
+      ? initialWindowsRelease.sourceTag
+      : tag;
   if (initialWindows)
     assert.equal(
       releaseCommit,
@@ -203,20 +228,35 @@ export async function publicationPlan(client, receipts) {
     }
   }
   const uploads = [];
+  const replacements = [];
   for (const receipt of receipts) {
     const { artifact } = receipt;
     const existing = assets.find((asset) => asset.name === artifact.name);
     if (existing) {
-      assert.equal(
-        existing.digest,
-        `sha256:${artifact.sha256}`,
-        `An installer with different bytes already exists: ${artifact.name}`,
-      );
-      assert.equal(
-        existing.size,
-        artifact.bytes,
-        "Remote installer size differs",
-      );
+      if (
+        replaceWindowsIcon &&
+        existing.digest !== `sha256:${artifact.sha256}`
+      ) {
+        for (const [key, value] of Object.entries(windowsIconReplacement.asset))
+          assert.equal(
+            existing[key],
+            value,
+            "Published Windows installer differs from the explicitly approved replacement",
+          );
+        replacements.push(existing);
+        uploads.push(artifact.name);
+      } else {
+        assert.equal(
+          existing.digest,
+          `sha256:${artifact.sha256}`,
+          `An installer with different bytes already exists: ${artifact.name}`,
+        );
+        assert.equal(
+          existing.size,
+          artifact.bytes,
+          "Remote installer size differs",
+        );
+      }
     } else uploads.push(artifact.name);
     entries.set(artifact.name, artifact.sha256);
   }
@@ -241,7 +281,91 @@ export async function publicationPlan(client, receipts) {
     sums,
     existingSums,
     updateSums,
+    replacements,
   };
+}
+
+export async function replaceVerifiedInstaller({
+  root,
+  client,
+  release,
+  receipt,
+  old,
+  bytes,
+  originalAssets,
+}) {
+  const { artifact } = receipt;
+  let asset;
+  const oldBytes = await client.download(old);
+  assert.equal(
+    sha256(oldBytes),
+    old.digest.slice(7),
+    "Previous installer backup hash differs",
+  );
+  const backupDirectory = path.join(
+    root,
+    "release/packages",
+    `v${receipt.version}`,
+    "github",
+    receipt.target,
+  );
+  await fs.mkdir(backupDirectory, { recursive: true });
+  const backup = path.join(backupDirectory, old.name);
+  try {
+    await fs.writeFile(backup, oldBytes, { flag: "wx" });
+  } catch (error) {
+    if (error.code !== "EEXIST") throw error;
+    assert.equal(
+      sha256(await fs.readFile(backup)),
+      old.digest.slice(7),
+      "Previous installer archive conflict",
+    );
+  }
+  await writeJSON(path.join(backupDirectory, "artifact.json"), {
+    createdAt: new Date().toISOString(),
+    purpose: "superseded-public-installer",
+    source: "github",
+    sourceCommit: windowsIconReplacement.previousCommit,
+    dirty: false,
+    platform: receipt.target,
+    status: "download-verified",
+    asset: old,
+    sha256: old.digest.slice(7),
+  });
+  // Verify the complete replacement before removing the public filename.
+  const stagingName = `${artifact.name}.icon-fix-${artifact.sha256.slice(0, 12)}.pending`;
+  const stagedExisting = (await client.getAssets(release.id)).find(
+    (item) => item.name === stagingName,
+  );
+  const staged =
+    stagedExisting || (await client.upload(release, stagingName, bytes));
+  assert.equal(
+    sha256(await client.download(staged)),
+    artifact.sha256,
+    "Staged installer download hash differs",
+  );
+  const beforeSwap = await client.getAssets(release.id);
+  for (const original of originalAssets) {
+    const current = beforeSwap.find((item) => item.id === original.id);
+    for (const key of ["id", "name", "size", "digest", "state", "updated_at"])
+      assert.equal(
+        current?.[key],
+        original[key],
+        "Release changed before installer replacement",
+      );
+  }
+  await client.remove(old.id);
+  try {
+    asset = await client.renameAsset(staged.id, artifact.name);
+  } catch (error) {
+    // Preserve the known public bytes if promotion of the staged file fails.
+    const afterFailure = await client.getAssets(release.id);
+    if (!afterFailure.some((item) => item.name === old.name))
+      await client.upload(release, old.name, oldBytes);
+    throw error;
+  }
+
+  return asset;
 }
 
 export async function publishVerified({
@@ -249,12 +373,13 @@ export async function publishVerified({
   receipts,
   client,
   execute = false,
+  replaceWindowsIcon = false,
 }) {
   const state = await sourceState(root);
   const filenames = [];
   for (const receipt of receipts)
     filenames.push(await validateReceipt(root, receipt, state));
-  const plan = await publicationPlan(client, receipts);
+  const plan = await publicationPlan(client, receipts, { replaceWindowsIcon });
   const summary = {
     mode: execute ? "publish" : "dry-run",
     tag: plan.tag,
@@ -263,8 +388,17 @@ export async function publishVerified({
     releaseCommit: plan.releaseCommit,
     targets: receipts.map((receipt) => receipt.target),
     upload: plan.uploads,
+    replace: plan.replacements.map(({ id, name, digest }) => ({
+      id,
+      name,
+      digest,
+    })),
     preserve: plan.assets
-      .filter((asset) => asset.name !== sumsName)
+      .filter(
+        (asset) =>
+          asset.name !== sumsName &&
+          !plan.replacements.some((old) => old.id === asset.id),
+      )
       .map((asset) => asset.name),
     updateChecksums: plan.updateSums,
     createDraft: !plan.release,
@@ -288,7 +422,8 @@ export async function publishVerified({
       prerelease: false,
     }));
   for (let index = 0; index < receipts.length; index++) {
-    const { artifact } = receipts[index];
+    const receipt = receipts[index];
+    const { artifact } = receipt;
     // Buffer the exact verified bytes, so a concurrent file edit cannot alter
     // the bytes being streamed into GitHub after the final hash check.
     const bytes = await fs.readFile(filenames[index]);
@@ -297,9 +432,22 @@ export async function publishVerified({
       artifact.sha256,
       "Installer changed before upload",
     );
-    const asset = plan.uploads.includes(artifact.name)
-      ? await client.upload(release, artifact.name, bytes)
-      : plan.assets.find((item) => item.name === artifact.name);
+    const old = plan.replacements.find((item) => item.name === artifact.name);
+    let asset;
+    if (old)
+      asset = await replaceVerifiedInstaller({
+        root,
+        client,
+        release,
+        receipt,
+        old,
+        bytes,
+        originalAssets: plan.assets,
+      });
+    else
+      asset = plan.uploads.includes(artifact.name)
+        ? await client.upload(release, artifact.name, bytes)
+        : plan.assets.find((item) => item.name === artifact.name);
     assert.equal(
       sha256(await client.download(asset)),
       artifact.sha256,
@@ -323,6 +471,7 @@ export async function publishVerified({
     "Another publisher changed this release; rerun the plan before updating checksums.",
   );
   for (const asset of plan.assets) {
+    if (plan.replacements.some((old) => old.id === asset.id)) continue;
     const unchanged = current.find((item) => item.name === asset.name);
     for (const key of ["id", "name", "size", "digest", "state", "updated_at"])
       assert.equal(
@@ -370,7 +519,7 @@ async function main() {
   const options = parseArguments(process.argv.slice(2));
   if (options.help) {
     console.log(
-      "npm run release:publish -- --manifest release/checks/<run>/verification.json [--manifest <other-platform>] [--execute]\nDefault: read-only GitHub plan. --execute uploads the exact verified installers and publishes the release. Never rebuilds, pushes source, or creates/moves tags.",
+      "npm run release:publish -- --manifest release/checks/<run>/verification.json [--manifest <other-platform>] [--execute] [--replace-windows-icon]\nDefault: read-only GitHub plan. --replace-windows-icon is the explicitly approved Windows x64 1.1.1 icon fix only. Never rebuilds, pushes source, or creates/moves tags.",
     );
     return;
   }
@@ -409,6 +558,7 @@ async function main() {
       receipts,
       client: githubClient(token),
       execute: options.execute,
+      replaceWindowsIcon: Boolean(options["replace-windows-icon"]),
     });
     console.log(JSON.stringify(result, null, 2));
     if (options.execute) {
@@ -419,6 +569,9 @@ async function main() {
           `v${receipt.version}`,
           "local",
           receipt.target,
+          ...(options["replace-windows-icon"]
+            ? [`icon-fix-${receipt.source.commit.slice(0, 7)}`]
+            : []),
         );
         await fs.mkdir(directory, { recursive: true });
         const destination = path.join(directory, receipt.artifact.name);

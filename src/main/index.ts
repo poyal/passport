@@ -1386,7 +1386,12 @@ async function createWindow(withLocalTerminal = false) {
     minHeight: 680,
     title: "Passport",
     backgroundColor: "#171b20",
-    icon: path.join(app.getAppPath(), "build/icon.png"),
+    icon:
+      process.platform === "win32"
+        ? app.isPackaged
+          ? path.join(process.resourcesPath, "icon.ico")
+          : path.join(app.getAppPath(), "build/icon.ico")
+        : path.join(app.getAppPath(), "build/icon.png"),
     titleBarStyle: process.platform === "darwin" ? "hiddenInset" : "default",
     trafficLightPosition: { x: 16, y: 14 },
     webPreferences: {
