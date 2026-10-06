@@ -39,6 +39,7 @@ type Snapshot = {
   endpoint: Endpoint | null;
   path: string;
   selected: FileEntry[];
+  ready: boolean;
 };
 const parentPath = (p: string) => {
   const parts = p.replace(/[\\/]$/, "").split(/[\\/]/);
@@ -53,8 +54,8 @@ const parentPath = (p: string) => {
 export function FilesView() {
   const app = useApp(),
     [snapshots, setSnapshots] = useState<Snapshot[]>([
-      { endpoint: null, path: "", selected: [] },
-      { endpoint: null, path: "", selected: [] },
+      { endpoint: null, path: "", selected: [], ready: false },
+      { endpoint: null, path: "", selected: [], ready: false },
     ]),
     [conflict, setConflict] = useState<TransferJob["conflict"]>("skip"),
     [collapsed, setCollapsed] = useState(false);
@@ -63,6 +64,10 @@ export function FilesView() {
       to = snapshots[1 - side];
     if (!to.endpoint || !from.endpoint) {
       app.notify("좌우 패널을 먼저 연결해 주세요.");
+      return;
+    }
+    if (!to.ready || !from.ready) {
+      app.notify("양쪽 폴더를 모두 연 뒤 복사해 주세요.");
       return;
     }
     const selected = paths ?? from.selected.map((f) => f.path);
@@ -107,8 +112,18 @@ export function FilesView() {
               <option value="rename">이름 변경</option>
             </select>
           </label>
-          <button onClick={() => void copy(0)}>왼쪽 → 오른쪽</button>
-          <button onClick={() => void copy(1)}>왼쪽 ← 오른쪽</button>
+          <button
+            disabled={snapshots.some((s) => !s.ready)}
+            onClick={() => void copy(0)}
+          >
+            왼쪽 → 오른쪽
+          </button>
+          <button
+            disabled={snapshots.some((s) => !s.ready)}
+            onClick={() => void copy(1)}
+          >
+            왼쪽 ← 오른쪽
+          </button>
         </div>
       </div>
       <div className="file-panels">
@@ -279,9 +294,10 @@ function FilePanel({
     menuButtonRef = useRef<HTMLButtonElement>(null),
     lastRequest = useRef(0);
   const selected = entries.filter((f) => selection.includes(f.path));
+  const ready = !!endpoint && !!path && !busy && !error && pathInput === path;
   useEffect(() => {
-    onSnapshot({ endpoint, path, selected });
-  }, [endpoint, path, entries, selection]);
+    onSnapshot({ endpoint, path, selected, ready });
+  }, [endpoint, path, entries, selection, ready]);
   const navigate = async (
     p: string,
     record = true,
@@ -512,6 +528,7 @@ function FilePanel({
     <section
       className={`file-panel ${drop ? "file-drop" : ""}`}
       aria-label={side ? "오른쪽 파일 패널" : "왼쪽 파일 패널"}
+      aria-busy={busy}
       onDragOver={(e) => {
         if (e.dataTransfer.types.includes(fileMime)) {
           e.preventDefault();
@@ -636,6 +653,7 @@ function FilePanel({
           <Folder size={15} />
           <input
             aria-label={side ? "오른쪽 경로" : "왼쪽 경로"}
+            disabled={busy || !endpoint}
             value={pathInput}
             onChange={(e) => setPathInput(e.target.value)}
             placeholder="경로 입력"
@@ -923,7 +941,7 @@ function FilePanel({
           </div>
           <button
             role="menuitem"
-            disabled={!menuPaths.length || !other.endpoint || busy}
+            disabled={!menuPaths.length || !other.ready || !ready}
             title={
               other.endpoint
                 ? `${other.endpoint.label}: ${other.path}`

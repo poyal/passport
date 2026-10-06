@@ -235,20 +235,73 @@ test("independent file panels, context menus, local copy and queue", async () =>
   const leftInput = page.getByLabel("왼쪽 경로"),
     rightInput = page.getByLabel("오른쪽 경로");
   await expect(leftInput).not.toHaveValue("");
+  await expect(rightInput).not.toHaveValue("");
+  const rightPanel = page.getByRole("region", { name: "오른쪽 파일 패널" });
+  await expect(
+    rightPanel.getByRole("button", { name: "새로고침", exact: true }),
+  ).toBeEnabled();
   await leftInput.fill(left);
   await leftInput.press("Enter");
-  await rightInput.fill(right);
-  await rightInput.press("Enter");
   const row = page
     .getByRole("region", { name: "왼쪽 파일 패널" })
     .locator("tr")
     .filter({ hasText: "한글 파일.txt" });
   await expect(row).toBeVisible();
-  await row.click({ button: "right" });
-  await expect(page.getByRole("menu")).toBeVisible();
-  await page
-    .getByRole("menuitem", { name: "오른쪽 폴더로 복사", exact: true })
-    .click();
+  // Hold the destination's real listing until the copy controls have been
+  // checked. A fast source must never copy into the destination's old folder.
+  const navigation = await application.evaluateHandle(({ ipcMain }, target) => {
+    const handlers = (ipcMain as any)._invokeHandlers;
+    const original = handlers.get("passport:call");
+    let pending = false;
+    let resume!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      resume = resolve;
+    });
+    ipcMain.removeHandler("passport:call");
+    ipcMain.handle("passport:call", async (event, name, input) => {
+      if (name === "files.list" && input.path === target && !pending) {
+        pending = true;
+        await gate;
+      }
+      return original(event, name, input);
+    });
+    return {
+      pending: () => pending,
+      resume: () => resume(),
+      restore: () => {
+        resume();
+        ipcMain.removeHandler("passport:call");
+        ipcMain.handle("passport:call", original);
+        return handlers.get("passport:call") === original;
+      },
+    };
+  }, right);
+  try {
+    await rightInput.fill(right);
+    await rightInput.press("Enter");
+    await expect
+      .poll(() => navigation.evaluate((state) => state.pending()))
+      .toBe(true);
+    await row.click({ button: "right" });
+    const copy = page.getByRole("menuitem", {
+      name: "오른쪽 폴더로 복사",
+      exact: true,
+    });
+    await expect(copy).toBeDisabled();
+    await expect(
+      page.getByRole("button", { name: "왼쪽 → 오른쪽", exact: true }),
+    ).toBeDisabled();
+    await navigation.evaluate((state) => state.resume());
+    await expect(copy).toBeEnabled();
+    await expect(copy).toHaveAttribute(
+      "title",
+      new RegExp(right.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "$"),
+    );
+    await copy.click();
+  } finally {
+    expect(await navigation.evaluate((state) => state.restore())).toBe(true);
+    await navigation.dispose();
+  }
   await expect
     .poll(async () => {
       try {
