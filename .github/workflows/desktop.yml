@@ -32,7 +32,12 @@ jobs:
         shell: pwsh
         run: |
           'C:\Program Files\Git\usr\bin' | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
-      - name: Run the same verification as a local release
+      - name: Verify on the isolated Windows desktop
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: npm.cmd run release:verify -- --desktop
+      - name: Verify on the isolated macOS desktop
+        if: runner.os == 'macOS'
         run: npm run release:verify -- --desktop
       - uses: actions/upload-artifact@v4
         if: always()
@@ -42,6 +47,7 @@ jobs:
             release/builds/*/Passport-*.dmg
             release/builds/*/Passport-*.exe
             release/checks/*/*.json
+            release/checks/*/*.jsonl
             release/checks/*/*.log
             release/checks/*/*.sample.txt
             release/checks/*/source-gui/**

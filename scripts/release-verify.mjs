@@ -17,6 +17,7 @@ import {
 } from "./release-core.mjs";
 import { runCommand } from "./release-process.mjs";
 import { beginWindowsPtyAudit } from "./windows-pty-audit.mjs";
+import { summarizeElectronLifecycle } from "./e2e-lifecycle.mjs";
 import {
   loadGuiPolicy,
   requestedGuiFeatures,
@@ -136,6 +137,7 @@ async function verify() {
         verification: relative(manifest),
         artifact: record.artifact,
         checks: record.checks.map(({ name, status }) => ({ name, status })),
+        guiLifecycle: record.guiLifecycle,
       });
   };
   const env = {
@@ -180,11 +182,13 @@ async function verify() {
   const npm = (label, args, extra) => node(label, npmCLI, args, extra);
   const gui = async (label, executable, mode = "hidden") => {
     const audit = await beginWindowsPtyAudit(root, executable);
+    const lifecycleFile = path.join(checks, `${label}-lifecycle.jsonl`);
     const report = path.join(checks, `${label}.json`);
     const guiEnv = {
       ...env,
       PASSPORT_E2E_EXECUTABLE: executable || "",
       PASSPORT_E2E_MODE: mode,
+      PASSPORT_E2E_LIFECYCLE_LOG: lifecycleFile,
     };
     const discovery = path.join(checks, `${label}-discovery.json`);
     await node(
@@ -223,6 +227,41 @@ async function verify() {
         },
       },
     );
+    const events = (await fs.readFile(lifecycleFile, "utf8"))
+      .trim()
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => JSON.parse(line));
+    const lifecycle = summarizeElectronLifecycle(events);
+    assert.ok(lifecycle.launches > 0, "GUI must launch the real app");
+    assert.equal(
+      lifecycle.exits,
+      lifecycle.launches,
+      "Every GUI app must exit",
+    );
+    if (mode !== "desktop") {
+      assert.equal(
+        lifecycle.auditedShutdowns,
+        lifecycle.launches,
+        "Every background app must have a shutdown audit",
+      );
+      assert.equal(
+        lifecycle.focused,
+        0,
+        "Background GUI must not focus native windows",
+      );
+      if (mode === "hidden")
+        assert.equal(
+          lifecycle.shown,
+          0,
+          "Hidden GUI must not show native windows",
+        );
+    }
+    (record.guiLifecycle ??= {})[label] = lifecycle;
+    record.evidence.push({
+      path: relative(lifecycleFile),
+      sha256: await hashFile(lifecycleFile),
+    });
     if (audit) {
       const nativeProcesses = await audit();
       const auditFile = path.join(checks, `${label}-native-processes.json`);

@@ -289,22 +289,29 @@ test("file shortcuts use custom bindings and retain rename and delete dialogs", 
   expect(await fs.readFile(path.join(folder, "renamed.txt"), "utf8")).toBe(
     "one",
   );
-  await page.evaluate(async (os) => {
-    const { document } = await window.passport.call("bootstrap", undefined);
-    document.settings.shortcuts[os === "darwin" ? "darwin" : "win32"].fileMenu =
-      [];
-    await window.passport.call("save", document);
-  }, os);
+  // Use the real editor and its saved state as the renderer update barrier.
+  // A direct save IPC reply can arrive before React applies the document event.
+  await settings(page, "단축키");
+  await page
+    .getByRole("button", { name: "파일 컨텍스트 메뉴 키 1 삭제", exact: true })
+    .click();
+  await page.getByRole("button", { name: "단축키 저장", exact: true }).click();
+  await expect(page.getByRole("status")).toContainText("저장했습니다");
+  await page.getByRole("button", { name: "파일", exact: true }).click();
   for (const key of ["Alt+m", "Shift+F10", "ContextMenu"]) {
     await renamed.press(key);
     await expect(page.getByRole("menu")).toHaveCount(0);
   }
-  await page.evaluate(async (os) => {
-    const { document } = await window.passport.call("bootstrap", undefined);
-    document.settings.shortcuts[os === "darwin" ? "darwin" : "win32"].fileMenu =
-      ["Shift+F10", "ContextMenu"];
-    await window.passport.call("save", document);
-  }, os);
+  await settings(page, "단축키");
+  await page
+    .getByRole("button", {
+      name: "파일 컨텍스트 메뉴 기본값 복원",
+      exact: true,
+    })
+    .click();
+  await page.getByRole("button", { name: "단축키 저장", exact: true }).click();
+  await expect(page.getByRole("status")).toContainText("저장했습니다");
+  await page.getByRole("button", { name: "파일", exact: true }).click();
   for (const key of ["Shift+F10", "ContextMenu"]) {
     await renamed.press(key);
     await expect(page.getByRole("menu")).toBeVisible();
