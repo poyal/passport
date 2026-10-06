@@ -14,8 +14,14 @@ export async function closeCleanly(
       ? Promise.resolve([child.exitCode, child.signalCode])
       : once(child, "exit");
   let stderr = "";
+  let quitCompleted!: () => void;
+  const nativeQuit = new Promise<void>((resolve) => {
+    quitCompleted = resolve;
+  });
   const onStderr = (data: Buffer) => {
     stderr = (stderr + data.toString()).slice(-4096);
+    if (stderr.includes("\nPASSPORT_E2E_NATIVE_QUIT_COMPLETE\n"))
+      quitCompleted();
   };
   child.stderr?.on("data", onStderr);
   let deadlineExpired = false;
@@ -123,15 +129,22 @@ export async function closeCleanly(
                 response: 1,
                 checkboxChecked: false,
               });
-              // Windows native PTYs require the debugger to stay attached until
-              // the established graceful quit path has completed.
-              if (quitFirst) setTimeout(() => app.quit(), 0);
+              // Keep the debugger through native cleanup, then let Playwright
+              // disconnect it before requiring process exit. Node may wait for
+              // that disconnect after Electron has emitted its final quit.
+              if (quitFirst) {
+                app.once("quit", () => {
+                  process.stderr.write("\nPASSPORT_E2E_NATIVE_QUIT_COMPLETE\n");
+                });
+                setTimeout(() => app.quit(), 0);
+              }
               return (globalThis as any).__passportE2EWindowAudit;
             },
             process.platform === "win32",
           );
         }
-        if (process.platform === "win32") await exited;
+        if (process.platform === "win32")
+          await Promise.race([exited, nativeQuit]);
         if (deadlineExpired) return;
         // On macOS let Playwright own graceful quit and debugger disconnection.
         // Independently require the real process to exit with code 0 below.
