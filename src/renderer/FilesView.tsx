@@ -292,7 +292,8 @@ function FilePanel({
     anchor = useRef(0),
     menuRef = useRef<HTMLDivElement>(null),
     menuButtonRef = useRef<HTMLButtonElement>(null),
-    lastRequest = useRef(0);
+    lastRequest = useRef(0),
+    refreshedCompletion = useRef("");
   const selected = entries.filter((f) => selection.includes(f.path));
   const ready = !!endpoint && !!path && !busy && !error && pathInput === path;
   useEffect(() => {
@@ -376,8 +377,37 @@ function FilePanel({
     }
   }, [app.fileRequest]);
   useEffect(() => {
-    if (completed) void navigate(path, false);
-  }, [completed]);
+    if (
+      !completed ||
+      completed === refreshedCompletion.current ||
+      busy ||
+      !endpoint ||
+      !path
+    )
+      return;
+    refreshedCompletion.current = completed;
+    const request = generation.current;
+    let active = true;
+    // A transfer refresh updates the visible listing, not the user's path
+    // draft or navigation. A newer navigation/connection owns its result.
+    void api.call("files.list", { id: endpoint.id, path }).then(
+      (result) => {
+        if (!active || request !== generation.current) return;
+        setEntries(result.entries);
+        setSelection((selected) =>
+          selected.filter((p) =>
+            result.entries.some((entry) => entry.path === p),
+          ),
+        );
+      },
+      (error) => {
+        if (active && request === generation.current) app.notify(error);
+      },
+    );
+    return () => {
+      active = false;
+    };
+  }, [completed, busy, endpoint, path]);
   useEffect(() => {
     if (!menu) return;
     menuRef.current

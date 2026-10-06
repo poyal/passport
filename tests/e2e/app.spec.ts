@@ -249,33 +249,63 @@ test("independent file panels, context menus, local copy and queue", async () =>
   await expect(row).toBeVisible();
   // Hold the destination's real listing until the copy controls have been
   // checked. A fast source must never copy into the destination's old folder.
-  const navigation = await application.evaluateHandle(({ ipcMain }, target) => {
-    const handlers = (ipcMain as any)._invokeHandlers;
-    const original = handlers.get("passport:call");
-    let pending = false;
-    let resume!: () => void;
-    const gate = new Promise<void>((resolve) => {
-      resume = resolve;
-    });
-    ipcMain.removeHandler("passport:call");
-    ipcMain.handle("passport:call", async (event, name, input) => {
-      if (name === "files.list" && input.path === target && !pending) {
-        pending = true;
-        await gate;
-      }
-      return original(event, name, input);
-    });
-    return {
-      pending: () => pending,
-      resume: () => resume(),
-      restore: () => {
-        resume();
-        ipcMain.removeHandler("passport:call");
-        ipcMain.handle("passport:call", original);
-        return handlers.get("passport:call") === original;
-      },
-    };
-  }, right);
+  const navigation = await application.evaluateHandle(
+    ({ ipcMain, BrowserWindow }, target) => {
+      const handlers = (ipcMain as any)._invokeHandlers;
+      const original = handlers.get("passport:call");
+      const contents = BrowserWindow.getAllWindows()[0].webContents;
+      const originalSend = contents.send;
+      let completedEvent: any;
+      contents.send = function (channel, ...args) {
+        if (
+          channel === "passport:event" &&
+          args[0]?.kind === "transfer" &&
+          args[0].job.state === "completed"
+        ) {
+          completedEvent = args[0];
+          return;
+        }
+        return originalSend.call(this, channel, ...args);
+      };
+      const deliverCompletion = () => {
+        contents.send = originalSend;
+        if (completedEvent) {
+          originalSend.call(contents, "passport:event", completedEvent);
+          completedEvent = undefined;
+        }
+      };
+      let pending = false;
+      let resume!: () => void;
+      const gate = new Promise<void>((resolve) => {
+        resume = resolve;
+      });
+      ipcMain.removeHandler("passport:call");
+      ipcMain.handle("passport:call", async (event, name, input) => {
+        if (name === "files.list" && input.path === target && !pending) {
+          pending = true;
+          await gate;
+        }
+        return original(event, name, input);
+      });
+      return {
+        pending: () => pending,
+        resume: () => resume(),
+        completed: () => !!completedEvent,
+        deliverCompletion,
+        restore: () => {
+          resume();
+          deliverCompletion();
+          ipcMain.removeHandler("passport:call");
+          ipcMain.handle("passport:call", original);
+          return (
+            handlers.get("passport:call") === original &&
+            contents.send === originalSend
+          );
+        },
+      };
+    },
+    right,
+  );
   try {
     await rightInput.fill(right);
     await rightInput.press("Enter");
@@ -298,6 +328,30 @@ test("independent file panels, context menus, local copy and queue", async () =>
       new RegExp(right.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "$"),
     );
     await copy.click();
+    await expect
+      .poll(() => navigation.evaluate((state) => state.completed()))
+      .toBe(true);
+    // A real completed transfer must refresh the list without replacing a
+    // path the user is already typing. The new file proves refresh finished.
+    await fs.writeFile(
+      path.join(left, "refresh-check.txt"),
+      "refresh evidence",
+    );
+    await leftInput.fill(directory);
+    await navigation.evaluate((state) => state.deliverCompletion());
+    await expect(
+      page
+        .getByRole("region", { name: "왼쪽 파일 패널" })
+        .getByText("refresh-check.txt", { exact: true }),
+    ).toBeVisible();
+    await expect(leftInput).toHaveValue(directory);
+    await expect(leftInput).toBeEnabled();
+    await leftInput.press("Enter");
+    await expect(
+      page
+        .getByRole("region", { name: "왼쪽 파일 패널" })
+        .getByText("left", { exact: true }),
+    ).toBeVisible();
   } finally {
     expect(await navigation.evaluate((state) => state.restore())).toBe(true);
     await navigation.dispose();
