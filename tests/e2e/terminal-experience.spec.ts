@@ -5,6 +5,7 @@ import {
   type Page,
 } from "@playwright/test";
 import { reusableApp } from "../fixtures/reusable-app";
+import { waitForLocalPrompt } from "../fixtures/terminal-ready";
 import { bundledFonts } from "../../src/shared/fonts";
 
 let application: ElectronApplication, page: Page;
@@ -63,6 +64,7 @@ test("local shortcuts create independent windows exactly once and preserve exist
     next.sessionStates.find((state) => state.id === firstPane)?.environment
       ?.sessionInstanceId,
   ).toBe(firstSession);
+  await waitForLocalPrompt(second);
   await second.locator(".xterm-helper-textarea").focus();
   await second.keyboard.type(
     process.platform === "win32"
@@ -318,6 +320,7 @@ test("bundled terminal fonts load offline and preserve settings and aligned outp
     window.passport.call("bootstrap", undefined),
   );
   expect(boot.document.settings.appearance.font).toBe("D2Coding");
+  await waitForLocalPrompt(page);
   await page.locator(".xterm-helper-textarea").focus();
   await page.keyboard.type(
     process.platform === "win32"
@@ -330,6 +333,7 @@ test("bundled terminal fonts load offline and preserve settings and aligned outp
     "font-family",
     /D2Coding/,
   );
+  await waitForLocalPrompt(page);
   await page.keyboard.type(
     "node -e \"console.log(String.fromCodePoint(0xd55c,0xae00)+' 123 '+String.fromCodePoint(0x250c,0x2500,0x2510))\"",
   );

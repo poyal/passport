@@ -12,6 +12,7 @@ import { randomUUID } from "node:crypto";
 import { sshFixture } from "../fixtures/ssh-server";
 import { hostSchema } from "../../src/shared/model";
 import { closeCleanly } from "../fixtures/electron-exit";
+import { waitForLocalPrompt } from "../fixtures/terminal-ready";
 let application: ElectronApplication,
   page: Page,
   directory: string,
@@ -258,12 +259,7 @@ test("opens and keeps a local tab active when ownership events arrive after the 
     await expect(page.locator(".view:not([hidden]) .pill").first()).toHaveText(
       "1 / 1 연결",
     );
-    // PTY attachment precedes Bash/readline startup on Windows. Keep the
-    // ownership check, then type only after the actual shell prompt is ready.
-    if (process.platform === "win32")
-      await expect(
-        page.locator(".view:not([hidden]) .xterm-rows"),
-      ).toContainText(/\$\s*$/);
+    await waitForLocalPrompt(page);
     await page.locator(".view:not([hidden]) .xterm-helper-textarea").focus();
     await page.keyboard.type(
       process.platform === "win32"

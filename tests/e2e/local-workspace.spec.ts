@@ -7,6 +7,7 @@ import { sshFixture } from "../fixtures/ssh-server";
 import { hostSchema } from "../../src/shared/model";
 import { closeCleanly } from "../fixtures/electron-exit";
 import { reusableApp } from "../fixtures/reusable-app";
+import { waitForLocalPrompt } from "../fixtures/terminal-ready";
 
 test.describe("local workspace UI", () => {
   const suite = reusableApp({ name: "local-workspace" });
@@ -509,6 +510,7 @@ console.log('CLI_FIXTURE_FINISHED');
     await expect
       .poll(() => page.evaluate(() => document.hasFocus()))
       .toBe(true);
+    await waitForLocalPrompt(page);
     await page.keyboard.type(
       "claude; printf '\\nPASSPORT_%s\\n' CLAUDE_RETURNED",
     );

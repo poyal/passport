@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { reusableApp } from "../fixtures/reusable-app";
+import { waitForLocalPrompt } from "../fixtures/terminal-ready";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { defaultShortcuts } from "../../src/shared/shortcuts";
@@ -144,6 +145,7 @@ test("Windows shortcut routing copies without interrupt and honors disabled cont
     "1 / 1 연결",
   );
   const area = page.locator(".view:not([hidden]) .xterm-helper-textarea");
+  await waitForLocalPrompt(page);
   await area.focus();
   await page.keyboard.type("echo COPY_MARKER");
   await page.keyboard.press("Enter");

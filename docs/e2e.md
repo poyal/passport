@@ -54,6 +54,8 @@ test("opens the host screen", async () => {
 
 `app.spec.ts`의 파일 복사 사례는 목적지의 실제 `files.list` 응답을 명시적 gate로 지연시켜, 조회 중 이전 경로로 복사할 수 없고 완료 후 새 경로로 복사되는지 확인한다. 고정 sleep이나 제한 시간 확대를 사용하지 않는다. 이 파일은 독립 수명을 유지하며 사례의 `finally`에서 gate를 풀고 원래 IPC handler를 복구한 뒤 동일성을 검사한다.
 
+로컬 터미널의 `1 / 1 연결`은 PTY 연결 상태이며 셸의 입력 준비 완료를 뜻하지 않는다. Windows의 기본 Passport Bash에 명령을 입력하는 GUI는 [terminal-ready.ts](../tests/fixtures/terminal-ready.ts)의 `waitForLocalPrompt()`로 실제 `$` 프롬프트 출력을 먼저 확인한다. 셸 종류를 직접 고르는 시험은 해당 셸의 프롬프트를 기다린다. 시작 도중 입력 자체가 목적이라면 이 대기를 사용하지 않고 별도 시나리오로 검증한다.
+
 fixture 호출은 테스트 등록 시 한 번만 한다. `suite.application`, `suite.page`, `suite.directory`는 `beforeAll` 완료 후 접근한다. 각 테스트는 자신의 초기 상태를 직접 준비하고 이전 테스트의 결과나 실행 순서에 의존하지 않는다. 테스트 본문에서 공유 앱을 종료하거나 기본 창을 닫지 않는다.
 
 초기화는 다음 순서를 지킨다.

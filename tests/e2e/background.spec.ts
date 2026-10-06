@@ -6,6 +6,7 @@ import { execFileSync } from "node:child_process";
 import { electron } from "../../scripts/e2e-electron.mjs";
 import { e2eMode } from "../../scripts/e2e-mode.mjs";
 import { closeCleanly } from "../fixtures/electron-exit";
+import { waitForLocalPrompt } from "../fixtures/terminal-ready";
 
 test("isolated windows accept terminal input and move workspaces without native focus", async ({}, info) => {
   const directory = await fs.mkdtemp(
@@ -37,6 +38,7 @@ test("isolated windows accept terminal input and move workspaces without native 
     await expect(page.locator(".view:not([hidden]) .pill").first()).toHaveText(
       "1 / 1 연결",
     );
+    await waitForLocalPrompt(page);
     await page.locator(".xterm-helper-textarea").focus();
     await page.keyboard.type("printf 'BACKGROUND_%s\\n' INPUT_OK");
     await page.keyboard.press("Enter");
