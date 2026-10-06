@@ -4,7 +4,7 @@
 
 ## 준비와 자동 검사
 
-[로컬 배포 운영 가이드](local-release-guide.md)의 Node 24 이상, npm, Rust/MSVC와 Spectre 완화 라이브러리, Python, OpenSSL, Windows PowerShell 5.1, PowerShell 7 준비 조건을 따른다. PowerShell에서는 인수가 npm 실행 파일에 그대로 전달되도록 `npm.cmd`를 사용한다. 내장 Bash 런타임은 해당 아키텍처로 준비한다. 아래는 Windows x64 예시이며 ARM64 PC에서는 `x64`를 `arm64`로 바꾼다.
+[로컬 배포 운영 가이드](local-release-guide.md)의 Node 24 이상, npm, Rust/MSVC와 Spectre 완화 라이브러리, Python, OpenSSL, Windows PowerShell 5.1, PowerShell 7 준비 조건을 따른다. PowerShell에서는 인수가 npm 실행 파일에 그대로 전달되도록 `npm.cmd`를 사용한다. 내장 Bash 런타임은 해당 아키텍처로 준비한다. 아래는 Windows x64 명령이다.
 
 ```powershell
 git fetch origin --tags

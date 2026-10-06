@@ -18,12 +18,9 @@ export function windowsExecutableArchitecture(file: string): string {
     fs.readSync(fd, pe, 0, 6, header.readUInt32LE(60));
     if (pe.readUInt32LE(0) !== 0x4550) return "unknown";
     return (
-      (
-        { 0xaa64: "arm64", 0x8664: "x64", 0x14c: "x86" } as Record<
-          number,
-          string
-        >
-      )[pe.readUInt16LE(4)] || "unknown"
+      ({ 0x8664: "x64", 0x14c: "x86" } as Record<number, string>)[
+        pe.readUInt16LE(4)
+      ] || "unknown"
     );
   } catch {
     return "unknown";
@@ -33,18 +30,16 @@ export function windowsExecutableArchitecture(file: string): string {
 }
 export function createWindowsTerminal(
   options: {
-    arch?: string;
     env?: NodeJS.ProcessEnv;
     exists?: (file: string) => boolean;
     architecture?: (file: string) => string;
   } = {},
 ): TerminalPlatform {
-  const arch = options.arch ?? process.arch;
   const env = options.env ?? process.env;
   const exists = options.exists ?? fs.existsSync;
   const architecture = options.architecture ?? windowsExecutableArchitecture;
   const bashPath = (root: string) =>
-    path.win32.join(root, "runtime", arch, "bin", "bash.exe");
+    path.win32.join(root, "runtime", "x64", "bin", "bash.exe");
   return {
     id: "win32",
     paths: path.win32,
@@ -99,7 +94,7 @@ export function createWindowsTerminal(
       if (exists(bash) && !target.CLAUDE_CODE_GIT_BASH_PATH)
         target.CLAUDE_CODE_GIT_BASH_PATH = bash;
       if (snapshot.shell === "passport-bash") {
-        target.MSYSTEM = arch === "arm64" ? "CLANGARM64" : "MINGW64";
+        target.MSYSTEM = "MINGW64";
         target.CHERE_INVOKING = "1";
         target.PROMPT_COMMAND = `${target.PROMPT_COMMAND ? target.PROMPT_COMMAND + "; " : ""}printf '\\033]133;A;passport=${snapshot.sessionInstanceId}\\007'`;
         target.PS0 =

@@ -32,7 +32,6 @@
 | -------------------------------------------- | -------------------------- | ---------------------------------------------------------------------------------- |
 | Mac · Apple Silicon(M 시리즈), macOS 14 이상 | `Passport-…-mac-arm64.dmg` | [최신 릴리즈](https://github.com/poyal/passport/releases/latest)                   |
 | Windows 11 · Intel / AMD(x64)                | `Passport-…-win-x64.exe`   | [최신 릴리즈](https://github.com/poyal/passport/releases/latest) |
-| Windows · ARM64                              | ARM64 전용 설치 파일       | 실기 검증 후 배포 예정                                                             |
 
 Mac·Windows x64 설치 파일을 최신 릴리즈에서 받을 수 있습니다. Intel Mac은 지원하지 않습니다. [플랫폼별 배포 상태와 변경 사항](docs/releases/README.md).
 

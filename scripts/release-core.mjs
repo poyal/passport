@@ -51,7 +51,6 @@ export const schemaVersion = 3;
 export const targets = {
   "mac-arm64": { platform: "darwin", arch: "arm64", extension: "dmg" },
   "win-x64": { platform: "win32", arch: "x64", extension: "exe" },
-  "win-arm64": { platform: "win32", arch: "arm64", extension: "exe" },
 };
 export const requiredChecks = [
   "dependencies",

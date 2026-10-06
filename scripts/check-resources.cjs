@@ -3,6 +3,11 @@ const path = require("node:path");
 module.exports = async (context) => {
   const platform = context.electronPlatformName;
   const arch = require("builder-util").Arch[context.arch];
+  if (!(
+    (platform === "win32" && arch === "x64") ||
+    (platform === "darwin" && arch === "arm64")
+  ))
+    throw new Error(`Unsupported package target: ${platform}-${arch}`);
   const root = path.resolve("resources/terminal");
   const helper = path.join(
     root,

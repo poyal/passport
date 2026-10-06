@@ -39,8 +39,8 @@ export function releaseDetails(raw: unknown, platform: string, arch: string) {
   const name =
     platform === "darwin" && arch === "arm64"
       ? `Passport-${version}-mac-arm64.dmg`
-      : platform === "win32" && ["x64", "arm64"].includes(arch)
-        ? `Passport-${version}-win-${arch}.exe`
+      : platform === "win32" && arch === "x64"
+        ? `Passport-${version}-win-x64.exe`
         : undefined;
   const expectedURL = name && `${base}/download/${release.tag_name}/${name}`;
   const installer = release.assets.find(

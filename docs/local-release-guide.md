@@ -178,7 +178,7 @@ npm run release:check
 npx playwright test tests/e2e/windows-shells.spec.ts tests/e2e/shutdown.spec.ts
 ```
 
-소스 GUI 검사는 먼저 `npm run build`가 필요하다. Windows는 `npm run prepare:runtime -- x64` 또는 `arm64`로 내장 Bash도 준비한다.
+소스 GUI 검사는 먼저 `npm run build`가 필요하다. Windows는 `npm run prepare:runtime -- x64`로 내장 Bash도 준비한다.
 
 다른 작업 중에도 실행할 수 있는 숨김 모드 리허설:
 

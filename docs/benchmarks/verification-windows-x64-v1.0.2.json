@@ -65,7 +65,10 @@
     "latestVersion": "1.0.2",
     "status": "current",
     "installerAvailable": false,
-    "publicReleaseAssets": ["Passport-1.0.2-mac-arm64.dmg", "SHA256SUMS.txt"]
+    "publicReleaseAssets": [
+      "Passport-1.0.2-mac-arm64.dmg",
+      "SHA256SUMS.txt"
+    ]
   },
   "artifact": {
     "path": "release/Passport-1.0.2-win-x64.exe",
@@ -75,7 +78,6 @@
     "published": false
   },
   "limitations": [
-    "Windows ARM64 runtime and installer not verified",
     "Default native source rebuild path not verified without Python and Visual Studio build tools",
     "Physical Korean IME composition, display scaling changes and native file dialogs not manually verified",
     "Upgrade over an existing installed version not tested",

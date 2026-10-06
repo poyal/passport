@@ -218,7 +218,6 @@
     }
   ],
   "limitations": [
-    "Windows ARM64 not verified",
     "PowerShell 7 verified on CI, unavailable on the local PC",
     "No real AI service request, physical IME or OS notification banner check",
     "No Docker matrix, long stress or overwrite upgrade repeated for 1.1.0",

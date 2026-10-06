@@ -17,7 +17,7 @@ import {
 } from "./release-core.mjs";
 
 const installerPattern =
-  /^Passport-\d+\.\d+\.\d+-(mac-arm64\.dmg|win-(x64|arm64)\.exe)$/;
+  /^Passport-\d+\.\d+\.\d+-(mac-arm64\.dmg|win-x64\.exe)$/;
 const sumsName = "SHA256SUMS.txt";
 
 export function githubClient(token, fetcher = fetch) {

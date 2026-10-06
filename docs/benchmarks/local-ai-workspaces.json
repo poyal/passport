@@ -25,7 +25,6 @@
   },
   "windows": {
     "x64": "runtime checksum, executables, home-file patch and cargo check passed",
-    "arm64": "runtime checksum, executables, home-file patch and cargo check passed",
     "desktopExecution": "not tested"
   },
   "liveAiServiceRequests": "not tested",

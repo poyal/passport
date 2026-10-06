@@ -251,7 +251,7 @@ Mac에서는 OS의 셸·Unix 도구를 활용하므로 Windows용 런타임을 �
 
 ### 3. Windows 내장 실행 환경 제공 방식
 
-첫 구현은 **공식 Git for Windows의 Portable 배포물을 앱 내부 런타임으로 포함하고, 여기에 Passport 전용 시작 프로파일을 적용하는 방식**을 우선 검증한다. 사용자는 Passport만 설치하며 내부 배포물은 구현에 사용하는 구성 요소다. 공식 페이지에 x64·ARM64 Portable 패키지가 제공된다. [Git for Windows 다운로드](https://git-scm.com/install/windows)
+첫 구현은 **공식 Git for Windows의 Portable 배포물을 앱 내부 런타임으로 포함하고, 여기에 Passport 전용 시작 프로파일을 적용하는 방식**을 우선 검증한다. 사용자는 Passport만 설치하며 내부 배포물은 구현에 사용하는 구성 요소다. 공식 페이지에 x64 Portable 패키지가 제공된다. [Git for Windows 다운로드](https://git-scm.com/install/windows)
 
 기본 사용자 흐름은 다음과 같다.
 
@@ -397,7 +397,7 @@ Git Bash와 같은 문법·Unix 옵션의 기준 환경은 `Passport Bash`다. c
 - 실행 파일과 DLL은 Electron `asar` 밖의 Windows 전용 resources에 둔다. 읽기 전용 설치 디렉터리에서도 실행되게 하고 기록·캐시·사용자 설정은 별도 사용자 데이터 위치에 둔다.
 - 셸 프로세스와 그 자식에게만 필요한 환경을 전달한다. Electron 메인이나 SSH 실행기의 PATH를 변경하지 않는다. 기존 사용자 홈·계정·파일 접근 범위를 임의로 바꾸지 않는다.
 - Windows 경로와 `/c/...` 표기의 변환은 런타임 기능으로 처리한다. 네이티브 Windows 도구에 전달하는 인자·환경의 자동 경로 변환은 별도 검증한다. [MSYS2 경로 문서](https://www.msys2.org/docs/filesystem-paths/)
-- x64·ARM64 런타임의 버전·출처·해시·포함 파일을 기록한다. 배포물에 저작권·라이선스 고지를 포함하고 각 구성 요소의 소스 제공 조건을 충족할 배포 방식을 확인한다.
+- x64 런타임의 버전·출처·해시·포함 파일을 기록한다. 배포물에 저작권·라이선스 고지를 포함하고 각 구성 요소의 소스 제공 조건을 충족할 배포 방식을 확인한다.
 - 런타임 업데이트는 Passport 설치본 업데이트와 함께 검증한다. 실행 중인 셸의 런타임 파일을 덮어쓰지 않는다. 설치 크기와 터미널 시작 지연은 측정 후 기록한다.
 
 ### 7. 구현 순서와 완료 기준
@@ -416,7 +416,6 @@ Git Bash와 같은 문법·Unix 옵션의 기준 환경은 `Passport Bash`다. c
 | 검증 대상 | 필수 조합 | 현재 상태 |
 | --- | --- | --- |
 | Windows 11 x64 | 내장 Bash·cmd·Windows PowerShell 5.1, PowerShell 7 설치/미설치 | 소스·문서 검토, 신규 동작 실행 검증 대기 |
-| Windows 11 ARM64 | 내장 ARM64 런타임, cmd·발견한 각 PowerShell의 실제 아키텍처 | 소스·문서 검토, 신규 동작 실행 검증 대기 |
 | macOS Apple Silicon | 제품 최소 버전 macOS 14와 최신 지원 환경, zsh·시스템 Bash·기본 셸 | 버전·격리 시작 규칙 확인, 앱 통합·설치본 검증 대기 |
 
 Mac Intel 배포는 현재 패키징 대상에 포함돼 있지 않으므로 이번 계획으로 지원 완료를 선언하지 않는다.
@@ -425,7 +424,7 @@ Mac Intel 배포는 현재 패키징 대상에 포함돼 있지 않으므로 이
 
 필수 시험은 Git·Bash·MSYS2·WSL이 없는 Windows의 새 사용자 환경에서 시작한다. 네트워크를 끈 상태로 설치본만으로 터미널을 열고 `sh -c`, `.sh`의 변수·조건·반복·파이프·리디렉션·종료 코드, `ll`, 기본 파일 명령을 확인한다. AI 서비스 접속 시험은 별도의 온라인 시험으로 수행한다.
 
-추가로 한글·공백이 있는 설치/사용자/프로젝트 경로, Windows 드라이브와 지원 대상 UNC 경로, 파일 줄바꿈·실행 권한 차이, `Ctrl+C`·리사이즈·CLI 종료, Bash와 네이티브 CLI의 인자 변환, F01 훅 전송을 검증한다. x64와 ARM64 결과를 각각 기록한다. 기존 사용자 설정이 있는 경우와 없는 경우를 모두 시험하고, Passport 밖의 PowerShell·cmd·Git 환경이 변경되지 않았는지도 확인한다.
+추가로 한글·공백이 있는 설치/사용자/프로젝트 경로, Windows 드라이브와 지원 대상 UNC 경로, 파일 줄바꿈·실행 권한 차이, `Ctrl+C`·리사이즈·CLI 종료, Bash와 네이티브 CLI의 인자 변환, F01 훅 전송을 검증한다. Windows x64 결과를 기록한다. 기존 사용자 설정이 있는 경우와 없는 경우를 모두 시험하고, Passport 밖의 PowerShell·cmd·Git 환경이 변경되지 않았는지도 확인한다.
 
 프로파일 조합은 추가 적용 없음·1개·여러 개, 적용 순서 변경, 동일 별칭·환경 변수·PATH·프롬프트 충돌, 셸 불일치, 원래 사용자 설정 우선, 프로파일 삭제·버전 변경을 시험한다. 기본값 상속과 명시적인 빈 목록을 구분하고, 설정 미리보기에 부수 효과가 없는지, 새 세션의 적용 내역이 실제 결과와 일치하는지 확인한다. 변경한 설정이 이미 실행 중인 세션에 주입되지 않고, AI 알림이 세션별 선택에 맞춰 한 번만 연결되는지도 검증한다.
 
@@ -486,7 +485,7 @@ cmux Feed 문서는 일반 Codex CLI의 질문·승인 UI를 Codex에 남기며,
 
 ### 4. 범위와 지원 기준
 
-첫 범위는 Passport가 생성한 로컬 터미널의 Claude Code·Codex CLI, 앱 내 알림 목록, OS 알림, 클릭 이동, 연동 설정이다. macOS Apple Silicon 설치본에서 먼저 검증하고, Windows x64·ARM64에서도 동일한 앱 내부 동작과 OS별 전송 경로를 검증한다. 플랫폼별 미검증 상태는 구분해서 표시한다.
+첫 범위는 Passport가 생성한 로컬 터미널의 Claude Code·Codex CLI, 앱 내 알림 목록, OS 알림, 클릭 이동, 연동 설정이다. macOS Apple Silicon 설치본에서 먼저 검증하고, Windows x64에서도 동일한 앱 내부 동작과 OS별 전송 경로를 검증한다. 플랫폼별 미검증 상태는 구분해서 표시한다.
 
 외부 Terminal.app·iTerm의 세션 수집, SSH 원격 CLI 자동 연동, 휴대폰 푸시, Slack·메일 전송, 자동 응답·승인, 앱 종료 후 에이전트 유지, 세션 자동 복원은 첫 범위에 넣지 않는다. 일반 명령의 완료 감시도 별도 기능으로 취급한다.
 
@@ -748,7 +747,7 @@ cmux에서 참고한 것은 알림 목록·배지·위치 이동과 이벤트 �
 
 ### 6. helper·OS 알림·성능 결정
 
-helper는 **Mac arm64 / Windows x64 / Windows arm64별 독립 네이티브 바이너리**를 기본안으로 한다. Electron 전체를 이벤트마다 새로 띄우거나 외부 Node.js·Python·jq를 설치하도록 요구하지 않는다. 앱 빌드에서 함께 만들고 버전·프로토콜 번호·해시를 기록하며 설치본 서명·검사 대상에 포함한다. 구현 언어·정확한 크기는 빌드 시 확정하되 이 배포 형태를 기준으로 설계한다.
+helper는 **Mac arm64 / Windows x64별 독립 네이티브 바이너리**를 기본안으로 한다. Electron 전체를 이벤트마다 새로 띄우거나 외부 Node.js·Python·jq를 설치하도록 요구하지 않는다. 앱 빌드에서 함께 만들고 버전·프로토콜 번호·해시를 기록하며 설치본 서명·검사 대상에 포함한다. 구현 언어·정확한 크기는 빌드 시 확정하되 이 배포 형태를 기준으로 설계한다.
 
 - `stdin hook / argv notify` 입력 어댑터와 공통 전송을 나눈다. 시작·입력 읽기·연결·전송 전체에 제한 시간을 적용한다. 실행 파일 부재·연결 실패·앱 종료에서 이벤트별 중립 반환을 유지하는 발신 래퍼를 함께 검증한다. 제한을 초과한 입력을 기다리며 CLI가 멈추지 않게 한다.
 - Unix socket은 사용자 전용의 짧은 경로에 두어 플랫폼의 경로 길이 제한을 피한다. Windows named pipe는 모든 사용자 접근 옵션을 켜지 않으며 실제 ACL과 같은 사용자 접근을 확인한다. 세션 토큰은 추가 검증 값이고 같은 사용자 계정 안의 모든 프로세스를 격리하는 보안 경계라고 안내하지 않는다. [Node IPC 옵션](https://nodejs.org/api/net.html#serverlistenoptions-callback)
@@ -761,7 +760,7 @@ helper는 **Mac arm64 / Windows x64 / Windows arm64별 독립 네이티브 바�
 
 ### 7. Windows 런타임과 배포 검토
 
-공식 Git for Windows 페이지의 x64·ARM64 Portable 배포 경로와 `bin/bash.exe`의 초기화 역할을 확인했다. 제품 지원 범위는 기존 배포 문서에 맞춰 Windows 11 x64·ARM64, macOS 14 이상 Apple Silicon으로 둔다. 외부 Git·WSL 미설치의 오프라인 첫 실행이 Windows 번들 통과 조건이다.
+공식 Git for Windows 페이지의 x64 Portable 배포 경로와 `bin/bash.exe`의 초기화 역할을 확인했다. 제품 지원 범위는 기존 배포 문서에 맞춰 Windows 11 x64, macOS 14 이상 Apple Silicon으로 둔다. 외부 Git·WSL 미설치의 오프라인 첫 실행이 Windows 번들 통과 조건이다.
 
 - 번들은 실행 파일 몇 개만 추출하지 않고 일관된 배포 구성을 유지하되 F04의 사용자 `.bash_profile` 자동 생성 방지 패치를 적용한다. `mingw64` 같은 내부 위치를 고정하지 않고 공식 진입점을 사용한다. Git for Windows의 내부 디렉터리 변경이 이미 공지돼 있으므로 버전 갱신 때 manifest를 비교한다. [Git for Windows 릴리즈 기록](https://github.com/git-for-windows/build-extra/blob/main/ReleaseNotes.md)
 - 현재 `build.files`·`asarUnpack`만으로는 새 외부 번들이 자동 포함되지 않는다. OS·아키텍처별 `extraResources`와 helper 경로를 추가할 대상으로 명시한다. Mac 설치본에는 Windows 런타임을 넣지 않는다.
@@ -775,14 +774,14 @@ helper는 **Mac arm64 / Windows x64 / Windows arm64별 독립 네이티브 바�
 
 | 검증 묶음 | 필요한 환경·실행 | 통과 기준 | 실패 시 처리 |
 | --- | --- | --- | --- |
-| G1 셸·번들 | Git·WSL 없는 Windows 11 x64/ARM64 설치본, Mac 사용자 셸 구성 | 선택한 셸·프로파일·경로·Ctrl+C·CLI 실행 일치 | 해당 셸 조합 오류 표시, 다른 셸로 몰래 전환하지 않음 |
+| G1 셸·번들 | Git·WSL 없는 Windows 11 x64 설치본, Mac 사용자 셸 구성 | 선택한 셸·프로파일·경로·Ctrl+C·CLI 실행 일치 | 해당 셸 조합 오류 표시, 다른 셸로 몰래 전환하지 않음 |
 | G2 실제 CLI 이벤트 | 검증 대상 버전의 Claude·Codex, 로그인된 시험 계정 | 완료·승인·질문·자동 승인·계속 실행 훅·공유 데몬을 구분 | 불확실 이벤트는 주의 환기로 제한, 지원 범위를 명시 |
 | G3 설치본 알림·helper | Mac ad-hoc 설치본, Windows NSIS·시작 메뉴·권한·집중 모드 | 수신·배너·정확한 창/패널 클릭 이동, timeout·차단 시 CLI 정상 | 앱 내 기록 유지, OS 표시 실패와 원인 안내 |
 | G4 이행·회귀 | 기존 문서·백업·배치 fixture, 다중 창·저장 충돌·출력 부하 | 새 필드 보존·구버전 거부·복원·ACK·32개 제한 유지 | 이행 롤백, 손상 상태 저장·자동 초기화 금지 |
 
 G1에는 PS 5.1/7·cmd의 인코딩·특수 문자·AutoRun·실행 정책, Bash/MSYS 경로 변환, Mac Bash 3.2·zsh 프롬프트 플러그인을 포함한다. G2에는 기존 `notify`·사용자 훅·비활성화·절대 경로 실행·짧은 시간에 해결된 요청·여러 동시 요청을 포함한다. G3에는 로그/버퍼 재생·창 이동 중·종료 직후의 이벤트와 메모리·파일 저장 장애를 포함한다.
 
-현재 CI의 Windows x64 작업은 `windows-2025` 서버 runner이고 ARM64는 `windows-11-arm`이다. CI의 unpacked 앱 smoke 성공을 Windows 11 데스크톱 NSIS 설치·알림 성공으로 대체하지 않는다. Mac 14 최소 버전도 현재 Mac 27 장비 확인과 구분한다. 필요한 실기 결과가 없는 플랫폼은 지원 완료로 게시하지 않는다.
+현재 CI의 Windows x64 작업은 `windows-2025` 서버 runner다. CI의 unpacked 앱 smoke 성공을 Windows 11 데스크톱 NSIS 설치·알림 성공으로 대체하지 않는다. Mac 14 최소 버전도 현재 Mac 27 장비 확인과 구분한다. 필요한 실기 결과가 없는 플랫폼은 지원 완료로 게시하지 않는다.
 
 사전 검토에서 남긴 것은 이 네 묶음의 구현·실측이며, 기존 계획의 미확정 사항은 위 기본안·제약·실패 처리로 구체화했다. 코드 구현을 시작할 때는 **데이터 이행 → 셸·프로파일 로더와 실행 세대 → 혼합 작업 UI·AI 실행 → 알림 수신·화면·OS 설치본** 순서로 진행한다.
 

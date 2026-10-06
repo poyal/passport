@@ -6,7 +6,7 @@
 
 ## 현재 상태
 
-현재 Mac Apple Silicon과 Windows x64 공개 버전은 **1.1.1**이다. [릴리즈 목록](releases/README.md)에서 다운로드한다. Windows 11 x64에서 소스·최종 설치본을 로컬 검증한 아이콘 수정 EXE를 재빌드 없이 기존 릴리즈에 교체 게시했고 Mac DMG와 기존 태그는 보존했다. 현재 Windows 소스 태그는 `v1.1.1-win-x64-icon-fix`이며 최초 Windows 태그 `v1.1.1-win-x64`도 유지한다. 자세한 출처·해시·사용자가 승인한 같은 버전 교체와 별도 확인 범위는 [아이콘 수정 게시 요약](benchmarks/github-release-windows-v1.1.1-icon-fix.json)을 따른다. Windows ARM64는 이번에 배포하지 않았다.
+현재 Mac Apple Silicon과 Windows x64 공개 버전은 **1.1.1**이다. [릴리즈 목록](releases/README.md)에서 다운로드한다. Windows 11 x64에서 소스·최종 설치본을 로컬 검증한 아이콘 수정 EXE를 재빌드 없이 기존 릴리즈에 교체 게시했고 Mac DMG와 기존 태그는 보존했다. 현재 Windows 소스 태그는 `v1.1.1-win-x64-icon-fix`이며 최초 Windows 태그 `v1.1.1-win-x64`도 유지한다. 자세한 출처·해시·사용자가 승인한 같은 버전 교체와 별도 확인 범위는 [아이콘 수정 게시 요약](benchmarks/github-release-windows-v1.1.1-icon-fix.json)을 따른다.
 
 Mac 설치본은 ad-hoc 서명이며 Developer ID 서명·Apple 공증을 포함하지 않는다. `codesign` 무결성 검사 통과는 Apple 공증이나 Gatekeeper의 실행 허용을 뜻하지 않는다. 현재 결과와 DMG 해시는 [검증 기록](verification.md)에 보관한다.
 
@@ -18,13 +18,12 @@ Mac 설치본은 ad-hoc 서명이며 Developer ID 서명·Apple 공증을 포함
 | ------------------- | ------------------------ | ------------------------------------------ |
 | macOS Apple Silicon | `npm run dist:mac`       | `release/Passport-<version>-mac-arm64.dmg` |
 | Windows x64         | `npm run dist:win`       | `release/Passport-<version>-win-x64.exe`   |
-| Windows ARM64       | `npm run dist:win:arm64` | `release/Passport-<version>-win-arm64.exe` |
 
 파일 이름의 버전은 `package.json`을 따른다. `npm run pack`은 설치 프로그램 없이 현재 환경의 앱 폴더를 만든다. `release/`와 `dist/`는 생성물이며 저장소에 커밋하지 않는다. README는 최신 공개 릴리즈 링크를 기본으로 사용하되 플랫폼별 공개 버전이 다르면 해당 버전 링크와 상태를 표시한다.
 
 산출물의 저장 위치와 보관 기간은 [산출물 보관 규칙](#산출물-보관-규칙)을 따른다. 기존 명령의 루트 출력 경로는 아래에 명시한 전환 전 예외다.
 
-Mac 최소 버전 목표는 14이며 macOS 27 로컬 환경과 macOS 15 GitHub Actions에서 앱 실행을 확인했다. Windows 대상은 Windows 11 x64·ARM64이며 각각의 설치 및 실행 검증을 구분한다. Intel Mac과 Rosetta 의존 Mac 패키지는 만들지 않는다.
+Mac 최소 버전 목표는 14이며 macOS 27 로컬 환경과 macOS 15 GitHub Actions에서 앱 실행을 확인했다. Windows 대상은 Windows 11 x64이며 각각의 설치 및 실행 검증을 구분한다. Intel Mac과 Rosetta 의존 Mac 패키지는 만들지 않는다.
 
 Windows의 `npm ci`는 네이티브 재컴파일 후 [ConPTY 배치 스크립트](../scripts/prepare-node-pty.mjs)로 DLL·OpenConsole을 실제 네이티브 모듈 옆에 복사한다. 패키징의 [afterPack](../scripts/after-pack.mjs)에서도 다시 배치한다. electron-builder 재컴파일이 node-pty의 원래 postinstall 복사 결과를 지워도 패키지에 필요한 파일을 포함하도록 한다.
 
@@ -78,9 +77,6 @@ node scripts/packaged-smoke.mjs release/mac-arm64/Passport.app/Contents/MacOS/Pa
 ```powershell
 # Windows x64
 node scripts/packaged-smoke.mjs release/win-unpacked/Passport.exe
-
-# Windows ARM64
-node scripts/packaged-smoke.mjs release/win-arm64-unpacked/Passport.exe
 ```
 
 검사는 별도 임시 프로필에서 초기 화면, 렌더러 Node 접근 차단, 실제 로컬 PTY 명령, 정상 종료를 확인한다. 이 검사와 별도로 DMG의 Applications 이동, EXE 설치·제거, 한글 IME, 배율, 파일 대화상자, Keychain/DPAPI를 해당 OS에서 확인해야 한다. 패키지 내부 앱의 실행 성공을 설치 프로그램 검증으로 대신하지 않는다.
@@ -93,7 +89,7 @@ $env:PASSPORT_E2E_EXECUTABLE = (Resolve-Path 'release/win-unpacked/Passport.exe'
 npx playwright test
 ```
 
-ARM64에서는 실행 경로를 `release/win-arm64-unpacked/Passport.exe`로 바꾼다. DPAPI 시험은 `safeStorage`를 대체하지 않고 임시 프로필의 SQLite 암호문과 재시작 후 실제 SSH 비밀번호 인증을 확인한다.
+DPAPI 시험은 `safeStorage`를 대체하지 않고 임시 프로필의 SQLite 암호문과 재시작 후 실제 SSH 비밀번호 인증을 확인한다.
 
 시작 시 업데이트 확인을 실제 공개 GitHub 응답으로 검사하려면 다음을 실행한다. 별도 임시 프로필을 사용하며 수동 확인을 호출하지 않고 시작 시 확인 결과·About 표시·정상 종료를 검사한다. 인터넷 연결이 필요하다.
 
@@ -172,7 +168,7 @@ Mac에서 바로 테스트할 앱은 **`release/builds/Passport.app`**이다. �
 
 보관 기준은 **정리 후보를 고르는 규칙**이며 자동 삭제 작업이 아니다. 최근 성공 2회와 최근 복구 2세트는 날짜가 오래돼도 유지한다. 설치 파일은 GitHub에 게시된 바이트와 체크섬을 확인한 뒤 이전 로컬 사본을 정리한다. 폴더 용량만으로 사용자 DB나 복구 세트를 삭제하지 않는다.
 
-실행 ID는 `UTC시각-커밋7자리-플랫폼-용도`로 통일한다. 예: `20261001T045129Z-4d2940c-mac-arm64-colors`. 커밋하지 않은 변경이 있으면 커밋 뒤에 `-dirty`를 붙이고, 실행 시점의 변경 파일 목록과 실제 산출물 해시도 남긴다. 같은 초에 겹치면 번호를 붙인다. 플랫폼은 `mac-arm64`, `win-x64`, `win-arm64`를 사용한다.
+실행 ID는 `UTC시각-커밋7자리-플랫폼-용도`로 통일한다. 예: `20261001T045129Z-4d2940c-mac-arm64-colors`. 커밋하지 않은 변경이 있으면 커밋 뒤에 `-dirty`를 붙이고, 실행 시점의 변경 파일 목록과 실제 산출물 해시도 남긴다. 같은 초에 겹치면 번호를 붙인다. 플랫폼은 `mac-arm64`, `win-x64`를 사용한다.
 
 패키지 출처는 `local`과 `github`를 구분한다. 같은 버전의 로컬 빌드와 공개 파일은 해시가 다를 수 있으므로 서로 덮어쓰지 않는다. 예: `packages/v1.0.2/github/mac-arm64/Passport-1.0.2-mac-arm64.dmg`. 추가 후보를 비교해야 하면 `builds/`에서 검증하고 확정한 1개만 `packages/`에 보관한다.
 

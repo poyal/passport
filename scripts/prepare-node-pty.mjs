@@ -107,10 +107,7 @@ export async function patchWindowsPtyAgent(root) {
 }
 
 export async function prepareWindowsPty(sourceRoot, targetRoot, arch) {
-  assert.ok(
-    ["x64", "arm64"].includes(arch),
-    "Unsupported Windows PTY architecture",
-  );
+  assert.equal(arch, "x64", "Windows PTY builds require x64");
   assert.equal(
     await conptySourceHash(sourceRoot),
     fixedConptySource,
@@ -211,6 +208,11 @@ if (
   path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 ) {
   if (process.platform === "win32") {
+    assert.equal(
+      process.env.npm_config_arch || process.arch,
+      "x64",
+      "Windows PTY builds require x64",
+    );
     const root = path.resolve("node_modules/node-pty");
     await patchWindowsConpty(root);
     const { rebuild } = await import("@electron/rebuild");

@@ -12,7 +12,6 @@ const platform = process.env.PASSPORT_TARGET_PLATFORM || process.platform;
 const targets = {
   "darwin-arm64": "aarch64-apple-darwin",
   "win32-x64": "x86_64-pc-windows-msvc",
-  "win32-arm64": "aarch64-pc-windows-msvc",
 };
 const target = targets[`${platform}-${arch}`];
 if (!target) throw new Error(`Unsupported helper target: ${platform}-${arch}`);

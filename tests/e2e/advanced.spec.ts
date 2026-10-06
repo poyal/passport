@@ -258,6 +258,12 @@ test("opens and keeps a local tab active when ownership events arrive after the 
     await expect(page.locator(".view:not([hidden]) .pill").first()).toHaveText(
       "1 / 1 연결",
     );
+    // PTY attachment precedes Bash/readline startup on Windows. Keep the
+    // ownership check, then type only after the actual shell prompt is ready.
+    if (process.platform === "win32")
+      await expect(
+        page.locator(".view:not([hidden]) .xterm-rows"),
+      ).toContainText(/\$\s*$/);
     await page.locator(".view:not([hidden]) .xterm-helper-textarea").focus();
     await page.keyboard.type(
       process.platform === "win32"
@@ -265,9 +271,15 @@ test("opens and keeps a local tab active when ownership events arrive after the 
         : "printf 'LOCAL_%s\\n' UI_OK",
     );
     await page.keyboard.press("Enter");
-    await expect(page.locator(".view:not([hidden]) .xterm-rows")).toContainText(
-      "LOCAL_UI_OK",
-    );
+    await expect
+      .poll(async () =>
+        (
+          await page
+            .locator(".view:not([hidden]) .xterm-rows > div")
+            .allTextContents()
+        ).map((line) => line.trim()),
+      )
+      .toContain("LOCAL_UI_OK");
     expect(errors).toEqual([]);
   } finally {
     await delayedEvents.evaluate((e) => e.restore());

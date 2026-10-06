@@ -46,7 +46,7 @@ it("constructs terminal adapters without accessing the host and caches the Mac l
     exists,
     loginShell,
   });
-  createWindowsTerminal({ arch: "x64", env: {}, exists });
+  createWindowsTerminal({ env: {}, exists });
   expect(exists).not.toHaveBeenCalled();
   expect(loginShell).not.toHaveBeenCalled();
   expect(mac.shells("/resources")[0]).toMatchObject({
@@ -82,14 +82,13 @@ it("keeps Mac fallback selection and missing-shell diagnostics", () => {
 
 it("uses Windows paths and aliases even when inspected on a Mac host", () => {
   const win = createWindowsTerminal({
-    arch: "arm64",
     env: { SystemRoot: "D:\\Windows", ProgramFiles: "E:\\Programs" },
     exists: (file) => !file.endsWith("pwsh.exe"),
-    architecture: () => "arm64",
+    architecture: () => "x64",
   });
   const shells = win.shells("D:\\Passport\\terminal");
   expect(shells.find((s) => s.id === "passport-bash")?.path).toBe(
-    "D:\\Passport\\terminal\\runtime\\arm64\\bin\\bash.exe",
+    "D:\\Passport\\terminal\\runtime\\x64\\bin\\bash.exe",
   );
   expect(shells.find((s) => s.id === "default")?.path).toBe(
     "D:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
@@ -121,7 +120,6 @@ it("reads the target PE architecture and rejects corrupt or absent executables",
     bytes.writeUInt32LE(64, 60);
     bytes.writeUInt32LE(0x4550, 64);
     for (const [machine, expected] of [
-      [0xaa64, "arm64"],
       [0x8664, "x64"],
       [0x14c, "x86"],
       [0, "unknown"],
@@ -139,7 +137,7 @@ it("reads the target PE architecture and rejects corrupt or absent executables",
 });
 
 it("sets Windows Bash launch state without overwriting an explicit CLI Bash path", () => {
-  const win = createWindowsTerminal({ arch: "arm64", exists: () => true });
+  const win = createWindowsTerminal({ exists: () => true });
   const env = {
     PROMPT_COMMAND: "user_prompt",
     PS0: "user-start",
@@ -147,7 +145,7 @@ it("sets Windows Bash launch state without overwriting an explicit CLI Bash path
   } as NodeJS.ProcessEnv;
   win.configureEnvironment(env, identity, "D:\\runtime");
   expect(env).toMatchObject({
-    MSYSTEM: "CLANGARM64",
+    MSYSTEM: "MINGW64",
     CHERE_INVOKING: "1",
     CLAUDE_CODE_GIT_BASH_PATH: "D:\\custom\\bash.exe",
   });
@@ -162,7 +160,7 @@ it("sets Windows Bash launch state without overwriting an explicit CLI Bash path
     "D:\\runtime",
   );
   expect(normal.CLAUDE_CODE_GIT_BASH_PATH).toBe(
-    "D:\\runtime\\runtime\\arm64\\bin\\bash.exe",
+    "D:\\runtime\\runtime\\x64\\bin\\bash.exe",
   );
   expect(normal.MSYSTEM).toBeUndefined();
   const unchanged = { PATH: "/bin" };

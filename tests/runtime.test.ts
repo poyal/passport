@@ -2,6 +2,7 @@ import { it, expect } from "vitest";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { stripVTControlCharacters } from "node:util";
 import { Store } from "../src/main/store";
 import { SessionLogs } from "../src/main/logs";
 import { LocalSessions, availableShells } from "../src/main/local";
@@ -49,6 +50,9 @@ it.skipIf(process.platform !== "win32")(
       await expect
         .poll(() => output, { timeout: 10000 })
         .toContain(bashPromptMarkers(launch.snapshot.sessionInstanceId).prompt);
+      // OSC 133 is emitted by PROMPT_COMMAND before Bash prints its prompt.
+      // Start each resize/input probe once the actual prompt is displayed.
+      await expect.poll(() => stripVTControlCharacters(output)).toMatch(/\$ $/);
       for (let index = 0; index < 30; index++) {
         local.resize("bash", index % 2 ? 80 : 60, 25);
         const previousPrompts = output.split(
@@ -66,6 +70,9 @@ it.skipIf(process.platform !== "win32")(
               ).length,
           )
           .toBeGreaterThan(previousPrompts);
+        await expect
+          .poll(() => stripVTControlCharacters(output))
+          .toMatch(/\$ $/);
       }
       const child = path.join(dir, "child.cjs");
       await fs.writeFile(

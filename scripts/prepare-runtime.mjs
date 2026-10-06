@@ -11,7 +11,7 @@ const manifest = JSON.parse(
   await fs.readFile(path.join(root, "runtime-manifest.json"), "utf8"),
 );
 const asset = manifest.assets[arch];
-if (!asset) throw new Error("Choose x64 or arm64.");
+if (!asset) throw new Error("Windows runtime builds require x64.");
 const destination = path.join(root, "runtime", arch);
 try {
   const installed = JSON.parse(
@@ -21,6 +21,10 @@ try {
     installed.sha256 === asset.sha256 &&
     (await fs.stat(path.join(destination, "bin/bash.exe"))).isFile()
   ) {
+    await fs.writeFile(
+      path.join(destination, "passport-runtime.json"),
+      JSON.stringify({ ...manifest, arch, sha256: asset.sha256 }, null, 2),
+    );
     console.log(`Passport Bash ${arch} already prepared.`);
     process.exit(0);
   }

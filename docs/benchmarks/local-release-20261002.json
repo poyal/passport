@@ -117,7 +117,7 @@
     "Intermittent Mac Electron normal shutdown hang. A diagnostic run reached app quit with only PipeWrap resources visible but the process remained alive. Root cause is not established.",
     "Final focused GUI success does not supersede the failed full pipeline attempts.",
     "No final DMG or EXE was produced by the new pipeline; installer payload, packaged smoke and complete packaged GUI stages are not validated end to end.",
-    "New Windows x64/ARM64 pipeline has not run on Windows hardware.",
+    "New Windows x64 pipeline has not run on Windows hardware.",
     "Real publication writes and account installation/uninstallation/upgrade are not tested in this task."
   ],
   "userApplication": {

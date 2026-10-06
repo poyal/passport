@@ -1,8 +1,18 @@
 # Passport 검증 기록
 
+## 지원 대상 정리와 후속 검증 — 2026-10-07
+
+사용자의 지원 범위 결정에 따라 **Windows 11 x64와 macOS 14 이상 Apple Silicon**만 공식 대상으로 유지한다. 나머지 데스크톱 대상의 빌드 명령·CI 작업·런타임 manifest·업데이트 선택·문서와 과거 안내를 제거했다. 패키징과 게시의 허용 목록도 같은 두 대상으로 제한한다. 공개 1.1.0·1.1.1 본문의 관련 문장만 수정했고, 설치 파일의 ID·크기·해시가 보존된 것을 확인했다.
+
+이전 `5f19657` 후보의 Mac 정식 검증은 통과했으나 Windows 최종 패키지에서 로컬 셸 준비 전에 입력한 문자가 재배치되는 시험 실패가 있었다. 연결 상태와 실제 셸 프롬프트를 구분하도록 해당 GUI를 보강하고, 명령 입력 에코가 아닌 독립 출력 행을 검사한다. 로컬 리사이즈 회귀도 `PROMPT_COMMAND`의 OSC 표식 이후 실제 프롬프트 출력을 확인하도록 보강했다. 공식 npm 환경의 **30회 리사이즈·첫 바이트·자식 입력 검사 3회**는 통과했다. 직접 실행 진단 중 npm Node 경로가 없어 자식 Node 실행이 실패한 로그도 별도로 보존한다.
+
+지원 대상 정리 후 타입·앱 빌드, 단위·통합 **172 통과·7 생략**, 배포 회귀 **71 통과·1 Windows 심볼릭 링크 생략**을 확인했다. Windows 셸·업데이트·고급 GUI **13개 × 3회 = 39개**가 통과했으며, launch/exit/종료 감사 각 9회, 창 12개, 재사용 18회, **표시·포커스 0회와 새 잔여 PTY 프로세스 0개**다. GUI 자료는 `release/checks/20261006T150900Z-5f19657-dirty-win-x64-e2e-hidden/`, 나머지 로그는 `release/checks/20261006-remote-v1.2.0/`에 보관한다.
+
+지원 대상을 정리한 최종 소스는 새 커밋에서 두 대상의 정식 검증이 필요하다. 이전 후보나 실패 기록을 게시용으로 재사용하지 않는다. 로컬 검사는 창 표시·포커스를 차단하며, 필수 데스크톱 검사는 사용자가 승인한 원격 환경에서 실행한다.
+
 ## 1.2.0 원격 후보의 파일 복사 경합 보완 — 2026-10-06
 
-`bee5cd5`의 [첫 원격 정식 검증](https://github.com/poyal/passport/actions/runs/37476176567)에서 Mac ARM64는 소스·DMG 숨김 GUI 각 60개와 데스크톱 각 4개를 통과했다. Windows x64는 소스 숨김 GUI 65개·데스크톱 4개와 EXE 생성·smoke를 통과했으나 최종 EXE의 파일 복사 목적지 확인에 실패했다. 해당 Windows receipt는 실패 상태로 보존하며 게시하지 않았다. Windows ARM64는 Python `cryptography` 빌드에 필요한 ARM64 OpenSSL 개발 파일이 없어 fixture 준비에서 실패했으며 배포 대상에 포함하지 않는다.
+`bee5cd5`의 [첫 원격 정식 검증](https://github.com/poyal/passport/actions/runs/37476176567)에서 Mac ARM64는 소스·DMG 숨김 GUI 각 60개와 데스크톱 각 4개를 통과했다. Windows x64는 소스 숨김 GUI 65개·데스크톱 4개와 EXE 생성·smoke를 통과했으나 최종 EXE의 파일 복사 목적지 확인에 실패했다. 해당 Windows receipt는 실패 상태로 보존하며 게시하지 않았다.
 
 실패 자료에 실제 복사 목적지의 스냅샷이 없어 원격 실패 원인을 단정하지 않는다. 로컬 일반 반복 10회는 통과했지만 목적지 조회를 명시적으로 지연시키자 **이전 홈 폴더를 가리키는 복사 메뉴가 활성화되는 결함**을 재현했다. 양쪽 패널의 연결·경로·조회 완료·오류·미완료 경로 편집 상태를 함께 확인해 메뉴·방향 버튼·드래그 복사를 막고, 조회 중 경로 입력도 보호한다. 같은 GUI 사례에서 지연 중 차단, 조회 완료 후 새 목적지 복사와 IPC 복구를 검증한다. 사례 파일·제목·플랫폼·모드는 동일하다.
 
@@ -57,7 +67,7 @@ Windows 파일 메뉴 키의 기본 동작을 막는 수정에 더해, ConPTY �
 - 검증용 `Passport-1.1.1-win-x64.exe`: **203,810,256바이트**, SHA-256 `65bcce5e57bb5059cc70c0a2baccd5f73336510420220f3578ee9974951ddda3`. 공개 1.1.1과 다른 파일이며 Authenticode 서명은 없다.
 - 소스 지문·파일 해시·단계별 근거·초기 실패·후속 조건: [장기 검증 요약](benchmarks/prerelease-windows-20261006.json).
 
-과거 Mac 기록의 구현 파일 21개는 수정 전 HEAD와 일치했고 당시 전체 소스 숨김 GUI 60 통과·9 생략, 단위 173 통과·4 생략이 있다. 이번 파일 메뉴 수정과 최종 DMG의 Mac 실기 검증은 대기다. 실제 데스크톱 검사는 AGENTS의 명시 요청 규칙에 따라 실행하지 않았다. 물리 IME·OS 알림·실제 AI 서비스·사용자 계정 설치/업그레이드·Windows ARM64도 완료로 표시하지 않는다.
+과거 Mac 기록의 구현 파일 21개는 수정 전 HEAD와 일치했고 당시 전체 소스 숨김 GUI 60 통과·9 생략, 단위 173 통과·4 생략이 있다. 이번 파일 메뉴 수정과 최종 DMG의 Mac 실기 검증은 대기다. 실제 데스크톱 검사는 AGENTS의 명시 요청 규칙에 따라 실행하지 않았다. 물리 IME·OS 알림·실제 AI 서비스·사용자 계정 설치/업그레이드도 완료로 표시하지 않는다.
 
 새 빌드와 최종 검증 자료는 합계 약 **2.0GiB**이며 자식 수명 재현 자료로 `KEEP.md`를 남겼다. 이 문제 해결 전에는 정리 대상에서 제외한다. 해결된 단축키 중간 진단만 2026-10-13 이후 정리 후보로 검토한다. 기존 산출물 삭제, 사용자 앱·DB 교체, 버전 변경, 커밋·태그·push·게시·원격 Actions 실행은 수행하지 않았다. 아래 기록은 각 시점의 과거 검증이다.
 
@@ -157,7 +167,7 @@ GUI 앱 수는 공통 `electron.launch()` 기준이다. 단일 인스턴스 전�
 - 최종 소스/패키지 desktop GUI: `20261006T012703Z` / `20261006T012714Z`로 시작하는 `release/checks/` 실행 폴더.
 - 미리보기: [release/builds/Passport.app](../release/builds/Passport.app) 상대 링크를 이번 검증 앱으로 갱신했다. 전체 경로·출처·소스 식별 정보·해시는 [장기 요약](benchmarks/platform-split-20261006.json)에 있다.
 
-네이티브 링크 확인창과 브라우저 호출은 GUI에서 대체했다. 실제 브라우저 표시·OS 알림 설정/배너·Windows ConPTY/탐색기/작업표시줄·설치 검증은 남아 있다. Windows ARM64는 기존 구성만 유지했다. Mac 의존성은 기존 Electron ABI 호환 바이너리를 재사용했고 정식 clean `release:verify`나 공개 배포는 수행하지 않았다. 사용자 설치본과 DB도 교체하지 않았다.
+네이티브 링크 확인창과 브라우저 호출은 GUI에서 대체했다. 실제 브라우저 표시·OS 알림 설정/배너·Windows ConPTY/탐색기/작업표시줄·설치 검증은 남아 있다. Mac 의존성은 기존 Electron ABI 호환 바이너리를 재사용했고 정식 clean `release:verify`나 공개 배포는 수행하지 않았다. 사용자 설치본과 DB도 교체하지 않았다.
 
 현재 미리보기와 직전 성공 빌드를 보존한다. 이번 검증 자료는 재현에 더 필요하지 않은 경우 2026-10-13 이후 정리 후보이며 현재 링크 대상·백업·KEEP·미해결 자료는 보호한다. 기존 산출물 삭제는 없다.
 
@@ -368,7 +378,7 @@ Mac ARM64에서 기본 숨김 GUI **47개 통과·9개 조건부 생략**을 확
 
 공개 EXE를 직접 내려받아 전체 바이트의 SHA-256을 GitHub 자산 digest와 `SHA256SUMS.txt` 양쪽에 대조했다. 추출한 앱에서 로컬 PTY·MSVC helper·렌더러 Node 격리·종료 코드 0, DPAPI·셸·혼합 작업·스크롤·종료 등 주요 GUI **26개 통과·1개 생략**을 확인했다. 실제 공개 GitHub 응답을 사용한 시작 시 업데이트 확인도 설치 1.1.0·최신 1.1.0·`installerAvailable: true`, About 표시와 정상 종료를 통과했다. 수동 업데이트 확인은 호출하지 않았다.
 
-공개 EXE도 작업 폴더의 빈 경로에 현재 사용자용으로 실제 설치했다. 설치된 app.asar의 해시가 공개 페이로드와 일치하고, 설치본의 PTY·DPAPI 재시작 접속·셸 GUI **4개 통과·1개 생략**, 시작 시 공개 업데이트 확인과 제거를 통과했다. 설치·제거 코드가 모두 0이며 HKCU 등록은 제거되고 HKLM 설치 등록은 생성되지 않았다. 기존 설치본과 사용자 DB는 보존했다. 이전 로컬 GNU-helper 설치본은 별도 빌드로 기록한다. Windows EXE는 Authenticode 서명이 없으며 ARM64, 실제 AI 서비스 요청·물리 한글 IME·OS 알림 배너, 덮어쓰기 업그레이드와 Docker·장시간 부하는 이번 검증 범위에 포함하지 않는다. PowerShell 7은 CI에서 검증했으며 로컬 PC에서는 없어 생략했다.
+공개 EXE도 작업 폴더의 빈 경로에 현재 사용자용으로 실제 설치했다. 설치된 app.asar의 해시가 공개 페이로드와 일치하고, 설치본의 PTY·DPAPI 재시작 접속·셸 GUI **4개 통과·1개 생략**, 시작 시 공개 업데이트 확인과 제거를 통과했다. 설치·제거 코드가 모두 0이며 HKCU 등록은 제거되고 HKLM 설치 등록은 생성되지 않았다. 기존 설치본과 사용자 DB는 보존했다. 이전 로컬 GNU-helper 설치본은 별도 빌드로 기록한다. Windows EXE는 Authenticode 서명이 없으며 실제 AI 서비스 요청·물리 한글 IME·OS 알림 배너, 덮어쓰기 업그레이드와 Docker·장시간 부하는 이번 검증 범위에 포함하지 않는다. PowerShell 7은 CI에서 검증했으며 로컬 PC에서는 없어 생략했다.
 
 마지막 프로세스 확인에서 앞선 로컬·공개 smoke의 OpenConsole 2개가 부모 종료 후 남아 있었다. 작업 경로·생성 시각·부모 종료를 확인해 시험 소유 프로세스만 종료했다. smoke도 GUI fixture와 같이 정상 `app.quit()`과 실제 종료 코드 0을 기다린 뒤 디버거를 해제하도록 보완했다. 공개 앱의 바이트를 바꾸지 않고 **3회 추가 통과**했으며 매번 Passport·helper·OpenConsole 잔여 프로세스가 **0개**였다.
 
@@ -510,7 +520,7 @@ Codex의 일반 `[tui]` 설정이 있으면 알림 설정까지 전부 생략하
 - 실제 설치 CLI를 앱의 임시 zsh 터미널에서 실행했다. Claude **2.1.286**은 `--print`와 도구 비활성·세션 비저장으로 최소 응답을 요청해 **응답 종료 신호** 수신을 확인했다. Codex **0.159.3**은 `exec --ephemeral`·read-only로 최소 응답을 요청해 **응답 완료** 수신을 확인했다. 둘 다 종료 코드 0이고 사용자 프로젝트 파일은 수정하지 않았다.
 - 관련 단위·통합 **9개**, Rust 단위 **2개**, 개발본과 최종 Mac 패키지의 GUI **각 3개** 통과. GUI는 실제 셸에서 `claude`/`codex` 명령을 입력해 fixture CLI가 주입된 설정으로 helper를 호출하는 경로를 검증한다. 승인 후보/완료 수신, 전경의 배너 미요청, 배경의 배너 2건 요청을 확인했다. GUI 배너 호출은 시험용으로 관측하며 실제 OS 전달과 구분한다.
 - 최종 Mac 앱에서 별도로 **테스트 알림 1건**을 실제 macOS에 요청했고 `Notification.isSupported() = true`, 네이티브 `show` 이벤트를 확인했지만 사용자는 배너가 보이지 않았다고 응답했다. 해당 시각의 Passport 전용 OS 로그에서 `authorizationStatus: Denied`와 `not visible`을 확인했다. 집중 모드 억제는 없었다. 따라서 이 환경의 실제 배너 표시는 실패이며, 시스템 설정에서 Passport 알림을 허용한 뒤 재확인해야 한다. `show` 이벤트는 표시 성공으로 취급하지 않는다. 앱에 운영체제 알림 설정으로 가는 버튼과 권한 안내를 추가했다.
-- 타입 검사·프로덕션 빌드 통과. 변경한 helper의 Windows x64·ARM64 `cargo check` 통과. 실제 대화형 승인 요청·Codex 공유 데몬과 Windows OS 알림은 별도 확인이 남는다.
+- 타입 검사·프로덕션 빌드 통과. 변경한 helper의 Windows x64 `cargo check` 통과. 실제 대화형 승인 요청·Codex 공유 데몬과 Windows OS 알림은 별도 확인이 남는다.
 
 수정 실행본: `release/notification-fix-preview/mac-arm64/Passport.app`. [현재 사용법과 조건](local-ai-workspaces.md).
 
@@ -531,7 +541,7 @@ PNG가 일부만 로딩된 상태에서 화면에 그려져 시작 아이콘이 
 - GUI **고유 시나리오 38개 통과**, 선택 10분·1 GiB 부하 2개 제외. 전체 실행의 37개 통과 후 SSH 선택 화면의 변경된 요소에 맞춰 테스트를 수정했고, 해당 사용성·신규 기능 9개를 다시 통과했다. 새 홈·혼합 패널·프로파일 설정을 촬영하고 직접 검토했다.
 - **최종 Mac 패키징 앱의 신규 GUI 2개 통과**: 실제 Bash 프로파일 준비, 로컬+SSH 분할, 알림 클릭으로 기존 패널 이동, 입력 대화상자 유지, 다른 창으로 이동한 패널 찾기, 출력 재생 중 중복 알림 방지, 템플릿 배치만 복원, 다중 프로파일과 알림 설정 저장. 별도 smoke에서 asar 밖 helper 실행·프로파일 ready·실제 PTY 입력·렌더러 Node 접근 차단·정상 종료 코드 0을 확인했다.
 - Mac arm64 앱의 `codesign --verify --deep --strict` 통과. 로컬 앱은 `release/local-ai-preview/mac-arm64/Passport.app`이며 ad-hoc 서명이다. Developer ID 서명·공증·공개 업로드는 포함하지 않는다. 버전 표시는 기존 소스의 1.0.2를 유지한다.
-- Windows x64·ARM64 공식 Portable Git 2.56.0 배포물을 실제 다운로드해 SHA-256·필수 실행 파일·사용자 `.bash_profile` 자동 생성 방지 패치를 확인했다. Rust helper는 두 Windows MSVC 대상 `cargo check`를 통과했다. Windows CI에 런타임 준비·helper 빌드·데스크톱 검사를 연결했다.
+- Windows x64 공식 Portable Git 2.56.0 배포물을 실제 다운로드해 SHA-256·필수 실행 파일·사용자 `.bash_profile` 자동 생성 방지 패치를 확인했다. Rust helper는 Windows x64 MSVC 대상 `cargo check`를 통과했다. Windows CI에 런타임 준비·helper 빌드·데스크톱 검사를 연결했다.
 
 [검증 요약과 패키지 helper 해시](benchmarks/local-ai-workspaces.json). 패키지의 `dist/` 파일은 빌드 결과와 바이트 단위로 일치한다. helper는 패키징 서명 때문에 원본 해시가 달라지며, 임시 복사본에서 양쪽 서명을 제거한 뒤 코드 일치와 패키지 원본의 서명 유효성을 각각 확인했다.
 
@@ -551,7 +561,7 @@ SHA-256: `55d35acfd60f389a607a6a5a99111d529d0b889c3e4de0d5b1a39e7d991661f5`.
 
 공개 EXE를 직접 다운로드해 크기·실제 SHA-256·GitHub 자산 digest·합본 체크섬 일치를 확인했다. EXE에서 앱을 추출하고 별도 임시 프로필에서 실제 로컬 PTY 출력, 렌더러 Node 접근 차단과 종료 코드 0을 확인했다. 공개 업데이트 응답도 대체하지 않고 시작 시 한 번 조회해 설치 1.0.2·최신 1.0.2·`installerAvailable: true`, About 표시와 정상 종료를 확인했다. 이 다운로드 검증은 기존 설치와 사용자 제거 등록을 변경하지 않는다.
 
-Windows EXE는 Authenticode 서명이 없다. Windows ARM64, 물리 한글 IME·배율 변경과 기존 설치본의 덮어쓰기 업그레이드는 이번 공개 검증에 포함하지 않는다. 아래 로컬 QA EXE는 별도 빌드이므로 해시·크기를 공개 설치 파일과 구분한다. [공개 게시·다운로드·실행 기록](benchmarks/github-release-windows-v1.0.2.json).
+Windows EXE는 Authenticode 서명이 없다. 물리 한글 IME·배율 변경과 기존 설치본의 덮어쓰기 업그레이드는 이번 공개 검증에 포함하지 않는다. 아래 로컬 QA EXE는 별도 빌드이므로 해시·크기를 공개 설치 파일과 구분한다. [공개 게시·다운로드·실행 기록](benchmarks/github-release-windows-v1.0.2.json).
 
 ## Windows x64 전체 검증·Docker SSH/SFTP — 2026-09-30
 
@@ -573,7 +583,7 @@ Windows 11 x64(10.0.26200), Node.js 24.14.0, Electron 44.4.5에서 현재 사용
 
 검사 환경에서 발견한 문제도 수정·재검증했다. Docker 아키텍처의 ARM64 고정을 제거하고 CentOS 7 보관 저장소·서명 키를 아키텍처별로 선택하며 Windows CRLF를 정리한다. 초기 Docker 실행은 역방향 DNS 조회로 5분 제한을 초과했고, 테스트 서버의 `UseDNS no` 적용 후 전체 프로토콜 검사가 약 24초에 통과했다. 초기 10분 부하는 100ms 타이머의 실측 평균 105.8ms 지연으로 목표 공급량 93%에 그쳐 실패했다. 경과 시간에 맞춰 누락분을 보충하도록 수정하고 **동일한 출력량·입력 지연 기준으로 10분 재검증을 통과**했다. 모든 GUI가 실제 패키지 실행 경로를 지원하며 Windows CI도 일반 패키지 GUI 전체를 실행하도록 확대했다.
 
-한 터미널에 대량 출력을 쉬지 않고 공급하면 입력 응답이 약 2.65초 지연된다. 위 24.1ms 수치는 16개 터미널에 정해진 속도로 공급하는 별도 부하의 측정값이다. 로컬 Docker·loopback 결과이며 WAN 속도·실제 키 입력부터 화면까지의 지연으로 해석하지 않는다. Windows ARM64, 물리 한글 IME·배율 변경, 기존 설치본의 덮어쓰기 업그레이드와 원격 CI는 이번에 실행하지 않았다.
+한 터미널에 대량 출력을 쉬지 않고 공급하면 입력 응답이 약 2.65초 지연된다. 위 24.1ms 수치는 16개 터미널에 정해진 속도로 공급하는 별도 부하의 측정값이다. 로컬 Docker·loopback 결과이며 WAN 속도·실제 키 입력부터 화면까지의 지연으로 해석하지 않는다. 물리 한글 IME·배율 변경, 기존 설치본의 덮어쓰기 업그레이드와 원격 CI는 이번에 실행하지 않았다.
 
 검증한 설치 파일: `release/current-user/Passport-1.0.2-win-x64.exe` · 115,649,103바이트.
 
@@ -596,7 +606,7 @@ SHA-256: `26703222762d1db26b8534de9a1b88022ce9fc3e5700be62076c171d5e47fb98`. 로
 
 SHA-256: `26703222762d1db26b8534de9a1b88022ce9fc3e5700be62076c171d5e47fb98`.
 
-[추가 검증 요약](benchmarks/verification-windows-current-user-v1.0.2.json). 아래 기존 점검의 EXE와 구분한다. Authenticode 서명·공개 게시·Windows ARM64 실행은 포함하지 않는다.
+[추가 검증 요약](benchmarks/verification-windows-current-user-v1.0.2.json). 아래 기존 점검의 EXE와 구분한다. Authenticode 서명·공개 게시은 포함하지 않는다.
 
 ## Windows x64 점검 — 2026-09-30
 
@@ -620,7 +630,7 @@ Windows 11 x64(10.0.26200), Node.js 24.14.0, Electron 44.4.5에서 현재 작업
 
 SHA-256: `3edafc0c619d9af83d6fe006e3015e3f9349704863484f8187859d519ba55251`.
 
-[Windows 검증 요약](benchmarks/verification-windows-x64-v1.0.2.json). Python 경로와 C++ 빌드 도구가 준비되지 않은 환경이므로 포함된 Node-API 바이너리로 점검했다. 재현 명령은 [개발 안내](development.md)에 둔다. Windows ARM64·소스 네이티브 재빌드·한글 IME의 실제 조합·배율 변경·네이티브 파일 선택창·기존 설치본의 덮어쓰기 업그레이드·장시간 부하는 확인하지 않았다. EXE는 Authenticode 서명되지 않았으며 공개 게시 전이다.
+[Windows 검증 요약](benchmarks/verification-windows-x64-v1.0.2.json). Python 경로와 C++ 빌드 도구가 준비되지 않은 환경이므로 포함된 Node-API 바이너리로 점검했다. 재현 명령은 [개발 안내](development.md)에 둔다. 소스 네이티브 재빌드·한글 IME의 실제 조합·배율 변경·네이티브 파일 선택창·기존 설치본의 덮어쓰기 업그레이드·장시간 부하는 확인하지 않았다. EXE는 Authenticode 서명되지 않았으며 공개 게시 전이다.
 
 공개 [v1.0.2 릴리즈](https://github.com/poyal/passport/releases/tag/v1.0.2)의 자산은 현재 Mac DMG와 체크섬뿐이다. 설치된 Windows 앱의 시작 시 조회는 정식 1.0.2를 정상 인식하며 `installerAvailable: false`로 공개 Windows 다운로드 버튼을 제공하지 않는다.
 
@@ -804,7 +814,7 @@ Windows 설치·실행과 물리 마우스 창 이동·OS별 IME는 자동 GUI �
 
 ## 구현 상태
 
-v0.2의 그룹 상속·일괄 편집, 스니펫 변수·실행·시작 명령·환경 변수, 동시 입력, 로컬 셸, 별도 창 이동·복귀, 3종 터널, 세션 로그·검색·북마크, 명령 제안, 사용자 테마·출력 강조·고급 외형·단축키를 구현했다. v0.3의 Windows ARM64 네이티브 빌드 경로도 추가했다. 업데이트·클라우드·사용자가 제외한 기능은 추가하지 않았다.
+v0.2의 그룹 상속·일괄 편집, 스니펫 변수·실행·시작 명령·환경 변수, 동시 입력, 로컬 셸, 별도 창 이동·복귀, 3종 터널, 세션 로그·검색·북마크, 명령 제안, 사용자 테마·출력 강조·고급 외형·단축키를 구현했다. 업데이트·클라우드·사용자가 제외한 기능은 추가하지 않았다.
 
 ## 자동 검증
 
@@ -858,13 +868,13 @@ CentOS 7은 공식 ARM64 아카이브와 이미지 내 ARM64 GPG 키를 사용�
 
 ## 플랫폼·패키지
 
-Mac은 Apple Silicon 네이티브이며 Rosetta가 필요 없다. Windows x64/ARM64는 별도 NSIS 스크립트와 네이티브 CI 구성을 제공한다. 이 작업 환경에는 Windows가 없어 실제 Windows 설치·실행 결과는 아직 없다. macOS 최소 버전 목표는 14지만 현재 실측 OS는 27이다. 개인 테스트용 Mac 패키지는 ad-hoc 서명이며 Developer ID 서명·공증은 포함하지 않는다.
+Mac은 Apple Silicon 네이티브이며 Rosetta가 필요 없다. Windows x64는 별도 NSIS 스크립트와 네이티브 CI 구성을 제공한다. 이 작업 환경에는 Windows가 없어 실제 Windows 설치·실행 결과는 아직 없다. macOS 최소 버전 목표는 14지만 현재 실측 OS는 27이다. 개인 테스트용 Mac 패키지는 ad-hoc 서명이며 Developer ID 서명·공증은 포함하지 않는다.
 
 생성한 설치본은 `release/Passport-0.3.0-mac-arm64.dmg`이다. 앱 실행 파일의 Mach-O arm64와 `codesign --verify --deep --strict` 통과를 확인했다. 패키징된 앱에서 로컬 PTY 명령 실행, Node 접근 차단, 정상 종료 코드 0까지 확인했다. [패키지 실행 결과](benchmarks/packaged-smoke.json).
 
 DMG SHA-256: `32d3a54712328930a91beeab29d635f235619dd536cf9a2018fa40db34a91d46`.
 
-Windows ARM64는 [GitHub 공식 runner 목록](https://docs.github.com/en/actions/reference/runners/github-hosted-runners)의 `windows-11-arm`을 사용한다. [워크플로](../.github/workflows/desktop.yml)는 수동 실행이며, 이 작업에서 원격 CI·공개 업로드는 실행하지 않았다.
+[워크플로](../.github/workflows/desktop.yml)는 수동 실행이며, 이 작업에서 원격 CI·공개 업로드는 실행하지 않았다.
 
 ## 재현
 
@@ -872,4 +882,4 @@ Windows ARM64는 [GitHub 공식 runner 목록](https://docs.github.com/en/action
 
 ## 실환경 확인 범위
 
-Windows x64/ARM64 설치·실행, macOS 14, 두 OS의 실제 한글 IME·배율·네이티브 파일 대화상자·Keychain/DPAPI 보호 흐름은 별도 환경 확인이 남는다. 한글 출력과 키/비밀번호 프로토콜 테스트는 이 OS UI 확인을 대신하지 않는다. 실제 WAN 단절·권한 제한 서버·장시간 원격 대용량 전송도 로컬 시험과 구분한다.
+Windows x64 설치·실행, macOS 14, 두 OS의 실제 한글 IME·배율·네이티브 파일 대화상자·Keychain/DPAPI 보호 흐름은 별도 환경 확인이 남는다. 한글 출력과 키/비밀번호 프로토콜 테스트는 이 OS UI 확인을 대신하지 않는다. 실제 WAN 단절·권한 제한 서버·장시간 원격 대용량 전송도 로컬 시험과 구분한다.

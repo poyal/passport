@@ -52,7 +52,11 @@
     "uniquePassedIncludingStress": 20,
     "shutdownRepeat": {
       "passed": 9,
-      "modes": ["active", "closed", "reopened"],
+      "modes": [
+        "active",
+        "closed",
+        "reopened"
+      ],
       "repeatsPerMode": 3,
       "exitCode": 0,
       "signal": null
@@ -142,7 +146,7 @@
     "previousArtifactPreserved": true
   },
   "limitations": [
-    "Windows x64/ARM64 installation and runtime not tested.",
+    "Windows x64 installation and runtime not tested.",
     "macOS 14 not tested; current runtime OS is macOS 27.",
     "Physical IME, mouse dragging, real Keychain/DPAPI protection flows, and WAN failure/large transfers remain outside the isolated automatic tests."
   ]

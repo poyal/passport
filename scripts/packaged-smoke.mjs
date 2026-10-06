@@ -63,6 +63,8 @@ try {
   }));
   if (runtime.platform === "darwin" && runtime.arch !== "arm64")
     throw new Error("Mac 설치본은 Apple Silicon 네이티브여야 합니다.");
+  if (runtime.platform === "win32" && runtime.arch !== "x64")
+    throw new Error("Windows 설치본은 x64여야 합니다.");
   phase = "bootstrap and profile";
   const state = await page.evaluate(async () => {
     const b = await window.passport.call("bootstrap");

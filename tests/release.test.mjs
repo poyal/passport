@@ -17,6 +17,7 @@ import {
   withReleaseLock,
   initialWindowsRelease,
   windowsIconReplacement,
+  targets,
 } from "../scripts/release-core.mjs";
 import {
   publicationPlan,
@@ -42,6 +43,28 @@ import {
 } from "../scripts/release-gui-policy.mjs";
 
 // Synthetic reporter output for gate and publication tests; no Electron launch.
+test("release and package configuration allow only the two supported targets", async () => {
+  assert.deepEqual(Object.keys(targets).sort(), ["mac-arm64", "win-x64"]);
+  const pkg = JSON.parse(
+    await fs.readFile(new URL("../package.json", import.meta.url), "utf8"),
+  );
+  assert.deepEqual(pkg.build.win.target, [{ target: "nsis", arch: ["x64"] }]);
+  const runtime = JSON.parse(
+    await fs.readFile(
+      new URL("../resources/terminal/runtime-manifest.json", import.meta.url),
+      "utf8",
+    ),
+  );
+  assert.deepEqual(Object.keys(runtime.assets), ["x64"]);
+  const { default: checkResources } =
+    await import("../scripts/check-resources.cjs");
+  const { Arch } = await import("builder-util");
+  await assert.rejects(
+    checkResources({ electronPlatformName: "win32", arch: Arch.ia32 }),
+    /Unsupported package target/,
+  );
+});
+
 test("Windows PTY audit scopes paths and distinguishes reused process IDs", () => {
   const roots = ptyAuditRoots("C:\\repo");
   const old = {
@@ -806,11 +829,7 @@ test("initial Windows publication rejects changed source tags, Mac tags and Mac 
 });
 test("the initial Windows source exception cannot publish another platform or version", async (t) => {
   const { receipt, client } = await initialWindowsFixture(t);
-  for (const replacement of [
-    { target: "win-arm64" },
-    { target: "mac-arm64" },
-    { version: "1.1.2" },
-  ])
+  for (const replacement of [{ target: "mac-arm64" }, { version: "1.1.2" }])
     await assert.rejects(
       publicationPlan(client, [{ ...receipt, ...replacement }]),
       /Remote tag differs/,
@@ -882,7 +901,7 @@ test("Windows icon replacement refuses any other installer, Mac asset or target"
     publicationPlan(client, [receipt], { replaceWindowsIcon: true }),
     /Existing Mac 1.1.1 installer changed/,
   );
-  for (const target of ["win-arm64", "mac-arm64"])
+  for (const target of ["mac-arm64"])
     await assert.rejects(
       publicationPlan(client, [{ ...receipt, target }], {
         replaceWindowsIcon: true,

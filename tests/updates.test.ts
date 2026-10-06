@@ -76,7 +76,7 @@ describe("GitHub release checks", () => {
     expect(
       releaseDetails(release("1.0.2", "win", "arm64"), "win32", "arm64")
         .downloadURL,
-    ).toMatch(/win-arm64\.exe$/);
+    ).toBeUndefined();
     for (const browser_download_url of [
       "https://evil.test/app.dmg",
       "file:///tmp/app.dmg",

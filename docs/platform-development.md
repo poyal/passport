@@ -8,13 +8,14 @@
 
 Passport는 저장소·앱·버전·`package-lock.json`을 하나로 유지한다. UI, SSH/SFTP/FTP, DB, IPC, 세션 수명은 공통으로 관리하고 **OS API·경로·셸 탐색·PTY 보정만 운영체제별 구현으로 분리**한다. Windows 수정이 Mac 코드를 건드리지 않고도 검토될 수 있고, 두 OS의 공통 기능은 한 번만 구현하는 구조다.
 
+공식 데스크톱 지원 대상은 **Windows 11 x64와 macOS 14 이상 Apple Silicon**이다. 런타임 manifest, helper, 패키징, 릴리즈 게시와 업데이트 다운로드는 이 두 대상만 허용한다. Windows 터미널 팩터리는 검사 호스트의 아키텍처와 관계없이 x64 내장 런타임을 선택한다.
+
 플랫폼별 저장소·브랜치·npm 패키지·별도 업데이트 피드를 만들지 않는다. 설치 파일은 기존처럼 OS와 아키텍처별로 생성한다. 계약을 바꾸려면 같은 변경에서 두 구현과 호출부·시험·문서를 수정한다. 한 플랫폼을 빈 구현으로 통과시키지 않는다.
 
 | 대상 | 코드·빌드 구성 | 이번 분리의 검증 기준 |
 | --- | --- | --- |
 | macOS ARM64 | `darwin/`, Apple Silicon helper, Mac 패키지 | 타입·단위/통합, 소스/패키지 GUI, PTY 종료, 서명 무결성 |
 | Windows 11 x64 | `win32/`, MSVC helper, 내장 Bash·ConPTY, NSIS | 같은 소스로 실제 Windows에서 셸·종료·파일 붙여넣기·아이콘 확인 |
-| Windows ARM64 | 기존 대상·CI 구성 유지 | 별도 실기·패키지 검증 전 지원 확대나 배포 완료로 표시하지 않음 |
 | Linux·Intel Mac | 앱 빌드 대상 아님 | Linux SSH 서버 지원과 데스크톱 앱 지원을 혼동하지 않음 |
 
 `selectPlatform()`은 `darwin`·`win32`만 받는다. 알 수 없는 OS는 오류를 내며 Mac 구현으로 자동 대체하지 않는다. Mac에서 Windows 어댑터를 주입해 통과한 단위 검사는 Windows 네이티브 검증이 아니다. 실제 수행 결과와 남은 항목은 [검증 기록](verification.md)을 기준으로 한다.
@@ -105,7 +106,7 @@ flowchart TD
 
 `platform`은 실제 `process.platform`을 한 번 선택한 `PlatformServices`다. `selectPlatform(id)`는 지원하는 ID의 같은 서비스 객체를 반환하고, 미지원 ID는 throw한다. 서비스 생성과 실제 OS 사용은 구분된다.
 
-`createDarwinTerminal({ arch, env, exists, loginShell })`, `createWindowsTerminal({ arch, env, exists, architecture })`는 선택적으로 조회 의존성을 받는다. 제품에서는 기본 OS 구현을 사용하고 단위 검사에서는 명시적인 Windows 경로와 가짜 조회를 넣는다. `createDarwinClipboard(run)`은 plist 명령을, `createWindowsClipboard(run, env)`는 탐색기 조회 명령과 Windows 루트를 주입한다. Mac의 실제 AppKit 조회는 이름 있는 pasteboard로 별도 통합 검사한다. `DesktopPlatform`에는 필요한 Electron 객체의 최소 메서드만 전달한다. Unix endpoint 팩터리의 선택적 `root`는 검사 소유 임시 디렉터리용이다.
+`createDarwinTerminal({ arch, env, exists, loginShell })`, `createWindowsTerminal({ env, exists, architecture })`는 선택적으로 조회 의존성을 받는다. 제품에서는 기본 OS 구현을 사용하고 단위 검사에서는 명시적인 Windows 경로와 가짜 조회를 넣는다. `createDarwinClipboard(run)`은 plist 명령을, `createWindowsClipboard(run, env)`는 탐색기 조회 명령과 Windows 루트를 주입한다. Mac의 실제 AppKit 조회는 이름 있는 pasteboard로 별도 통합 검사한다. `DesktopPlatform`에는 필요한 Electron 객체의 최소 메서드만 전달한다. Unix endpoint 팩터리의 선택적 `root`는 검사 소유 임시 디렉터리용이다.
 
 ### TerminalPlatform
 
@@ -187,11 +188,10 @@ Windows 순서는 **AppUserModelID → `show: false` 생성 → ICO·재실행 �
 ### Windows 셸 탐색을 바꿀 때
 
 1. `win32/terminal.ts`의 `shells()`에서 탐색 규칙을 변경한다. 후보가 없으면 `available: false`와 이유를 제공한다. 기존 별칭은 유지한다.
-2. `tests/platform.test.ts`에 `env`·`exists`·`architecture`를 주입해 설치됨/없음·공백/한글·ARM64 경로를 검사한다. 아래는 실제 팩터리를 쓰는 최소 예다.
+2. `tests/platform.test.ts`에 `env`·`exists`·`architecture`를 주입해 설치됨/없음·공백/한글·Windows x64 경로를 검사한다. 아래는 실제 팩터리를 쓰는 최소 예다.
 
    ```ts
    const terminal = createWindowsTerminal({
-     arch: "x64",
      env: { SystemRoot: "D:\\Windows", ProgramFiles: "E:\\Programs" },
      exists: (file) => !file.endsWith("pwsh.exe"),
      architecture: () => "x64",
@@ -239,7 +239,7 @@ Cargo가 PATH에 없으면 **실제 설치 경로**를 `PASSPORT_CARGO`로 지�
 
 ### Windows 11 x64
 
-대상과 같은 x64 Node/Rust, Visual Studio C++ 빌드 도구·Windows SDK·Spectre 완화 라이브러리, Python, Git, Windows PowerShell·PowerShell 7을 준비한다. FTPS용 OpenSSL이 PATH에 있어야 한다. ARM64도 같은 원칙으로 해당 MSVC 도구와 Rust 대상을 사용한다.
+대상과 같은 x64 Node/Rust, Visual Studio C++ 빌드 도구·Windows SDK·Spectre 완화 라이브러리, Python, Git, Windows PowerShell·PowerShell 7을 준비한다. FTPS용 OpenSSL이 PATH에 있어야 한다.
 
 ```powershell
 node -p process.arch

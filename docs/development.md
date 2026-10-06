@@ -6,12 +6,12 @@ OS 관련 코드를 수정하기 전에 [플랫폼 개발 가이드](platform-de
 
 ## 환경 준비
 
-Node.js 24 이상, npm, stable Rust 도구 체인(cargo)을 사용한다. 네이티브 모듈을 빌드하려면 macOS에서는 Xcode Command Line Tools, Windows에서는 Visual Studio C++ 빌드 도구와 Python이 필요하다. Mac은 Apple Silicon, Windows는 대상 아키텍처와 같은 x64 또는 ARM64 환경을 사용한다.
+Node.js 24 이상, npm, stable Rust 도구 체인(cargo)을 사용한다. 네이티브 모듈을 빌드하려면 macOS에서는 Xcode Command Line Tools, Windows에서는 Visual Studio C++ 빌드 도구와 Python이 필요하다. Mac은 Apple Silicon, Windows는 x64 환경을 사용한다.
 
 ```sh
 npm ci
 npm run build:helper
-# Windows에서만: npm run prepare:runtime -- x64 (ARM64는 arm64)
+# Windows에서만: npm run prepare:runtime -- x64
 npm run dev
 ```
 
@@ -36,7 +36,7 @@ npm run check
 npm run dev
 ```
 
-ARM64에서는 대상과 같은 Node·MSVC·Rust 도구와 `prepare:runtime -- arm64`를 사용한다. 빌드 구성의 존재와 실기 검증 완료는 구분한다. [플랫폼별 준비·문제 진단](platform-development.md#6-로컬-준비와-문제-진단)을 함께 확인한다.
+빌드 구성의 존재와 실기 검증 완료는 구분한다. [플랫폼별 준비·문제 진단](platform-development.md#6-로컬-준비와-문제-진단)을 함께 확인한다.
 
 `scripts/patch-ssh2.mjs`는 ssh2 1.17.0의 DH group1 구현에서 Electron/BoringSSL이 제공하지 않는 이름 기반 `modp2` 대신 RFC 2409 §6.2의 동일한 소수를 명시적으로 지정한다. 설치·빌드·단위 시험에서 멱등적으로 적용하며 의존성 버전이나 패치 대상이 달라지면 중단한다. Passport는 현대 기본 협상 목록 뒤에 SHA-1 group14·GEX·group1을 항상 추가한다. 호스트별 옵션은 없으며 이전 `legacySSH` 필드는 파싱 과정에서 제외한다. 전역 `crypto` API를 변경하지 않는다.
 
@@ -188,7 +188,7 @@ npx playwright test tests/e2e/stress.spec.ts tests/e2e/throughput.spec.ts --outp
 
 ## 로컬 셸 리소스
 
-`npm run build`는 Rust helper를 현재 대상에 맞게 빌드하고 라이선스를 모은다. `PASSPORT_CARGO`로 cargo 실행 파일을 지정할 수 있다. 대상은 darwin-arm64, win32-x64, win32-arm64이며 Windows 설치본은 같은 대상의 Windows 빌드 환경을 사용한다. `npm run prepare:runtime -- x64` 또는 `-- arm64`는 고정된 공식 Portable Git을 내려받고 SHA-256을 확인해 시작 파일 패치를 적용한다. 생성된 바이너리·런타임은 Git에 넣지 않는다. `npm run dist:win`과 `dist:win:arm64`는 준비 단계를 포함한다.
+`npm run build`는 Rust helper를 현재 대상에 맞게 빌드하고 라이선스를 모은다. `PASSPORT_CARGO`로 cargo 실행 파일을 지정할 수 있다. 대상은 darwin-arm64, win32-x64이며 Windows 설치본은 같은 대상의 Windows 빌드 환경을 사용한다. `npm run prepare:runtime -- x64`는 고정된 공식 Portable Git을 내려받고 SHA-256을 확인해 시작 파일 패치를 적용한다. 생성된 바이너리·런타임은 Git에 넣지 않는다. `npm run dist:win`은 준비 단계를 포함한다.
 
 프로파일과 알림 구조·수동 검증 한계는 [로컬 AI 작업 안내](local-ai-workspaces.md)를 따른다.
 

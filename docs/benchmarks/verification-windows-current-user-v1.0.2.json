@@ -17,7 +17,10 @@
   "checks": {
     "typecheck": "passed",
     "productionBuild": "passed",
-    "unitAndProtocolIntegration": { "passed": 100, "skipped": 3 },
+    "unitAndProtocolIntegration": {
+      "passed": 100,
+      "skipped": 3
+    },
     "installer": {
       "currentUserOnly": true,
       "directoryChooserFirst": true,
@@ -39,6 +42,9 @@
     "protectedEntryBrowseRegression": "passed",
     "strictTransferEnumerationRegression": "passed"
   },
-  "notRun": ["Remote CI", "Upgrade over an existing installation", "Windows ARM64"],
+  "notRun": [
+    "Remote CI",
+    "Upgrade over an existing installation"
+  ],
   "previousAudit": "verification-windows-x64-v1.0.2.json"
 }

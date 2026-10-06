@@ -251,7 +251,6 @@
     "Pace stress output by elapsed time to prevent delayed Windows timer callbacks from reducing the requested rate"
   ],
   "notRun": [
-    "Windows ARM64",
     "Physical Korean IME composition and DPI changes",
     "Upgrade over an existing installation",
     "Remote CI",

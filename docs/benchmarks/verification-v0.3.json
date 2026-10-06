@@ -63,7 +63,7 @@
     "sizeBytes": 153260889
   },
   "limitations": [
-    "Windows x64/ARM64 actual installation and execution not tested on this machine"
+    "Windows x64 actual installation and execution not tested on this machine"
   ],
   "terminalStress": {
     "durationMs": 600002,

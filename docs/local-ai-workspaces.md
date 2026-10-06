@@ -59,7 +59,7 @@ PowerShell 로더는 실행 정책을 우회하지 않는다. 정책·사용자 
 - 기존 Windows `default`/`powershell` 선택은 이행 시 현재 해석된 PowerShell 버전으로 고정한다. 가져온 로컬 설정은 폴더·셸·프로파일 검토 후 다시 시작해야 한다. 프로파일 ID 충돌은 가져온 참조를 새 ID로 치환해 보존한다.
 - `native/helper/`: 외부 Node/Python/jq 없이 JSON을 처리하고 Unix socket/Windows named pipe로 전달하는 Rust 프로그램. stdin과 argv 어댑터 분리, 입력 256 KiB·전송 16 KiB·500 ms 제한, 세션 실행 세대와 토큰 확인, run ID로 종료 후 이벤트 차단.
 - OSC 파서는 메인에서 원본 PTY 스트림에 한 번만 적용한다. 렌더러 snapshot 재생·창 이동 때 이벤트가 재발생하지 않는다. 이는 계획의 렌더러 파서안에서 변경한 구현 선택이다.
-- `resources/terminal/runtime-manifest.json`: Portable Git 버전·x64/ARM64 SHA-256 고정. `scripts/prepare-runtime.mjs`는 체크섬 확인 후 압축을 풀고 사용자 `.bash_profile` 자동 생성 스크립트를 비활성화한다. 원본과 수정 설명을 번들에 함께 보존한다.
+- `resources/terminal/runtime-manifest.json`: Portable Git 버전·x64 SHA-256 고정. `scripts/prepare-runtime.mjs`는 체크섬 확인 후 압축을 풀고 사용자 `.bash_profile` 자동 생성 스크립트를 비활성화한다. 원본과 수정 설명을 번들에 함께 보존한다.
 - helper·런타임은 asar 밖의 대상 OS/아키텍처별 리소스로 배포한다. 패키징 전 누락 검사를 수행하며 Rust 의존성 라이선스도 수집한다. Windows AUMID는 NSIS와 메인 모두 `io.passport.desktop`을 사용한다.
 
 ## 검증 범위
@@ -68,7 +68,7 @@ Mac에서 타입 검사, Rust helper 빌드·단위 검사, 실제 PTY의 zsh �
 
 2026-10-01 별도 점검에서 설치된 **Claude 2.1.286의 `--print`**, **Codex 0.159.3의 `exec --ephemeral`**로 최소 응답을 실제 요청했고, 각각 응답 종료 신호·응답 완료 기록과 종료 코드 0을 확인했다. 원래 사용자 설정을 수정하지 않고 임시 앱 데이터와 작업 폴더를 사용했다. 실제 대화형 승인 화면·공유 데몬까지 검증한 결과는 아니다. 수정 설치본의 GUI에서는 직접 입력한 CLI fixture의 승인/완료 신호, 전경에서 배너 생략·배경에서 배너 요청을 확인했다.
 
-Windows x64·ARM64는 공식 번들 다운로드·SHA-256·필수 실행 파일·패치 확인과 Rust 대상 `cargo check`를 수행했다. 이후 1.1.0 Windows x64 CI에서 helper·내장 Bash 준비·기본 검사·빌드·EXE 생성·설치 범위 검사를 통과했으나 패키지 검증 단계가 실패했다. Windows EXE는 사용자 기기에서 후속 확인하기로 해 공개하지 않았으며 자동 게시 연결도 해제했다. [해당 실행과 Mac 공개 결과](verification.md)를 확인한다. 이 결과를 Windows 전체 셸·OS 알림 검증 완료로 취급하지 않는다. `.github/workflows/desktop.yml`은 두 Windows 대상의 수동 검증을 제공한다. 실제 대화형 Claude/Codex 승인·공유 데몬, 제한된 PowerShell 실행 정책, 사용자 셸 플러그인 전체와 오프라인 Windows 설치는 별도 실기 검증 항목이다.
+Windows x64는 공식 번들 다운로드·SHA-256·필수 실행 파일·패치 확인과 Rust 대상 `cargo check`를 수행했다. 이후 1.1.0 Windows x64 CI에서 helper·내장 Bash 준비·기본 검사·빌드·EXE 생성·설치 범위 검사를 통과했으나 패키지 검증 단계가 실패했다. Windows EXE는 사용자 기기에서 후속 확인하기로 해 공개하지 않았으며 자동 게시 연결도 해제했다. [해당 실행과 Mac 공개 결과](verification.md)를 확인한다. 이 결과를 Windows 전체 셸·OS 알림 검증 완료로 취급하지 않는다. `.github/workflows/desktop.yml`은 Windows x64 수동 검증을 제공한다. 실제 대화형 Claude/Codex 승인·공유 데몬, 제한된 PowerShell 실행 정책, 사용자 셸 플러그인 전체와 오프라인 Windows 설치는 별도 실기 검증 항목이다.
 
 ## 터미널 복사와 중단
 

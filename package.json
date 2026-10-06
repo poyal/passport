@@ -29,7 +29,6 @@
     "dist:mac:signed": "node -e \"require('./electron-builder.mac-signed.cjs')\" && npm run build && electron-builder --config electron-builder.mac-signed.cjs --mac dmg --arm64 --publish never",
     "dist:win": "npm run prepare:runtime -- x64 && npm run build && electron-builder --win nsis --x64",
     "format": "prettier --write src tests scripts *.config.ts",
-    "dist:win:arm64": "npm run prepare:runtime -- arm64 && npm run build && electron-builder --win nsis --arm64",
     "test:ssh:docker": "node scripts/docker-ssh.mjs",
     "test:terminal:large": "npm run build && node scripts/terminal-large.mjs",
     "build:helper": "node scripts/build-helper.mjs",
@@ -73,7 +72,14 @@
       ]
     },
     "win": {
-      "target": "nsis",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "icon": "build/icon.ico",
       "extraResources": [
         {

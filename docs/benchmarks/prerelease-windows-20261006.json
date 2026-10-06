@@ -257,7 +257,7 @@
     "Commit the finalized source and obtain formal publishable verification receipts for that exact release candidate.",
     "Run macOS ARM64 source and final DMG validation including the new file-menu correction.",
     "Run source and final-package native desktop checks only after an explicit request permitting window display/focus.",
-    "Manual Explorer/Finder clipboard, physical IME, OS notifications, real AI services and account installation/upgrade remain separate; no Windows ARM64 validation was performed."
+    "Manual Explorer/Finder clipboard, physical IME, OS notifications, real AI services and account installation/upgrade remain separate."
   ],
   "initialFailures": [
     {

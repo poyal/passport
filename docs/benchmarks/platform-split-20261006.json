@@ -124,7 +124,6 @@
   ],
   "limitations": [
     "Windows 11 x64 native runtime, ConPTY, Explorer clipboard, DPAPI, taskbar icons and installer validation are pending; Mac contract tests do not replace Windows execution.",
-    "Windows ARM64 remains configured but was not built, tested or published.",
     "Native link confirmation and shell.openExternal were mocked; actual default-browser display and OS notification settings/banner delivery remain manual checks.",
     "Docker, long-running terminal/file stress and 1 GiB throughput were not requested or executed.",
     "Mac native dependencies reused unchanged Electron-compatible binaries; this is a local 1.1.1 preview, not a clean release:verify receipt or public release.",

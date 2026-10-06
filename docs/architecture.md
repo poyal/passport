@@ -68,7 +68,7 @@ Rust helper는 CLI 훅의 JSON을 제한된 크기로 읽고 Unix socket 또는 
 
 ## 네이티브 패키징
 
-Mac은 arm64만 빌드한다. Windows는 x64와 ARM64를 별도 네이티브 CI 작업으로 구성한다. better-sqlite3와 node-pty를 대상 Electron ABI에 맞춰 빌드하고 PTY helper를 asar 밖에 포함한다. 패키지 검증은 초기 화면, 로컬 PTY 실행·입력, 프로세스 종료 코드 0과 종료 시그널 없음을 확인한다. Windows ARM64 runner 선택 근거는 [GitHub 공식 runner 목록](https://docs.github.com/en/actions/reference/runners/github-hosted-runners)이다. 실제 플랫폼별 실행 여부는 검증 기록을 따른다.
+Mac은 arm64만 빌드한다. Windows는 x64 네이티브 CI 작업으로 구성한다. better-sqlite3와 node-pty를 대상 Electron ABI에 맞춰 빌드하고 PTY helper를 asar 밖에 포함한다. 패키지 검증은 초기 화면, 로컬 PTY 실행·입력, 프로세스 종료 코드 0과 종료 시그널 없음을 확인한다. 실제 플랫폼별 실행 여부는 검증 기록을 따른다.
 
 ## 호스트 선택과 운영체제 감지
 
