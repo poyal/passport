@@ -1,5 +1,15 @@
 # Passport 검증 기록
 
+## Windows 셸의 명령 간 준비 조건과 남은 제한 — 2026-10-07
+
+`d40e33f`의 [정식 검증](https://github.com/poyal/passport/actions/runs/37498794129)은 Mac에서 통과했지만 Windows 최종 EXE의 Bash 붙여넣기 명령 `cat `이 `act `으로 표시돼 실패했다. 소스 숨김 GUI 65개·데스크톱 4개와 설치본 smoke는 통과했으며 실패한 후보는 게시하지 않았다. 로컬 소스 30회와 같은 원격 EXE 30회에서는 재현되지 않았다.
+
+[원격 입력 추적](https://github.com/poyal/passport/actions/runs/37502626840)은 16회 통과 후 17번째에 `cat `이 `t ca`로 재배치되는 같은 종류의 실패를 재현했다. 키 이벤트·IPC·PTY 쓰기는 `c`, `a`, `t`, 공백 순서를 유지했다. 첫 입력은 이전 명령 결과와 OSC 133;A 다음이지만 실제 다음 `$` 출력보다 **136ms 빨랐다**. 그러므로 결과 행이나 OSC 표식을 다음 readline 준비 완료로 간주하지 않는다. 추적 원본·요약은 `release/checks/20261006-remote-v1.2.0/terminal-input-failure*.json`과 원격 원본 보고서에 보존한다.
+
+Windows 셸 4종의 기존 사례는 각 명령의 고유 결과와 다음 프롬프트를 기다린 뒤 다음 입력을 시작하도록 보완했다. 붙여넣기 접두사의 입력 지연은 0이며 고정 sleep·재시도·생략·필수 제목 변경은 없다. **프롬프트 전 빠른 연속 입력의 순서 문제는 남아 있으며 제품 수정으로 주장하지 않는다.** 릴리즈 노트에도 다음 프롬프트 이후 입력하도록 안내한다.
+
+타입 검사와 로컬 셸 GUI **4개 × 3회 = 12 통과**를 확인했다. `release/checks/20261006T173514Z-d40e33f-dirty-win-x64-e2e-hidden/`의 launch/exit/종료 감사는 각 3회, 재사용 9회, 표시·포커스·새 잔여 PTY는 0이다. 원격 반복과 새 후보의 두 OS 정식 검증 결과는 별도로 기록한다.
+
 ## Windows 파일 목록의 순차 조회 지연 보완 — 2026-10-07
 
 `f5fcde3`의 [정식 원격 검증](https://github.com/poyal/passport/actions/runs/37492601126)에서 Mac은 통과했지만 Windows 소스의 긴 파일 목록 검사에서 실패했다. 별도 [진단 1](https://github.com/poyal/passport/actions/runs/37495306842)은 13회 통과 후 같은 실패를 재현했다. DOM 입력·Enter·submit과 실제 IPC를 기록해 두 경로가 정확히 전달됐고 5초 후에도 양쪽 조회가 진행 중임을 확인했다. [진단 2](https://github.com/poyal/passport/actions/runs/37496940678)에서는 대기를 30초로 늘려도 실패했다. `lstat` 완료가 계속 발생하지만 순차 호출의 지연이 누적돼 각 패널이 160개 중 약 100개까지만 처리했다. 입력 누락이나 단순한 5초 제한 문제로 처리하지 않는다.

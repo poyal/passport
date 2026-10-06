@@ -60,6 +60,8 @@ test("opens the host screen", async () => {
 
 로컬 터미널의 `1 / 1 연결`은 PTY 연결 상태이며 셸의 입력 준비 완료를 뜻하지 않는다. Windows의 기본 Passport Bash에 명령을 입력하는 GUI는 [terminal-ready.ts](../tests/fixtures/terminal-ready.ts)의 `waitForLocalPrompt()`로 실제 `$` 프롬프트 출력을 먼저 확인한다. 셸 종류를 직접 고르는 시험은 해당 셸의 프롬프트를 기다린다. 시작 도중 입력 자체가 목적이라면 이 대기를 사용하지 않고 별도 시나리오로 검증한다.
 
+Windows 셸 프로필·붙여넣기 검사는 각 명령의 고유 결과와 다음 프롬프트를 모두 확인한 뒤 다음 명령을 입력한다. Bash의 결과 행과 OSC 133;A만으로 readline 준비를 판정하지 않는다. 원격 추적에서는 다음 프롬프트 136ms 전에 입력된 `cat `이 키 이벤트·IPC·PTY 쓰기까지 같은 순서였으나 Bash에서 `t ca`로 재배치됐다. 붙여넣기 접두사의 입력 지연은 0으로 유지하며, 이 준비 조건 변경을 프롬프트 전 입력 결함의 제품 수정으로 표시하지 않는다.
+
 fixture 호출은 테스트 등록 시 한 번만 한다. `suite.application`, `suite.page`, `suite.directory`는 `beforeAll` 완료 후 접근한다. 각 테스트는 자신의 초기 상태를 직접 준비하고 이전 테스트의 결과나 실행 순서에 의존하지 않는다. 테스트 본문에서 공유 앱을 종료하거나 기본 창을 닫지 않는다.
 
 초기화는 다음 순서를 지킨다.

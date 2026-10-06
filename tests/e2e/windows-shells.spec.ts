@@ -116,9 +116,24 @@ for (const shell of [
           requestAnimationFrame(() => requestAnimationFrame(resolve)),
         ),
     );
-    for (const command of commands) {
+    const prompt = shell === "passport-bash" ? /\$\s*$/ : />\s*$/;
+    const waitForResultAndPrompt = async (output: string) => {
+      await expect(page.locator(".xterm-rows")).toContainText(output);
+      // Command output (and OSC 133;A) can precede the next readline prompt.
+      // Keep zero-delay paste-prefix typing, but begin it at a ready prompt.
+      await expect(page.locator(".xterm-rows")).toContainText(prompt, {
+        timeout: 15000,
+      });
+    };
+    const outputs = [
+      "PROFILE_한글_100%_!_&_value",
+      "한글 ' & project",
+      "PASSPORT_ALIAS_OK",
+    ];
+    for (const [index, command] of commands.entries()) {
       await page.keyboard.type(command, { delay: 20 });
       await page.keyboard.press("Enter");
+      await waitForResultAndPrompt(outputs[index]);
     }
     await expect(page.locator(".xterm-rows")).toContainText(
       "PROFILE_한글_100%_!_&_value",
@@ -169,9 +184,7 @@ for (const shell of [
           ),
       );
       await page.keyboard.press("Enter");
-      await expect(page.locator(".xterm-rows")).toContainText(
-        `WINDOWS_PASTE_CONTENT_${index}`,
-      );
+      await waitForResultAndPrompt(`WINDOWS_PASTE_CONTENT_${index}`);
     }
   });
 }
