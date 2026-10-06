@@ -113,6 +113,13 @@ test("Windows shortcut routing copies without interrupt and honors disabled cont
     ipcMain.handle("passport:call", async (event, name, input) => {
       const state = (globalThis as any).__shortcutIO;
       if (state.capture && name === "session.input") {
+        // Keep ConPTY device/focus replies flowing to the real shell, as in
+        // paste.spec.ts; they are not shortcut-generated input bytes.
+        if (
+          process.platform === "win32" &&
+          ["\x1b[?1;2c", "\x1b[I", "\x1b[O"].includes(input.data)
+        )
+          return original(event, name, input);
         state.inputs.push(input.data);
         return { ok: true, value: undefined };
       }
@@ -265,7 +272,12 @@ test("file shortcuts use custom bindings and retain rename and delete dialogs", 
   await renamed.click();
   await renamed.press("Shift+F10");
   await expect(page.getByRole("menu")).toHaveCount(0);
+  await renamed.press("ContextMenu");
+  await expect(page.getByRole("menu")).toHaveCount(0);
   await renamed.press("Alt+m");
+  await expect(page.getByRole("menu")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await renamed.click({ button: "right" });
   await expect(page.getByRole("menu")).toBeVisible();
   await page.keyboard.press("Escape");
   await renamed.press("Delete");
@@ -277,6 +289,27 @@ test("file shortcuts use custom bindings and retain rename and delete dialogs", 
   expect(await fs.readFile(path.join(folder, "renamed.txt"), "utf8")).toBe(
     "one",
   );
+  await page.evaluate(async (os) => {
+    const { document } = await window.passport.call("bootstrap", undefined);
+    document.settings.shortcuts[os === "darwin" ? "darwin" : "win32"].fileMenu =
+      [];
+    await window.passport.call("save", document);
+  }, os);
+  for (const key of ["Alt+m", "Shift+F10", "ContextMenu"]) {
+    await renamed.press(key);
+    await expect(page.getByRole("menu")).toHaveCount(0);
+  }
+  await page.evaluate(async (os) => {
+    const { document } = await window.passport.call("bootstrap", undefined);
+    document.settings.shortcuts[os === "darwin" ? "darwin" : "win32"].fileMenu =
+      ["Shift+F10", "ContextMenu"];
+    await window.passport.call("save", document);
+  }, os);
+  for (const key of ["Shift+F10", "ContextMenu"]) {
+    await renamed.press(key);
+    await expect(page.getByRole("menu")).toBeVisible();
+    await page.keyboard.press("Escape");
+  }
 });
 
 test("settings cards and form controls scroll the page while log panes keep independent scrolling", async ({}, info) => {

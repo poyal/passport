@@ -1,4 +1,8 @@
-import { shortcutMatch, shortcutPlatform } from "../shared/shortcuts";
+import {
+  defaultShortcuts,
+  shortcutMatch,
+  shortcutPlatform,
+} from "../shared/shortcuts";
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import {
   ArrowLeft,
@@ -679,10 +683,8 @@ function FilePanel({
           }
         }}
         onKeyDown={(e) => {
-          const keys =
-            app.document.settings.shortcuts[
-              shortcutPlatform(app.boot.platform)
-            ];
+          const platform = shortcutPlatform(app.boot.platform);
+          const keys = app.document.settings.shortcuts[platform];
           const mac = app.boot.platform === "darwin";
           if (
             e.nativeEvent.isComposing ||
@@ -691,6 +693,16 @@ function FilePanel({
             )
           )
             return;
+          // Chromium also generates contextmenu from these keys on Windows.
+          // Cancel that default even when the configured binding was removed.
+          if (
+            shortcutMatch(
+              e.nativeEvent,
+              defaultShortcuts[platform].fileMenu,
+              mac,
+            )
+          )
+            e.preventDefault();
           if (shortcutMatch(e.nativeEvent, keys.fileMenu, mac)) {
             e.preventDefault();
             const r = e.currentTarget.getBoundingClientRect();
@@ -704,6 +716,10 @@ function FilePanel({
             e.preventDefault();
             if (!e.repeat && selection.length) void operation("delete");
           }
+        }}
+        onKeyUp={(e) => {
+          // Windows dispatches the dedicated menu key's default on keyup.
+          if (e.key === "ContextMenu") e.preventDefault();
         }}
       >
         <table className="file-table">

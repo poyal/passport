@@ -16,6 +16,7 @@ import {
   parseArguments,
 } from "./release-core.mjs";
 import { runCommand } from "./release-process.mjs";
+import { beginWindowsPtyAudit } from "./windows-pty-audit.mjs";
 import {
   loadGuiPolicy,
   requestedGuiFeatures,
@@ -178,6 +179,7 @@ async function verify() {
     command(label, process.execPath, [script, ...args], extra);
   const npm = (label, args, extra) => node(label, npmCLI, args, extra);
   const gui = async (label, executable, mode = "hidden") => {
+    const audit = await beginWindowsPtyAudit(root, executable);
     const report = path.join(checks, `${label}.json`);
     const guiEnv = {
       ...env,
@@ -221,6 +223,19 @@ async function verify() {
         },
       },
     );
+    if (audit) {
+      const nativeProcesses = await audit();
+      const auditFile = path.join(checks, `${label}-native-processes.json`);
+      await writeJSON(auditFile, nativeProcesses);
+      record.evidence.push({
+        path: relative(auditFile),
+        sha256: await hashFile(auditFile),
+      });
+      assert.ok(
+        nativeProcesses.passed,
+        "Windows PTY processes survived the GUI suite",
+      );
+    }
     const result = JSON.parse(await fs.readFile(report, "utf8"));
     const coverage = validateGuiReport(
       result,

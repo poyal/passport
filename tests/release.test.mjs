@@ -31,6 +31,10 @@ import { PassThrough } from "node:stream";
 import { closeCleanly } from "./fixtures/electron-exit.ts";
 import { e2eMode } from "../scripts/e2e-mode.mjs";
 import {
+  ptyAuditRoots,
+  newPtyProcesses,
+} from "../scripts/windows-pty-audit.mjs";
+import {
   guiCheckModes,
   loadGuiPolicy,
   requestedGuiFeatures,
@@ -38,6 +42,41 @@ import {
 } from "../scripts/release-gui-policy.mjs";
 
 // Synthetic reporter output for gate and publication tests; no Electron launch.
+test("Windows PTY audit scopes paths and distinguishes reused process IDs", () => {
+  const roots = ptyAuditRoots("C:\\repo");
+  const old = {
+    ProcessId: 7,
+    CreationDate: "old",
+    ExecutablePath:
+      "C:\\repo\\node_modules\\node-pty\\build\\Release\\conpty\\OpenConsole.exe",
+  };
+  const reused = { ...old, CreationDate: "new" };
+  const bash = {
+    ProcessId: 8,
+    CreationDate: "new",
+    ExecutablePath:
+      "C:\\repo\\resources\\terminal\\runtime\\x64\\bin\\..\\usr\\bin\\bash.exe",
+  };
+  const external = {
+    ...reused,
+    ProcessId: 9,
+    ExecutablePath: "C:\\WindowsApps\\OpenConsole.exe",
+  };
+  const sibling = {
+    ...reused,
+    ProcessId: 10,
+    ExecutablePath: "C:\\repo\\node_modules\\node-pty-other\\OpenConsole.exe",
+  };
+  assert.deepEqual(
+    newPtyProcesses([old, reused, bash, external, sibling], roots, [old]),
+    [reused, bash],
+  );
+  assert.deepEqual(ptyAuditRoots("C:\\repo", "D:\\candidate\\Passport.exe"), [
+    "d:\\candidate\\resources\\app.asar.unpacked\\node_modules\\node-pty\\",
+    "d:\\candidate\\resources\\terminal\\runtime\\",
+  ]);
+});
+
 function guiReport(platform = "darwin", mode = "hidden", optional = []) {
   const entries = loadGuiPolicy().policy.tests.filter(
     (entry) => (entry.mode || "hidden") === mode,

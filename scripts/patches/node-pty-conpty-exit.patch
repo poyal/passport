@@ -1,0 +1,152 @@
+diff --git a/src/win/conpty.cc b/src/win/conpty.cc
+index a63ca9b..d3b6300 100644
+--- a/src/win/conpty.cc
++++ b/src/win/conpty.cc
+@@ -46,7 +46,20 @@ struct pty_baton {
+   HANDLE hOut;
+   HPCON hpc;
+ 
+-  HANDLE hShell;
++  HANDLE hShell = nullptr;
++  HANDLE hJob = nullptr;
++  PFNCLOSEPSEUDOCONSOLE closePseudoConsole = nullptr;
++
++  // Both kill and the native exit watcher can win the shutdown race.
++  // Always release the console before removing its only owning baton.
++  // The caller holds g_ptyHandlesMutex; closing is therefore exactly once.
++  void closeConsole() {
++    if (hpc && closePseudoConsole) {
++      const HPCON console = hpc;
++      hpc = nullptr;
++      closePseudoConsole(console);
++    }
++  }
+ 
+   pty_baton(int _id, HANDLE _hIn, HANDLE _hOut, HPCON _hpc) : id(_id), hIn(_hIn), hOut(_hOut), hpc(_hpc) {};
+ };
+@@ -96,6 +109,19 @@ void SetupExitCallback(Napi::Env env, Napi::Function cb, pty_baton* baton) {
+     {
+       std::lock_guard<std::mutex> lock(g_ptyHandlesMutex);
+       GetExitCodeProcess(baton->hShell, (LPDWORD)(&exit_event->exit_code));
++      baton->closeConsole();
++      if (baton->hJob) {
++        // The shell can be a launcher (PortableGit's bin/bash.exe). Its exit
++        // does not prove that the real shell or its descendants have exited.
++        TerminateJobObject(baton->hJob, 1);
++        JOBOBJECT_BASIC_ACCOUNTING_INFORMATION accounting{};
++        while (QueryInformationJobObject(baton->hJob, JobObjectBasicAccountingInformation,
++                                        &accounting, sizeof(accounting), nullptr) && accounting.ActiveProcesses) {
++          Sleep(10);
++        }
++        CloseHandle(baton->hJob);
++        baton->hJob = nullptr;
++      }
+       CloseHandle(baton->hShell);
+       const int id = baton->id;
+       std::erase_if(ptyHandles, [id](const auto& ptyHandle) {
+@@ -413,6 +439,16 @@ static Napi::Value PtyConnect(const Napi::CallbackInfo& info) {
+     throw errorWithCode(info, "UpdateProcThreadAttribute failed");
+   }
+ 
++  HANDLE job = CreateJobObjectW(nullptr, nullptr);
++  if (!job) throw errorWithCode(info, "Cannot create PTY job");
++  JOBOBJECT_EXTENDED_LIMIT_INFORMATION limits{};
++  limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
++  if (!SetInformationJobObject(job, JobObjectExtendedLimitInformation, &limits, sizeof(limits))) {
++    auto error = errorWithCode(info, "Cannot configure PTY job");
++    CloseHandle(job);
++    throw error;
++  }
++
+   PROCESS_INFORMATION piClient{};
+   fSuccess = !!CreateProcessW(
+       nullptr,
+@@ -420,14 +456,16 @@ static Napi::Value PtyConnect(const Napi::CallbackInfo& info) {
+       nullptr,                      // lpProcessAttributes
+       nullptr,                      // lpThreadAttributes
+       false,                        // bInheritHandles VERY IMPORTANT that this is false
+-      EXTENDED_STARTUPINFO_PRESENT | CREATE_UNICODE_ENVIRONMENT, // dwCreationFlags
++      EXTENDED_STARTUPINFO_PRESENT | CREATE_UNICODE_ENVIRONMENT | CREATE_SUSPENDED, // dwCreationFlags
+       envArg,                       // lpEnvironment
+       mutableCwd.get(),             // lpCurrentDirectory
+       &siEx.StartupInfo,            // lpStartupInfo
+       &piClient                     // lpProcessInformation
+   );
+   if (!fSuccess) {
+-    throw errorWithCode(info, "Cannot create process");
++    auto error = errorWithCode(info, "Cannot create process");
++    CloseHandle(job);
++    throw error;
+   }
+ 
+   HANDLE hLibrary = LoadConptyDll(info, useConptyDll);
+@@ -442,8 +480,41 @@ static Napi::Value PtyConnect(const Napi::CallbackInfo& info) {
+     }
+   }
+ 
++  // Retain the DLL function for the exit watcher (which has no Napi env).
++  handle->closePseudoConsole = fLoadedDll ? (PFNCLOSEPSEUDOCONSOLE)GetProcAddress(
++      (HMODULE)hLibrary, useConptyDll ? "ConptyClosePseudoConsole" : "ClosePseudoConsole") : nullptr;
++
++  // Assign before executing any shell code, so even a fast launcher cannot
++  // create an unowned child. Never fall back to an uncontained process.
++  if (!AssignProcessToJobObject(job, piClient.hProcess)) {
++    auto error = errorWithCode(info, "Cannot assign PTY job");
++    TerminateProcess(piClient.hProcess, 1);
++    WaitForSingleObject(piClient.hProcess, INFINITE);
++    CloseHandle(piClient.hThread);
++    CloseHandle(piClient.hProcess);
++    CloseHandle(job);
++    handle->closeConsole();
++    throw error;
++  }
++  handle->hJob = job;
+   // Update handle
+   handle->hShell = piClient.hProcess;
++  if (ResumeThread(piClient.hThread) == static_cast<DWORD>(-1)) {
++    auto error = errorWithCode(info, "Cannot resume PTY shell");
++    TerminateJobObject(job, 1);
++    WaitForSingleObject(piClient.hProcess, INFINITE);
++    CloseHandle(piClient.hThread);
++    CloseHandle(piClient.hProcess);
++    CloseHandle(job);
++    handle->hJob = nullptr;
++    handle->hShell = nullptr;
++    handle->closeConsole();
++    CloseHandle(handle->hIn);
++    CloseHandle(handle->hOut);
++    std::lock_guard<std::mutex> lock(g_ptyHandlesMutex);
++    std::erase_if(ptyHandles, [id](const auto& ptyHandle) { return ptyHandle->id == id; });
++    throw error;
++  }
+ 
+   // Close the thread handle to avoid resource leak
+   CloseHandle(piClient.hThread);
+@@ -551,23 +622,13 @@ static Napi::Value PtyKill(const Napi::CallbackInfo& info) {
+   const bool useConptyDll = info[1].As<Napi::Boolean>().Value();
+ 
+   std::lock_guard<std::mutex> lock(g_ptyHandlesMutex);
+-  const pty_baton* handle = get_pty_baton(lock, id);
++  pty_baton* handle = get_pty_baton(lock, id);
+ 
+   if (handle != nullptr) {
+-    HANDLE hLibrary = LoadConptyDll(info, useConptyDll);
+-    bool fLoadedDll = hLibrary != nullptr;
+-    if (fLoadedDll)
+-    {
+-      PFNCLOSEPSEUDOCONSOLE const pfnClosePseudoConsole = (PFNCLOSEPSEUDOCONSOLE)GetProcAddress(
+-        (HMODULE)hLibrary,
+-        useConptyDll ? "ConptyClosePseudoConsole" : "ClosePseudoConsole");
+-      if (pfnClosePseudoConsole)
+-      {
+-        pfnClosePseudoConsole(handle->hpc);
+-      }
+-    }
++    handle->closeConsole();
+     if (useConptyDll) {
+-      TerminateProcess(handle->hShell, 1);
++      if (handle->hJob) TerminateJobObject(handle->hJob, 1);
++      else TerminateProcess(handle->hShell, 1);
+     }
+   }
+ 

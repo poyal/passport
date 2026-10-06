@@ -256,6 +256,10 @@ node scripts/e2e.mjs tests/e2e/windows-shells.spec.ts tests/e2e/windows-files.sp
 
 ### 흔한 실패의 처리
 
+ConPTY의 종료 감시 스레드는 셸이 먼저 끝난 경우에도 콘솔 핸들을 정리한 뒤 baton을 제거한다. `kill`과 종료 감시가 같은 잠금 아래에서 정확히 한 번 닫도록 유지한다. `scripts/patches/node-pty-conpty-exit.patch`와 고정 소스 해시를 함께 검토하며, `tests/windows-pty.test.ts`와 소스·패키지 GUI의 잔여 프로세스 감사를 실행한다. `ReleasePseudoConsole` 이후에도 `ClosePseudoConsole`이 필요하다는 [Windows API 계약](https://learn.microsoft.com/en-us/windows/console/releasepseudoconsole)을 따른다. 잔여 Bash·OpenConsole을 발견하면 앱의 종료 코드가 0이어도 배포 검증을 실패시킨다.
+
+Windows 셸은 정지 상태로 생성해 터미널별 [Job Object](https://learn.microsoft.com/en-us/windows/win32/procthread/job-objects)에 넣은 뒤 실행한다. 터미널 종료 시 이 Job의 자식만 종료하고 다른 터미널의 Job은 보존한다. 프로세스 이름이나 뒤늦게 수집한 PID 목록으로 종료 대상을 정하지 않는다. 종료 감시에서 Job의 자식 종료를 확인하며, node-pty의 출력 소켓이 먼저 닫혀도 네이티브 종료 콜백 전에는 공개 `onExit`를 내보내지 않는다. 사용자는 2026-10-06에 해당 터미널의 자식 프로그램까지 종료하는 동작을 명시적으로 허용했다.
+
 | 증상 | 확인과 조치 |
 | --- | --- |
 | `NODE_MODULE_VERSION` 불일치·네이티브 load 실패 | Node용과 Electron용 바이너리를 섞지 않았는지 확인. 잠금 파일의 `npm ci` 후 `scripts/test.mjs`로 실행. 임의 `npm rebuild`로 덮지 않음 |

@@ -103,6 +103,8 @@ Get-Content .\SHA256SUMS.txt
 
 Mac은 기본 로그인 셸·zsh·bash를 지원합니다. Windows는 별도 Git Bash 설치 없이 **Passport Bash**를 사용할 수 있고, **cmd·Windows PowerShell·PowerShell 7**도 선택할 수 있습니다.
 
+Windows 1.2.0부터는 터미널 탭이나 패널을 닫으면 그 터미널에서 실행한 셸과 자식 프로그램도 종료합니다. 다른 터미널의 작업은 유지합니다. 1.2.0의 공개 여부는 [릴리즈 목록](docs/releases/README.md)에서 확인하세요.
+
 | 동작                         | Mac | Windows                  |
 | ---------------------------- | --- | ------------------------ |
 | 현재 창에 새 로컬 터미널     | ⌘N  | Ctrl+N                   |

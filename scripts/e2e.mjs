@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { sourceState, writeJSON } from "./release-core.mjs";
 import { runCommand } from "./release-process.mjs";
 import { summarizeElectronLifecycle } from "./e2e-lifecycle.mjs";
+import { beginWindowsPtyAudit } from "./windows-pty-audit.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const args = process.argv.slice(2);
@@ -42,6 +43,9 @@ console.log(
   `E2E mode: ${mode}. ${mode === "desktop" ? "Native focus and clipboard tests will use the desktop." : "Native window focus is disabled; @desktop tests are excluded."}`,
 );
 try {
+  const audit = args.includes("--list")
+    ? null
+    : await beginWindowsPtyAudit(root, process.env.PASSPORT_E2E_EXECUTABLE);
   await runCommand(
     process.execPath,
     [
@@ -72,6 +76,13 @@ try {
     );
     metadata.tests = report.stats;
     metadata.status = report.stats.expected > 0 ? "passed" : "skipped";
+    if (audit) {
+      metadata.nativeProcesses = await audit();
+      if (!metadata.nativeProcesses.passed)
+        throw new Error(
+          "Windows PTY processes survived the GUI suite; see artifact.json",
+        );
+    }
   }
 } catch (error) {
   metadata.status = "failed";

@@ -7,8 +7,10 @@ import { execFileSync } from "node:child_process";
 
 const originalConptySource =
   "52c893b689ab3210c0961e2a6aa805a82350003767b21069b164926b5becd4e2";
-const fixedConptySource =
+const raceFixedConptySource =
   "a000a53daa90506662e4747c6585a403b93431d1fe46f99895aa6d58faaa9082";
+const fixedConptySource =
+  "74058d051cf70e4f272deae674608502c0972121a434aa7d25b805f0b77ce182";
 const conptySourceHash = async (root) =>
   createHash("sha256")
     .update(
@@ -21,10 +23,9 @@ const conptySourceHash = async (root) =>
 export async function patchWindowsConpty(root) {
   const hash = await conptySourceHash(root);
   if (hash === fixedConptySource) return;
-  assert.equal(
-    hash,
-    originalConptySource,
-    "Review the node-pty ConPTY race patch",
+  assert.ok(
+    [originalConptySource, raceFixedConptySource].includes(hash),
+    "Review the node-pty ConPTY patches",
   );
   const project = fileURLToPath(new URL("..", import.meta.url));
   const directory = path.relative(project, root);
@@ -41,27 +42,36 @@ export async function patchWindowsConpty(root) {
     sourceFile,
     (await fs.readFile(sourceFile, "utf8")).replaceAll("\r\n", "\n"),
   );
-  const patch = (
-    await fs.readFile(
-      fileURLToPath(
-        new URL("./patches/node-pty-conpty-race.patch", import.meta.url),
-      ),
-      "utf8",
-    )
-  ).replaceAll("\r\n", "\n");
-  const args = [
-    "apply",
-    `--directory=${directory.split(path.sep).join("/")}`,
-    "-",
-  ];
-  execFileSync("git", [...args.slice(0, 1), "--check", ...args.slice(1)], {
-    cwd: project,
-    windowsHide: true,
-    input: patch,
-  });
-  execFileSync("git", args, { cwd: project, windowsHide: true, input: patch });
+  async function applyPatch(name) {
+    const patch = (
+      await fs.readFile(
+        fileURLToPath(new URL(`./patches/${name}`, import.meta.url)),
+        "utf8",
+      )
+    ).replaceAll("\r\n", "\n");
+    const args = [
+      "apply",
+      `--directory=${directory.split(path.sep).join("/")}`,
+      "-",
+    ];
+    execFileSync("git", [...args.slice(0, 1), "--check", ...args.slice(1)], {
+      cwd: project,
+      windowsHide: true,
+      input: patch,
+    });
+    execFileSync("git", args, {
+      cwd: project,
+      windowsHide: true,
+      input: patch,
+    });
+  }
+  if (hash === originalConptySource) {
+    await applyPatch("node-pty-conpty-race.patch");
+    assert.equal(await conptySourceHash(root), raceFixedConptySource);
+  }
+  await applyPatch("node-pty-conpty-exit.patch");
   assert.equal(await conptySourceHash(root), fixedConptySource);
-  console.log("node-pty: upstream Windows ConPTY race fix applied");
+  console.log("node-pty: Windows ConPTY race and exit cleanup fixes applied");
 }
 
 export async function patchWindowsPtyAgent(root) {
@@ -109,8 +119,11 @@ export async function prepareWindowsPty(sourceRoot, targetRoot, arch) {
   const fixedNative = path.join(sourceRoot, "build/Release/conpty.node");
   await fs.access(fixedNative);
   await patchWindowsPtyAgent(sourceRoot);
-  if (path.resolve(sourceRoot) !== path.resolve(targetRoot))
+  await patchWindowsNativeExit(sourceRoot);
+  if (path.resolve(sourceRoot) !== path.resolve(targetRoot)) {
     await patchWindowsPtyAgent(targetRoot);
+    await patchWindowsNativeExit(targetRoot);
+  }
   const versions = await fs.readdir(
     path.join(sourceRoot, "third_party/conpty"),
   );
@@ -151,6 +164,46 @@ export async function prepareWindowsPty(sourceRoot, targetRoot, arch) {
   console.log(
     `Prepared bundled ConPTY for ${arch} in ${prepared} native module directories`,
   );
+}
+
+async function patchWindowsNativeExit(root) {
+  const patches = [
+    [
+      "windowsPtyAgent.js",
+      "this._exitCode = exitCode;",
+      `this._exitCode = exitCode;
+        // Passport: native teardown must finish before the public exit event.
+        this._outSocket.emit('passport-native-exit');`,
+    ],
+    [
+      "windowsTerminal.js",
+      `                _this.emit('exit', _this._agent.exitCode);
+                _this._close();`,
+      `                // Passport: native teardown must finish before the public exit event.
+                var reportExit = function () {
+                    _this.emit('exit', _this._agent.exitCode);
+                    _this._close();
+                };
+                if (_this._agent._useConpty && _this._agent.exitCode === undefined)
+                    _this._socket.once('passport-native-exit', reportExit);
+                else
+                    reportExit();`,
+    ],
+  ];
+  for (const [file, original, replacement] of patches) {
+    const filename = path.join(root, "lib", file);
+    const source = (await fs.readFile(filename, "utf8")).replaceAll(
+      "\r\n",
+      "\n",
+    );
+    if (source.includes(replacement)) continue;
+    assert.equal(
+      source.split(original).length,
+      2,
+      `Review native exit ordering in ${file}`,
+    );
+    await fs.writeFile(filename, source.replace(original, replacement));
+  }
 }
 
 if (

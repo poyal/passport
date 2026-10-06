@@ -1,0 +1,312 @@
+{
+  "createdAt": "2026-10-06T13:01:56.208Z",
+  "purpose": "Pre-release regression review after platform split and OS-specific shortcuts",
+  "result": "Release held: hidden source and final installer suites passed, but test-owned Bash/OpenConsole descendants survived Electron shutdown; native cleanup and remaining release checks are unresolved",
+  "source": {
+    "commit": "a1de4552e2e6688ab1d9b3ceabffdf98113f425f",
+    "dirty": true,
+    "fingerprint": "b8fd6680e7c26dc5d6246c7f3a988d893a86758043237bc790690cf75b88a3b9",
+    "changes": [
+      {
+        "status": " M",
+        "path": "src/renderer/FilesView.tsx"
+      },
+      {
+        "status": " M",
+        "path": "tests/e2e/shortcuts-settings.spec.ts"
+      }
+    ]
+  },
+  "sourceFingerprintNote": "Captured before adding the long-term verification documents; application and test corrections are identified below.",
+  "baselines": {
+    "mac": {
+      "tag": "v1.1.1",
+      "commit": "f4497cc2a337c5f5aa73d5834a2b99f06013020d"
+    },
+    "windows": {
+      "tag": "v1.1.1-win-x64-icon-fix",
+      "commit": "34c4851fa5f0f71bf8bde0d5426a0777533d2503"
+    }
+  },
+  "version": "1.1.1",
+  "platform": "win-x64",
+  "preview": true,
+  "publishable": false,
+  "published": false,
+  "environment": {
+    "platform": "win32",
+    "arch": "x64",
+    "os": "10.0.26300",
+    "node": "v24.14.0",
+    "npm": "11.20.0",
+    "cargo": "cargo 1.99.0 (5f94df478 2026-08-27)",
+    "electron": "44.4.5"
+  },
+  "changesReviewed": [
+    "Platform terminal/clipboard/desktop/activity adapters and common session lifetime",
+    "Terminal link validation and browser handoff",
+    "OS-specific shortcut defaults, migration, persistence, menu routing and file actions",
+    "Settings scrolling and reusable hidden E2E lifecycle"
+  ],
+  "fixes": [
+    {
+      "file": "src/renderer/FilesView.tsx",
+      "problem": "On Windows, Chromium reopened file context menus through Shift+F10 and ContextMenu after those bindings were changed or cleared.",
+      "resolution": "Cancel Chromium default keydown and dedicated menu-key keyup behavior while preserving configured shortcuts and mouse right-click."
+    },
+    {
+      "file": "tests/e2e/shortcuts-settings.spec.ts",
+      "problem": "Shortcut input capture counted Windows ConPTY focus responses as user input.",
+      "resolution": "Forward only the existing known device/focus protocol replies to the real shell; continue asserting all shortcut input bytes and clipboard counts."
+    }
+  ],
+  "implementationSHA256": {
+    "src/renderer/FilesView.tsx": "dff1f65e703652f0a73b4949b0f0d25e9f821c748e7d474cca3ea7c89d7c4c4c",
+    "tests/e2e/shortcuts-settings.spec.ts": "926c0cc36edff49d504199a78a739d209e28a6368c5c063cec0b3e5b9b1d1bec"
+  },
+  "checks": {
+    "lockedDependencies": {
+      "status": "passed",
+      "inheritedFrom": {
+        "manifest": "release/checks/20261006T123628Z-a1de455-win-x64-local-release/verification.json",
+        "sha256": "d22546ef15ae1494d4f8ff1d152cd94f12ca6636ebd400aca677efdb54b0f1b0",
+        "checks": [
+          {
+            "name": "dependencies",
+            "status": "passed",
+            "startedAt": "2026-10-06T12:36:28.118Z",
+            "finishedAt": "2026-10-06T12:38:05.501Z"
+          },
+          {
+            "name": "ftp-fixtures",
+            "status": "passed",
+            "startedAt": "2026-10-06T12:38:05.504Z",
+            "finishedAt": "2026-10-06T12:38:05.816Z"
+          },
+          {
+            "name": "windows-tools",
+            "status": "passed",
+            "startedAt": "2026-10-06T12:38:05.818Z",
+            "finishedAt": "2026-10-06T12:38:06.404Z"
+          }
+        ]
+      },
+      "reason": "Only the identified renderer/test files changed after npm ci; dependency, lockfile, native patch and build configuration inputs stayed unchanged."
+    },
+    "build": {
+      "status": "passed",
+      "log": "release/checks/20261006T123415Z-a1de455-win-x64-prerelease-review/context-menu-final-build.log",
+      "files": 219
+    },
+    "unit": {
+      "passed": 170,
+      "skipped": 7,
+      "failed": 0,
+      "skipReasons": {
+        "macOrPosixOnly": 5,
+        "optionalDocker": 1,
+        "optionalFileStress": 1
+      },
+      "ftpFtps": "passed",
+      "log": "release/checks/20261006T124731Z-a1de455-dirty-win-x64-prerelease-final/unit.log"
+    },
+    "releaseRegression": {
+      "passed": 69,
+      "skipped": 1,
+      "failed": 0,
+      "skipReason": "Windows symlink escape test",
+      "log": "release/checks/20261006T124731Z-a1de455-dirty-win-x64-prerelease-final/release-tests.log"
+    },
+    "focusedShortcuts": {
+      "passed": 12,
+      "failed": 0,
+      "repeated": 3,
+      "artifact": "release/checks/20261006T124641Z-a1de455-dirty-win-x64-e2e-hidden/artifact.json",
+      "lifecycle": {
+        "launches": 3,
+        "windows": 3,
+        "exits": 3,
+        "reusedTests": 9,
+        "auditedShutdowns": 3,
+        "shown": 0,
+        "focused": 0
+      }
+    },
+    "sourceHidden": {
+      "status": "passed",
+      "tests": {
+        "startTime": "2026-10-06T12:49:15.293Z",
+        "duration": 115205.719,
+        "expected": 65,
+        "skipped": 4,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "lifecycle": {
+        "launches": 29,
+        "windows": 35,
+        "exits": 29,
+        "reusedTests": 20,
+        "auditedShutdowns": 29,
+        "shown": 0,
+        "focused": 0
+      },
+      "policyHash": "0f3a435efd11acdd72fade0c84576de246bbc53db6189f71c6e09cb0915919a9",
+      "report": "release/checks/20261006T124731Z-a1de455-dirty-win-x64-prerelease-final/source-gui.json",
+      "reportSHA256": "84f244f3602a6482824ddafe006e677d512224f919d554babe4040401708920a"
+    },
+    "packagedHidden": {
+      "status": "passed",
+      "tests": {
+        "startTime": "2026-10-06T12:56:06.355Z",
+        "duration": 114034.493,
+        "expected": 65,
+        "skipped": 4,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "lifecycle": {
+        "launches": 29,
+        "windows": 35,
+        "exits": 29,
+        "reusedTests": 20,
+        "auditedShutdowns": 29,
+        "shown": 0,
+        "focused": 0
+      },
+      "policyHash": "0f3a435efd11acdd72fade0c84576de246bbc53db6189f71c6e09cb0915919a9",
+      "report": "release/checks/20261006T124731Z-a1de455-dirty-win-x64-prerelease-final/packaged-gui.json",
+      "reportSHA256": "2495ab758455ce92502ba732f8093c153ff56f596073f968755462d87ab8298c"
+    },
+    "guiSkipReasons": {
+      "macFinder": 1,
+      "optionalDocker": 1,
+      "optionalLongStress": 1,
+      "optionalThroughput": 1
+    },
+    "package": {
+      "status": "passed",
+      "installerScope": "Directory chooser first; scope radio buttons removed; /allusers rejected with exit 2",
+      "smoke": {
+        "packagedSmoke": "passed",
+        "localPTY": "passed",
+        "bundledHelper": "passed",
+        "shutdown": "passed",
+        "exitCode": 0,
+        "appVersion": "1.1.1",
+        "arch": "x64",
+        "platform": "win32",
+        "hosts": 0,
+        "fonts": 96,
+        "version": 2,
+        "nodeAvailable": false
+      }
+    },
+    "nativePayload": {
+      "status": "passed",
+      "sourceConptySHA256": "cdda731423986d719a2ae8169165ffa935b9ffb9f1761fa6c8f0a45438315152",
+      "files": {
+        "release/checks/20261006T124731Z-a1de455-dirty-win-x64-prerelease-final/nsis/resources/app.asar.unpacked/node_modules/node-pty/build/Release/conpty.node": "cdda731423986d719a2ae8169165ffa935b9ffb9f1761fa6c8f0a45438315152",
+        "release/checks/20261006T124731Z-a1de455-dirty-win-x64-prerelease-final/nsis/resources/app.asar.unpacked/node_modules/node-pty/prebuilds/win32-x64/conpty.node": "cdda731423986d719a2ae8169165ffa935b9ffb9f1761fa6c8f0a45438315152"
+      },
+      "compiledFilesMatchingSourceBuild": 219,
+      "helperSHA256": "7eeb46f33b38203aaf0a7f0722afb0b27e370d42494a964039960a79fca9a4fe",
+      "dllAndOpenConsole": "Both runtime loader paths match the prepared source binaries"
+    },
+    "nativeCleanup": {
+      "status": "failed",
+      "residualBeforeCleanup": {
+        "bash": 2,
+        "openConsole": 4,
+        "total": 6
+      },
+      "manualCleanup": "Six verified test-owned processes were stopped; no remaining processes at their test executable paths",
+      "evidence": "release/checks/20261006T124731Z-a1de455-dirty-win-x64-prerelease-final/post-run-audit.json",
+      "evidenceSHA256": "332138786dd5fb60b2f1bb598b97579af1fbe125586446ce18b18ee65e486d2b",
+      "rawProcessEvidence": "release/checks/20261006T124731Z-a1de455-dirty-win-x64-prerelease-final/residual-processes.json",
+      "limitation": "Current GUI closeCleanly checks Electron exit and window interference, not the complete descendant tree. Do not treat the passing suites as proof that child process lifetime is fixed."
+    },
+    "guiPolicy": "Same 69 hidden case identities; all required cases executed, retries and flaky results zero",
+    "architectureReview": "No cross-OS adapter imports or renderer/preload/shared imports of main platform implementations; common ACK, generation, async clipboard rechecks and shutdown ownership retained"
+  },
+  "artifact": {
+    "path": "release/builds/20261006T124731Z-a1de455-dirty-win-x64-prerelease-final/Passport-1.1.1-win-x64.exe",
+    "bytes": 203810256,
+    "sha256": "65bcce5e57bb5059cc70c0a2baccd5f73336510420220f3578ee9974951ddda3",
+    "executable": "release/checks/20261006T124731Z-a1de455-dirty-win-x64-prerelease-final/nsis/Passport.exe",
+    "authenticode": "NotSigned",
+    "signatureEvidence": "release/checks/20261006T124731Z-a1de455-dirty-win-x64-prerelease-final/signature.json"
+  },
+  "verification": {
+    "path": "release/checks/20261006T124731Z-a1de455-dirty-win-x64-prerelease-final/review.json",
+    "sha256": "a8c1e58859202c252d1153a5121b45ff9d5a268988c2d212aa6c66e8f2394848"
+  },
+  "macEvidence": {
+    "comparison": "release/checks/20261006T123415Z-a1de455-win-x64-prerelease-review/mac-evidence-comparison.json",
+    "matchedHeadFiles": 21,
+    "historicalSummary": "docs/benchmarks/shortcuts-settings-20261006.json",
+    "unitPassed": 173,
+    "focusedGuiPassed": 22,
+    "fullSourceGuiPassed": 60,
+    "fullSourceGuiSkipped": 9,
+    "limitation": "Historical Mac results are not new runs or final-package verification; this turn also changes FilesView."
+  },
+  "pending": [
+    "Resolve and regress the Windows Bash/OpenConsole descendants surviving normal Electron shutdown; this was also noted in the prior 1.1.1 release and is still reproduced.",
+    "Choose a new release version, update package.json/package-lock.json and release notes; existing 1.1.1 tags and assets do not represent this source.",
+    "Commit the finalized source and obtain formal publishable verification receipts for that exact release candidate.",
+    "Run macOS ARM64 source and final DMG validation including the new file-menu correction.",
+    "Run source and final-package native desktop checks only after an explicit request permitting window display/focus.",
+    "Manual Explorer/Finder clipboard, physical IME, OS notifications, real AI services and account installation/upgrade remain separate; no Windows ARM64 validation was performed."
+  ],
+  "initialFailures": [
+    {
+      "path": "release/checks/20261006T123431Z-a1de455-win-x64-local-release",
+      "reason": "Daemon restart interrupted dependency preparation"
+    },
+    {
+      "path": "release/checks/20261006T123628Z-a1de455-win-x64-local-release",
+      "reason": "Sandbox ancestor-directory access blocked esbuild after dependencies passed; continued with authorized elevated local execution"
+    },
+    {
+      "path": "release/checks/20261006T123415Z-a1de455-win-x64-prerelease-review",
+      "reason": "Original full source run stopped at ConPTY focus replies; raw ANSI payloads initially looked empty in console output"
+    },
+    {
+      "path": "release/checks/20261006T124314Z-a1de455-dirty-win-x64-e2e-hidden",
+      "reason": "Empty-string filtering did not address actual focus protocol replies; abandoned"
+    },
+    {
+      "path": "release/checks/20261006T124354Z-a1de455-dirty-win-x64-e2e-hidden",
+      "reason": "Protocol capture corrected, revealing real Shift+F10 default-action bug"
+    },
+    {
+      "path": "release/checks/20261006T124502Z-a1de455-dirty-win-x64-e2e-hidden",
+      "reason": "Keydown fix passed Shift+F10; new dedicated ContextMenu regression required keyup cancellation"
+    }
+  ],
+  "retention": {
+    "inventory": [
+      {
+        "path": "release/builds/20261006T124731Z-a1de455-dirty-win-x64-prerelease-final",
+        "files": 10282,
+        "bytes": 1136422801
+      },
+      {
+        "path": "release/checks/20261006T124731Z-a1de455-dirty-win-x64-prerelease-final",
+        "files": 10614,
+        "bytes": 961089977
+      }
+    ],
+    "keep": "Final candidate build and linked verification evidence are protected by KEEP.md until the native descendant-lifetime issue is resolved. Existing tooling and backups remain protected.",
+    "cleanupCandidates": "Intermediate resolved shortcut diagnostic runs may be reviewed after 2026-10-13; unresolved cleanup reproduction material is excluded. No artifacts were deleted and no extra package copy was created."
+  },
+  "operations": {
+    "userInstallationReplaced": false,
+    "userDatabaseUsed": false,
+    "desktopChecksRun": false,
+    "githubWrites": false,
+    "tagsChanged": false,
+    "committed": false
+  }
+}
