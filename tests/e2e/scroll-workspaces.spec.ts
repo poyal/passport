@@ -166,6 +166,64 @@ test.afterAll(async () => {
 });
 
 test("file action triggers toggle, dismiss, restore focus and stay in bounds while scrolling", async ({}, info) => {
+  if (process.env.PASSPORT_FILE_DIAGNOSTICS) {
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send("Emulation.setCPUThrottlingRate", {
+      rate: Number(process.env.PASSPORT_FILE_CPU_RATE || 1),
+    });
+    await application.evaluate(({ ipcMain }) => {
+      const handlers = (ipcMain as any)._invokeHandlers;
+      const original = handlers.get("passport:call");
+      const calls: any[] = [];
+      (globalThis as any).__fileCalls = calls;
+      (globalThis as any).__restoreFileCalls = () => {
+        ipcMain.removeHandler("passport:call");
+        ipcMain.handle("passport:call", original);
+      };
+      ipcMain.removeHandler("passport:call");
+      ipcMain.handle("passport:call", async (event, name, input) => {
+        if (name !== "files.list" && name !== "files.connect")
+          return original(event, name, input);
+        const call = {
+          name,
+          input: { id: input.id, path: input.path, hostId: input.hostId },
+          started: Date.now(),
+        } as any;
+        calls.push(call);
+        const result = await original(event, name, input);
+        Object.assign(call, {
+          finished: Date.now(),
+          ok: result.ok,
+          path: result.value?.path,
+          initialPath: result.value?.initialPath,
+          entries: result.value?.entries?.length,
+          error: result.error,
+        });
+        return result;
+      });
+    });
+    await page.evaluate(() => {
+      const events: unknown[] = [];
+      (window as any).__fileEvents = events;
+      for (const type of ["input", "change", "keydown", "submit"])
+        document.addEventListener(
+          type,
+          (event) => {
+            const target = event.target as HTMLInputElement;
+            if (target.closest(".file-panel"))
+              events.push({
+                type,
+                key: (event as KeyboardEvent).key,
+                label: target.getAttribute("aria-label"),
+                value: target.value,
+                formValue: target.querySelector("input")?.value,
+                time: Date.now(),
+              });
+          },
+          true,
+        );
+    });
+  }
   await page.getByRole("button", { name: "파일", exact: true }).click();
   for (const label of ["왼쪽 경로", "오른쪽 경로"]) {
     await page.getByLabel(label).fill(directory);
@@ -218,6 +276,40 @@ test("file action triggers toggle, dismiss, restore focus and stay in bounds whi
     path: info.outputPath("file-panels.png"),
     animations: "disabled",
   });
+});
+
+test.afterEach(async ({}, info) => {
+  if (
+    process.env.PASSPORT_FILE_DIAGNOSTICS ||
+    info.status !== info.expectedStatus
+  ) {
+    const calls = await application.evaluate(() => {
+      const calls = (globalThis as any).__fileCalls;
+      (globalThis as any).__restoreFileCalls?.();
+      return calls;
+    });
+    await info.attach("file-navigation-state", {
+      contentType: "application/json",
+      body: JSON.stringify(
+        {
+          calls,
+          renderer: await page.evaluate(() => ({
+            active: document.activeElement?.outerHTML,
+            panels: [...document.querySelectorAll(".file-panel")].map(
+              (panel) => ({
+                text: panel.textContent,
+                busy: panel.getAttribute("aria-busy"),
+                path: panel.querySelector("input")?.value,
+              }),
+            ),
+            events: (window as any).__fileEvents,
+          })),
+        },
+        null,
+        2,
+      ),
+    });
+  }
 });
 
 test("log list and output fit and scroll independently at both themes and window sizes", async ({}, info) => {

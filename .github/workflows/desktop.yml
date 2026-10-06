@@ -1,20 +1,12 @@
-name: Desktop verification (manual diagnostics)
+name: Windows file navigation diagnostic
 on:
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
-  desktop:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: windows-2025
-            target: win-x64
-          - os: macos-15
-            target: mac-arm64
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 45
+  diagnostic:
+    runs-on: windows-2025
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -25,31 +17,21 @@ jobs:
         with:
           python-version: "3.13"
       - uses: dtolnay/rust-toolchain@stable
-      - name: Expose Windows OpenSSL
-        if: runner.os == 'Windows'
+      - name: Install and build
         shell: pwsh
         run: |
-          'C:\Program Files\Git\usr\bin' | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
-      - name: Verify on the isolated Windows desktop
-        if: runner.os == 'Windows'
+          npm.cmd ci
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm.cmd run build
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Diagnose hidden file navigation
         shell: pwsh
-        run: npm.cmd run release:verify -- --desktop
-      - name: Verify on the isolated macOS desktop
-        if: runner.os == 'macOS'
-        run: npm run release:verify -- --desktop
+        env:
+          PASSPORT_FILE_DIAGNOSTICS: "1"
+        run: node scripts/e2e.mjs tests/e2e/scroll-workspaces.spec.ts --grep 'file action triggers' --repeat-each 50
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: verification-${{ matrix.target }}
-          path: |
-            release/builds/*/Passport-*.dmg
-            release/builds/*/Passport-*.exe
-            release/checks/*/*.json
-            release/checks/*/*.jsonl
-            release/checks/*/*.log
-            release/checks/*/*.sample.txt
-            release/checks/*/source-gui/**
-            release/checks/*/packaged-gui/**
-            release/checks/*/source-desktop/**
-            release/checks/*/packaged-desktop/**
+          name: windows-file-navigation-diagnostic
+          path: release/checks/**
           if-no-files-found: warn
