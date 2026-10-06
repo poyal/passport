@@ -1,6 +1,8 @@
 # 개발 안내
 
-[전체 문서](README.md) · [구현 구조](architecture.md) · [검증 결과](verification.md)
+[전체 문서](README.md) · [Windows·macOS 개발 규칙](platform-development.md) · [구현 구조](architecture.md) · [검증 결과](verification.md)
+
+OS 관련 코드를 수정하기 전에 [플랫폼 개발 가이드](platform-development.md)를 읽는다. 분리 경계, import 규칙, 계약·수명, 변경별 검사와 Windows 인계 기준을 정의한다. 이 문서는 환경 준비와 실행 명령의 진입점이다.
 
 ## 환경 준비
 
@@ -24,21 +26,17 @@ npm start
 
 `postinstall`에서 Electron용 네이티브 의존성을 준비한다. better-sqlite3와 node-pty는 Electron ABI에 맞아야 하므로 일반 Node.js용으로 임의 재빌드한 바이너리와 섞지 않는다.
 
-Windows에서 Python·Visual Studio 빌드 도구 없이 **현재 고정된 의존성의 포함 바이너리**를 점검한 절차는 다음과 같다. better-sqlite3 13.0.3과 node-pty 1.1.0의 Windows x64 Node-API 바이너리를 사용하며 소스 재빌드 검증과 구분한다. 의존성을 변경하면 패키지 PTY·SQLite·DPAPI 검사를 다시 수행한다.
+Windows는 `npm ci`의 postinstall에서 ConPTY 동시 접근 수정 소스를 해시로 확인하고 node-pty를 강제 컴파일한다. Python·Visual Studio C++ 빌드 도구·Windows SDK·Spectre 완화 라이브러리를 준비한다. 현재 개발·패키징에서는 `npm ci --ignore-scripts`나 `npmRebuild=false`로 이 절차를 우회하지 않는다. 이전에 포함 바이너리만 점검한 기록은 현재 수정본 검증을 대신하지 않는다. 패치 해시가 달라지면 검사를 끄지 말고 의존성과 원본 변경을 검토한다.
 
 ```powershell
-npm ci --ignore-scripts
-node node_modules/electron/install.js
-node scripts/patch-ssh2.mjs
-npm run build:helper
+npm ci
 npm run prepare:runtime -- x64
-npm run check
 npm run build
-npx electron-builder --win nsis --x64 --publish never '--config.npmRebuild=false'
-node scripts/packaged-smoke.mjs release/win-unpacked/Passport.exe
+npm run check
+npm run dev
 ```
 
-`--ignore-scripts`는 의존성 설치 훅을 생략하므로 일반 설치와 같은 절차로 취급하지 않는다. 이 점검에서는 Electron 다운로드와 SSH 패치를 직접 실행하고 패키지의 네이티브 기능까지 확인했다. 기본 `npm ci`·`dist:win` 경로에는 앞서 안내한 컴파일 도구를 준비한다.
+ARM64에서는 대상과 같은 Node·MSVC·Rust 도구와 `prepare:runtime -- arm64`를 사용한다. 빌드 구성의 존재와 실기 검증 완료는 구분한다. [플랫폼별 준비·문제 진단](platform-development.md#6-로컬-준비와-문제-진단)을 함께 확인한다.
 
 `scripts/patch-ssh2.mjs`는 ssh2 1.17.0의 DH group1 구현에서 Electron/BoringSSL이 제공하지 않는 이름 기반 `modp2` 대신 RFC 2409 §6.2의 동일한 소수를 명시적으로 지정한다. 설치·빌드·단위 시험에서 멱등적으로 적용하며 의존성 버전이나 패치 대상이 달라지면 중단한다. Passport는 현대 기본 협상 목록 뒤에 SHA-1 group14·GEX·group1을 항상 추가한다. 호스트별 옵션은 없으며 이전 `legacySSH` 필드는 파싱 과정에서 제외한다. 전역 `crypto` API를 변경하지 않는다.
 
@@ -47,6 +45,7 @@ node scripts/packaged-smoke.mjs release/win-unpacked/Passport.exe
 | 경로            | 역할                                                          |
 | --------------- | ------------------------------------------------------------- |
 | `src/main/`     | SSH·파일 연결, 로컬 셸, 전송 큐, 터널, 데이터·자격 증명, IPC  |
+| `src/main/platform/` | Windows·Mac의 터미널, 파일 클립보드, 데스크톱, 알림 endpoint 구현 |
 | `src/preload/`  | 허용된 호출과 이벤트를 전달하는 브리지                        |
 | `src/renderer/` | 호스트·탭·분할·파일·설정 화면과 xterm.js                      |
 | `src/shared/`   | 데이터 검증, IPC 타입, 분할 트리와 테마                       |
@@ -83,6 +82,8 @@ npm run test:e2e
 
 `check`는 타입과 단위·통합 검사를, `test:e2e`는 빌드 후 창을 숨긴 Electron GUI 검사를 실행한다. 기본 모드는 네이티브 창 표시·포커스를 차단하며 DOM 입력·스크린샷·실제 PTY는 검사한다. 실제 OS 포커스와 클립보드를 쓰는 `@desktop` 검사는 기본 실행에서 제외한다.
 
+로컬 작업에서는 이 숨김 모드를 유지한다. 일반적인 개발·검증 요청을 이유로 `--show`나 `--desktop`을 자동 실행하지 않는다. 창 표시·실제 데스크톱 검사는 사용자가 명시적으로 요청한 경우에만 실행하며, 필요한 실기 확인을 수행하지 않았으면 결과에 대기로 남긴다. 아래 표시 모드 명령은 그런 별도 실행을 위한 명령이다.
+
 ```sh
 npm run test:e2e                           # 숨김, 포커스 없음
 npm run test:e2e:show                      # 창만 표시, 포커스 없음
@@ -91,6 +92,8 @@ npm run test:e2e -- tests/e2e/shutdown.spec.ts
 ```
 
 결과는 `release/checks/<실행 ID>/`의 로그·JSON·스크린샷에 남는다. 이미 빌드했다면 `node scripts/e2e.mjs <파일>`로 재빌드 없이 필요한 검사만 실행한다. `npx playwright test`도 기본 숨김 모드를 사용한다. 예전 빌드나 설치본이 숨김 모드를 지원하지 않으면 창을 열기 전에 거부하므로 먼저 새 소스로 빌드한다. 정상 사용 앱의 창 동작은 그대로이며 테스트는 별도 데이터 폴더를 사용한다.
+
+초기화 범위가 명확한 UI 검사는 파일·describe마다 앱과 기본 창을 재사용한다. 사례 사이에는 문서·세션·로그·모의 API를 복구하고 같은 창의 renderer만 다시 읽는다. 실제 종료·재시작·시작 환경 검사는 독립 실행을 유지한다. `artifact.json`의 `lifecycle`과 `lifecycle.jsonl`에 실제 앱 시작·창 생성·종료·표시·포커스 수를 기록한다. 새 사례의 작성 기준과 제한은 [E2E 실행과 앱 재사용](e2e.md)을 따른다.
 
 네이티브 모듈이 포함된 시험은 `scripts/test.mjs`가 실행 환경을 맞추므로 직접 일반 Node.js에서 Vitest를 실행하지 않는다. 숨김 모드도 Electron 실행을 위한 데스크톱 세션은 필요하다. 시험은 localhost 서버 사용 가능 여부를 먼저 확인한다. 로컬 네트워크나 macOS 앱 등록을 제한하는 실행 샌드박스에서는 실행 권한을 허용한 뒤 검사해야 한다.
 
@@ -102,7 +105,9 @@ npx playwright test tests/e2e/shutdown.spec.ts --repeat-each=3
 
 GUI 종료 검사는 Electron 종료 코드 0과 시그널 없음을 확인해야 하며 창이 닫힌 것만으로 성공으로 보지 않는다.
 
-알림·새 창·폰트 회귀는 `tests/terminal-experience.test.ts`와 `tests/e2e/terminal-experience.spec.ts`에 있다. 숨김 시험은 실제 IPC·DB·PTY 경로와 창 표시/포커스 0회를 검사한다. 읽음 통합 시나리오에서는 네이티브 창 상태 조회만 대체하므로 실제 OS 포커스·알림 센터 검증을 대신하지 않는다. 실제 전경 읽음 시나리오는 `@desktop`으로 분리한다. 필수 GUI 목록은 숨김 62개·데스크톱 4개이며 목록 변경 시 `tests/e2e/release-policy.json`도 검토해 갱신한다.
+알림·새 창·폰트 회귀는 `tests/terminal-experience.test.ts`와 `tests/e2e/terminal-experience.spec.ts`에 있다. 숨김 시험은 실제 IPC·DB·PTY 경로와 창 표시/포커스 0회를 검사한다. 읽음 통합 시나리오에서는 네이티브 창 상태 조회만 대체하므로 실제 OS 포커스·알림 센터 검증을 대신하지 않는다. 실제 전경 읽음 시나리오는 `@desktop`으로 분리한다. 필수 GUI 목록과 플랫폼별 생략 기준은 `tests/e2e/release-policy.json`을 따른다. GUI 제목·파일·모드를 변경하면 같은 변경에서 정책도 갱신하고 `test:release`를 실행한다.
+
+터미널 웹 링크 회귀는 `tests/terminal-links.test.ts`와 `tests/e2e/terminal-links.spec.ts`에서 확인한다. GUI 검사는 실제 OSC 8 링크를 클릭해 취소·확인·브라우저 실행 실패와 창 소유권 검사를 거치며, 네이티브 확인창과 `shell.openExternal`만 대체해 사용자 브라우저를 열지 않는다. 기본 브라우저의 실제 표시와 Windows 실기는 별도로 확인한다.
 
 파일·이미지 붙여넣기는 `clipboard.terminal({ id })` IPC에서 처리한다. 메인 프로세스가 소유권·연결 세대를 검사하고 Electron 44의 `clipboard.read()` 결과를 파일·이미지·텍스트로 구분한다. macOS 파일 URL/파일 목록 plist, Windows Unicode CF_HDROP/탐색기 파일 목록과 표준 파일 URL 목록을 처리한다. Windows FileNameW만 노출되면 고정 PowerShell 코드로 전체 목록을 읽고 첫 경로가 원래 스냅샷과 같은지 확인한다. 이 보조 프로세스는 창을 숨기고 3초 제한을 적용한다. 이미지 파일은 사용자 데이터에 보관하며 renderer에는 경로만 전달한다.
 

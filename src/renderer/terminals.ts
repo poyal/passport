@@ -71,6 +71,11 @@ export function ensureTerminal(id: string) {
     allowProposedApi: true,
     theme: getTheme("mocha").theme,
     convertEol: false,
+    linkHandler: {
+      activate: (_event, url) => {
+        void api.call("terminal.link", { id, url }).catch(errorHandler);
+      },
+    },
   });
   const fit = new FitAddon(),
     search = new SearchAddon();

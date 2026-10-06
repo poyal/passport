@@ -1,6 +1,7 @@
 // Opt-in presentation for isolated automation profiles. Normal app launches
 // retain their native focus/activation behavior.
-export type TestWindowMode = "hidden" | "passive" | undefined;
+import type { WindowMode } from "./platform/contracts";
+export type TestWindowMode = WindowMode;
 
 export function testWindowMode(env: NodeJS.ProcessEnv): TestWindowMode {
   const mode = env.PASSPORT_E2E_WINDOW_MODE;

@@ -5,11 +5,9 @@ import {
   type Page,
 } from "@playwright/test";
 import fs from "node:fs/promises";
-import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { electron } from "../../scripts/e2e-electron.mjs";
-import { closeCleanly } from "../fixtures/electron-exit";
+import { reusableApp } from "../fixtures/reusable-app";
 import {
   writeMacPasteboard,
   releaseMacPasteboard,
@@ -20,20 +18,13 @@ let application: ElectronApplication, page: Page, directory: string;
 let nativeBoard: string;
 const mod = process.platform === "darwin" ? "Meta" : "Control";
 const pasteKey = process.platform === "darwin" ? "Meta+v" : "Control+Shift+v";
+const suite = reusableApp({ name: "paste-e2e" });
 test.beforeEach(async () => {
-  directory = await fs.mkdtemp(path.join(os.tmpdir(), "passport-paste-e2e-"));
+  application = suite.application;
+  page = suite.page;
+  directory = suite.directory;
   nativeBoard = `io.passport.test.${path.basename(directory)}`;
   if (process.platform === "darwin") await writeMacPasteboard(nativeBoard, []);
-  application = await electron.launch({
-    executablePath: process.env.PASSPORT_E2E_EXECUTABLE,
-    args: process.env.PASSPORT_E2E_EXECUTABLE ? [] : ["."],
-    env: {
-      ...process.env,
-      PASSPORT_DATA_DIR: directory,
-      PASSPORT_DISABLE_UPDATE_CHECK: "1",
-    },
-  });
-  page = await application.firstWindow();
   if (process.platform === "darwin") {
     await application.evaluate(({}, name) => {
       const cp = process.getBuiltinModule("node:child_process") as any;
@@ -61,6 +52,7 @@ test.beforeEach(async () => {
   await application.evaluate(({ ipcMain }) => {
     const state = globalThis as any;
     state.__pasteInputs = [];
+    state.__pasteReads = 0;
     const handle = ipcMain.handle.bind(ipcMain);
     const handlers = (ipcMain as any)._invokeHandlers;
     const original = handlers.get("passport:call");
@@ -81,12 +73,7 @@ test.beforeEach(async () => {
   });
 });
 test.afterEach(async () => {
-  try {
-    if (application) await closeCleanly(application);
-  } finally {
-    if (process.platform === "darwin") await releaseMacPasteboard(nativeBoard);
-    await fs.rm(directory, { recursive: true, force: true });
-  }
+  if (process.platform === "darwin") await releaseMacPasteboard(nativeBoard);
 });
 
 test("Finder app and folder copy inserts absolute paths when Electron exposes only names", async () => {

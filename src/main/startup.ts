@@ -11,25 +11,15 @@ import {
   type StartupProfile,
   type ShellId,
 } from "../shared/terminal-config";
-import { resolvedShell, helperPath, bashPath } from "./shells";
+import { resolvedShell, helperPath, resourceRoot } from "./shells";
 import { localTerminalEnv } from "./terminal-env";
+import { platform } from "./platform";
+export { bashPromptMarkers } from "./platform/shared/terminal";
 
 export const shQuote = (value: string) =>
   "'" + value.split("'").join("'\"'\"'") + "'";
 export const psQuote = (value: string) => `'${value.replace(/'/g, "''")}'`;
-export const bashFile = (file: string) =>
-  process.platform === "win32"
-    ? file
-        .replace(/\\/g, "/")
-        .replace(
-          /^([A-Za-z]):/,
-          (_, drive: string) => `/${drive.toLowerCase()}`,
-        )
-    : file;
-export const bashPromptMarkers = (instance: string) => ({
-  prompt: `\x1b]133;A;passport=${instance}\x07`,
-  command: `\x1b]133;C;passport=${instance}\x07`,
-});
+export const bashFile = (file: string) => platform.terminal.posixPath(file);
 export type LaunchSpec = {
   executable: string;
   args: string[] | string;
@@ -64,7 +54,7 @@ export function previewEnvironment(
   const seen = new Set<string>();
   for (const profile of profiles) {
     if (
-      !profile.platforms.includes(process.platform as "darwin") ||
+      !profile.platforms.includes(platform.id) ||
       !profile.shells.includes(shell.id)
     )
       throw new Error(
@@ -73,7 +63,7 @@ export function previewEnvironment(
     for (const entry of profile.entries) {
       if (
         entry.kind === "path" &&
-        entry.value.includes(process.platform === "win32" ? ";" : ":")
+        entry.value.includes(platform.terminal.paths.delimiter)
       )
         throw new Error("PATH 항목에 경로 구분자를 넣을 수 없습니다.");
       if (shell.id === "cmd")
@@ -87,7 +77,7 @@ export function previewEnvironment(
       const key =
         entry.kind === "path"
           ? `path:${entry.value}`
-          : `${entry.kind}:${process.platform === "win32" ? entry.name.toLowerCase() : entry.name}`;
+          : `${entry.kind}:${platform.terminal.profileKey(entry.name)}`;
       results.push(
         `${profile.name} · ${key}${seen.has(key) ? (entry.kind !== "path" && entry.overwrite ? " (앞 항목 덮어쓰기)" : " (충돌 시 생략)") : ""}`,
       );
@@ -196,21 +186,7 @@ export function prepareLaunch(
     ...credentials,
   };
   env.PASSPORT_INIT_FAILED = "0";
-  if (
-    process.platform === "win32" &&
-    fs.existsSync(bashPath()) &&
-    !env.CLAUDE_CODE_GIT_BASH_PATH
-  )
-    env.CLAUDE_CODE_GIT_BASH_PATH = bashPath();
-  if (snapshot.shell === "passport-bash") {
-    env.MSYSTEM = process.arch === "arm64" ? "CLANGARM64" : "MINGW64";
-    env.CHERE_INVOKING = "1";
-    // Track the Bash prompt separately from child TUIs. A pending ConPTY size
-    // event can consume Readline's next input byte (including after a long idle).
-    env.PROMPT_COMMAND = `${env.PROMPT_COMMAND ? env.PROMPT_COMMAND + "; " : ""}printf '\\033]133;A;passport=${snapshot.sessionInstanceId}\\007'`;
-    env.PS0 =
-      bashPromptMarkers(snapshot.sessionInstanceId).command + (env.PS0 || "");
-  }
+  platform.terminal.configureEnvironment(env, snapshot, resourceRoot());
   if (!profiles.length && !config.agent) {
     // A plain shell needs no loader or execution-policy exception. In particular,
     // Bash keeps its native login/logout semantics when injection is disabled.
@@ -279,12 +255,6 @@ export function prepareLaunch(
     "claude-settings.json",
     JSON.stringify({ hooks }),
   );
-  if (
-    process.platform === "win32" &&
-    fs.existsSync(bashPath()) &&
-    !env.CLAUDE_CODE_GIT_BASH_PATH
-  )
-    env.CLAUDE_CODE_GIT_BASH_PATH = bashPath();
   const shell = snapshot.shell;
   let args: string[] | string;
   if (shell === "bash" || shell === "zsh" || shell === "passport-bash") {
@@ -324,10 +294,6 @@ export function prepareLaunch(
         `if ${q(bashFile(snapshot.executable))} --noprofile --norc -n "${file}"; then . "${file}" || ${q(helperUnix)} result '시작 파일: 마지막 명령이 0이 아닌 상태로 끝났습니다.'; else PASSPORT_INIT_FAILED=1; fi`;
       const init = `if [ -r /etc/profile ]; then ${read("/etc/profile")}; fi\nif [ -r "$HOME/.bash_profile" ]; then ${read("$HOME/.bash_profile")}; elif [ -r "$HOME/.bash_login" ]; then ${read("$HOME/.bash_login")}; elif [ -r "$HOME/.profile" ]; then ${read("$HOME/.profile")}; ${shell === "passport-bash" ? `elif [ -r "$HOME/.bashrc" ]; then ${read("$HOME/.bashrc")}; ` : ""}fi\n`;
       const loader = write("startup.bash", init + body);
-      if (shell === "passport-bash") {
-        env.MSYSTEM = process.arch === "arm64" ? "CLANGARM64" : "MINGW64";
-        env.CHERE_INVOKING = "1";
-      }
       args = ["--rcfile", bashFile(loader), "-i"];
     }
   } else if (shell === "pwsh" || shell === "windows-powershell") {

@@ -1,16 +1,12 @@
-import { electron } from "../../scripts/e2e-electron.mjs";
 import {
   test,
   expect,
   type ElectronApplication,
   type Page,
 } from "@playwright/test";
-import fs from "node:fs/promises";
-import os from "node:os";
-import path from "node:path";
-import { closeCleanly } from "../fixtures/electron-exit";
+import { reusableApp } from "../fixtures/reusable-app";
 
-let application: ElectronApplication, page: Page, directory: string;
+let application: ElectronApplication, page: Page;
 const errors: string[] = [];
 let currentVersion: string, nextVersion: string;
 const installerName = (version: string) =>
@@ -18,22 +14,15 @@ const installerName = (version: string) =>
     ? `Passport-${version}-win-${process.arch}.exe`
     : `Passport-${version}-mac-arm64.dmg`;
 
+const suite = reusableApp({ name: "updates", advanceClockMs: 6000 });
 test.beforeEach(async () => {
+  application = suite.application;
+  page = suite.page;
   errors.length = 0;
-  directory = await fs.mkdtemp(path.join(os.tmpdir(), "passport-updates-"));
-  application = await electron.launch({
-    executablePath: process.env.PASSPORT_E2E_EXECUTABLE,
-    args: process.env.PASSPORT_E2E_EXECUTABLE ? [] : ["."],
-    env: {
-      ...process.env,
-      PASSPORT_DATA_DIR: path.join(directory, "data"),
-      PASSPORT_DISABLE_UPDATE_CHECK: "1",
-    },
-  });
   currentVersion = await application.evaluate(({ app }) => app.getVersion());
   const [major, minor, patch] = currentVersion.split(".").map(Number);
   nextVersion = `${major}.${minor}.${patch + 1}`;
-  page = await application.firstWindow();
+
   await page.getByRole("button", { name: "호스트", exact: true }).click();
   page.on("pageerror", (error) => errors.push(error.message));
   await expect(page.locator(".hosts-view")).toBeVisible();
@@ -43,14 +32,7 @@ test.beforeEach(async () => {
     .getByRole("button", { name: "About", exact: true })
     .click();
 });
-test.afterEach(async () => {
-  try {
-    if (application) await closeCleanly(application);
-  } finally {
-    if (directory) await fs.rm(directory, { recursive: true, force: true });
-  }
-  expect(errors).toEqual([]);
-});
+test.afterEach(() => expect(errors).toEqual([]));
 
 async function mockRelease(
   version: string,

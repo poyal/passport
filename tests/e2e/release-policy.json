@@ -3,6 +3,16 @@
   "description": "Explicit release test inventory. IDs remain stable when titles are deliberately updated. Entries without overrides are required on macOS and Windows in hidden mode.",
   "tests": [
     {
+      "id": "terminal-links.browser-open",
+      "file": "terminal-links.spec.ts",
+      "title": "terminal hyperlinks confirm the actual URL and open the browser without navigating the app"
+    },
+    {
+      "id": "terminal-links.ipc-boundary",
+      "file": "terminal-links.spec.ts",
+      "title": "terminal link IPC rejects unsafe destinations and panes owned by another window"
+    },
+    {
       "id": "advanced.broadcast-uses-physical-keys-only-explicit-execution-records-hist",
       "file": "advanced.spec.ts",
       "title": "broadcast uses physical keys only, explicit execution records history, logs start automatically"
@@ -259,49 +269,37 @@
       "id": "windows-credentials.windows-dpapi-protects-stored-credentials-and-reconnects-after-re",
       "file": "windows-credentials.spec.ts",
       "title": "Windows DPAPI protects stored credentials and reconnects after restart",
-      "platforms": [
-        "win32"
-      ]
+      "platforms": ["win32"]
     },
     {
       "id": "windows-files.windows-drive-root-remains-browsable-around-protected-system-file",
       "file": "windows-files.spec.ts",
       "title": "Windows drive root remains browsable around protected system files",
-      "platforms": [
-        "win32"
-      ]
+      "platforms": ["win32"]
     },
     {
       "id": "windows-shells.windows-passport-bash-applies-a-startup-profile-and-accepts-termi",
       "file": "windows-shells.spec.ts",
       "title": "Windows passport-bash applies a startup profile and accepts terminal input",
-      "platforms": [
-        "win32"
-      ]
+      "platforms": ["win32"]
     },
     {
       "id": "windows-shells.windows-cmd-applies-a-startup-profile-and-accepts-terminal-input",
       "file": "windows-shells.spec.ts",
       "title": "Windows cmd applies a startup profile and accepts terminal input",
-      "platforms": [
-        "win32"
-      ]
+      "platforms": ["win32"]
     },
     {
       "id": "windows-shells.windows-windows-powershell-applies-a-startup-profile-and-accepts",
       "file": "windows-shells.spec.ts",
       "title": "Windows windows-powershell applies a startup profile and accepts terminal input",
-      "platforms": [
-        "win32"
-      ]
+      "platforms": ["win32"]
     },
     {
       "id": "windows-shells.windows-pwsh-applies-a-startup-profile-and-accepts-terminal-input",
       "file": "windows-shells.spec.ts",
       "title": "Windows pwsh applies a startup profile and accepts terminal input",
-      "platforms": [
-        "win32"
-      ]
+      "platforms": ["win32"]
     },
     {
       "id": "advanced.saves-custom-colors-and-shortcuts-and-applies-highlights-without",
@@ -356,9 +354,12 @@
       "id": "paste.finder-native-full-paths",
       "file": "paste.spec.ts",
       "title": "Finder app and folder copy inserts absolute paths when Electron exposes only names",
-      "platforms": [
-        "darwin"
-      ]
+      "platforms": ["darwin"]
+    },
+    {
+      "id": "reuse.clean-state",
+      "file": "reuse.spec.ts",
+      "title": "reusing an app clears prior state and native mocks without replacing its process or primary window"
     }
   ]
 }

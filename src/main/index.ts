@@ -58,7 +58,8 @@ import { LocalSessions, availableShells } from "./local";
 import { ActivityService } from "./activity";
 import { ActivityBanners } from "./activity-banners";
 import { prepareTerminalClipboard } from "./terminal-clipboard";
-import { readMacClipboardFiles } from "./clipboard-files";
+import { terminalLinkURL } from "./terminal-links";
+import { platform } from "./platform";
 import { prepareLaunch, previewEnvironment } from "./startup";
 import { selectedProfiles } from "../shared/terminal-config";
 import { SessionLogs } from "./logs";
@@ -85,8 +86,7 @@ import {
 
 app.setName("Passport");
 const e2eWindowMode = testWindowMode(process.env);
-if (e2eWindowMode && process.platform === "darwin")
-  app.setActivationPolicy("accessory");
+platform.desktop.initialize(app, e2eWindowMode);
 const e2eWindowAudit = {
   mode: e2eWindowMode,
   created: 0,
@@ -97,7 +97,6 @@ if (e2eWindowMode) {
   Object.assign(globalThis, { __passportE2EWindowAudit: e2eWindowAudit });
   app.on("browser-window-focus", () => e2eWindowAudit.focused++);
 }
-if (process.platform === "win32") app.setAppUserModelId("io.passport.desktop");
 if (process.env.PASSPORT_DATA_DIR)
   app.setPath("userData", path.resolve(process.env.PASSPORT_DATA_DIR));
 const desktopNotifications = {
@@ -377,6 +376,7 @@ const schemas: Record<Call, z.ZodType> = {
   "terminal.create": z.undefined(),
   "window.create": z.undefined(),
   "terminal.folder": z.undefined(),
+  "terminal.link": z.object({ id: idSchema, url: z.string().max(8192) }),
   "terminal.preview": z.object({
     local: localShellSchema,
     workspaceId: idSchema.optional(),
@@ -677,13 +677,7 @@ async function call<K extends Call>(
       if (i.paneId && isPaneViewed(i.paneId)) activity.readPane(i.paneId);
       return;
     case "activity.settings":
-      if (process.platform === "darwin")
-        await shell.openExternal(
-          "x-apple.systempreferences:com.apple.Notifications-Settings.extension",
-        );
-      else if (process.platform === "win32")
-        await shell.openExternal("ms-settings:notifications");
-      else throw new Error("운영체제의 알림 설정을 직접 열어 주세요.");
+      await platform.desktop.openNotificationSettings(shell);
       return;
     case "activity.test": {
       if (!desktopNotifications.isSupported()) return false;
@@ -974,8 +968,7 @@ async function call<K extends Call>(
       };
       return prepareTerminalClipboard({
         read: () => clipboard.read(),
-        readNativeFiles:
-          process.platform === "darwin" ? readMacClipboardFiles : undefined,
+        readNativeFiles: platform.clipboard.readNativeFiles,
         toPNG: (bytes) => {
           const image = nativeImage.createFromBuffer(bytes);
           const size = image.getSize();
@@ -999,6 +992,24 @@ async function call<K extends Call>(
         about.links[i.target as keyof typeof about.links],
       );
       return;
+    case "terminal.link": {
+      assertOwned(i.id, caller);
+      const url = terminalLinkURL(i.url);
+      const result = await dialog.showMessageBox(caller, {
+        type: "question",
+        title: "링크 열기",
+        message: "기본 브라우저에서 이 링크를 여시겠습니까?",
+        detail: url,
+        buttons: ["취소", "브라우저에서 열기"],
+        defaultId: 0,
+        cancelId: 0,
+        noLink: true,
+      });
+      if (result.response !== 1 || caller.isDestroyed()) return;
+      assertOwned(i.id, caller);
+      await shell.openExternal(url);
+      return;
+    }
     case "updates.check":
       return updates.check();
     case "updates.open":
@@ -1392,24 +1403,21 @@ async function createWindow(withLocalTerminal = false) {
     assertTerminalCapacity(store.read());
     if (moves.size) throw new Error("창 이동이 완료된 후 다시 시도해 주세요.");
   }
-  const windowIcon =
-    process.platform === "win32"
-      ? app.isPackaged
-        ? path.join(process.resourcesPath, "icon.ico")
-        : path.join(app.getAppPath(), "build/icon.ico")
-      : path.join(app.getAppPath(), "build/icon.png");
+  const desktopContext = {
+    appPath: app.getAppPath(),
+    resourcesPath: process.resourcesPath,
+    executable: process.execPath,
+    packaged: app.isPackaged,
+  };
   const win = new BrowserWindow({
+    ...platform.desktop.windowOptions(desktopContext),
     ...testWindowOptions(e2eWindowMode),
-    ...(process.platform === "win32" ? { show: false } : {}),
     width: 1440,
     height: 900,
     minWidth: 1024,
     minHeight: 680,
     title: "Passport",
     backgroundColor: "#171b20",
-    icon: windowIcon,
-    titleBarStyle: process.platform === "darwin" ? "hiddenInset" : "default",
-    trafficLightPosition: { x: 16, y: 14 },
     webPreferences: {
       preload: path.join(__dirname, "../preload/index.cjs"),
       contextIsolation: true,
@@ -1419,18 +1427,7 @@ async function createWindow(withLocalTerminal = false) {
       backgroundThrottling: !e2eWindowMode,
     },
   });
-  if (process.platform === "win32") {
-    win.setAppDetails({
-      appId: "io.passport.desktop",
-      appIconPath: windowIcon,
-      appIconIndex: 0,
-      relaunchCommand: app.isPackaged
-        ? `"${process.execPath}"`
-        : `"${process.execPath}" "${app.getAppPath()}"`,
-      relaunchDisplayName: "Passport",
-    });
-    if (!e2eWindowMode) win.once("ready-to-show", () => win.show());
-  }
+  platform.desktop.configureWindow(win, desktopContext, e2eWindowMode);
   if (e2eWindowMode) {
     e2eWindowAudit.created++;
     win.on("show", () => e2eWindowAudit.shown++);
@@ -1760,7 +1757,7 @@ void app
     app.quit();
   });
 app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") app.quit();
+  if (platform.desktop.quitOnLastWindow) app.quit();
 });
 app.on("before-quit", () => {
   quitting = true;

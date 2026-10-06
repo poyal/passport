@@ -2,6 +2,7 @@ import { expect, type ElectronApplication } from "@playwright/test";
 import { once } from "node:events";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
+import { recordElectronLifecycle } from "../../scripts/e2e-lifecycle.mjs";
 
 export async function closeCleanly(
   application: ElectronApplication,
@@ -142,6 +143,11 @@ export async function closeCleanly(
           "Electron must exit normally, including native PTY teardown",
         ).toEqual({ code: 0, signal: null });
         if (windowAudit) {
+          recordElectronLifecycle({
+            kind: "shutdown-audit",
+            pid: child.pid,
+            ...windowAudit,
+          });
           expect(
             windowAudit.focused,
             "Background E2E must never focus a native window",

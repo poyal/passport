@@ -10,6 +10,7 @@ const names: Call[] = [
   "terminal.create",
   "window.create",
   "terminal.folder",
+  "terminal.link",
   "terminal.preview",
   "activity.list",
   "activity.read",

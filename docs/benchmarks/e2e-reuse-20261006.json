@@ -1,0 +1,264 @@
+{
+  "createdAt": "2026-10-06T02:01:26.463Z",
+  "purpose": "Reduce hidden E2E app restarts with isolated suite reuse",
+  "source": "local",
+  "sourceCommit": "c7e776ff7107d150490e02347bf9fa6e40dab418",
+  "dirty": true,
+  "platform": "mac-arm64",
+  "status": "mac-verified-windows-pending",
+  "implementation": "complete",
+  "verificationSourceFingerprint": "4f61efce8973058abc85fca5a5fbfec56cceb15ba318a2770253b011aa8a7bcb",
+  "fingerprintNote": "Captured before writing this summary. Source/package run fingerprints differ due to guide edits during verification; tested harness files below were unchanged across the final runs. Product runtime and the packaged app were not rebuilt for this test-only change.",
+  "environment": {
+    "node": "v25.6.0",
+    "electron": "44.4.5",
+    "mode": "hidden",
+    "workers": 1,
+    "zshInitialization": "isolated ZDOTDIR from release/checks/20261006T011216Z-c7e776f-dirty-mac-arm64-platform-split/zsh"
+  },
+  "comparison": {
+    "baseline": {
+      "path": "release/checks/20261006T014645Z-c7e776f-dirty-mac-arm64-e2e-hidden",
+      "tests": {
+        "startTime": "2026-10-06T01:46:45.710Z",
+        "duration": 85157.274,
+        "expected": 55,
+        "skipped": 9,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "lifecycle": {
+        "launches": 37,
+        "windows": 42,
+        "exits": 37,
+        "reusedTests": 0,
+        "auditedShutdowns": 37,
+        "shown": 0,
+        "focused": 0
+      },
+      "sourceFingerprint": "271b9940da6681b83a3de7d4fd61838f92b4901d7f41fd0ff84f3d6d7a0e776e",
+      "policyHash": "d5a8dd6298fa7b55d1738aea9e0225daac7fbe92def3628f763f86a1a1f28f4f",
+      "pidExitAndAudit": "all matching; normal exit 0, no signal"
+    },
+    "source": {
+      "path": "release/checks/20261006T015530Z-c7e776f-dirty-mac-arm64-e2e-hidden",
+      "tests": {
+        "startTime": "2026-10-06T01:55:30.737Z",
+        "duration": 79060.98400000001,
+        "expected": 56,
+        "skipped": 9,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "lifecycle": {
+        "launches": 24,
+        "windows": 30,
+        "exits": 24,
+        "reusedTests": 14,
+        "auditedShutdowns": 24,
+        "shown": 0,
+        "focused": 0
+      },
+      "sourceFingerprint": "a813b585ecfc765431c42340387ca8f1872204b2300edd8da947acf95d927dc6",
+      "policyHash": "2ead9cb26f540f686db087b8b7adde47e01932836bc2e98763a58d3839f530d2",
+      "pidExitAndAudit": "all matching; normal exit 0, no signal"
+    },
+    "packaged": {
+      "path": "release/checks/20261006T015804Z-c7e776f-dirty-mac-arm64-e2e-hidden",
+      "tests": {
+        "startTime": "2026-10-06T01:58:04.512Z",
+        "duration": 80640.953,
+        "expected": 56,
+        "skipped": 9,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "lifecycle": {
+        "launches": 24,
+        "windows": 30,
+        "exits": 24,
+        "reusedTests": 14,
+        "auditedShutdowns": 24,
+        "shown": 0,
+        "focused": 0
+      },
+      "sourceFingerprint": "caa89747b69be420f73acf1308281d9a01adb14832b5f57f2490456cd974281f",
+      "policyHash": "2ead9cb26f540f686db087b8b7adde47e01932836bc2e98763a58d3839f530d2",
+      "pidExitAndAudit": "all matching; normal exit 0, no signal"
+    }
+  },
+  "reduction": {
+    "guiAppLaunches": 13,
+    "guiAppLaunchPercent": 35.13513513513514,
+    "nativeWindows": 12,
+    "nativeWindowPercent": 28.571428571428573,
+    "additionalRegressionCases": 1,
+    "previousRequiredCases": "all retained",
+    "scope": "GUI apps created through electron.launch(); the unchanged direct-spawn single-instance handoff process is excluded (one per full run). Renderer reload and PTY spawn are not GUI app launches.",
+    "durationNote": "Single local run per variant; 85.2s baseline, 79.1s optimized source, 80.6s optimized package. Timing is descriptive, not a stable speed benchmark."
+  },
+  "checks": {
+    "typecheck": "passed",
+    "releaseTests": {
+      "passed": 70,
+      "failed": 0,
+      "log": "release/checks/20261006T015552Z-c7e776f-dirty-mac-arm64-e2e-reuse/release-tests.log"
+    },
+    "fixtureResetRegression": "passed in source and package; same PID/window, settings, live PTY, logs, storage, native API and extra-window cleanup",
+    "filteredLastCases": {
+      "path": "release/checks/20261006T020004Z-c7e776f-dirty-mac-arm64-e2e-hidden",
+      "stats": {
+        "startTime": "2026-10-06T02:00:05.263Z",
+        "duration": 6767.196,
+        "expected": 3,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "lifecycle": {
+        "launches": 3,
+        "windows": 3,
+        "exits": 3,
+        "reusedTests": 0,
+        "auditedShutdowns": 3,
+        "shown": 0,
+        "focused": 0
+      },
+      "selection": "last layout-drag, image paste and last updates cases, each without earlier cases in its file"
+    },
+    "guiPolicy": "all required file/title entries retained; additional reuse.clean-state; final source/package have no retry, flaky result or unexpected skip",
+    "format": "changed harness files passed Prettier",
+    "documentation": "E2E guide, AGENTS rule, developer/platform/index links; local targets checked separately"
+  },
+  "reusedSuites": [
+    "layout-drag",
+    "local-colors",
+    "local-workspace (hidden describe only)",
+    "paste",
+    "terminal-experience",
+    "terminal-links",
+    "updates",
+    "windows-shells (implementation; native Windows verification pending)"
+  ],
+  "retainedIsolation": [
+    "actual native PTY shutdown/reopen",
+    "process restart and persistence",
+    "different launch environments",
+    "existing transfer/import/credential test fixtures"
+  ],
+  "skipReasons": [
+    "Windows-only: 6",
+    "optional Docker SSH: 1",
+    "optional long-duration terminal stress: 1",
+    "optional 1 GiB throughput: 1"
+  ],
+  "pending": [
+    "Windows native source/package E2E, including all four shells",
+    "Desktop modes deliberately not executed during this task; require explicit user request"
+  ],
+  "app": "release/builds/20261006T011216Z-c7e776f-dirty-mac-arm64-platform-split/mac-arm64/Passport.app",
+  "previewLink": "release/builds/Passport.app",
+  "artifacts": [
+    {
+      "path": "release/builds/20261006T011216Z-c7e776f-dirty-mac-arm64-platform-split/mac-arm64/Passport.app/Contents/Resources/app.asar",
+      "bytes": 76037062,
+      "sha256": "6f8b9163e2cff2dea9cb418fc209af440e4a46bf74c1bff2fc49ecfeffbd48ff"
+    },
+    {
+      "path": "release/builds/20261006T011216Z-c7e776f-dirty-mac-arm64-platform-split/mac-arm64/Passport.app/Contents/MacOS/Passport",
+      "bytes": 34800,
+      "sha256": "1aaff85f389826ebbcdc493c7d8be4bd101aa0893dfb1413147659b3311f9ea9"
+    }
+  ],
+  "harness": [
+    {
+      "path": "scripts/e2e.mjs",
+      "sha256": "47394e59c6f04259dabdcd97d4d8f04f9aee441a632719b5ee00b14f5c46a30c"
+    },
+    {
+      "path": "scripts/e2e-electron.mjs",
+      "sha256": "d9b38e0c9021ce1a48e0b049f8bc09059c5731ccb3e1473fc72e0ff29cc8e757"
+    },
+    {
+      "path": "scripts/e2e-lifecycle.mjs",
+      "sha256": "c3aca70e19a734f71605c11afb4140d507751785f4d48786ddc1b6fbdaee0d18"
+    },
+    {
+      "path": "scripts/e2e-lifecycle.d.mts",
+      "sha256": "19136fab1041cb1ba522f75b9706dd81b114903289a67c63cfa7908c445b54e4"
+    },
+    {
+      "path": "tests/fixtures/reusable-app.ts",
+      "sha256": "418c887ad83bd6b3ed9ea2b93e28c18e4ef41df73e5ec40e4df28c32cdc514b8"
+    },
+    {
+      "path": "tests/fixtures/electron-exit.ts",
+      "sha256": "09ebbf0996cdd2a3b42addefae147c5196a14e30a4ea6d4b8d9718032263a963"
+    },
+    {
+      "path": "tests/e2e/reuse.spec.ts",
+      "sha256": "ef48f44abd1145a7fe678c71b496fb6d22e2d2d7c87d5f6f9ed20a1150b6815f"
+    },
+    {
+      "path": "tests/e2e/layout-drag.spec.ts",
+      "sha256": "8ce74269d378026f29b92db83f6138fbb3ac2e0d370e9b590ec5fffe6da9315e"
+    },
+    {
+      "path": "tests/e2e/local-colors.spec.ts",
+      "sha256": "e83982593e78d6d435c2d444eaca8bf4ddc4090f1a8a750f5fa9ee2a7425b374"
+    },
+    {
+      "path": "tests/e2e/local-workspace.spec.ts",
+      "sha256": "82d43851d10712e0b173458aa972fa1d79ccc83a4291c26eb87928e3cabe075a"
+    },
+    {
+      "path": "tests/e2e/paste.spec.ts",
+      "sha256": "03819a7d17a819223e30576f9e98ed5eeaf0947e724aef293212eb3b69652b4c"
+    },
+    {
+      "path": "tests/e2e/terminal-experience.spec.ts",
+      "sha256": "76b4f4b6a074917a6465ef7309e4d6afc7496030dd3b4f84033799648792e059"
+    },
+    {
+      "path": "tests/e2e/terminal-links.spec.ts",
+      "sha256": "43e72405b9089538d01eaef1e30630bfa56c7022966621420627840a1d53642b"
+    },
+    {
+      "path": "tests/e2e/updates.spec.ts",
+      "sha256": "ea0f5d13492511de4e161c7e508391b7c2a3d089670a3b52f87fcac5811d070e"
+    },
+    {
+      "path": "tests/e2e/windows-shells.spec.ts",
+      "sha256": "a9fffe86bd3e760098ca14f6a237cf1101f83cedee6185ae7088f43bb5fe8011"
+    },
+    {
+      "path": "tests/e2e/release-policy.json",
+      "sha256": "84f4e3d18d33c85e7f209843fba1e0fabba11bf0d1a7cd65f323b48f6f72ec66"
+    },
+    {
+      "path": "tests/release.test.mjs",
+      "sha256": "b219b85207aec8576bb90df11d66f7c1f7626d28ff2c2fb8585d3c930810a96d"
+    }
+  ],
+  "intermediateRuns": [
+    {
+      "path": "release/checks/20261006T014943Z-c7e776f-dirty-mac-arm64-e2e-hidden",
+      "result": "18 passed, 4 Windows-only skipped; 6 GUI apps, 8 windows, no show/focus"
+    },
+    {
+      "path": "release/checks/20261006T015120Z-c7e776f-dirty-mac-arm64-e2e-hidden",
+      "result": "3 local-workspace cases passed; new reset regression failed because net.fetch was mocked before second-window resources loaded; test setup fixed and evidence retained"
+    },
+    {
+      "path": "release/checks/20261006T015259Z-c7e776f-dirty-mac-arm64-e2e-hidden",
+      "result": "corrected reset regression passed; one app, two windows, no show/focus"
+    }
+  ],
+  "earlierReleaseAttempt": "Expected passing inventory count still 55 after adding the regression; updated to 56 and all 70 release tests passed.",
+  "retention": {
+    "summaryChecks": "release/checks/20261006T015552Z-c7e776f-dirty-mac-arm64-e2e-reuse",
+    "earliestReviewDate": "2026-10-13",
+    "cleanup": "No existing artifacts deleted. Keep current preview target, backups, KEEP directories and unresolved reproduction evidence. New evidence is a cleanup candidate only after retention and resolution rules apply.",
+    "productChanges": "No new app copies, installation replacement, preview-link change, user DB changes or foreground E2E runs."
+  }
+}

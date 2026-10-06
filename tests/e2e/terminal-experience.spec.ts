@@ -4,37 +4,20 @@ import {
   type ElectronApplication,
   type Page,
 } from "@playwright/test";
-import fs from "node:fs/promises";
-import os from "node:os";
-import path from "node:path";
-import { electron } from "../../scripts/e2e-electron.mjs";
-import { closeCleanly } from "../fixtures/electron-exit";
+import { reusableApp } from "../fixtures/reusable-app";
 import { bundledFonts } from "../../src/shared/fonts";
 
-let application: ElectronApplication, page: Page, directory: string;
+let application: ElectronApplication, page: Page;
+const suite = reusableApp({ name: "experience" });
 test.beforeEach(async () => {
-  directory = await fs.mkdtemp(path.join(os.tmpdir(), "passport-experience-"));
-  application = await electron.launch({
-    executablePath: process.env.PASSPORT_E2E_EXECUTABLE,
-    args: process.env.PASSPORT_E2E_EXECUTABLE ? [] : ["."],
-    env: {
-      ...process.env,
-      PASSPORT_DATA_DIR: directory,
-      PASSPORT_DISABLE_UPDATE_CHECK: "1",
-    },
-  });
-  page = await application.firstWindow();
+  application = suite.application;
+  page = suite.page;
+
   await expect(
     page.getByRole("button", { name: "새 로컬 터미널", exact: true }),
   ).toBeVisible();
 });
-test.afterEach(async () => {
-  try {
-    if (application) await closeCleanly(application);
-  } finally {
-    await fs.rm(directory, { recursive: true, force: true });
-  }
-});
+
 const mod = process.platform === "darwin" ? "Meta" : "Control";
 const connected = (target: Page) =>
   expect(target.locator(".view:not([hidden]) .pill").first()).toHaveText(

@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { e2eMode } from "./e2e-mode.mjs";
+import { recordElectronLifecycle } from "./e2e-lifecycle.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 
@@ -64,7 +65,21 @@ export const electron = {
           ]
         : []),
     ];
-    return _electron.launch({ ...options, args, env });
+    const application = await _electron.launch({ ...options, args, env });
+    const child = application.process();
+    recordElectronLifecycle({ kind: "launch", pid: child.pid, mode });
+    const windows = new Set();
+    const recordWindow = (page) => {
+      if (windows.has(page)) return;
+      windows.add(page);
+      recordElectronLifecycle({ kind: "window", pid: child.pid, mode });
+    };
+    application.on("window", recordWindow);
+    for (const page of application.windows()) recordWindow(page);
+    child.once("exit", (code, signal) =>
+      recordElectronLifecycle({ kind: "exit", pid: child.pid, code, signal }),
+    );
+    return application;
   },
 };
 

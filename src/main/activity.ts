@@ -1,11 +1,10 @@
 import net from "node:net";
-import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
 import { randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 import type Database from "better-sqlite3";
 import type { Activity } from "../shared/model";
+import { platform } from "./platform";
+import type { ActivityEndpoint } from "./platform/contracts";
 
 const wire = z.object({
   token: z.string().regex(/^[a-f0-9]{64}$/),
@@ -120,7 +119,7 @@ export class ActivityService {
     socket.on("close", () => this.sockets.delete(socket));
   });
   private sockets = new Set<net.Socket>();
-  private directory = "";
+  private endpointResource?: ActivityEndpoint;
   endpoint = "";
   constructor(
     private db: Database.Database,
@@ -146,28 +145,26 @@ export class ActivityService {
     this.persist();
   }
   async start() {
-    if (process.platform === "win32")
-      this.endpoint = `\\\\.\\pipe\\passport-${randomUUID()}`;
-    else {
-      this.directory = fs.mkdtempSync(
-        path.join(os.tmpdir(), "passport-events-"),
-      );
-      fs.chmodSync(this.directory, 0o700);
-      this.endpoint = path.join(this.directory, "events.sock");
-    }
-    await new Promise<void>((resolve, reject) => {
-      this.server.once("error", reject);
-      this.server.listen(this.endpoint, () => {
-        this.server.removeListener("error", reject);
-        resolve();
+    this.endpointResource = platform.createActivityEndpoint();
+    this.endpoint = this.endpointResource.address;
+    try {
+      await new Promise<void>((resolve, reject) => {
+        this.server.once("error", reject);
+        this.server.listen(this.endpoint, () => {
+          this.server.removeListener("error", reject);
+          resolve();
+        });
       });
-    });
+      this.endpointResource.listening();
+    } catch (error) {
+      await this.close();
+      throw error;
+    }
     this.server.on("error", () =>
       this.callbacks.error(
         "알림 수신 연결이 끊겼습니다. 앱을 다시 시작하세요.",
       ),
     );
-    if (process.platform !== "win32") fs.chmodSync(this.endpoint, 0o600);
   }
   register(
     paneId: string,
@@ -410,7 +407,7 @@ export class ActivityService {
     for (const socket of this.sockets) socket.destroy();
     if (this.server.listening)
       await new Promise<void>((resolve) => this.server.close(() => resolve()));
-    if (this.directory)
-      fs.rmSync(this.directory, { recursive: true, force: true });
+    this.endpointResource?.dispose();
+    this.endpointResource = undefined;
   }
 }

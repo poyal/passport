@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { sourceState, writeJSON } from "./release-core.mjs";
 import { runCommand } from "./release-process.mjs";
+import { summarizeElectronLifecycle } from "./e2e-lifecycle.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const args = process.argv.slice(2);
@@ -58,6 +59,7 @@ try {
         PASSPORT_E2E_MODE: mode,
         PASSPORT_TEST_REPORT: path.join(directory, "report.json"),
         PASSPORT_SHUTDOWN_DIAGNOSTICS: directory,
+        PASSPORT_E2E_LIFECYCLE_LOG: path.join(directory, "lifecycle.jsonl"),
       },
       log: path.join(directory, "e2e.log"),
       timeout: 15 * 60 * 1000,
@@ -76,6 +78,23 @@ try {
   metadata.error = error.message;
   process.exitCode = 1;
 } finally {
+  try {
+    const events = (
+      await fs.readFile(path.join(directory, "lifecycle.jsonl"), "utf8")
+    )
+      .trim()
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => JSON.parse(line));
+    metadata.lifecycle = summarizeElectronLifecycle(events);
+    console.log(`Electron lifecycle: ${JSON.stringify(metadata.lifecycle)}`);
+  } catch (error) {
+    if (error.code !== "ENOENT") {
+      metadata.status = "failed";
+      metadata.error = `Lifecycle evidence: ${error.message}`;
+      process.exitCode = 1;
+    }
+  }
   metadata.finishedAt = new Date().toISOString();
   await writeJSON(path.join(directory, "artifact.json"), metadata);
   console.log(`E2E evidence: ${path.relative(root, directory)}`);

@@ -572,6 +572,7 @@ export interface Calls {
   };
   "window.create": { input: undefined; output: number };
   "terminal.folder": { input: undefined; output: string | null };
+  "terminal.link": { input: { id: string; url: string }; output: void };
   "terminal.preview": {
     input: { local: LocalShell; workspaceId?: string };
     output: AppliedEnvironment;

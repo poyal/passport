@@ -1,12 +1,12 @@
 import * as pty from "node-pty";
 import fs from "node:fs";
-import path from "node:path";
 import os from "node:os";
 import type { AppEvent, LocalShell } from "../shared/model";
 import { shellPaths } from "./shells";
 export { shellPaths, availableShells } from "./shells";
 import type { LaunchSpec } from "./startup";
-import { bashPromptMarkers } from "./startup";
+import { platform } from "./platform";
+import type { PtyBehavior } from "./platform/contracts";
 import { localTerminalEnv } from "./terminal-env";
 type LocalSession = {
   pty: pty.IPty;
@@ -15,12 +15,9 @@ type LocalSession = {
   alive: boolean;
   dataListener: pty.IDisposable;
   timer?: ReturnType<typeof setTimeout>;
-  killTimer?: ReturnType<typeof setTimeout>;
   launch?: LaunchSpec;
   startupTimer?: ReturnType<typeof setTimeout>;
-  bashPrompt?: boolean;
-  bashProtocolTail?: string;
-  primeBashInput?: boolean;
+  behavior: PtyBehavior;
 };
 export class LocalSessions {
   // A closed tab may still own a native exit callback. Keep tracking that
@@ -40,12 +37,7 @@ export class LocalSessions {
       throw new Error("시작 폴더를 찾을 수 없습니다.");
     const terminal = pty.spawn(
       executable,
-      launch?.args ??
-        (process.platform === "win32"
-          ? path.basename(executable).toLowerCase() === "cmd.exe"
-            ? []
-            : ["-NoLogo"]
-          : ["-l"]),
+      launch?.args ?? platform.terminal.defaultArgs(executable),
       {
         name: "xterm-256color",
         cols: 100,
@@ -54,7 +46,7 @@ export class LocalSessions {
         env: launch?.env || localTerminalEnv(),
         // Use the bundled ConPTY on Windows 11. The system ConPTY shutdown
         // forks a console-list helper that can race with the shell's exit.
-        useConptyDll: process.platform === "win32",
+        useConptyDll: platform.terminal.useConptyDll,
       },
     );
     let resolveExit!: () => void;
@@ -64,6 +56,7 @@ export class LocalSessions {
     this.pendingExits.add(exited);
     const entry: LocalSession = {
       pty: terminal,
+      behavior: platform.terminal.createPtyBehavior(launch?.snapshot),
       launch,
       inFlight: 0,
       queue: "",
@@ -73,17 +66,7 @@ export class LocalSessions {
     this.sessions.set(id, entry);
     entry.dataListener = terminal.onData((data) => {
       if (this.sessions.get(id) !== entry) return;
-      if (
-        process.platform === "win32" &&
-        launch?.snapshot.shell === "passport-bash"
-      ) {
-        const protocol = (entry.bashProtocolTail || "") + data;
-        const markers = bashPromptMarkers(launch.snapshot.sessionInstanceId);
-        const prompt = protocol.lastIndexOf(markers.prompt);
-        const command = protocol.lastIndexOf(markers.command);
-        if (prompt >= 0 || command >= 0) entry.bashPrompt = prompt > command;
-        entry.bashProtocolTail = protocol.slice(-(markers.prompt.length - 1));
-      }
+      entry.behavior.observeOutput(data);
       entry.queue += data;
       if (Buffer.byteLength(entry.queue) + entry.inFlight >= 262144)
         terminal.pause();
@@ -97,7 +80,7 @@ export class LocalSessions {
       } catch {
         /* a locked loader is reclaimed on the next app start */
       }
-      clearTimeout(entry.killTimer);
+      entry.behavior.dispose();
       entry.dataListener.dispose();
       // Defer resolution past the JS/native callback stack. Electron must not
       // tear down its Node environment from inside node-pty's callback.
@@ -173,31 +156,14 @@ export class LocalSessions {
   input(id: string, data: string) {
     const s = this.sessions.get(id);
     if (!s?.alive) throw new Error("로컬 터미널이 종료되었습니다.");
-    if (
-      s.primeBashInput &&
-      s.bashPrompt &&
-      data &&
-      !["\x1b[I", "\x1b[O", "\x1b[?1;2c"].includes(data)
-    ) {
-      // NUL is Readline's non-printing set-mark command. It absorbs the stale
-      // resize read instead of losing the user's first byte. Prompt markers
-      // and Enter tracking keep this out of child CLI/TUI input.
-      data = "\x00" + data;
-      s.primeBashInput = false;
-    }
-    if (data.includes("\r") || data.includes("\n")) s.bashPrompt = false;
-    s.pty.write(data);
+    s.pty.write(s.behavior.input(data));
   }
   resize(id: string, cols: number, rows: number) {
     const s = this.sessions.get(id);
     if (s?.alive) {
       if (s.pty.cols === cols && s.pty.rows === rows) return;
       s.pty.resize(cols, rows);
-      if (
-        process.platform === "win32" &&
-        s.launch?.snapshot.shell === "passport-bash"
-      )
-        s.primeBashInput = true;
+      s.behavior.resized();
     }
   }
   ack(id: string, bytes: number) {
@@ -219,12 +185,7 @@ export class LocalSessions {
     if (s.alive) {
       // Drain paused PTYs so node-pty can deliver its exit notification.
       s.pty.resume();
-      s.pty.kill();
-      // Windows node-pty terminates the process itself and rejects POSIX signals.
-      if (s.alive && process.platform !== "win32")
-        s.killTimer = setTimeout(() => {
-          if (s.alive) s.pty.kill("SIGKILL");
-        }, 1000);
+      s.behavior.terminate(s.pty, () => s.alive);
       this.emit({ kind: "session", state: { id, status: "disconnected" } });
     }
   }

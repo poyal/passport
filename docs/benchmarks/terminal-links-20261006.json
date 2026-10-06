@@ -1,0 +1,80 @@
+{
+  "createdAt": "2026-10-06T00:33:12.849Z",
+  "purpose": "Terminal OSC 8 web links open through the default browser after confirmation",
+  "source": "local",
+  "sourceCommit": "c7e776ff7107d150490e02347bf9fa6e40dab418",
+  "dirty": true,
+  "platform": "mac-arm64",
+  "status": "passed",
+  "preview": true,
+  "checks": {
+    "typecheck": "passed",
+    "build": "passed",
+    "urlUnitTests": {
+      "passed": 17
+    },
+    "releaseTests": {
+      "passed": 70
+    },
+    "sourceGui": {
+      "path": "release/checks/20261006T003130Z-c7e776f-dirty-mac-arm64-e2e-hidden",
+      "stats": {
+        "startTime": "2026-10-06T00:31:30.490Z",
+        "duration": 7233.219,
+        "expected": 6,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      }
+    },
+    "packagedGui": {
+      "path": "release/checks/20261006T003207Z-c7e776f-dirty-mac-arm64-e2e-hidden",
+      "stats": {
+        "startTime": "2026-10-06T00:32:07.504Z",
+        "duration": 11502.339,
+        "expected": 6,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      }
+    },
+    "packagedSmoke": "passed: local PTY, helper, isolated SQLite, sandbox and normal exit 0",
+    "codesign": "passed: deep strict ad-hoc integrity"
+  },
+  "artifacts": [
+    {
+      "path": "release/builds/20261006T002654Z-c7e776f-dirty-mac-arm64-terminal-links/mac-arm64/Passport.app/Contents/Resources/app.asar",
+      "bytes": 76020510,
+      "sha256": "b275e54ff622d8ffe5a9c9047ebc2ce2c50c4375b7354619501d503748f074fe"
+    },
+    {
+      "path": "release/builds/20261006T002654Z-c7e776f-dirty-mac-arm64-terminal-links/mac-arm64/Passport.app/Contents/MacOS/Passport",
+      "bytes": 34800,
+      "sha256": "a4349a45a1ddfb65bb0c0127fc692056d7f42ef89d1ab0d5b63fe4525a2b3a99"
+    },
+    {
+      "path": "release/builds/20261006T002654Z-c7e776f-dirty-mac-arm64-terminal-links/mac-arm64/Passport.app/Contents/_CodeSignature/CodeResources",
+      "bytes": 153936,
+      "sha256": "130a1e2e196905a83ebf3d3c267723ad9766c40889e018d2735c8d12b304f122"
+    }
+  ],
+  "app": "release/builds/20261006T002654Z-c7e776f-dirty-mac-arm64-terminal-links/mac-arm64/Passport.app",
+  "previewLink": "release/builds/Passport.app",
+  "limitations": [
+    "Native confirmation and shell.openExternal are mocked in GUI tests; actual browser display is not automated.",
+    "Windows runtime, full GUI suite, OS focus and installed app replacement were not performed.",
+    "This is a local 1.1.1 preview, not a public release."
+  ],
+  "earlierAttempts": [
+    "Default cargo command was unavailable; reused the existing isolated Rust toolchain and rebuilt successfully.",
+    "Release inventory expected count updated from 53 to 55 after adding two required cases; rerun passed.",
+    "Four initial GUI runs failed while developing xterm pointer targeting and repeated-hover handling; final source and packaged runs pass with no retries."
+  ],
+  "retention": {
+    "previewProtectedBySymlink": true,
+    "checksEligibleAfter": "2026-10-13",
+    "cleanup": "Retain current preview, prior successful builds per policy and all existing backups/KEEP folders. No existing artifacts deleted."
+  },
+  "verificationSourceFingerprint": "e21bada5cdc31cc2083db3624709f65b2a38f629006ed9685ee622286b5e4d54",
+  "appSourceFingerprint": "cab6c18b1b0b5a5b13c9f178fb292bf082451a872c6e9bcd88d860a21bd9846d"
+}

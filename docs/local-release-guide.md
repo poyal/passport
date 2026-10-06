@@ -20,7 +20,7 @@
 
 ## Finder 전체 경로 후속 수정 — 2026-10-02
 
-실제 Finder 복사에서 앱 이름만 입력된다는 사용자 재현을 반영해 macOS AppKit의 파일 URL 목록을 직접 읽도록 수정했다. 파일·폴더·앱 및 다중 선택의 절대경로를 전달한다. 별도 macOS pasteboard로 실제 URL을 읽는 회귀를 추가했고 단위 **19개**, 개발/최종 앱의 붙여넣기 GUI **각 3개**, 배포 회귀 **60개**, 패키지 실제 PTY/종료 검사를 통과했다. 필수 GUI 목록은 현재 **숨김 62개·데스크톱 4개**이며 새 Mac 전용 검사 1개는 Windows에서 플랫폼 사유로 생략한다.
+실제 Finder 복사에서 앱 이름만 입력된다는 사용자 재현을 반영해 macOS AppKit의 파일 URL 목록을 직접 읽도록 수정했다. 파일·폴더·앱 및 다중 선택의 절대경로를 전달한다. 별도 macOS pasteboard로 실제 URL을 읽는 회귀를 추가했고 단위 **19개**, 개발/최종 앱의 붙여넣기 GUI **각 3개**, 배포 회귀 **60개**, 패키지 실제 PTY/종료 검사를 통과했다. 당시 필수 GUI 목록은 **숨김 62개·데스크톱 4개**였으며 새 Mac 전용 검사 1개는 Windows에서 플랫폼 사유로 생략했다. 현재 목록은 `tests/e2e/release-policy.json`을 따른다.
 
 수정된 미리보기는 저장소 `release/builds/Passport.app`에서 연다. 기존 Passport를 ⌘Q로 종료한 뒤 사용한다. 사용자의 일반 클립보드를 바꾸지 않고 검사했으므로 Finder에서 직접 복사·붙여넣기는 사용자 재확인이 필요하다. Windows 실기·릴리즈는 사용자가 진행한다. 자세한 출처·해시는 `docs/benchmarks/finder-paths-20261002.json`과 `docs/verification.md`에 남겼다.
 
@@ -236,7 +236,7 @@ npm run test:e2e -- tests/e2e/shutdown.spec.ts
 
 `tests/e2e/release-policy.json`에 안정적인 ID, 파일·테스트 이름, 모드, 대상 플랫폼과 허용 생략 조건을 명시한다. 소스와 최종 패키지 각각 실행 전에 Playwright 목록을 대조하고, 실행 후에는 원본 보고서의 개별 결과를 검사한다. 필수 테스트의 생략·누락·이름 변경·결과 없음·중단·예상 실패 처리와 중복은 실패다. 총 개수나 성공 1개만으로 전체 통과로 판정하지 않는다. 목록은 실행 때 자동 생성하지 않으며 테스트 변경과 함께 검토해 갱신한다. 이름을 바꿔도 기존 ID는 유지한다.
 
-현재 숨김 목록은 62개, 별도 데스크톱 목록은 4개다. Mac에서는 Windows 전용 6개만 플랫폼 사유로 생략할 수 있다. Docker·장시간 스트레스·대용량 텍스트 3개는 선택하지 않았을 때만 생략할 수 있다. 각각 `PASSPORT_DOCKER_MANIFEST`, `PASSPORT_UI_STRESS=1`, `PASSPORT_TEXT_BENCH=1`을 지정하면 통과가 필수다. Windows의 내장 Bash·cmd·Windows PowerShell·PowerShell 7과 DPAPI·드라이브 검사는 필수이며 환경 미준비로 생략되어도 릴리즈 검증은 실패한다.
+현재 숨김·별도 데스크톱 필수 목록은 `tests/e2e/release-policy.json`을 기준으로 한다. 고정 개수를 문서에서 복사하지 않고 파일·제목·모드와 실제 실행 보고서를 대조한다. Mac에서는 Windows 전용 6개만 플랫폼 사유로 생략할 수 있다. Docker·장시간 스트레스·대용량 텍스트 3개는 선택하지 않았을 때만 생략할 수 있다. 각각 `PASSPORT_DOCKER_MANIFEST`, `PASSPORT_UI_STRESS=1`, `PASSPORT_TEXT_BENCH=1`을 지정하면 통과가 필수다. Windows의 내장 Bash·cmd·Windows PowerShell·PowerShell 7과 DPAPI·드라이브 검사는 필수이며 환경 미준비로 생략되어도 릴리즈 검증은 실패한다.
 
 검증 기록에는 정책 해시와 테스트 ID별 결과·필수 여부·허용 생략 사유를 저장한다. 게시 시에도 해시를 확인한 소스·패키지 원본 보고서 4개를 같은 정책으로 다시 판정한다. 기록의 `status`나 집계 숫자만 바꾸어 검사를 대신할 수 없다. 새 정책을 통과한 형식 3 기록이 필요하며 이전 기록의 형식 번호만 고쳐 재사용하지 않는다.
 

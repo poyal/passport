@@ -1,0 +1,160 @@
+{
+  "createdAt": "2026-10-06T01:28:45.412Z",
+  "purpose": "Single-repository Windows/macOS adapter split and development guide",
+  "source": "local",
+  "sourceCommit": "c7e776ff7107d150490e02347bf9fa6e40dab418",
+  "dirty": true,
+  "platform": "mac-arm64",
+  "status": "mac-verified-windows-pending",
+  "implementation": "complete",
+  "preview": true,
+  "appVersion": "1.1.1",
+  "environment": {
+    "os": "Darwin",
+    "kernel": "27.0.0",
+    "arch": "arm64",
+    "node": "v25.6.0",
+    "electron": "44.4.5",
+    "zshInitialization": "isolated ZDOTDIR in checks directory"
+  },
+  "appSourceFingerprint": "b7e76aeef06dcfc6ed23798cf6513795d07337fcfd7f62a71c0305d9e6cd6acb",
+  "verificationSourceFingerprint": "659b2b6b240d6a5965459e2fc6660fead69d744a5b0cbd458a54594ac17909e0",
+  "fingerprintNote": "Verification fingerprint was captured before writing this summary; application source files are recorded in build artifact.json and still match.",
+  "checks": {
+    "typecheck": "passed",
+    "build": "passed",
+    "unitIntegration": {
+      "passed": 164,
+      "skipped": 4,
+      "platformContractTests": 16,
+      "ftpFtps": "executed",
+      "skipReasons": [
+        "Windows-only runtime: 2",
+        "Optional Docker SSH: 1",
+        "Optional file stress: 1"
+      ],
+      "log": "release/checks/20261006T011216Z-c7e776f-dirty-mac-arm64-platform-split/check-final.log"
+    },
+    "releaseTests": {
+      "passed": 70,
+      "skipped": 0,
+      "log": "release/checks/20261006T011216Z-c7e776f-dirty-mac-arm64-platform-split/release-tests.log"
+    },
+    "sourceHidden": {
+      "path": "release/checks/20261006T012344Z-c7e776f-dirty-mac-arm64-e2e-hidden",
+      "stats": {
+        "startTime": "2026-10-06T01:23:44.968Z",
+        "duration": 87146.079,
+        "expected": 55,
+        "skipped": 9,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "policyHash": "d5a8dd6298fa7b55d1738aea9e0225daac7fbe92def3628f763f86a1a1f28f4f",
+      "sourceFingerprint": "659b2b6b240d6a5965459e2fc6660fead69d744a5b0cbd458a54594ac17909e0"
+    },
+    "packagedHidden": {
+      "path": "release/checks/20261006T012512Z-c7e776f-dirty-mac-arm64-e2e-hidden",
+      "stats": {
+        "startTime": "2026-10-06T01:25:13.162Z",
+        "duration": 94079.773,
+        "expected": 55,
+        "skipped": 9,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "policyHash": "d5a8dd6298fa7b55d1738aea9e0225daac7fbe92def3628f763f86a1a1f28f4f",
+      "sourceFingerprint": "659b2b6b240d6a5965459e2fc6660fead69d744a5b0cbd458a54594ac17909e0"
+    },
+    "sourceDesktop": {
+      "path": "release/checks/20261006T012703Z-c7e776f-dirty-mac-arm64-e2e-desktop",
+      "stats": {
+        "startTime": "2026-10-06T01:27:04.393Z",
+        "duration": 9734.884,
+        "expected": 4,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "policyHash": "d5a8dd6298fa7b55d1738aea9e0225daac7fbe92def3628f763f86a1a1f28f4f",
+      "sourceFingerprint": "659b2b6b240d6a5965459e2fc6660fead69d744a5b0cbd458a54594ac17909e0"
+    },
+    "packagedDesktop": {
+      "path": "release/checks/20261006T012714Z-c7e776f-dirty-mac-arm64-e2e-desktop",
+      "stats": {
+        "startTime": "2026-10-06T01:27:14.783Z",
+        "duration": 11433.269,
+        "expected": 4,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "policyHash": "d5a8dd6298fa7b55d1738aea9e0225daac7fbe92def3628f763f86a1a1f28f4f",
+      "sourceFingerprint": "659b2b6b240d6a5965459e2fc6660fead69d744a5b0cbd458a54594ac17909e0"
+    },
+    "linkRepeat": {
+      "passed": 6,
+      "repetitions": 3,
+      "path": "release/checks/20261006T012259Z-c7e776f-dirty-mac-arm64-e2e-hidden"
+    },
+    "packagedSmoke": "passed: real PTY, helper, isolated SQLite, renderer sandbox, normal exit 0",
+    "codesign": "passed: deep strict ad-hoc integrity",
+    "guiPolicy": "all four final GUI reports match required inventory; no retry, failure or unexpected skip",
+    "boundaryReview": "release/checks/20261006T011216Z-c7e776f-dirty-mac-arm64-platform-split/boundary-review.json",
+    "documentation": "six updated guide/index files: local targets and heading anchors checked"
+  },
+  "app": "release/builds/20261006T011216Z-c7e776f-dirty-mac-arm64-platform-split/mac-arm64/Passport.app",
+  "previewLink": "release/builds/Passport.app",
+  "artifacts": [
+    {
+      "path": "release/builds/20261006T011216Z-c7e776f-dirty-mac-arm64-platform-split/mac-arm64/Passport.app/Contents/Resources/app.asar",
+      "bytes": 76037062,
+      "sha256": "6f8b9163e2cff2dea9cb418fc209af440e4a46bf74c1bff2fc49ecfeffbd48ff"
+    },
+    {
+      "path": "release/builds/20261006T011216Z-c7e776f-dirty-mac-arm64-platform-split/mac-arm64/Passport.app/Contents/MacOS/Passport",
+      "bytes": 34800,
+      "sha256": "1aaff85f389826ebbcdc493c7d8be4bd101aa0893dfb1413147659b3311f9ea9"
+    },
+    {
+      "path": "release/builds/20261006T011216Z-c7e776f-dirty-mac-arm64-platform-split/mac-arm64/Passport.app/Contents/_CodeSignature/CodeResources",
+      "bytes": 153936,
+      "sha256": "488d4af7ce5c587b3e2fcd7fd88c52c4149eb55bc97401d1fac31f84a2ab5b5e"
+    }
+  ],
+  "limitations": [
+    "Windows 11 x64 native runtime, ConPTY, Explorer clipboard, DPAPI, taskbar icons and installer validation are pending; Mac contract tests do not replace Windows execution.",
+    "Windows ARM64 remains configured but was not built, tested or published.",
+    "Native link confirmation and shell.openExternal were mocked; actual default-browser display and OS notification settings/banner delivery remain manual checks.",
+    "Docker, long-running terminal/file stress and 1 GiB throughput were not requested or executed.",
+    "Mac native dependencies reused unchanged Electron-compatible binaries; this is a local 1.1.1 preview, not a clean release:verify receipt or public release.",
+    "No DMG/NSIS installation, installed-app replacement, user DB migration or public publication was performed."
+  ],
+  "earlierAttempts": [
+    {
+      "path": "release/checks/20261006T011216Z-c7e776f-dirty-mac-arm64-platform-split/check.log",
+      "result": "Unix socket fixture nested TMPDIR exceeded macOS socket path length; moved test-owned root to short /tmp path. Final check passes."
+    },
+    {
+      "path": "release/checks/20261006T011809Z-c7e776f-dirty-mac-arm64-e2e-hidden",
+      "result": "Existing retry-shell test assumed a dollar-sign prompt. Replaced appearance assertion with actual command round-trip on the recovered shell."
+    },
+    {
+      "path": "release/checks/20261006T011928Z-c7e776f-dirty-mac-arm64-e2e-hidden",
+      "result": "xterm hover replaced a display span while repeated click located it; test targeting failed."
+    },
+    {
+      "path": "release/checks/20261006T012148Z-c7e776f-dirty-mac-arm64-e2e-hidden",
+      "result": "Intermediate screen-targeting test still read transient span bounds; capture both rectangles in one renderer task before hover, then click the stable screen."
+    }
+  ],
+  "windowsHandoff": "docs/platform-development.md#8-완료리뷰windows-인계",
+  "retention": {
+    "previewProtectedBySymlink": true,
+    "previousPreviewTarget": "20261006T002654Z-c7e776f-dirty-mac-arm64-terminal-links/mac-arm64/Passport.app",
+    "checksEligibleAfter": "2026-10-13",
+    "buildPolicy": "Retain latest two successful Mac builds including this preview and prior terminal-links build.",
+    "cleanup": "No existing artifacts deleted. Keep backups, KEEP folders, running apps and unresolved reproduction evidence."
+  },
+  "localE2EPolicy": "Local E2E remains hidden. Never run --show or --desktop for a general implementation or verification request; require an explicit user request for visible/native desktop tests. User interruption reported after the completed desktop runs; all test apps exited normally."
+}

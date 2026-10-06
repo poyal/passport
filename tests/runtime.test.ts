@@ -51,13 +51,21 @@ it.skipIf(process.platform !== "win32")(
         .toContain(bashPromptMarkers(launch.snapshot.sessionInstanceId).prompt);
       for (let index = 0; index < 30; index++) {
         local.resize("bash", index % 2 ? 80 : 60, 25);
+        const previousPrompts = output.split(
+          bashPromptMarkers(launch.snapshot.sessionInstanceId).prompt,
+        ).length;
         local.input("bash", "p");
         await new Promise((resolve) => setTimeout(resolve, 30));
         local.input("bash", `rintf 'RESIZE_%s\\n' ${index}\r`);
         await expect.poll(() => output).toContain(`RESIZE_${index}\r\n`);
         await expect
-          .poll(() => local.sessions.get("bash")?.bashPrompt)
-          .toBe(true);
+          .poll(
+            () =>
+              output.split(
+                bashPromptMarkers(launch.snapshot.sessionInstanceId).prompt,
+              ).length,
+          )
+          .toBeGreaterThan(previousPrompts);
       }
       const child = path.join(dir, "child.cjs");
       await fs.writeFile(
