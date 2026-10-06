@@ -7,6 +7,101 @@ import { pathToFileURL } from "node:url";
 
 const suite = reusableApp({ name: "windows-shells", platform: "win32" });
 
+test.beforeEach(async () => {
+  if (!process.env.PASSPORT_INPUT_DIAGNOSTICS) return;
+  await suite.application.evaluate(({ ipcMain, app }) => {
+    const events: any[] = [];
+    const record = (kind: string, value: unknown) =>
+      events.push({ kind, value, time: Date.now() });
+    const handlers = (ipcMain as any)._invokeHandlers;
+    const handler = handlers.get("passport:call");
+    ipcMain.removeHandler("passport:call");
+    ipcMain.handle("passport:call", (event, name, input) => {
+      if (
+        ["session.input", "session.resize", "clipboard.terminal"].includes(name)
+      )
+        record(name, input);
+      return handler(event, name, input);
+    });
+    const require = process
+      .getBuiltinModule("module")
+      .createRequire(app.getAppPath() + "/package.json");
+    const pty = require("node-pty"),
+      spawn = pty.spawn;
+    const restores: (() => void)[] = [];
+    pty.spawn = (...args: any[]) => {
+      const terminal = spawn(...args),
+        write = terminal.write,
+        resize = terminal.resize;
+      terminal.write = (data: string) => {
+        record("pty-input", data);
+        return write.call(terminal, data);
+      };
+      terminal.resize = (cols: number, rows: number) => {
+        record("pty-resize", { cols, rows });
+        return resize.call(terminal, cols, rows);
+      };
+      const listener = terminal.onData((data: string) =>
+        record("pty-output", data),
+      );
+      restores.push(() => {
+        listener.dispose();
+        terminal.write = write;
+        terminal.resize = resize;
+      });
+      return terminal;
+    };
+    (globalThis as any).__inputDiagnostics = {
+      events,
+      restore() {
+        restores.forEach((restore) => restore());
+        pty.spawn = spawn;
+        ipcMain.removeHandler("passport:call");
+        ipcMain.handle("passport:call", handler);
+      },
+    };
+  });
+  await suite.page.evaluate(() => {
+    const events: unknown[] = [];
+    (window as any).__keyDiagnostics = events;
+    for (const type of ["keydown", "keypress", "input", "keyup"])
+      document.addEventListener(
+        type,
+        (event) => {
+          if (
+            !(event.target as Element).classList.contains(
+              "xterm-helper-textarea",
+            )
+          )
+            return;
+          events.push({
+            type,
+            key: (event as KeyboardEvent).key,
+            data: (event as InputEvent).data,
+            time: Date.now(),
+          });
+        },
+        true,
+      );
+  });
+});
+test.afterEach(async ({}, info) => {
+  if (!process.env.PASSPORT_INPUT_DIAGNOSTICS) return;
+  const main = await suite.application.evaluate(() => {
+    const state = (globalThis as any).__inputDiagnostics;
+    state.restore();
+    return state.events;
+  });
+  const renderer = await suite.page.evaluate(() => ({
+    events: (window as any).__keyDiagnostics,
+    rows: document.querySelector(".xterm-rows")?.textContent,
+  }));
+  await info.attach("terminal-input-diagnostics", {
+    contentType: "application/json",
+    body: JSON.stringify({ main, renderer }, null, 2),
+  });
+});
+
 for (const shell of [
   "passport-bash",
   "cmd",
