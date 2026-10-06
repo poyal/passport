@@ -1280,6 +1280,33 @@ test("Electron teardown waits for asynchronous native cleanup and actual process
   assert.equal(child.exitCode, 0);
 });
 
+test("Electron teardown disconnects the debugger after native quit before waiting for process exit", async () => {
+  const child = Object.assign(new EventEmitter(), {
+    exitCode: null,
+    signalCode: null,
+    stderr: new PassThrough(),
+  });
+  let cleaned = false;
+  const app = {
+    process: () => child,
+    evaluate: async () => {
+      setTimeout(() => {
+        cleaned = true;
+        child.stderr.write("\nPASSPORT_E2E_NATIVE_QUIT_");
+        child.stderr.write("COMPLETE\n");
+      }, 5);
+    },
+    close: async () => {
+      if (process.platform === "win32") assert.equal(cleaned, true);
+      assert.equal(child.exitCode, null);
+      child.exitCode = 0;
+      child.emit("exit", 0, null);
+    },
+  };
+  await closeCleanly(app, 1000);
+  assert.equal(child.exitCode, 0);
+});
+
 test("a forced Electron exit is never accepted as a normal shutdown", async () => {
   const child = Object.assign(new EventEmitter(), {
     exitCode: null,
