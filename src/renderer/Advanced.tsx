@@ -25,7 +25,6 @@ import {
   interpolate,
   variables,
   executableCommand,
-  validateShortcuts,
   paneHost,
 } from "../shared/advanced";
 import {
@@ -1454,62 +1453,4 @@ export function CustomThemes() {
     </section>
   );
 }
-export function ShortcutSettings() {
-  const app = useApp(),
-    [draft, setDraft] = useState(app.document.settings.shortcuts),
-    [error, setError] = useState("");
-  return (
-    <section className="settings-card">
-      <h3>사용자 단축키</h3>
-      <p className="hint">
-        Mod는 Mac의 ⌘, Windows의 Ctrl입니다. Platform은 Mac의 ⌘, Windows의
-        Ctrl+Shift입니다. 예: Mod+Shift+T
-      </p>
-      {(!draft.newWindow || draft.newTab === "Mod+Shift+T") && (
-        <p className="hint">
-          기존 단축키를 보존했습니다. 새 창 단축키가 비어 있거나 기본 키와
-          다르면 충돌 여부를 확인해 지정하세요.
-        </p>
-      )}
-      <div className="settings-form-grid">
-        {Object.entries({
-          copy: "복사",
-          paste: "붙여넣기",
-          search: "출력 검색",
-          nextPane: "다음 패널",
-          previousPane: "이전 패널",
-          newTab: "새 탭 · 로컬 터미널",
-          newWindow: "새 창 · 로컬 터미널 (빈 값으로 끄기)",
-          activity: "알림함 (빈 값으로 끄기)",
-          recentActivity: "최근 미확인 터미널",
-        }).map(([id, label]) => (
-          <label key={id}>
-            {label}
-            <input
-              value={draft[id as keyof typeof draft]}
-              onChange={(e) => setDraft({ ...draft, [id]: e.target.value })}
-            />
-          </label>
-        ))}
-      </div>
-      {error && <p className="error-text">{error}</p>}
-      <button
-        className="primary"
-        onClick={() => {
-          try {
-            validateShortcuts(draft);
-            setError("");
-            void app.update((d) => ({
-              ...d,
-              settings: { ...d.settings, shortcuts: draft },
-            }));
-          } catch (e) {
-            setError((e as Error).message);
-          }
-        }}
-      >
-        단축키 저장
-      </button>
-    </section>
-  );
-}
+export { ShortcutSettings } from "./ShortcutSettings";

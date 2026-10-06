@@ -597,28 +597,17 @@ export function Settings() {
             <div className="page-heading">
               <div>
                 <h1>단축키</h1>
-                <p>터미널 조작 단축키를 변경할 수 있습니다.</p>
+                <p>
+                  앱·터미널·파일 기능의 단축키를 추가하거나 변경·해제하세요.
+                </p>
               </div>
             </div>
             <ShortcutSettings />
             <div className="settings-card shortcut-reference">
-              <h3>기본 조작</h3>
+              <h3>화면 이동과 닫기</h3>
               <table className="shortcut-table">
                 <tbody>
                   {[
-                    ["현재 명령 중단", "Ctrl C"],
-                    [
-                      "터미널 글자 크기 조절",
-                      app.boot.platform === "darwin"
-                        ? "⌘ + / − / 0"
-                        : "Ctrl + / − / 0",
-                    ],
-                    [
-                      "파일 전체 선택",
-                      app.boot.platform === "darwin" ? "⌘ A" : "Ctrl A",
-                    ],
-                    ["파일 이름 변경", "F2"],
-                    ["컨텍스트 메뉴", "Shift F10"],
                     ["분할 크기 조절", "경계선 포커스 후 방향키"],
                     ["메뉴 · 대화상자 닫기", "Esc"],
                   ].map(([label, key]) => (

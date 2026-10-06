@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { defaultShortcuts, migrateShortcuts } from "./shortcuts";
+import { shortcutSettingsSchema, type ShortcutContext } from "./shortcuts";
 import {
   shellIdSchema,
   profileSelectionSchema,
@@ -257,25 +257,7 @@ export const settingsSchema = z.object({
   colorMode: z.enum(["system", "dark", "light"]).default("system"),
   confirmNewHostKeys: z.boolean().default(true),
   customThemes: z.array(customThemeSchema).max(100).default([]),
-  shortcuts: z.preprocess(
-    migrateShortcuts,
-    z
-      .record(
-        z.enum([
-          "copy",
-          "paste",
-          "search",
-          "nextPane",
-          "previousPane",
-          "newTab",
-          "newWindow",
-          "activity",
-          "recentActivity",
-        ]),
-        z.string().max(80),
-      )
-      .default(defaultShortcuts),
-  ),
+  shortcuts: shortcutSettingsSchema,
   autoLog: z.boolean().default(true),
   logRetentionDays: z
     .number()
@@ -571,6 +553,7 @@ export interface Calls {
     output: { workspaceId: string; paneId: string };
   };
   "window.create": { input: undefined; output: number };
+  "window.keyboardContext": { input: ShortcutContext; output: undefined };
   "terminal.folder": { input: undefined; output: string | null };
   "terminal.link": { input: { id: string; url: string }; output: void };
   "terminal.preview": {

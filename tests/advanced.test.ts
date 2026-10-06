@@ -77,15 +77,15 @@ it("substitutes command variables literally, requires all values, and rejects co
   expect(executableCommand("printf x\r\n")).toBe("printf x");
   expect(() => executableCommand("\x1b[5n")).toThrow();
 });
-it("validates both operating system shortcut maps and preserves terminal signal keys", () => {
+it("validates both operating system shortcut maps and explicit terminal controls", () => {
   const keys = emptyDocument().settings.shortcuts;
   expect(() => validateShortcuts(keys)).not.toThrow();
-  expect(() => validateShortcuts({ ...keys, copy: "Ctrl+C" })).toThrow(
-    "터미널",
-  );
-  expect(() => validateShortcuts({ ...keys, newTab: keys.search })).toThrow(
-    "중복",
-  );
+  expect(() =>
+    validateShortcuts({
+      ...keys,
+      win32: { ...keys.win32, newTab: keys.win32.search },
+    }),
+  ).toThrow("중복");
   expect(
     shortcutMatch(
       {

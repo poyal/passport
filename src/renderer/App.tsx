@@ -1,3 +1,4 @@
+import { shortcutPlatform, type ShortcutContext } from "../shared/shortcuts";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Server,
@@ -333,8 +334,12 @@ export function App() {
     setBroadcast([]);
   }, [active]);
   useEffect(() => {
-    if (boot) setTerminalSettings(boot.document.settings);
-  }, [boot?.document.settings]);
+    if (boot)
+      setTerminalSettings(
+        boot.document.settings,
+        shortcutPlatform(boot.platform),
+      );
+  }, [boot?.document.settings, boot?.platform]);
   useEffect(() => {
     const mode = boot?.document.settings.colorMode ?? "system";
     const query = matchMedia("(prefers-color-scheme: dark)");
@@ -486,11 +491,58 @@ export function App() {
     configureTerminals(deliverPaste, notify);
   });
   useEffect(() => {
+    let previous: ShortcutContext | undefined;
+    const updateContext = () => {
+      const target = document.activeElement;
+      const context: ShortcutContext = document.querySelector(
+        ".shortcut-recorder",
+      )
+        ? "recording"
+        : document.querySelector('[role="dialog"]')
+          ? "dialog"
+          : target?.closest(".terminal-mount")
+            ? "terminal"
+            : target?.closest(
+                  'input, textarea, select, [contenteditable="true"]',
+                )
+              ? "editing"
+              : target?.closest(".file-table-scroll")
+                ? "files"
+                : "standard";
+      if (context === previous) return;
+      previous = context;
+      void api.call("window.keyboardContext", context).catch(notify);
+    };
+    const blur = () => queueMicrotask(updateContext);
+    document.addEventListener("focusin", updateContext);
+    document.addEventListener("focusout", blur);
+    window.addEventListener("passport-view-changed", updateContext);
+    updateContext();
+    return () => {
+      document.removeEventListener("focusin", updateContext);
+      document.removeEventListener("focusout", blur);
+      window.removeEventListener("passport-view-changed", updateContext);
+    };
+  }, [active]);
+  useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (document.querySelector('[role="dialog"]')) return;
-      const shortcuts = bootRef.current?.document.settings.shortcuts;
-      if (!shortcuts) return;
-      const mac = bootRef.current?.platform === "darwin";
+      if (
+        e.isComposing ||
+        e.defaultPrevented ||
+        document.querySelector('[role="dialog"]')
+      )
+        return;
+      const target = e.target instanceof Element ? e.target : null;
+      if (
+        target?.closest('input, textarea, select, [contenteditable="true"]') &&
+        !target.closest(".terminal-mount")
+      )
+        return;
+      const boot = bootRef.current;
+      if (!boot) return;
+      const shortcuts =
+        boot.document.settings.shortcuts[shortcutPlatform(boot.platform)];
+      const mac = boot.platform === "darwin";
       if (shortcutMatch(e, shortcuts.newWindow, mac)) {
         e.preventDefault();
         e.stopPropagation();

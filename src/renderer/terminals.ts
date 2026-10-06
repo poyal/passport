@@ -2,7 +2,11 @@ import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import { SerializeAddon } from "@xterm/addon-serialize";
 import { highlightTerminal } from "./highlights";
-import { shortcutMatch } from "../shared/advanced";
+import {
+  shortcutMatch,
+  managedTerminalKey,
+  type ShortcutPlatform,
+} from "../shared/shortcuts";
 import type { PassportDocument, TerminalSnapshot } from "../shared/model";
 import { SearchAddon } from "@xterm/addon-search";
 import type { Appearance } from "../shared/model";
@@ -31,6 +35,7 @@ type Entry = {
 };
 export const terminals = new Map<string, Entry>();
 let settings: PassportDocument["settings"] | undefined;
+let platform: ShortcutPlatform | undefined;
 let installedFonts: string[] = [];
 const warnedFonts = new Set<string>();
 export function setTerminalFonts(fonts: string[]) {
@@ -40,8 +45,12 @@ let broadcast: string[] = [];
 export function setBroadcast(ids: string[]) {
   broadcast = ids;
 }
-export function setTerminalSettings(value: PassportDocument["settings"]) {
+export function setTerminalSettings(
+  value: PassportDocument["settings"],
+  os: ShortcutPlatform,
+) {
   settings = value;
+  platform = os;
   for (const [id, e] of terminals)
     if (e.appearance) applyAppearance(id, e.appearance);
 }
@@ -166,72 +175,41 @@ export function ensureTerminal(id: string) {
   };
   let suppressNativePaste = false;
   term.attachCustomKeyEventHandler((event) => {
-    const mac = navigator.platform.includes("Mac");
-    const copy = shortcutMatch(
-      event,
-      settings?.shortcuts.copy || "Platform+C",
-      mac,
-    );
-    const paste = shortcutMatch(
-      event,
-      settings?.shortcuts.paste || "Platform+V",
-      mac,
-    );
-    if (copy) {
+    if (!settings || !platform || event.isComposing) return true;
+    const mac = platform === "darwin";
+    const keys = settings.shortcuts[platform];
+    const action = (
+      ["copy", "paste", "interrupt", "eof", "suspend", "cliImage"] as const
+    ).find((action) => shortcutMatch(event, keys[action], mac));
+    if (action || managedTerminalKey(event, platform)) {
       event.preventDefault();
       event.stopPropagation();
-      if (event.type === "keydown") {
+      if (event.type !== "keydown" || event.repeat) return false;
+      if (action === "copy" && term.hasSelection()) {
         void api
           .call("clipboard.write", { text: term.getSelection() })
           .catch(errorHandler);
-      }
-      return false;
-    }
-    const windowsPaste =
-      !mac &&
-      event.ctrlKey &&
-      !event.altKey &&
-      !event.metaKey &&
-      !event.shiftKey &&
-      event.code === "KeyV";
-    if (paste || windowsPaste) {
-      event.preventDefault();
-      event.stopPropagation();
-      if (event.type === "keydown" && !event.repeat) {
+      } else if (action === "paste") {
         suppressNativePaste = true;
         setTimeout(() => {
           suppressNativePaste = false;
         }, 0);
         readPaste();
-      }
-      return false;
-    }
-    // CLI image shortcuts go only to this pane, including during broadcast.
-    if (
-      (mac &&
-        event.ctrlKey &&
-        !event.metaKey &&
-        !event.altKey &&
-        !event.shiftKey &&
-        event.code === "KeyV") ||
-      (!mac &&
-        event.altKey &&
-        !event.ctrlKey &&
-        !event.metaKey &&
-        !event.shiftKey &&
-        event.code === "KeyV")
-    ) {
-      event.preventDefault();
-      event.stopPropagation();
-      if (
-        event.type === "keydown" &&
-        !event.repeat &&
+      } else if (
+        action &&
+        action !== "copy" &&
         entry.connected &&
         !entry.hydrating
-      )
-        void api
-          .call("session.input", { id, data: mac ? "\x16" : "\x1bv" })
-          .catch(errorHandler);
+      ) {
+        const data = {
+          interrupt: "\x03",
+          eof: "\x04",
+          suspend: "\x1a",
+          cliImage: mac ? "\x16" : "\x1bv",
+        }[action];
+        // Control actions and CLI image input belong to this pane, even during broadcast.
+        void api.call("session.input", { id, data }).catch(errorHandler);
+      }
       return false;
     }
     return true;

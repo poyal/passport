@@ -360,6 +360,26 @@
       "id": "reuse.clean-state",
       "file": "reuse.spec.ts",
       "title": "reusing an app clears prior state and native mocks without replacing its process or primary window"
+    },
+    {
+      "id": "shortcuts-settings.editor",
+      "file": "shortcuts-settings.spec.ts",
+      "title": "shortcut editor captures multiple keys, rejects conflicts and persists only the current OS"
+    },
+    {
+      "id": "shortcuts-settings.windows-routing",
+      "file": "shortcuts-settings.spec.ts",
+      "title": "Windows shortcut routing copies without interrupt and honors disabled controls and paste under injected platform"
+    },
+    {
+      "id": "shortcuts-settings.scroll",
+      "file": "shortcuts-settings.spec.ts",
+      "title": "settings cards and form controls scroll the page while log panes keep independent scrolling"
+    },
+    {
+      "id": "shortcuts-settings.files",
+      "file": "shortcuts-settings.spec.ts",
+      "title": "file shortcuts use custom bindings and retain rename and delete dialogs"
     }
   ]
 }

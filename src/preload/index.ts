@@ -9,6 +9,7 @@ import type {
 const names: Call[] = [
   "terminal.create",
   "window.create",
+  "window.keyboardContext",
   "terminal.folder",
   "terminal.link",
   "terminal.preview",

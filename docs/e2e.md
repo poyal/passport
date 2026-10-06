@@ -48,6 +48,8 @@ test("opens the host screen", async () => {
 });
 ```
 
+`shortcuts-settings.spec.ts`는 같은 앱을 재사용하며 단축키 편집·휠 스크롤·파일 조작을 확인한다. Windows 플랫폼을 bootstrap에 주입하는 입력 검사는 Windows 네이티브 검증이 아니다. 사례 소유 IPC 캡처 상태는 afterEach에서 제거하며 기존 passport:call 모의는 fixture가 복구한다. 키보드 문맥은 페이지 탐색 시 제품 코드가 초기화하고 포커스에 따라 다시 설정한다.
+
 fixture 호출은 테스트 등록 시 한 번만 한다. `suite.application`, `suite.page`, `suite.directory`는 `beforeAll` 완료 후 접근한다. 각 테스트는 자신의 초기 상태를 직접 준비하고 이전 테스트의 결과나 실행 순서에 의존하지 않는다. 테스트 본문에서 공유 앱을 종료하거나 기본 창을 닫지 않는다.
 
 초기화는 다음 순서를 지킨다.

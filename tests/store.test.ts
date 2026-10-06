@@ -226,7 +226,8 @@ it("upgrades v0.1 metadata without losing hosts and rejects a future database ve
     expect(store.read().hosts[0].name).toBe("기존 서버");
     expect(store.read().hosts[0].icon).toBe("auto");
     expect(store.read().tunnels).toEqual([]);
-    expect(store.read().settings.shortcuts.newTab).toBe("Mod+N");
+    expect(store.read().settings.shortcuts.darwin.newTab).toEqual(["Meta+N"]);
+    expect(store.read().settings.shortcuts.win32.newTab).toEqual(["Ctrl+N"]);
     store.close();
     const future = new Database(path.join(dir, "passport.sqlite"));
     future.pragma("user_version=6");
@@ -274,5 +275,25 @@ it("migrates credential-only v2 profiles and preserves account metadata through 
   } finally {
     store.close();
     await fs.rm(dir, { recursive: true, force: true });
+  }
+});
+
+it("keeps independent shortcut lanes and explicit removals after closing and reopening the DB", async () => {
+  const directory = await fs.mkdtemp(
+    path.join(os.tmpdir(), "passport-shortcuts-db-"),
+  );
+  let store = new Store(directory, vault);
+  try {
+    const document = store.read();
+    document.settings.shortcuts.win32.copy = [];
+    document.settings.shortcuts.win32.paste = ["Alt+P"];
+    document.settings.shortcuts.darwin.newTab = ["Meta+Y", "Meta+Shift+Y"];
+    const expected = store.save(document).settings.shortcuts;
+    store.close();
+    store = new Store(directory, vault);
+    expect(store.read().settings.shortcuts).toEqual(expected);
+  } finally {
+    if (store.db.open) store.close();
+    await fs.rm(directory, { recursive: true, force: true });
   }
 });

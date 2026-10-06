@@ -3109,3 +3109,54 @@ select:disabled {
   border: 1px solid var(--line);
   border-radius: 6px;
 }
+
+/* Settings own the page scroll; tool-body is reserved for the workspace toolbox. */
+.shortcut-group {
+  border: 0;
+  min-width: 0;
+  margin: 24px 0;
+  padding: 0;
+}
+.shortcut-group legend {
+  font-weight: 600;
+  padding: 0 0 8px;
+}
+.shortcut-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) minmax(0, 2fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+.shortcut-label {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.shortcut-bindings {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.shortcut-binding {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+}
+.shortcut-binding button {
+  min-width: 0;
+}
+.shortcut-binding kbd {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+@container settings (max-width: 620px) {
+  .shortcut-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .shortcut-label {
+    grid-column: 1 / -1;
+  }
+}

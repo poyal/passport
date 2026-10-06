@@ -1,3 +1,4 @@
+import { shortcutMatch, shortcutPlatform } from "../shared/shortcuts";
 import { FontPicker } from "./FontPicker";
 import { useEffect, useRef, useState, type DragEvent } from "react";
 import {
@@ -585,27 +586,35 @@ function Leaf({
             app.document.settings.customThemes,
           ).theme.background,
         }}
-        onKeyDown={(e) => {
-          if (
-            (e.metaKey || e.ctrlKey) &&
-            ["=", "+", "-", "0"].includes(e.key)
-          ) {
-            e.preventDefault();
-            e.stopPropagation();
-            app.setSessionAppearance(pane.id, {
-              ...app.sessionAppearance[pane.id],
-              fontSize:
-                e.key === "0"
-                  ? 14
-                  : Math.max(
-                      8,
-                      Math.min(
-                        36,
-                        appearance.fontSize + (e.key === "-" ? -1 : 1),
-                      ),
+        onKeyDownCapture={(e) => {
+          const keys =
+            app.document.settings.shortcuts[
+              shortcutPlatform(app.boot.platform)
+            ];
+          const action = (["zoomIn", "zoomOut", "zoomReset"] as const).find(
+            (action) =>
+              shortcutMatch(
+                e.nativeEvent,
+                keys[action],
+                app.boot.platform === "darwin",
+              ),
+          );
+          if (!action) return;
+          e.preventDefault();
+          e.stopPropagation();
+          app.setSessionAppearance(pane.id, {
+            ...app.sessionAppearance[pane.id],
+            fontSize:
+              action === "zoomReset"
+                ? 14
+                : Math.max(
+                    8,
+                    Math.min(
+                      36,
+                      appearance.fontSize + (action === "zoomOut" ? -1 : 1),
                     ),
-            });
-          }
+                  ),
+          });
         }}
       />
       {status !== "connected" && (
@@ -1275,7 +1284,7 @@ export function AppearancePanel({
       }));
   };
   return (
-    <div className="tool-body appearance-panel">
+    <div className={`${workspace ? "tool-body " : ""}appearance-panel`}>
       {workspace && (
         <label>
           적용 범위

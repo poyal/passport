@@ -289,8 +289,12 @@ test("saves custom colors and shortcuts and applies highlights without changing 
   ).toBeVisible();
   await page.getByRole("button", { name: "단축키", exact: true }).click();
   await page
-    .getByLabel("새 탭 · 로컬 터미널", { exact: true })
-    .fill("Mod+Shift+Y");
+    .getByRole("button", { name: "새 탭 · 로컬 터미널 키 1 변경", exact: true })
+    .click();
+  await page
+    .getByLabel("키 조합", { exact: true })
+    .press(process.platform === "darwin" ? "Meta+Shift+y" : "Control+Shift+y");
+  await page.getByRole("button", { name: "등록", exact: true }).click();
   await page.getByRole("button", { name: "단축키 저장", exact: true }).click();
   await expect
     .poll(
@@ -299,9 +303,11 @@ test("saves custom colors and shortcuts and applies highlights without changing 
           await page.evaluate(() =>
             window.passport.call("bootstrap", undefined),
           )
-        ).document.settings.shortcuts.newTab,
+        ).document.settings.shortcuts[
+          process.platform === "darwin" ? "darwin" : "win32"
+        ].newTab,
     )
-    .toBe("Mod+Shift+Y");
+    .toEqual([process.platform === "darwin" ? "Meta+Shift+Y" : "Ctrl+Shift+Y"]);
   // The preceding window-transfer test leaves another native window focused.
   const windowId = (
     await page.evaluate(() => window.passport.call("bootstrap", undefined))

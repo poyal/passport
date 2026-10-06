@@ -11,7 +11,7 @@ import {
   documentSchema,
   type Activity,
 } from "../src/shared/model";
-import { defaultShortcuts, migrateShortcuts } from "../src/shared/shortcuts";
+import { shortcutSettingsSchema } from "../src/shared/shortcuts";
 import { validateShortcuts } from "../src/shared/advanced";
 import {
   assertTerminalCapacity,
@@ -125,37 +125,30 @@ it("closes only read or removed activity banners, including retained delivered n
   expect(testBanner.close).toHaveBeenCalledTimes(1);
 });
 
-it("migrates legacy defaults once and preserves customized shortcuts and cross-platform conflicts", () => {
-  const legacy: Record<string, string> = {
-    ...defaultShortcuts,
+it("migrates the old new-tab default without overwriting a customized binding", () => {
+  const legacy = {
+    copy: "Platform+C",
+    paste: "Platform+V",
+    search: "Mod+Shift+F",
+    nextPane: "Alt+ArrowRight",
+    previousPane: "Alt+ArrowLeft",
     newTab: "Mod+Shift+T",
   };
-  delete legacy.newWindow;
-  const migrated = migrateShortcuts(legacy) as Record<string, string>;
-  expect(migrated).toMatchObject({ newTab: "Mod+N", newWindow: "Mod+Shift+N" });
+  const migrated = shortcutSettingsSchema.parse(legacy);
+  expect(migrated.darwin.newTab).toEqual(["Meta+N"]);
+  expect(migrated.win32.newWindow).toEqual(["Ctrl+Shift+N"]);
   expect(() => validateShortcuts(migrated)).not.toThrow();
-  expect(migrateShortcuts({ ...legacy, newTab: "Mod+Shift+Y" })).toMatchObject({
-    newTab: "Mod+Shift+Y",
-    newWindow: "Mod+Shift+N",
-  });
-  const conflict = migrateShortcuts({
+  const custom = shortcutSettingsSchema.parse({
     ...legacy,
-    search: "Meta+Shift+N",
-    activity: "Ctrl+N",
-  }) as Record<string, string>;
-  expect(conflict).toMatchObject({
-    newTab: "Mod+Shift+T",
-    newWindow: "",
-    search: "Meta+Shift+N",
+    newTab: "Mod+Shift+Y",
+  });
+  expect(custom.darwin.newTab).toEqual(["Meta+Shift+Y"]);
+  const conflict = shortcutSettingsSchema.parse({
+    ...legacy,
     activity: "Ctrl+N",
   });
-  expect(() => validateShortcuts(conflict)).not.toThrow();
-  expect(
-    migrateShortcuts({ ...defaultShortcuts, newTab: "Mod+Shift+T" }),
-  ).toMatchObject({ newTab: "Mod+Shift+T" });
-  expect(
-    documentSchema.parse(emptyDocument()).settings.shortcuts,
-  ).toMatchObject({ newTab: "Mod+N", newWindow: "Mod+Shift+N" });
+  expect(conflict.win32.newTab).toEqual(["Ctrl+Shift+T"]);
+  expect(conflict.darwin.newTab).toEqual(["Meta+N"]);
 });
 
 it("new local workspaces inherit the configured shell and enforce the shared terminal limit", () => {

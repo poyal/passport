@@ -1,3 +1,4 @@
+import { shortcutMatch, shortcutPlatform } from "../shared/shortcuts";
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import {
   ArrowLeft,
@@ -678,16 +679,31 @@ function FilePanel({
           }
         }}
         onKeyDown={(e) => {
-          if ((e.key === "F10" && e.shiftKey) || e.key === "ContextMenu") {
+          const keys =
+            app.document.settings.shortcuts[
+              shortcutPlatform(app.boot.platform)
+            ];
+          const mac = app.boot.platform === "darwin";
+          if (
+            e.nativeEvent.isComposing ||
+            (e.target as HTMLElement).closest(
+              "input, textarea, select, [contenteditable=true]",
+            )
+          )
+            return;
+          if (shortcutMatch(e.nativeEvent, keys.fileMenu, mac)) {
             e.preventDefault();
             const r = e.currentTarget.getBoundingClientRect();
             showMenu(r.left + 60, r.top + 50, selection);
           }
-          if ((e.ctrlKey || e.metaKey) && e.key === "a") {
+          if (shortcutMatch(e.nativeEvent, keys.fileSelectAll, mac)) {
             e.preventDefault();
             setSelection(visible.map((f) => f.path));
           }
-          if (e.key === "Delete" && selection.length) void operation("delete");
+          if (shortcutMatch(e.nativeEvent, keys.fileDelete, mac)) {
+            e.preventDefault();
+            if (!e.repeat && selection.length) void operation("delete");
+          }
         }}
       >
         <table className="file-table">
@@ -756,7 +772,18 @@ function FilePanel({
                   }
                   if (e.key === "Enter" && f.kind === "directory")
                     void navigate(f.path);
-                  if (e.key === "F2") {
+                  if (
+                    shortcutMatch(
+                      e.nativeEvent,
+                      app.document.settings.shortcuts[
+                        shortcutPlatform(app.boot.platform)
+                      ].fileRename,
+                      app.boot.platform === "darwin",
+                    )
+                  ) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (e.repeat) return;
                     setSelection([f.path]);
                     void operation("rename", [f.path]);
                   }

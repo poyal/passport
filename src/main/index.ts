@@ -1,3 +1,4 @@
+import { ignoreShortcutMenu, type ShortcutContext } from "../shared/shortcuts";
 import {
   app,
   BrowserWindow,
@@ -145,6 +146,7 @@ function trackBanner(banner: Notification) {
   banners.track(banner);
 }
 const windows = new Map<number, BrowserWindow>();
+const keyboardContexts = new Map<number, ShortcutContext>();
 const initialTerminals = new Map<
   number,
   { workspaceId: string; paneId: string }
@@ -375,6 +377,14 @@ const idObject = z.object({ id: idSchema });
 const schemas: Record<Call, z.ZodType> = {
   "terminal.create": z.undefined(),
   "window.create": z.undefined(),
+  "window.keyboardContext": z.enum([
+    "standard",
+    "editing",
+    "terminal",
+    "files",
+    "dialog",
+    "recording",
+  ]),
   "terminal.folder": z.undefined(),
   "terminal.link": z.object({ id: idSchema, url: z.string().max(8192) }),
   "terminal.preview": z.object({
@@ -659,6 +669,10 @@ async function call<K extends Call>(
     }
     case "terminal.create":
       return addLocalTerminal(caller);
+    case "window.keyboardContext":
+      keyboardContexts.set(caller.id, i);
+      caller.webContents.setIgnoreMenuShortcuts(i === "recording");
+      return;
     case "window.create":
       return (await createWindow(true)).id;
     case "activity.list":
@@ -1440,6 +1454,26 @@ async function createWindow(withLocalTerminal = false) {
   if (!window) window = win;
   for (const w of store.read().workspaces)
     if (!owners.has(w.id)) owners.set(w.id, win.id);
+  win.webContents.on("before-input-event", (_event, input) => {
+    const event = {
+      key: input.key,
+      code: input.code,
+      ctrlKey: input.control,
+      metaKey: input.meta,
+      altKey: input.alt,
+      shiftKey: input.shift,
+      isComposing: input.isComposing,
+    };
+    win.webContents.setIgnoreMenuShortcuts(
+      ignoreShortcutMenu(
+        keyboardContexts.get(win.id) || "standard",
+        event,
+        (documentCache ??= store.read()).settings.shortcuts,
+        platform.id,
+      ),
+    );
+  });
+  win.on("closed", () => keyboardContexts.delete(win.id));
   win.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
   win.webContents.on("will-navigate", (e) => e.preventDefault());
   win.webContents.on("will-attach-webview", (e) => e.preventDefault());
@@ -1466,7 +1500,11 @@ async function createWindow(withLocalTerminal = false) {
   };
   win.webContents.on("render-process-gone", releaseConnections);
   win.webContents.on("did-start-navigation", (details) => {
-    if (details.isMainFrame && !details.isSameDocument) releaseConnections();
+    if (details.isMainFrame && !details.isSameDocument) {
+      keyboardContexts.delete(win.id);
+      win.webContents.setIgnoreMenuShortcuts(false);
+      releaseConnections();
+    }
   });
   let closing = false;
   win.on("close", (event) => {
@@ -1674,14 +1712,14 @@ void app
               role: "copy",
               registerAccelerator: false,
               accelerator:
-                process.platform === "darwin" ? "Command+C" : "Control+Shift+C",
+                process.platform === "darwin" ? "Command+C" : "Control+C",
             },
             {
               label: "붙여넣기",
               role: "paste",
               registerAccelerator: false,
               accelerator:
-                process.platform === "darwin" ? "Command+V" : "Control+Shift+V",
+                process.platform === "darwin" ? "Command+V" : "Control+V",
             },
             { label: "전체 선택", role: "selectAll" },
           ],
