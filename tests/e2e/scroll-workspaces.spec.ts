@@ -175,8 +175,32 @@ test("file action triggers toggle, dismiss, restore focus and stay in bounds whi
       const handlers = (ipcMain as any)._invokeHandlers;
       const original = handlers.get("passport:call");
       const calls: any[] = [];
+      const io: any[] = [];
+      const fs = process.getBuiltinModule(
+        "fs/promises",
+      ) as typeof import("node:fs/promises");
+      const originals = { readdir: fs.readdir, lstat: fs.lstat };
+      for (const name of ["readdir", "lstat"] as const) {
+        (fs as any)[name] = async (...args: any[]) => {
+          if (!String(args[0]).includes("passport-scroll-workspaces-"))
+            return (originals[name] as any)(...args);
+          const call = {
+            name,
+            path: String(args[0]),
+            started: Date.now(),
+          } as any;
+          io.push(call);
+          try {
+            return await (originals[name] as any)(...args);
+          } finally {
+            call.finished = Date.now();
+          }
+        };
+      }
+      (globalThis as any).__fileIO = io;
       (globalThis as any).__fileCalls = calls;
       (globalThis as any).__restoreFileCalls = () => {
+        Object.assign(fs, originals);
         ipcMain.removeHandler("passport:call");
         ipcMain.handle("passport:call", original);
       };
@@ -229,6 +253,12 @@ test("file action triggers toggle, dismiss, restore focus and stay in bounds whi
     await page.getByLabel(label).fill(directory);
     await page.getByLabel(label).press("Enter");
   }
+  for (const label of ["왼쪽 파일 패널", "오른쪽 파일 패널"])
+    await expect(page.getByRole("region", { name: label })).toHaveAttribute(
+      "aria-busy",
+      "false",
+      { timeout: 30_000 },
+    );
   await expect(
     page
       .locator(".file-panel")
@@ -286,7 +316,7 @@ test.afterEach(async ({}, info) => {
     const calls = await application.evaluate(() => {
       const calls = (globalThis as any).__fileCalls;
       (globalThis as any).__restoreFileCalls?.();
-      return calls;
+      return { calls, io: (globalThis as any).__fileIO };
     });
     await info.attach("file-navigation-state", {
       contentType: "application/json",
@@ -294,7 +324,7 @@ test.afterEach(async ({}, info) => {
         {
           calls,
           renderer: await page.evaluate(() => ({
-            active: document.activeElement?.outerHTML,
+            active: document.activeElement?.outerHTML.slice(0, 500),
             panels: [...document.querySelectorAll(".file-panel")].map(
               (panel) => ({
                 text: panel.textContent,
