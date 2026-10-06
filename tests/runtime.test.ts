@@ -18,6 +18,22 @@ import {
 } from "../src/shared/terminal-config";
 import type { AppEvent } from "../src/shared/model";
 
+// These direct PTY probes have no xterm renderer to answer terminal queries.
+// PowerShell/ConPTY may wait for DA/DSR before presenting its first prompt.
+function terminalReplies() {
+  let pending = "";
+  return (data: string, write: (reply: string) => void) => {
+    if (process.platform !== "win32") return;
+    pending += data;
+    let consumed = 0;
+    for (const match of pending.matchAll(/\x1b\[(0?c|6n)/g)) {
+      write(match[1] === "6n" ? "\x1b[1;1R" : "\x1b[?1;2c");
+      consumed = match.index! + match[0].length;
+    }
+    pending = pending.slice(consumed).slice(-4);
+  };
+}
+
 it.skipIf(process.platform !== "win32")(
   "preserves the first Bash input byte after repeated resizes without priming a child CLI",
   async () => {
@@ -151,9 +167,13 @@ it("records only opted-in output, searches across chunks, persists bookmarks, ex
 
 it("ignores stale exit callbacks after reopening a local pane and drains closed PTYs before shutdown", async () => {
   const events: AppEvent[] = [];
+  const reply = terminalReplies();
   const local = new LocalSessions((event) => {
     events.push(event);
-    if (event.kind === "output") local.ack(event.id, event.bytes);
+    if (event.kind === "output") {
+      local.ack(event.id, event.bytes);
+      reply(event.data, (data) => local.input(event.id, data));
+    }
   });
   try {
     for (let n = 0; n < 4; n++) {
@@ -162,6 +182,19 @@ it("ignores stale exit callbacks after reopening a local pane and drains closed 
     }
     local.open("same", { shell: "default", cwd: os.tmpdir() });
     events.length = 0;
+    if (process.platform === "win32")
+      await expect
+        .poll(
+          () =>
+            stripVTControlCharacters(
+              events
+                .filter((event) => event.kind === "output")
+                .map((event) => event.data)
+                .join(""),
+            ),
+          { timeout: 10000 },
+        )
+        .toMatch(/>\s*$/);
     local.input(
       "same",
       process.platform === "win32"
@@ -252,15 +285,23 @@ it.skipIf(process.platform === "win32")(
 it("runs a native local PTY, accepts input and resize, and closes its process", async () => {
   expect(availableShells().length).toBeGreaterThan(0);
   const output: string[] = [];
+  const reply = terminalReplies();
   const local = new LocalSessions((e) => {
     if (e.kind === "output") {
       output.push(e.data);
       local.ack(e.id, e.bytes);
+      reply(e.data, (data) => local.input(e.id, data));
     }
   });
   try {
     local.open("local", { shell: "default", cwd: os.tmpdir() });
     local.resize("local", 91, 37);
+    if (process.platform === "win32")
+      await expect
+        .poll(() => stripVTControlCharacters(output.join("")), {
+          timeout: 10000,
+        })
+        .toMatch(/>\s*$/);
     local.input(
       "local",
       process.platform === "win32"

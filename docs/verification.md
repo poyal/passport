@@ -1,5 +1,13 @@
 # Passport 검증 기록
 
+## 직접 PTY 검사의 터미널 응답 계약 보완 — 2026-10-07
+
+`ee7ee70`의 [원격 정식 검증](https://github.com/poyal/passport/actions/runs/37506985213)에서 Mac은 통과했으나 Windows 단위 검사의 재연결 사례가 `REOPEN_READY`를 받지 못해 실패했다. 출력에는 PowerShell의 초기 터미널 질의와 제목만 있었으며 이 단계에는 xterm renderer가 없다. 다른 네이티브 Windows 검사에는 이미 있던 DA 응답이 이 직접 PTY 검사에는 빠져 있었다.
+
+렌더러 없이 기본 셸을 사용하는 재연결·입력/리사이즈 두 사례에 청크 경계를 처리하는 DA·DSR 응답을 넣었다. PowerShell 프롬프트를 최대 10초 기다린 뒤 기존 명령과 결과 판정을 수행한다. 실제 셸·입력·오래된 종료 콜백 배제·네이티브 정리는 유지하며 제품 코드는 바꾸지 않았다. 실패 기록은 `release/checks/20261006-remote-v1.2.0/eighth-formal-failure.log`와 원본 receipt에 보존한다.
+
+타입 검사와 해당 네이티브 파일 3회 반복 **18 통과·3 Mac 전용 생략**을 확인했다. 매회 Bash 30회 리사이즈·자식 CLI 입력, PTY 재연결·조용한 종료·입력/크기 변경, 로그 보존도 포함한다. 원본은 같은 폴더의 `runtime-terminal-response-1.log`부터 `-3.log`까지 보관한다. 최종 후보의 두 OS 전체 검증은 별도다.
+
 ## Windows 시험 종료의 디버거 대기 보완 — 2026-10-07
 
 프롬프트 대기를 적용한 [원격 Bash 반복](https://github.com/poyal/passport/actions/runs/37504732756)은 32회 통과 뒤 33번째의 종료 단계에서 실패했다. 입력·붙여넣기 결과는 통과했지만 Electron의 `quit` 이후 `Waiting for the debugger to disconnect...`가 남았고 10초 제한을 넘었다. 해당 실행은 종료 감사가 33회 중 32회뿐이므로 성공으로 취급하지 않는다.
