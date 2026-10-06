@@ -386,6 +386,11 @@ test("long file lists stay above the queue and scroll independently at both wind
   }
   const left = page.getByRole("region", { name: "왼쪽 파일 패널" });
   const right = page.getByRole("region", { name: "오른쪽 파일 패널" });
+  // File enumeration must finish before checking the rendered row count.
+  for (const panel of [left, right])
+    await expect(panel).toHaveAttribute("aria-busy", "false", {
+      timeout: 30_000,
+    });
   await expect(left.locator("tbody tr")).toHaveCount(101);
   await expect(right.locator("tbody tr")).toHaveCount(101);
   for (const size of [

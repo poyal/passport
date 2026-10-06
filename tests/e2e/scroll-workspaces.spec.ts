@@ -171,6 +171,14 @@ test("file action triggers toggle, dismiss, restore focus and stay in bounds whi
     await page.getByLabel(label).fill(directory);
     await page.getByLabel(label).press("Enter");
   }
+  // Enter starts asynchronous disk reads. Assert the layout only after both
+  // listings settle, including on an intermittently slow Windows filesystem.
+  for (const label of ["왼쪽 파일 패널", "오른쪽 파일 패널"])
+    await expect(page.getByRole("region", { name: label })).toHaveAttribute(
+      "aria-busy",
+      "false",
+      { timeout: 30_000 },
+    );
   await expect(
     page
       .locator(".file-panel")

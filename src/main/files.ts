@@ -52,17 +52,17 @@ export class LocalAdapter implements FileAdapter {
   async list(p: string, options?: { skipUnreadable?: boolean }) {
     const names = await fsp.readdir(p);
     const result: FileEntry[] = [];
-    for (const name of names) {
+    const inspect = async (name: string): Promise<FileEntry | null> => {
       try {
         const s = await fsp.lstat(path.join(p, name));
-        result.push({
+        return {
           name,
           path: path.join(p, name),
           kind: kind(s),
           size: s.size,
           modified: s.mtimeMs,
           mode: s.mode,
-        });
+        };
       } catch (error) {
         // Windows protected files may report EINVAL as well as permission errors.
         // Browsing may omit these entries; recursive transfers remain strict.
@@ -75,6 +75,18 @@ export class LocalAdapter implements FileAdapter {
           )
         )
           throw error;
+        return null;
+      }
+    };
+    // Windows filesystem callbacks can be delayed independently. Avoid adding
+    // every delay serially, while bounding outstanding work for large folders.
+    for (let offset = 0; offset < names.length; offset += 16) {
+      const batch = await Promise.allSettled(
+        names.slice(offset, offset + 16).map(inspect),
+      );
+      for (const entry of batch) {
+        if (entry.status === "rejected") throw entry.reason;
+        if (entry.value) result.push(entry.value);
       }
     }
     return result;

@@ -21,6 +21,8 @@ PASSPORT_E2E_EXECUTABLE="$PWD/release/builds/Passport.app/Contents/MacOS/Passpor
 
 `playwright.config.ts`는 worker 1개, `fullyParallel: false`로 실행한다. 재시작을 줄이려고 worker를 늘리지 않는다. 앱 빌드가 숨김 실행을 지원하지 않으면 실행 도구가 거부한다. 사용자 앱·데이터·일반 클립보드를 재사용하지 않는다.
 
+긴 파일 목록의 레이아웃 검사는 Enter 뒤 양쪽 패널의 `aria-busy=false`를 최대 30초 기다린 다음 항목 수·메뉴·스크롤을 확인한다. 디스크 조회 중 이전 목록을 판정하지 않으며, 전역 제한 시간·재시도·필수 사례 목록은 바꾸지 않는다. 원격에서 파일 메타데이터를 순차 조회할 때 지연이 누적된 문제는 제품의 제한된 동시 조회로 별도 수정했다.
+
 ## 재사용할 수 있는 검사
 
 | 사례                                                           | 실행 방식과 이유                                                                           |
