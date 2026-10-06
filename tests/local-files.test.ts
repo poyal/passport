@@ -7,9 +7,41 @@ import type { Store } from "../src/main/store";
 
 const directories: string[] = [];
 afterEach(async () => {
+  vi.useRealTimers();
   vi.restoreAllMocks();
   for (const directory of directories.splice(0))
     await fs.rm(directory, { recursive: true, force: true });
+});
+
+it("bounds concurrent metadata reads and preserves order despite out-of-order completion", async () => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), "passport-files-"));
+  directories.push(directory);
+  const visible = path.join(directory, "visible.txt");
+  await fs.writeFile(visible, "visible");
+  const stat = await fs.lstat(visible);
+  const names = Array.from({ length: 96 }, (_, i) => `entry-${i}.txt`);
+  vi.spyOn(fs, "readdir").mockResolvedValueOnce(names as never);
+  let active = 0,
+    maximum = 0;
+  vi.useFakeTimers();
+  vi.spyOn(fs, "lstat").mockImplementation(async (file) => {
+    active++;
+    maximum = Math.max(maximum, active);
+    const index = names.indexOf(path.basename(String(file)));
+    await new Promise((resolve) => setTimeout(resolve, 20 - (index % 16)));
+    active--;
+    return stat;
+  });
+  const listing = new LocalAdapter().list(directory);
+  await vi.runAllTimersAsync();
+  const entries = await listing;
+  expect(maximum).toBeGreaterThan(1);
+  expect(maximum).toBeLessThanOrEqual(16);
+  expect(active).toBe(0);
+  expect(entries.map((entry) => entry.name)).toEqual(names);
+  expect(
+    entries.every((entry) => entry.size === 7 && entry.kind === "file"),
+  ).toBe(true);
 });
 
 it.each(["EPERM", "EACCES", "EINVAL", "ENOENT"])(
