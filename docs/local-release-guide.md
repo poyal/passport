@@ -2,7 +2,11 @@
 
 이 문서는 데스크톱 앱 등에서 수정할 때마다 원격 CI의 설치·빌드·패키징을 반복하는 비용을 줄이는 방법을 설명한다. 각 대상 OS에서 배포할 파일을 만들고 검사한 뒤, 그 파일을 다시 빌드하지 않고 게시한다. 다른 프로젝트에 적용할 원칙과 Passport의 실제 명령을 함께 정리했다.
 
-## 1.2.1 Mac 배포 완료·Windows 후속 인계 — 2026-10-08
+## 1.2.1 Windows 후속 배포 완료 — 2026-10-08
+
+같은 `v1.2.1` 소스(`7be5713`)의 Windows x64를 [격리된 Windows 검증](https://github.com/poyal/passport/actions/runs/37772353610)에서 정식 검증하고, 원본 설치본·보고서를 이 PC에서 재확인한 뒤 재빌드 없이 게시했다. 소스·최종 EXE 숨김 GUI는 각각 67개·67개, 데스크톱 검사는 각각 4개·4개 통과했다. 공개 EXE 다운로드 해시·합본 체크섬이 일치하고 기존 Mac DMG와 직전 1.2.0 자산을 보존했다. 이 PC에서는 데스크톱 검사를 실행하지 않았다. [Windows 게시·검증 요약](benchmarks/github-release-windows-v1.2.1.json)와 [완료된 Windows 인계](windows-paste-release.md)를 따른다.
+
+## 1.2.1 Mac 선행 배포 당시 인계 — 2026-10-08
 
 사용자의 Mac 우선 게시 요청에 따라 `7be5713`의 `target=mac-arm64`만 격리된 원격 runner에서 정식 검증했다. 소스와 최종 DMG의 숨김 GUI는 각각 62개, 데스크톱 검사는 각각 4개 통과했으며 검증한 DMG를 재빌드 없이 공개했다. `v1.2.1`은 검증 소스에 고정하며 게시 결과를 덧붙인 문서 커밋과 구분한다. Windows 작업은 실행하지 않았고 기존 1.2.0 파일은 보존했다. 집의 Windows PC에서는 [인계 절차](windows-paste-release.md)에 따라 같은 `v1.2.1` 소스의 EXE를 추가한다. [Mac 게시·검증 요약](benchmarks/github-release-v1.2.1-mac.json).
 

@@ -31,9 +31,9 @@
 | 컴퓨터                                       | 선택할 파일                | 다운로드 안내                                                                      |
 | -------------------------------------------- | -------------------------- | ---------------------------------------------------------------------------------- |
 | Mac · Apple Silicon(M 시리즈), macOS 14 이상 | `Passport-…-mac-arm64.dmg` | [최신 릴리즈](https://github.com/poyal/passport/releases/latest)                   |
-| Windows 11 · Intel / AMD(x64)                | `Passport-…-win-x64.exe`   | [Windows 1.2.0 릴리즈](https://github.com/poyal/passport/releases/tag/v1.2.0) |
+| Windows 11 · Intel / AMD(x64)                | `Passport-…-win-x64.exe`   | [최신 릴리즈](https://github.com/poyal/passport/releases/latest) |
 
-Mac 1.2.1은 최신 릴리즈에서, Windows는 현재 공개된 1.2.0 릴리즈에서 받으세요. Windows 1.2.1 설치 파일은 별도로 공개할 예정입니다. Intel Mac은 지원하지 않습니다. [플랫폼별 배포 상태와 변경 사항](docs/releases/README.md).
+Mac·Windows x64 설치 파일을 최신 릴리즈에서 받을 수 있습니다. Intel Mac은 지원하지 않습니다. [플랫폼별 배포 상태와 변경 사항](docs/releases/README.md).
 
 ### Mac
 
@@ -182,8 +182,6 @@ Claude Code·Codex 자체의 이미지 붙여넣기를 사용할 때는 Mac **Ct
 4. **단축키 저장**을 눌러 적용합니다. **변경 취소**는 저장하지 않은 변경을 되돌립니다.
 
 이전에 한 기능에 여러 키를 지정했다면 첫 번째 키만 유지합니다. 기존 백업을 가져올 때도 같으며, 해제한 기능은 해제 상태로 유지합니다.
-
-Windows 1.2.0에서는 **키 추가** 또는 기존 키 버튼을 누르고 **등록**으로 지정합니다. **×**로 키를 삭제하며, **기본값**·**전체 기본값 복원**으로 되돌린 뒤 **단축키 저장**을 누릅니다.
 
 Windows의 기본 **Ctrl+C**는 선택한 텍스트를 복사하며, 선택이 없으면 아무 동작도 하지 않습니다. 실행 중인 명령을 중단하려면 **Ctrl+Shift+C**를 사용합니다. Mac은 **⌘C**로 복사하고 **Ctrl+C**로 중단합니다. 두 기능 모두 키를 바꿀 수 있으며, 입력칸 편집과 Esc·Tab·방향키 화면 조작은 유지됩니다.
 

@@ -1,5 +1,24 @@
 # Passport 검증 기록
 
+## 1.2.1 Windows 공개 배포 완료 — 2026-10-08
+
+Mac과 같은 `v1.2.1` 소스 `7be5713234519a7670f92f536d7dd2f09dad7c9f`를 [격리된 Windows 검증](https://github.com/poyal/passport/actions/runs/37772353610)에서 검증하고 [Windows EXE](https://github.com/poyal/passport/releases/download/v1.2.1/Passport-1.2.1-win-x64.exe)를 추가했다. 원본 보고서·증거 파일·설치본 해시를 게시 도구로 재검사했으며 재빌드 없이 업로드하고 다운로드 해시를 확인했다. 기존 Mac DMG의 자산 ID·크기·해시와 직전 1.2.0의 모든 자산은 그대로다.
+
+| 검사 | 결과 |
+| --- | --- |
+| 타입·단위/통합·FTP/FTPS | 176 통과·7 허용 생략 |
+| 배포 정책·회귀 | 72 통과·1 플랫폼 생략 |
+| 소스 / 최종 EXE 숨김 GUI | 67 / 67 통과, 각각 4 / 4 허용 생략 |
+| 소스 / 최종 EXE 데스크톱 | 4 / 4 통과, 격리된 Windows runner에서 실행 |
+| NSIS 현재 사용자 범위·네 가지 셸·DPAPI·PTY·helper·정상 종료 | 통과 |
+| 공개 EXE 다운로드 해시·합본 체크섬 | 일치 |
+
+모든 필수 검사에 실패·재시도·flaky가 없다. 숨김 GUI는 Mac 전용 1개와 선택 Docker·장시간 부하·대용량 출력 3개를 생략했다. 소스/패키지 숨김 GUI의 launch·exit·종료 감사는 각각 29/29회, 재사용은 22/22개이며 표시·네이티브 포커스는 모두 0회다. 이 PC의 데스크톱 검사와 사용자 계정 설치·업그레이드, 물리 IME, OS 알림·외부 AI 서비스는 실행하지 않았다. Windows EXE에는 코드 서명이 없다.
+
+공개 EXE는 **203,975,760바이트**, SHA-256은 `9195fdccbdc29ee89b4e23a1c216c8e44c2f535aa67b462a69ff23d4180acb34`다. 빌드는 `release/builds/20261008T114751Z-7be5713-win-x64-local-release/`, 원본 검사는 `release/checks/20261008T114751Z-7be5713-win-x64-local-release/`, 게시본은 `release/packages/v1.2.1/local/win-x64/`에 보관한다. 게시 증거는 `release/checks/20261008T114556Z-7be5713-win-x64-v1.2.1-publication/`에 있다. 폴더를 최종 보관 경로로 옮긴 뒤 설치본과 모든 원본 증거 해시를 다시 확인했다. 최신·직전 Windows 공개 설치본 1.2.1·1.2.0과 최근 성공 빌드 2개를 보존하며, 그보다 오래된 성공 자료는 KEEP·미해결 재현·도구·복구 백업 등 보존 예외를 확인한 뒤 정리 후보로만 남겼다. 기존 자료는 삭제하지 않았다.
+
+README와 릴리즈 본문은 두 플랫폼 1.2.1 공개 상태로 갱신했다. 문서만 별도 커밋하며 `v1.2.1` 태그를 이동하지 않는다. [Windows 게시·검증 요약](benchmarks/github-release-windows-v1.2.1.json).
+
 ## 산출물 정리·1.2.1 테스트 앱 연결 — 2026-10-08
 
 사용자 요청으로 최신·직전본 보관 기준을 적용했다. 오래된 빌드 20개·검증 폴더 60개·설치 파일 보관 버전 4개와 다운로드 캐시를 삭제하고, 보호 자료를 제외한 정리 내역을 [경로·해시·용량 기록](benchmarks/release-cleanup-20261008.json)에 남겼다. `build/`·`dist/`·`release/` 합계는 약 **13.14GiB에서 4.35GiB로 8.79GiB 감소**했다. 실제 앱은 기존 26개에서 최신 앱 1개를 추가하고 과거 20개를 지워 **7개**가 남았다.

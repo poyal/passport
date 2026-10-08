@@ -1,25 +1,20 @@
 # Windows 붙여넣기 검증 및 릴리즈 인계
 
-## 1.2.1 후속 Windows 배포 — 2026-10-08
+## 1.2.1 Windows 배포 완료 — 2026-10-08
 
-Mac 1.2.1은 `7be5713` 소스로 [공개 배포](https://github.com/poyal/passport/releases/tag/v1.2.1)했으며 Windows x64는 집의 Windows PC에서 이어서 검증·게시한다. **Mac과 같은 `v1.2.1` 태그를 체크아웃**하며, 이후 README·검증 기록만 갱신한 `main` 커밋으로 빌드하지 않는다. 소스나 버전을 임의로 바꾸거나 기존 태그를 이동하지 않는다. Windows 제품 수정이 필요하면 동일 소스 계약에 맞는 새 버전으로 진행한다.
+Mac과 같은 `v1.2.1` 소스(`7be5713`)로 Windows x64 EXE를 [공개 배포](https://github.com/poyal/passport/releases/tag/v1.2.1)했다. [격리된 Windows 검증](https://github.com/poyal/passport/actions/runs/37772353610)에서 만든 설치본과 원본 보고서를 Windows PC로 내려받아 게시 도구로 재검사하고 재빌드 없이 게시했다. 기존 Mac DMG·태그와 직전 1.2.0 자산은 보존했다. [Windows 게시·검증 요약](benchmarks/github-release-windows-v1.2.1.json).
 
-아래 환경 준비 조건을 충족한 깨끗한 작업 폴더에서 실행한다. 정식 검증은 실제 창·클립보드를 사용하므로 다른 작업을 방해하지 않는 데스크톱에서 실행한다.
+소스·최종 설치본의 숨김 GUI는 각각 67개·67개 통과, 허용 생략은 각각 4개·4개다. 데스크톱 검사는 각각 4개·4개 통과했다. 기존 복수 단축키의 첫 키 유지, **키 변경·X·초기화**, Ctrl+V 붙여넣기, 네 가지 셸·DPAPI·NSIS 설치 범위를 확인했다. Ctrl+Shift+V는 직접 지정했을 때만 Passport 붙여넣기로 동작한다.
 
-```powershell
-git fetch origin --tags
-git switch --detach v1.2.1
-npm.cmd run release:verify -- --desktop
-```
-
-출력된 `release/checks/<실행 ID>/verification.json`으로 게시 계획을 확인한다. `Passport-1.2.1-win-x64.exe` 추가와 기존 Mac DMG 보존이 표시되는지 확인한 뒤 게시한다. 검증에서 의존성 설치·빌드·전체 검사를 수행하므로 게시 전에 다시 빌드하지 않는다.
+이번 실행은 [운영 가이드의 격리된 runner 절차](local-release-guide.md#actions-운영)를 사용했다.
 
 ```powershell
-npm.cmd run release:publish -- --manifest release/checks/<실행-ID>/verification.json
-npm.cmd run release:publish -- --manifest release/checks/<실행-ID>/verification.json --execute
+gh workflow run desktop.yml --repo poyal/passport --ref v1.2.1 -f target=win-x64
 ```
 
-게시 후 공개 EXE·합본 체크섬을 확인하고 README의 Windows 1.2.0 고정 링크와 플랫폼별 상태를 갱신한다. GitHub Release 본문은 플랫폼 추가만으로 자동 변경되지 않으므로 `docs/releases/v1.2.1.md`의 Windows 후속 예정 안내를 실제 결과에 맞춰 수정하고 같은 내용으로 릴리즈 본문도 갱신한다. 문서 마무리는 게시 후 별도 커밋으로 남기며 태그를 이동하지 않는다. 특히 기존 복수 단축키의 첫 키 유지, **키 변경·X·초기화**, Ctrl+V 붙여넣기, 네 가지 셸·DPAPI·설치 범위를 확인한다. Ctrl+Shift+V는 직접 지정했을 때만 Passport 붙여넣기로 동작한다.
+검증 결과의 `release/builds/<실행 ID>/`와 `release/checks/<실행 ID>/`를 상대 경로 그대로 같은 태그의 깨끗한 체크아웃에 내려받은 뒤, `release:publish -- --manifest <verification.json>`으로 계획을 확인하고 `--execute`로 게시했다. 공개 EXE 다운로드 해시·합본 체크섬을 확인하고 README의 Windows 1.2.0 고정 링크와 GitHub 릴리즈 본문을 갱신했다. 검증 소스와 태그는 유지하며 문서는 게시 후 별도 커밋으로 기록한다.
+
+이 PC의 창·포커스를 사용하는 검사는 실행하지 않았다. 사용자 설치본·DB도 변경하지 않았다. 실제 사용자 계정 설치·업그레이드, 물리 IME, OS 알림·외부 AI 서비스는 별도 확인 대상이다. 이후 제품 수정은 동일 소스 계약에 맞는 새 버전으로 진행한다.
 
 ## 이전 Windows 1.1.1 기록
 

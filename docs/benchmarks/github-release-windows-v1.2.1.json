@@ -1,0 +1,537 @@
+{
+  "createdAt": "2026-10-08T12:15:55.092Z",
+  "status": "published-and-download-verified",
+  "version": "1.2.1",
+  "source": {
+    "commit": "7be5713234519a7670f92f536d7dd2f09dad7c9f",
+    "dirty": false,
+    "fingerprint": "99cd7a7c4f1d7fe7959ca5d353507aa6d977c101f783139ef67516cd4274c282"
+  },
+  "sourceTag": "v1.2.1",
+  "publication": {
+    "mode": "publish",
+    "tag": "v1.2.1",
+    "sourceCommit": "7be5713234519a7670f92f536d7dd2f09dad7c9f",
+    "sourceTag": "v1.2.1",
+    "releaseCommit": "7be5713234519a7670f92f536d7dd2f09dad7c9f",
+    "targets": [
+      "win-x64"
+    ],
+    "upload": [
+      "Passport-1.2.1-win-x64.exe"
+    ],
+    "replace": [],
+    "preserve": [
+      "Passport-1.2.1-mac-arm64.dmg"
+    ],
+    "updateChecksums": true,
+    "createDraft": false,
+    "publishDraft": false,
+    "status": "published-and-download-verified",
+    "url": "https://github.com/poyal/passport/releases/tag/v1.2.1",
+    "finishedAt": "2026-10-08T12:14:32.079Z"
+  },
+  "buildOrigin": {
+    "source": "GitHub Actions isolated Windows desktop verification",
+    "runId": 37772353610,
+    "url": "https://github.com/poyal/passport/actions/runs/37772353610"
+  },
+  "publicationHost": "Windows x64; verified installer uploaded without rebuilding",
+  "existingMacAssetPreserved": true,
+  "previousReleaseUnchanged": true,
+  "publicAssets": [
+    {
+      "id": 620329482,
+      "name": "Passport-1.2.1-mac-arm64.dmg",
+      "size": 170489906,
+      "digest": "sha256:2a47391ce4e0e81c8af7d02fb96e308b88bc75ba7b9a39aa98e6f5e1f7e70188",
+      "updated_at": "2026-10-08T01:25:59Z",
+      "state": "uploaded",
+      "url": "https://github.com/poyal/passport/releases/download/v1.2.1/Passport-1.2.1-mac-arm64.dmg"
+    },
+    {
+      "id": 621739147,
+      "name": "Passport-1.2.1-win-x64.exe",
+      "size": 203975760,
+      "digest": "sha256:9195fdccbdc29ee89b4e23a1c216c8e44c2f535aa67b462a69ff23d4180acb34",
+      "updated_at": "2026-10-08T12:13:52Z",
+      "state": "uploaded",
+      "url": "https://github.com/poyal/passport/releases/download/v1.2.1/Passport-1.2.1-win-x64.exe"
+    },
+    {
+      "id": 621740494,
+      "name": "SHA256SUMS.txt",
+      "size": 188,
+      "digest": "sha256:5f19e597fcdc91223b4f4927a2d32fa67c21be6988e017cc879c5647bcafe788",
+      "updated_at": "2026-10-08T12:14:16Z",
+      "state": "uploaded",
+      "url": "https://github.com/poyal/passport/releases/download/v1.2.1/SHA256SUMS.txt"
+    }
+  ],
+  "verification": {
+    "receipt": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/verification.json",
+    "receiptSHA256": "c1a994585c160fa66f556ed1f6bb3cd9758234eb08f24a33c06688e7810b0f13",
+    "environment": {
+      "platform": "win32",
+      "arch": "x64",
+      "os": "10.0.26100",
+      "node": "v24.21.0",
+      "npm": "11.19.0",
+      "cargo": "cargo 1.99.0 (5f94df478 2026-08-27)",
+      "electron": "44.4.5"
+    },
+    "unit": {
+      "passed": 176,
+      "skipped": 7
+    },
+    "releaseTests": {
+      "passed": 72,
+      "skipped": 1
+    },
+    "artifact": {
+      "name": "Passport-1.2.1-win-x64.exe",
+      "path": "release/builds/20261008T114751Z-7be5713-win-x64-local-release/Passport-1.2.1-win-x64.exe",
+      "bytes": 203975760,
+      "sha256": "9195fdccbdc29ee89b4e23a1c216c8e44c2f535aa67b462a69ff23d4180acb34"
+    },
+    "checks": [
+      {
+        "name": "dependencies",
+        "status": "passed",
+        "startedAt": "2026-10-08T11:47:51.272Z",
+        "finishedAt": "2026-10-08T11:53:21.685Z"
+      },
+      {
+        "name": "ftp-fixtures",
+        "status": "passed",
+        "startedAt": "2026-10-08T11:53:21.688Z",
+        "finishedAt": "2026-10-08T11:53:40.459Z"
+      },
+      {
+        "name": "windows-tools",
+        "status": "passed",
+        "startedAt": "2026-10-08T11:53:40.461Z",
+        "finishedAt": "2026-10-08T11:53:50.176Z"
+      },
+      {
+        "name": "build",
+        "status": "passed",
+        "startedAt": "2026-10-08T11:53:50.178Z",
+        "finishedAt": "2026-10-08T11:54:15.785Z"
+      },
+      {
+        "name": "unit",
+        "status": "passed",
+        "startedAt": "2026-10-08T11:54:15.788Z",
+        "finishedAt": "2026-10-08T11:55:24.494Z"
+      },
+      {
+        "name": "release-tests",
+        "status": "passed",
+        "startedAt": "2026-10-08T11:55:24.497Z",
+        "finishedAt": "2026-10-08T11:56:01.291Z"
+      },
+      {
+        "name": "source-gui",
+        "status": "passed",
+        "startedAt": "2026-10-08T11:56:01.293Z",
+        "finishedAt": "2026-10-08T11:59:19.876Z",
+        "tests": {
+          "startTime": "2026-10-08T11:56:05.088Z",
+          "duration": 194310.821,
+          "expected": 67,
+          "skipped": 4,
+          "unexpected": 0,
+          "flaky": 0
+        },
+        "mode": "hidden",
+        "policyHash": "0b6d69028d74eb9887921886ae0a1005ca79c700cc3f4f32ed66fe09ca209f2d",
+        "allowedSkips": [
+          {
+            "id": "docker-ssh.real-docker-ssh-and-sftp-through-the-desktop-application",
+            "reason": "optional feature not requested: docker"
+          },
+          {
+            "id": "stress.16-visible-terminals-process-100-kib-s-each-for-ten-minutes",
+            "reason": "optional feature not requested: stress"
+          },
+          {
+            "id": "throughput.large-terminal-text-remains-interactive-and-bounded-through-1-gib",
+            "reason": "optional feature not requested: throughput"
+          },
+          {
+            "id": "paste.finder-native-full-paths",
+            "reason": "not applicable on win32"
+          }
+        ]
+      },
+      {
+        "name": "source-desktop",
+        "status": "passed",
+        "startedAt": "2026-10-08T11:59:19.879Z",
+        "finishedAt": "2026-10-08T11:59:39.168Z",
+        "tests": {
+          "startTime": "2026-10-08T11:59:22.070Z",
+          "duration": 16683.224,
+          "expected": 4,
+          "skipped": 0,
+          "unexpected": 0,
+          "flaky": 0
+        },
+        "mode": "desktop",
+        "policyHash": "0b6d69028d74eb9887921886ae0a1005ca79c700cc3f4f32ed66fe09ca209f2d",
+        "allowedSkips": []
+      },
+      {
+        "name": "package",
+        "status": "passed",
+        "startedAt": "2026-10-08T11:59:39.170Z",
+        "finishedAt": "2026-10-08T12:05:05.860Z"
+      },
+      {
+        "name": "installer",
+        "status": "passed",
+        "startedAt": "2026-10-08T12:05:06.165Z",
+        "finishedAt": "2026-10-08T12:05:30.382Z"
+      },
+      {
+        "name": "packaged-smoke",
+        "status": "passed",
+        "startedAt": "2026-10-08T12:05:30.385Z",
+        "finishedAt": "2026-10-08T12:05:35.773Z"
+      },
+      {
+        "name": "packaged-gui",
+        "status": "passed",
+        "startedAt": "2026-10-08T12:05:35.776Z",
+        "finishedAt": "2026-10-08T12:09:19.990Z",
+        "tests": {
+          "startTime": "2026-10-08T12:05:38.016Z",
+          "duration": 221473.147,
+          "expected": 67,
+          "skipped": 4,
+          "unexpected": 0,
+          "flaky": 0
+        },
+        "mode": "hidden",
+        "policyHash": "0b6d69028d74eb9887921886ae0a1005ca79c700cc3f4f32ed66fe09ca209f2d",
+        "allowedSkips": [
+          {
+            "id": "docker-ssh.real-docker-ssh-and-sftp-through-the-desktop-application",
+            "reason": "optional feature not requested: docker"
+          },
+          {
+            "id": "stress.16-visible-terminals-process-100-kib-s-each-for-ten-minutes",
+            "reason": "optional feature not requested: stress"
+          },
+          {
+            "id": "throughput.large-terminal-text-remains-interactive-and-bounded-through-1-gib",
+            "reason": "optional feature not requested: throughput"
+          },
+          {
+            "id": "paste.finder-native-full-paths",
+            "reason": "not applicable on win32"
+          }
+        ]
+      },
+      {
+        "name": "packaged-desktop",
+        "status": "passed",
+        "startedAt": "2026-10-08T12:09:19.993Z",
+        "finishedAt": "2026-10-08T12:09:40.228Z",
+        "tests": {
+          "startTime": "2026-10-08T12:09:22.305Z",
+          "duration": 17481.617000000002,
+          "expected": 4,
+          "skipped": 0,
+          "unexpected": 0,
+          "flaky": 0
+        },
+        "mode": "desktop",
+        "policyHash": "0b6d69028d74eb9887921886ae0a1005ca79c700cc3f4f32ed66fe09ca209f2d",
+        "allowedSkips": []
+      }
+    ],
+    "guiLifecycle": {
+      "source-gui": {
+        "launches": 29,
+        "windows": 35,
+        "exits": 29,
+        "reusedTests": 22,
+        "auditedShutdowns": 29,
+        "shown": 0,
+        "focused": 0
+      },
+      "source-desktop": {
+        "launches": 4,
+        "windows": 4,
+        "exits": 4,
+        "reusedTests": 0,
+        "auditedShutdowns": 0,
+        "shown": 0,
+        "focused": 0
+      },
+      "packaged-gui": {
+        "launches": 29,
+        "windows": 35,
+        "exits": 29,
+        "reusedTests": 22,
+        "auditedShutdowns": 29,
+        "shown": 0,
+        "focused": 0
+      },
+      "packaged-desktop": {
+        "launches": 4,
+        "windows": 4,
+        "exits": 4,
+        "reusedTests": 0,
+        "auditedShutdowns": 0,
+        "shown": 0,
+        "focused": 0
+      }
+    },
+    "evidence": [
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/dependencies.log",
+        "sha256": "c3e9b25bd057ebb2609f1a8d6c94d0005e2e396d485b54c4f000858715c4ec92"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/python-venv.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/python-requirements.log",
+        "sha256": "2338caf0d3e29bb43a0ca087a2963c6a8743a9798c41ba5ddd68086f56edcaef"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/ftp-fixtures.log",
+        "sha256": "e68568e7d7506c80bd22ea939fb00d789045f7752a2210bfc516fdd0232a0b26"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/openssl.log",
+        "sha256": "09489a37e055e8902bc7759a0ef22cacd7475da802984f2dd29be8bebde766e9"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/powershell7.log",
+        "sha256": "a83005914600536c41ec1d734bf13d783d5894206b4ca092f94e760e84390941"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/runtime.log",
+        "sha256": "8978d71caa89e223546f3e0a426c48c39ebce829026984b31c3769634deb451a"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/build.log",
+        "sha256": "145b2e779129b81002b89a932d0ef3c68f1f97e70a4fb3f58835c36f9a979e20"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/unit.log",
+        "sha256": "49e47f95de08e1e9e52c5491cfa1c64abd98b8eb578ba2ee71ee793a97993348"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/release-tests.log",
+        "sha256": "3b3a13da478105f94e7ca2521f3403d2115fcf58236c42244ecc5e6b789d29be"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/source-gui-discovery.log",
+        "sha256": "dd1960ee39be0d1d5616dde752d3f8d43098cfbe16132d47a4130bbd91d33dee"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/source-gui-discovery.json",
+        "sha256": "b61b4b62c8475b24ea7fd0a2eee325f5ce988e67ef94d093b3f27b501ade50fc"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/source-gui.log",
+        "sha256": "e27e433d9215171c654285beb4af7e974741f07db36fefa62d0790c2e1f39ca5"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/source-gui-lifecycle.jsonl",
+        "sha256": "2ee152a7d1cc22c35061dc30e2ec60a80d7d79175b679a52783e30a55277ad65"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/source-gui-native-processes.json",
+        "sha256": "a5d267223eebdc2dfaf957f903fa50435286047060571ac65d9c65d4bbaafefc"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/source-gui.json",
+        "sha256": "71c9f04392fc9844a135dc065d5fd8eaa9a8baaff140b9836ef36d44f850bb71"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/source-desktop-discovery.log",
+        "sha256": "e5d85980a4a1fab68f6ad99b2a69ec2358fafa3bf7bd8b3efe803cb209c3a11a"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/source-desktop-discovery.json",
+        "sha256": "4c287364f7481d39d962274d7bcc996dcc745e706e23bcf5ed0e9976d69bd90a"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/source-desktop.log",
+        "sha256": "15beb4353604327cbffbac8934d889c007edd93358ed4d53497e2d654d5457df"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/source-desktop-lifecycle.jsonl",
+        "sha256": "56c5b6d79d49fd3a2d67e9dcef7b5f340f204de0849d5aa9cb08323db53f6bdd"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/source-desktop-native-processes.json",
+        "sha256": "a5d267223eebdc2dfaf957f903fa50435286047060571ac65d9c65d4bbaafefc"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/source-desktop.json",
+        "sha256": "011eb4b229c0aa7ec583fc92fbb8d44064039106ab522eba5839f7451a5fc886"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/package.log",
+        "sha256": "5c386095cabfaf89ac2c36a2f8a8e10a5f545daff4d2bbcb96fa88c7b3e8989b"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/installer-scope.log",
+        "sha256": "e73a9d44624d20831cb597488727ff419ff20f6fd1f9fd0c19808bd5c20d45f2"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/nsis-extract.log",
+        "sha256": "200124f7824e1e40bff0013cc788b4b3520ae84407b5ad6cd1c8278814c777f2"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/packaged-smoke.log",
+        "sha256": "422de8a3af2115978cf6915dcde5d124838e0e4318a64e495371eaa8b5e67203"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/packaged-gui-discovery.log",
+        "sha256": "dd1960ee39be0d1d5616dde752d3f8d43098cfbe16132d47a4130bbd91d33dee"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/packaged-gui-discovery.json",
+        "sha256": "5ab66e8dbdc84cf31cb79974e03828a89db3b78461d8d144c2c1bcb064a5df95"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/packaged-gui.log",
+        "sha256": "49419551364b08736e6b0d512cffbf9f18b6ab1b77803acf4dae5f58eec10f41"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/packaged-gui-lifecycle.jsonl",
+        "sha256": "b499abffb7154428d2d49b775dce3c3b2441cbdb5d740cfa89de73e92dd474c5"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/packaged-gui-native-processes.json",
+        "sha256": "d12fba554de7ef4384ad02bccf25487cd9be982a2aa942a5e28b67ee6fdd4c15"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/packaged-gui.json",
+        "sha256": "3d07d02b855cf109dec88c3c68386203a8598acc4ab5e283b4a295b10511f96e"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/packaged-desktop-discovery.log",
+        "sha256": "e5d85980a4a1fab68f6ad99b2a69ec2358fafa3bf7bd8b3efe803cb209c3a11a"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/packaged-desktop-discovery.json",
+        "sha256": "f03357384e33aeb67b372ddba3ccef26f94462e0f38d9313e0a44492b4e2223a"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/packaged-desktop.log",
+        "sha256": "3e19ea1d10cb09fe4643c0e6e9914b0248f3fa3b3ac806498d5a279acadd0867"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/packaged-desktop-lifecycle.jsonl",
+        "sha256": "63e8c69dde33458a5db06f09f54abb2b811f4b5cd686dedfa97bb1c987a37a1c"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/packaged-desktop-native-processes.json",
+        "sha256": "d12fba554de7ef4384ad02bccf25487cd9be982a2aa942a5e28b67ee6fdd4c15"
+      },
+      {
+        "path": "release/checks/20261008T114751Z-7be5713-win-x64-local-release/packaged-desktop.json",
+        "sha256": "6184a89ab86272958698e71a3a263c921a9dc2f3ac55dbe6c2fae23e04dda8cc"
+      }
+    ],
+    "evidenceAndInstallerHashesVerifiedAfterRelocation": true,
+    "nativeProcessAudits": [
+      {
+        "name": "source-gui",
+        "passed": true,
+        "residualProcesses": 0
+      },
+      {
+        "name": "source-desktop",
+        "passed": true,
+        "residualProcesses": 0
+      },
+      {
+        "name": "packaged-gui",
+        "passed": true,
+        "residualProcesses": 0
+      },
+      {
+        "name": "packaged-desktop",
+        "passed": true,
+        "residualProcesses": 0
+      }
+    ]
+  },
+  "publicDownloadAndCombinedChecksumsVerified": true,
+  "localDesktopTestsRun": false,
+  "userInstallationReplaced": false,
+  "userDatabaseModified": false,
+  "limitations": [
+    "Physical IME, OS notifications, real AI services, upgrade installation, and optional Docker/long stress tests are separate checks.",
+    "Windows installer UI/scope and extracted payload are checked; installing/uninstalling into a user account is a separate check.",
+    "Windows installer is unsigned.",
+    "Remote native Windows verification does not imply testing on this local Windows desktop.",
+    "The release tag remains at the verified source; publication documentation is committed separately."
+  ],
+  "retention": {
+    "artifacts": [
+      "release/builds/20261008T114751Z-7be5713-win-x64-local-release",
+      "release/checks/20261008T114751Z-7be5713-win-x64-local-release",
+      "release/packages/v1.2.1/local/win-x64",
+      "release/checks/20261008T114556Z-7be5713-win-x64-v1.2.1-publication"
+    ],
+    "existingArtifactsDeleted": false,
+    "protected": [
+      "Latest and previous Windows public packages: 1.2.1 and 1.2.0",
+      "Two latest successful Windows builds: 1.2.1 and 1.2.0",
+      "KEEP-marked diagnostics, unresolved reproduction evidence, tooling, running apps/builds, and recovery backups"
+    ],
+    "candidates": [
+      "Older successful Windows builds and their checks beyond the latest two, only after checking retention exceptions",
+      "Windows public package copies older than 1.2.0, only after checking retention exceptions"
+    ],
+    "sizesBytes": {
+      "release/builds/20261008T114751Z-7be5713-win-x64-local-release": 203977274,
+      "release/checks/20261008T114751Z-7be5713-win-x64-local-release": 20579467,
+      "release/packages/v1.2.1/local/win-x64": 203977451,
+      "release/checks/20261008T114556Z-7be5713-win-x64-v1.2.1-publication": 19934939
+    },
+    "olderWindowsPackageCandidates": [
+      "release/packages/v1.1.0",
+      "release/packages/v1.1.1"
+    ]
+  },
+  "releaseNotesMatchRepository": true,
+  "documentationVerification": {
+    "checkedAt": "2026-10-08T12:15:55.235Z",
+    "status": "passed",
+    "files": [
+      "README.md",
+      "docs/releases/README.md",
+      "docs/releases/v1.2.1.md",
+      "docs/distribution.md",
+      "docs/local-release-guide.md",
+      "docs/windows-paste-release.md",
+      "docs/verification.md"
+    ],
+    "linksChecked": 173,
+    "historicalArtifactsUnavailable": [
+      {
+        "file": "docs/verification.md",
+        "target": "../release/builds/Passport.app"
+      },
+      {
+        "file": "docs/verification.md",
+        "target": "../release/builds/Passport.app"
+      }
+    ],
+    "sourceCommit": "7be5713234519a7670f92f536d7dd2f09dad7c9f",
+    "fullBuildOrE2ERepeatedForDocs": false
+  }
+}
