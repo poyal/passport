@@ -297,12 +297,12 @@ test("saves custom colors and shortcuts and applies highlights without changing 
   ).toBeVisible();
   await page.getByRole("button", { name: "단축키", exact: true }).click();
   await page
-    .getByRole("button", { name: "새 탭 · 로컬 터미널 키 1 변경", exact: true })
+    .getByRole("button", { name: "새 탭 · 로컬 터미널 키 변경", exact: true })
     .click();
   await page
     .getByLabel("키 조합", { exact: true })
     .press(process.platform === "darwin" ? "Meta+Shift+y" : "Control+Shift+y");
-  await page.getByRole("button", { name: "등록", exact: true }).click();
+  await page.getByRole("button", { name: "적용", exact: true }).click();
   await page.getByRole("button", { name: "단축키 저장", exact: true }).click();
   await expect
     .poll(

@@ -17,6 +17,10 @@
   --selected: #233e3d;
   --danger: #ff838c;
   --shadow: 0 18px 60px #0007;
+  --space-control: 8px;
+  --space-help: 12px;
+  --space-field: 16px;
+  --space-section: 24px;
   font-size: 13px;
   color: var(--text);
   background: var(--bg);
@@ -191,7 +195,7 @@ small {
   gap: 9px;
 }
 .row > small:last-child,
-.row > .text-button:last-child {
+.row > .row-action:last-child {
   margin-left: auto;
 }
 .row > label {
@@ -203,22 +207,14 @@ small {
   margin: 20px 0;
 }
 .icon-button {
-  border: 0;
-  background: transparent;
   width: 28px;
   height: 28px;
   padding: 5px;
-  border-radius: 5px;
   flex-shrink: 0;
 }
 .icon-button.active,
 .icon-button.favorite {
   color: var(--accent);
-}
-.subtle,
-.text-button {
-  background: transparent;
-  border-color: transparent;
 }
 .hint {
   font-size: 12px;
@@ -733,8 +729,6 @@ summary {
 .workspace-bar button {
   font-size: 11px;
   padding: 5px 9px;
-  background: transparent;
-  border-color: transparent;
 }
 .workspace-bar button.active {
   color: var(--accent);
@@ -986,20 +980,6 @@ summary {
   overflow-wrap: anywhere;
   font-weight: 600;
 }
-.update-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin-bottom: 20px;
-}
-.update-heading h3 {
-  margin: 0;
-}
-.update-heading button {
-  flex-shrink: 0;
-}
 .update-result {
   display: grid;
   gap: 10px;
@@ -1023,7 +1003,7 @@ summary {
 }
 .update-actions {
   flex-wrap: wrap;
-  margin-top: 16px;
+  margin-top: var(--space-field);
 }
 .app-status .update-notice {
   padding: 2px 6px;
@@ -1153,7 +1133,7 @@ summary {
 .snippet-card strong {
   font-size: 12px;
 }
-.snippet-card .text-button {
+.snippet-card .row-action {
   font-size: 10px;
   padding: 3px;
 }
@@ -1641,7 +1621,7 @@ summary {
   border: 1px solid var(--line);
   border-radius: 10px;
   background: var(--panel);
-  padding: 23px;
+  padding: var(--space-section);
   height: fit-content;
 }
 .settings-card h3 {
@@ -1649,10 +1629,41 @@ summary {
   align-items: center;
   gap: 9px;
   font-size: 13px;
-  margin-bottom: 22px;
+  margin: 0;
+}
+.settings-card > h3 {
+  margin-bottom: var(--space-field);
+}
+.settings-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-help) var(--space-field);
+  margin-bottom: var(--space-field);
+}
+.settings-card-header > h3 {
+  margin: 0;
+}
+.settings-card-header > button {
+  flex-shrink: 0;
 }
 .settings-card p {
   font-size: 12px;
+}
+.settings-card > :last-child {
+  margin-bottom: 0;
+}
+/* The containing layout owns separation after controls and result blocks. */
+.settings-card > :is(.row, button, .update-result) + .hint,
+.appearance-panel > .theme-list + .hint,
+.home-view > .row + .hint,
+.tunnel-card > .row + p,
+.profile-editor-form > .row + .hint {
+  margin-top: var(--space-help);
+}
+.profile-editor-form > .row + .profile-shells {
+  margin-top: var(--space-field);
 }
 .settings-card .tool-body {
   padding: 0;
@@ -1748,10 +1759,9 @@ summary {
   text-align: right;
 }
 kbd {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  padding: 5px 9px;
-  border-radius: 4px;
+  background: transparent;
+  border: 0;
+  padding: 0;
   font-size: 11px;
 }
 .modal-shade {
@@ -2654,8 +2664,12 @@ select:disabled {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   column-gap: 24px;
-  row-gap: 6px;
+  row-gap: var(--space-field);
   align-items: start;
+}
+.settings-content .appearance-fields > :is(label, .toggle-field),
+.settings-form-grid > :is(label, .toggle-field) {
+  margin: 0;
 }
 .settings-content .appearance-fields > .check-label {
   align-self: end;
@@ -2859,7 +2873,6 @@ select:disabled {
 .workspace-sidebar .tabs > .icon-button {
   width: 100%;
   margin-top: 8px;
-  border: 1px dashed var(--line);
 }
 .unread-dot {
   display: inline-block;
@@ -2871,10 +2884,6 @@ select:disabled {
   border: 0;
   border-radius: 50%;
   background: var(--accent);
-}
-.activity-button {
-  border: 0;
-  background: transparent;
 }
 .activity-button small {
   background: var(--accent);
@@ -3093,12 +3102,21 @@ select:disabled {
 
 .font-picker {
   display: grid;
-  gap: 6px;
+  gap: var(--space-field);
   min-width: 0;
   grid-column: 1 / -1;
 }
+.font-field {
+  display: grid;
+  gap: var(--space-control);
+  min-width: 0;
+}
 .font-picker label {
   font-size: 12px;
+  margin: 0;
+}
+.font-picker > :is(p, pre) {
+  margin: 0;
 }
 .font-preview {
   margin: 4px 0;
@@ -3123,7 +3141,7 @@ select:disabled {
 }
 .shortcut-row {
   display: grid;
-  grid-template-columns: minmax(140px, 1fr) minmax(0, 2fr) auto;
+  grid-template-columns: minmax(140px, 1fr) minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
   padding: 12px 0;
@@ -3133,22 +3151,28 @@ select:disabled {
   font-size: 12px;
   overflow-wrap: anywhere;
 }
-.shortcut-bindings {
+.shortcut-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  justify-content: flex-end;
+  gap: var(--space-control);
   min-width: 0;
 }
-.shortcut-binding {
-  display: inline-flex;
-  align-items: center;
-  max-width: 100%;
-}
-.shortcut-binding button {
+.shortcut-actions > button {
+  height: 34px;
+  padding-top: 0;
+  padding-bottom: 0;
   min-width: 0;
 }
-.shortcut-binding kbd {
+.shortcut-actions > .icon-button {
+  width: 34px;
+}
+.shortcut-key {
+  min-width: 0;
+}
+.shortcut-key kbd {
+  font-size: 12px;
   white-space: normal;
   overflow-wrap: anywhere;
 }
@@ -3158,5 +3182,13 @@ select:disabled {
   }
   .shortcut-label {
     grid-column: 1 / -1;
+  }
+}
+@container settings (max-width: 380px) {
+  .shortcut-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .shortcut-actions {
+    justify-content: flex-start;
   }
 }

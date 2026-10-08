@@ -1,0 +1,347 @@
+{
+  "createdAt": "2026-10-08T01:05:36.590Z",
+  "purpose": "Consistent action button appearance: local Mac test app",
+  "source": "local",
+  "sourceCommit": "ea2ffc072bbab8dbe4fc1f48007d73bc6f1cc28c",
+  "dirty": true,
+  "sourceFingerprint": "d5025b3d55fe540ba02e2fee4a80a8042ec24b05787fe0dc5c6007f52b5fa2e7",
+  "changedFiles": [
+    {
+      "status": " M",
+      "path": "README.md"
+    },
+    {
+      "status": " M",
+      "path": "docs/README-작성-가이드.md"
+    },
+    {
+      "status": " M",
+      "path": "docs/e2e.md"
+    },
+    {
+      "status": " M",
+      "path": "docs/platform-development.md"
+    },
+    {
+      "status": " M",
+      "path": "docs/user-guide.md"
+    },
+    {
+      "status": " M",
+      "path": "docs/verification.md"
+    },
+    {
+      "status": " M",
+      "path": "src/renderer/Activity.tsx"
+    },
+    {
+      "status": " M",
+      "path": "src/renderer/Advanced.tsx"
+    },
+    {
+      "status": " M",
+      "path": "src/renderer/FilesView.tsx"
+    },
+    {
+      "status": " M",
+      "path": "src/renderer/FontPicker.tsx"
+    },
+    {
+      "status": " M",
+      "path": "src/renderer/Settings.tsx"
+    },
+    {
+      "status": " M",
+      "path": "src/renderer/ShortcutSettings.tsx"
+    },
+    {
+      "status": " M",
+      "path": "src/renderer/TerminalSetup.tsx"
+    },
+    {
+      "status": " M",
+      "path": "src/renderer/Updates.tsx"
+    },
+    {
+      "status": " M",
+      "path": "src/renderer/Workspaces.tsx"
+    },
+    {
+      "status": " M",
+      "path": "src/renderer/styles.css"
+    },
+    {
+      "status": " M",
+      "path": "src/shared/shortcuts.ts"
+    },
+    {
+      "status": " M",
+      "path": "tests/e2e/advanced.spec.ts"
+    },
+    {
+      "status": " M",
+      "path": "tests/e2e/paste.spec.ts"
+    },
+    {
+      "status": " M",
+      "path": "tests/e2e/release-policy.json"
+    },
+    {
+      "status": " M",
+      "path": "tests/e2e/shortcuts-settings.spec.ts"
+    },
+    {
+      "status": " M",
+      "path": "tests/e2e/updates.spec.ts"
+    },
+    {
+      "status": " M",
+      "path": "tests/e2e/usability.spec.ts"
+    },
+    {
+      "status": " M",
+      "path": "tests/e2e/windows-shells.spec.ts"
+    },
+    {
+      "status": " M",
+      "path": "tests/release.test.mjs"
+    },
+    {
+      "status": " M",
+      "path": "tests/shortcuts.test.ts"
+    },
+    {
+      "status": " M",
+      "path": "tests/store.test.ts"
+    },
+    {
+      "status": "??",
+      "path": "docs/benchmarks/mac-handoff-20261007.json"
+    },
+    {
+      "status": "??",
+      "path": "docs/benchmarks/shortcut-ui-preview-20261008.json"
+    },
+    {
+      "status": "??",
+      "path": "docs/benchmarks/shortcut-ui-spacing-20261008.json"
+    },
+    {
+      "status": "??",
+      "path": "tests/fixtures/ui-spacing.ts"
+    }
+  ],
+  "platform": "mac-arm64",
+  "status": "preview-verified",
+  "build": "release/builds/20261008T010536Z-ea2ffc0-dirty-mac-arm64-button-style-preview",
+  "checks": "release/checks/20261008T010536Z-ea2ffc0-dirty-mac-arm64-button-style-preview",
+  "previousPreviewTarget": "20261008T005851Z-ea2ffc0-dirty-mac-arm64-shortcut-ui-preview/mac-arm64/Passport.app",
+  "compilation": "passed",
+  "app": "release/builds/20261008T010536Z-ea2ffc0-dirty-mac-arm64-button-style-preview/mac-arm64/Passport.app",
+  "codesign": "passed: deep, strict",
+  "buildAttempts": [
+    {
+      "sourceFingerprint": "2d893e4cf9fbc516db4829a6a311f77a3e79deafd2308ff800995e456e11486c",
+      "status": "superseded-before-verification",
+      "reason": "Apply the same button treatment to workspace actions, activity button and new-tab action",
+      "buildLog": "build.log",
+      "packageLog": "package.log"
+    }
+  ],
+  "packagedSmoke": {
+    "status": "passed",
+    "lifecycle": {
+      "launches": 1,
+      "windows": 1,
+      "exits": 1,
+      "reusedTests": 0,
+      "auditedShutdowns": 1,
+      "shown": 0,
+      "focused": 0
+    }
+  },
+  "finishedAt": "2026-10-08T01:09:40.138Z",
+  "appVersion": "1.2.0",
+  "packageIntegrity": {
+    "codesign": "passed",
+    "sourceBuildMatch": "passed",
+    "buildFiles": [
+      {
+        "file": "dist/main/index.cjs",
+        "sha256": "d5b5eebb953d4d84ffb14afa3d82870a11adc506986be5b2f31ceb6c1bf22122",
+        "packagedMatch": true
+      },
+      {
+        "file": "dist/preload/index.cjs",
+        "sha256": "f1d510e44a1cfcc034df1f0a6495be5126b3c03fa19575968c846a5e64e85bd4",
+        "packagedMatch": true
+      },
+      {
+        "file": "dist/renderer/index.html",
+        "sha256": "471aab0f2d400b6830a4ede073ccd4ab171ad27dc6d68b3fae998f8024bab641",
+        "packagedMatch": true
+      },
+      {
+        "file": "dist/renderer/assets/index-8RrZw9rX.css",
+        "sha256": "c231a746130bfab473e5714b6c81bef4d4f6a334b0782991efee1f2814a1d8f2",
+        "packagedMatch": true
+      },
+      {
+        "file": "dist/renderer/assets/index-CualGuzY.js",
+        "sha256": "b6aa21d1b6e61f3b3719c16a08f5df4999c6d5ebdc30be95d7a096bf4ea82402",
+        "packagedMatch": true
+      }
+    ],
+    "appArchive": {
+      "path": "release/builds/20261008T010536Z-ea2ffc0-dirty-mac-arm64-button-style-preview/mac-arm64/Passport.app/Contents/Resources/app.asar",
+      "bytes": 76076011,
+      "sha256": "44f7a8988570b1c9cfdd1c3ade468d24e540fa70a62d27327adaa40489075f32"
+    }
+  },
+  "packagedGui": {
+    "directory": "release/checks/20261008T010739Z-ea2ffc0-dirty-mac-arm64-e2e-hidden",
+    "scope": "Related shortcut, update and usability suites",
+    "startTime": "2026-10-08T01:07:40.114Z",
+    "duration": 38344.57,
+    "expected": 16,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0,
+    "lifecycle": {
+      "launches": 3,
+      "windows": 3,
+      "exits": 3,
+      "reusedTests": 8,
+      "auditedShutdowns": 3,
+      "shown": 0,
+      "focused": 0
+    }
+  },
+  "visualInspection": {
+    "themes": [
+      "dark",
+      "light"
+    ],
+    "lifecycle": {
+      "launches": 2,
+      "windows": 2,
+      "exits": 2,
+      "reusedTests": 0,
+      "auditedShutdowns": 2,
+      "shown": 0,
+      "focused": 0
+    },
+    "appearance": [
+      {
+        "mode": "dark",
+        "buttons": [
+          {
+            "label": "출력 검색 키 변경",
+            "height": 34,
+            "border": "1px",
+            "borderColor": "rgb(50, 58, 69)",
+            "background": "rgb(36, 43, 51)",
+            "radius": "6px"
+          },
+          {
+            "label": "출력 검색 단축키 해제",
+            "height": 34,
+            "border": "1px",
+            "borderColor": "rgb(50, 58, 69)",
+            "background": "rgb(36, 43, 51)",
+            "radius": "6px"
+          },
+          {
+            "label": "출력 검색 초기화",
+            "height": 34,
+            "border": "1px",
+            "borderColor": "rgb(50, 58, 69)",
+            "background": "rgb(36, 43, 51)",
+            "radius": "6px"
+          }
+        ]
+      },
+      {
+        "mode": "light",
+        "buttons": [
+          {
+            "label": "출력 검색 키 변경",
+            "height": 34,
+            "border": "1px",
+            "borderColor": "rgb(220, 226, 232)",
+            "background": "rgb(237, 241, 244)",
+            "radius": "6px"
+          },
+          {
+            "label": "출력 검색 단축키 해제",
+            "height": 34,
+            "border": "1px",
+            "borderColor": "rgb(220, 226, 232)",
+            "background": "rgb(237, 241, 244)",
+            "radius": "6px"
+          },
+          {
+            "label": "출력 검색 초기화",
+            "height": 34,
+            "border": "1px",
+            "borderColor": "rgb(220, 226, 232)",
+            "background": "rgb(237, 241, 244)",
+            "radius": "6px"
+          }
+        ]
+      }
+    ],
+    "evidence": "release/checks/20261008T010536Z-ea2ffc0-dirty-mac-arm64-button-style-preview/button-appearance.json",
+    "note": "Final values sampled after theme transition; intermediate samples retained separately"
+  },
+  "implementationSHA256": {
+    "src/renderer/styles.css": "153154d794aa5f23bcb63e5ad1b95a5ab7881e98c9cdd7cd2d4d705f46ceec3f",
+    "src/renderer/ShortcutSettings.tsx": "bbbec8722222d000a090a3f46034ac4de5b6840a2096f7c2b0e79f84c2b56c78",
+    "src/renderer/FilesView.tsx": "54ade6dbcd8464b2b022120455d7a1d0e1147c1fc6f6f814060fca7e12e2b488",
+    "src/renderer/Advanced.tsx": "dc3932b02e69c19e149eb6c5956e26b9d083715fcabebbb9ecd34ca211f3e7f7",
+    "src/renderer/Workspaces.tsx": "6a838aad5de3822ef2326d6c04605c129ce1c25b6f84884ee38755ed22d4f33a"
+  },
+  "evidenceSHA256": {
+    "release/checks/20261008T010536Z-ea2ffc0-dirty-mac-arm64-button-style-preview/build-final.log": "dcaf51f89344f4a6cbfb5a6f34d3fc0ff73a728a53ec9ea69339e4619f0d8e3f",
+    "release/builds/20261008T010536Z-ea2ffc0-dirty-mac-arm64-button-style-preview/package-final.log": "14d664df1d9f755d7832950381cd5b904a8a454fad73e98cb0db20a6db051cca",
+    "release/checks/20261008T010536Z-ea2ffc0-dirty-mac-arm64-button-style-preview/codesign-final.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "release/checks/20261008T010536Z-ea2ffc0-dirty-mac-arm64-button-style-preview/package-integrity.json": "9cbe8072c6aa57321fe5d1794c74e05553c3e0428d749e79096a0494572db54c",
+    "release/checks/20261008T010536Z-ea2ffc0-dirty-mac-arm64-button-style-preview/app-files.json": "e5ea9f1f9e028b6bc25f57247190cbb5b9e0937695db89d260f6af27cf6a8a0d",
+    "release/checks/20261008T010536Z-ea2ffc0-dirty-mac-arm64-button-style-preview/packaged-smoke.log": "a94c32f765e164ec5b080da02f7b1b307ac9c13b90490ec173ea8d88b649e467",
+    "release/checks/20261008T010536Z-ea2ffc0-dirty-mac-arm64-button-style-preview/smoke-lifecycle.jsonl": "d8766fd2cfbd40cf71243e77cdee1928a3705f1129d7896ce72880d941b7b3b5",
+    "release/checks/20261008T010536Z-ea2ffc0-dirty-mac-arm64-button-style-preview/button-appearance.json": "b4e8f7d0a638f7db4e21f869354d83bf03783a53e10975d90b27dc4c8826b538",
+    "release/checks/20261008T010536Z-ea2ffc0-dirty-mac-arm64-button-style-preview/visual-lifecycle.jsonl": "8e20dfae54f99a8d71bdca5f86056f1282a10c531594b4cbd3bf09688ea6ac70",
+    "release/checks/20261008T010536Z-ea2ffc0-dirty-mac-arm64-button-style-preview/shortcut-dark.png": "3d74aa54d7f3455a9b8a2efec03d456283dc2a8645294409479a0399ada24479",
+    "release/checks/20261008T010536Z-ea2ffc0-dirty-mac-arm64-button-style-preview/shortcut-light.png": "01965f562bcccf2e4186fde7b6ede96386042605f9c992ff2e33e33e434813fe",
+    "release/checks/20261008T010739Z-ea2ffc0-dirty-mac-arm64-e2e-hidden/artifact.json": "632380fd487222b74dd20ae7a2ad8a13632edf5077e94890659df8aa2a3f0fd7",
+    "release/checks/20261008T010739Z-ea2ffc0-dirty-mac-arm64-e2e-hidden/report.json": "341c82da71aae5e47cb5017f36fcaed65459a1c36675ec862e99b6b5156cce1d",
+    "release/checks/20261008T010739Z-ea2ffc0-dirty-mac-arm64-e2e-hidden/lifecycle.jsonl": "968b97edc31a32b975334f36310ef041545b72f64716520721813524043997e9",
+    "release/builds/20261008T010536Z-ea2ffc0-dirty-mac-arm64-button-style-preview/artifact.json": "f40b8169631855325890d6275acf051d83648ed60aca9b9024f6f807a0e5e9b2",
+    "release/checks/20261008T010536Z-ea2ffc0-dirty-mac-arm64-button-style-preview/artifact.json": "f40b8169631855325890d6275acf051d83648ed60aca9b9024f6f807a0e5e9b2"
+  },
+  "previewLink": "release/builds/Passport.app",
+  "retention": {
+    "candidateAfter": "2026-10-15",
+    "deleted": [],
+    "protected": [
+      "release/builds/20261008T010536Z-ea2ffc0-dirty-mac-arm64-button-style-preview/mac-arm64/Passport.app",
+      "release/builds/20261008T005851Z-ea2ffc0-dirty-mac-arm64-shortcut-ui-preview/mac-arm64/Passport.app",
+      "KEEP.md marked artifacts",
+      "Existing Rust toolchain",
+      "Recovery backups"
+    ],
+    "reviewRequired": [
+      "Older failed or unclassified builds require issue/source review"
+    ],
+    "sizesKiB": {
+      "build": 425072,
+      "checks": 668,
+      "gui": 22680
+    }
+  },
+  "limitations": [
+    "Local Mac arm64 test app; related GUI scope only",
+    "Windows native and actual desktop checks not performed",
+    "No installation replacement, DMG or publication"
+  ]
+}

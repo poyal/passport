@@ -1,5 +1,61 @@
 # Passport 검증 기록
 
+## 동작 버튼 스타일 통일과 Mac 테스트 앱 — 2026-10-08
+
+아이콘·텍스트 버튼과 작업 도구의 투명 배경·테두리 제거 규칙, 새 탭 버튼의 점선 테두리를 없애 일반 동작 버튼의 공통 스타일을 사용하도록 정리했다. 단축키의 `키 변경`·X·`초기화`는 높이 34px, 테두리 1px, 모서리 6px와 동일한 테마 배경색을 사용한다. 탭·메뉴·주요 동작·위험 동작의 의미를 나타내는 상태 스타일은 유지한다.
+
+타입 검사·앱 빌드·서명 검증을 통과했고 패키지의 단축키·업데이트·사용성 숨김 GUI **16개가 실패·생략·재시도 없이 통과**했다. 실제 PTY·helper·정상 종료도 확인했다. 다크·라이트 스크린샷을 확인하고 테마 전환이 끝난 뒤 세 버튼의 배경·테두리·높이·모서리가 같은지 측정했다. smoke·GUI·화면 점검을 합쳐 launch/exit/종료 감사 각 6회, **표시·네이티브 포커스 0회**다. 관련 부분 검사이며 Windows 실기와 실제 데스크톱 검사는 수행하지 않았다.
+
+`release/builds/Passport.app`은 `20261008T010536Z-ea2ffc0-dirty-mac-arm64-button-style-preview/mac-arm64/Passport.app`으로 갱신했다. 패키지의 main·preload·renderer가 소스 빌드와 일치하며 `app.asar` SHA-256은 `44f7a8988570b1c9cfdd1c3ade468d24e540fa70a62d27327adaa40489075f32`다. 빌드 폴더 약 415MiB, 같은 실행 ID의 검사 폴더와 `20261008T010739Z-ea2ffc0-dirty-mac-arm64-e2e-hidden/` 자료 약 23MiB를 보관한다. 새 검증 자료는 2026-10-15 이후 정리 후보이며 현재·직전 성공 빌드와 KEEP·도구 체인·복구 자료를 보호한다. 기존 자료 삭제나 설치본 교체는 하지 않았다. [구현·패키지·화면 측정과 해시](benchmarks/button-style-preview-20261008.json).
+
+## 단축키·간격 수정본의 Mac 테스트 앱 — 2026-10-08
+
+아래 수정 내용을 포함한 `ea2ffc0` 작업 사본을 Apple Silicon용 Passport 1.2.0 앱으로 패키징했다. `codesign --verify --deep --strict`를 통과했고, 패키지의 main·preload·renderer JS/CSS 해시가 앞서 검증한 소스 빌드와 일치한다. 격리된 임시 데이터로 실제 PTY·내장 helper·초기 DB·renderer Node 접근 차단·종료 코드 0을 확인했다.
+
+패키지의 단축키·업데이트·사용성 숨김 GUI **16개가 실패·생략·재시도 없이 통과**했다. 다크·라이트와 세 창 크기의 설정 화면을 포함한다. smoke와 GUI를 합쳐 launch/exit/정상 종료 감사는 각 4회이며 **창 표시·네이티브 포커스는 0회**다. 관련 부분 검사 결과이며 전체 배포 승인이나 Windows 실기·데스크톱 검사 완료를 의미하지 않는다.
+
+테스트용 상대 링크 `release/builds/Passport.app`은 검증된 `20261008T005851Z-ea2ffc0-dirty-mac-arm64-shortcut-ui-preview/mac-arm64/Passport.app`을 가리킨다. 앱·빌드 로그는 약 415MiB, 대응하는 `release/checks/` 실행 폴더와 `20261008T005952Z-ea2ffc0-dirty-mac-arm64-e2e-hidden/` 검증 자료는 약 22MiB다. 앱의 파일·심볼릭 링크 708개와 해시를 기록했다. `app.asar` SHA-256은 `c047d995b7f8b523c8e752b05cf76f90326c2fa9640c4d75d0ea14c3cd861175`다.
+
+새 검증 자료는 2026-10-15 이후 정리 후보이며 현재 링크 대상·직전 성공 빌드·KEEP 자료·도구 체인·복구 백업을 보호한다. 오래된 실패·미분류 빌드는 문제 해결 여부와 출처 확인 후 후보로 분류한다. 기존 자료 삭제·설치본 교체·DMG 생성·게시 없이 테스트 앱만 준비했다. [패키지 검사·해시·보관 기록](benchmarks/shortcut-ui-preview-20261008.json).
+
+## 단축키 단일 지정과 공통 UI 간격 — 2026-10-08
+
+`ea2ffc0` 작업 사본에서 기능당 키 하나로 변경·해제·초기화하도록 수정했다. 기존 문서·백업·가져오기는 두 OS의 첫 번째 키만 유지하고 빈 배열은 보존한다. 저장 형식과 IPC는 유지하며, 편집 가능한 기본 키와 xterm·Chromium·메뉴의 기본 동작 차단 키를 분리했다. 키 표시는 테두리 없는 텍스트로, X는 아이콘 버튼으로 표시한다.
+
+제목과 버튼의 정렬, 글꼴 라벨의 중복 여백, 업데이트·테마·알림·가져오기·시작 화면의 붙은 안내문, 포트 포워딩·시작 프로파일 대화상자의 간격과 알림함 빈 화면을 수정했다. 레이아웃 회귀는 가로 넘침 외에 실제 간격·중앙 정렬·버튼 높이·중첩 테두리도 판정한다.
+
+| 검사 | 결과 |
+| --- | --- |
+| 타입·단위/통합 | 175 통과·8 조건부 생략(Windows 전용 4, FTP/FTPS 2, Docker 1, 파일 부하 1) |
+| 배포 정책·회귀 | 73 통과 |
+| Rust helper·앱 빌드 | 기존 격리 Rust 도구 체인을 지정해 통과 |
+| 관련 소스 숨김 GUI | 30 통과, 실패·생략·재시도 없음 |
+| 테마·크기 | 다크·라이트, 1024×680·1440×900·1920×1080 설정/주요 화면 및 최소 크기 대화상자 |
+
+GUI launch/exit/정상 종료 감사는 각 7회, 창 7개, 재사용 사례 10개이며 **표시·포커스는 모두 0회**다. 단축키 변경 후 이전 키 미실행, 저장·reload, 해제·초기화·취소·충돌, 백업·SQLite 재개방 이행과 Windows 플랫폼 주입 시 보조 키 차단을 확인했다. Windows 실기와 실제 네이티브 데스크톱 검사는 대기이며 부분 소스 GUI를 전체 배포 승인으로 간주하지 않는다.
+
+자료는 `release/checks/20261008T004956Z-ea2ffc0-dirty-mac-arm64-shortcut-ui-check/`와 `release/checks/20261008T005235Z-ea2ffc0-dirty-mac-arm64-e2e-hidden/`에 약 26MiB로 보관했다. 초기 배포 정책 사례 수 불일치와 Cargo PATH 누락은 해결했으며 로그를 보존했다. 계획 단계의 두 `ui-plan-*` 폴더 약 7.6MiB도 유지한다. 성공·해결된 진단 자료는 2026-10-15 이후 정리 후보이며 기존 링크 대상·보존 도구 체인·설치본·백업은 변경하거나 삭제하지 않았다. 이번 변경은 패키징·설치본 교체·게시를 포함하지 않는다. [구현·빌드 해시와 검증 요약](benchmarks/shortcut-ui-spacing-20261008.json).
+
+## Windows 작업분의 로컬 Mac 재검증 — 2026-10-07
+
+Windows에서 반영한 Passport 1.2.0 소스 `ea2ffc072bbab8dbe4fc1f48007d73bc6f1cc28c`를 macOS 27.0.1 Apple Silicon에서 `npm run release:verify -- --preview`로 검증했다. 실행 시작과 종료의 소스는 변경 없는 동일 커밋이며, 검증 후 이 기록만 추가했다. 기본 PATH의 Node 22 대신 기존 Homebrew Node 25.6.0과 보존된 Rust 1.99.0 도구 체인을 명시해 사용했다. 제품·시험 코드 수정 없이 전체 숨김 검증이 통과했다.
+
+| 검사 | 결과 |
+| --- | --- |
+| 고정 의존성 설치·타입·Rust helper·앱 빌드 | 통과 |
+| 단위·통합 | 174 통과·6 허용 생략. 실제 FTP/FTPS fixture 포함 |
+| 배포 회귀 | 73 통과·생략 없음 |
+| 소스 / 최종 DMG 내부 앱 숨김 GUI | 각각 60 통과·9 허용 생략. 실패·재시도·flaky 없음 |
+| DMG 체크섬·내부 앱 서명 | `hdiutil verify`, `codesign --verify --deep --strict` 통과 |
+| 패키지 실행 | ARM64·1.2.0, 실제 PTY·helper·초기 DB·renderer Node 접근 차단·종료 코드 0 확인 |
+| 빌드 앱과 DMG 내부 앱 비교 | 파일 해시·권한·심볼릭 링크 708개 항목 일치 |
+
+소스·패키지 GUI 각각 launch/exit/종료 감사는 **25회**, 창은 31개, 재사용 사례는 17개이며 **표시·포커스는 0회**다. 단위 생략은 Windows 전용 4개와 선택 Docker·파일 부하 각 1개, GUI 생략은 Windows 전용 6개와 선택 Docker·10분 부하·1GiB 출력 각 1개다. 네이티브 데스크톱 4개는 숨김 실행의 검사 목록에서 제외했다. 실제 Mac 물리 IME·OS 알림·Finder 조작·외부 AI 서비스·사용자 계정 설치/업그레이드와 Windows 실기는 이번에 수행하지 않았다.
+
+검증 상태는 `preview-verified`이며 게시용 기록이 아니다. 로컬 DMG는 **169,155,991바이트**, SHA-256은 `9d42b6b2609ea4fc5a3e9b9c4258582b7331836013475d92ce4e4b49b90aaee4`다. 기존 공개 DMG와 별개의 로컬 빌드이며 ad-hoc 서명·미공증이다. 검증 증거와 DMG의 해시 24개를 재확인했고, 종료 후 DMG 마운트와 실행 잠금이 해제됐다.
+
+테스트용 앱은 `release/builds/Passport.app`이며 `20261007T001303Z-ea2ffc0-mac-arm64-local-release/mac-arm64/Passport.app`을 가리키는 상대 링크로 갱신했다. 빌드·DMG는 같은 `release/builds/` 실행 폴더에 약 576MiB, 로그·보고서·검증용 Python 환경은 대응하는 `release/checks/` 폴더에 약 75MiB를 보관한다. 새 성공 검증 자료는 2026-10-14 이후 정리 후보이며 링크 대상·최근 성공 빌드 2회·KEEP 자료·복구 백업은 보호한다. 기존 자료를 삭제하지 않았으며 오래된 실패·미분류 폴더는 해결 여부와 출처 확인을 먼저 거친다. [실행 환경·검사·해시·생략 사유 요약](benchmarks/mac-handoff-20261007.json).
+
 ## 1.2.0 두 플랫폼 공개 배포 완료 — 2026-10-07
 
 [Passport 1.2.0](https://github.com/poyal/passport/releases/tag/v1.2.0)을 공개했다. 소스 `b8b650e440f352078b23f1cf221290f816170775`의 [원격 정식 검증](https://github.com/poyal/passport/actions/runs/37508842125)을 통과한 Windows x64 EXE와 Mac Apple Silicon DMG를 재빌드 없이 게시했으며 업로드 후 다운로드 해시도 확인했다. 공식 지원 대상은 **Windows 11 x64와 macOS 14 이상 Apple Silicon**이다.

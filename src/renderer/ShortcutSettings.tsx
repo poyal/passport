@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { X } from "lucide-react";
 import { useApp } from "./context";
-import { Modal } from "./components";
+import { IconButton, Modal } from "./components";
 import {
   defaultShortcuts,
   shortcutActions,
@@ -23,10 +24,7 @@ export function ShortcutSettings() {
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [recording, setRecording] = useState<{
-    action: ShortcutAction;
-    index?: number;
-  } | null>(null);
+  const [recording, setRecording] = useState<ShortcutAction | null>(null);
   const [binding, setBinding] = useState("");
   const [recordError, setRecordError] = useState("");
   const change = (next: ShortcutMap) => {
@@ -34,18 +32,14 @@ export function ShortcutSettings() {
     setSaved(false);
     setError("");
   };
-  const start = (action: ShortcutAction, index?: number) => {
-    setRecording({ action, index });
+  const start = (action: ShortcutAction) => {
+    setRecording(action);
     setBinding("");
     setRecordError("");
   };
   const apply = () => {
     if (!recording || !binding) return;
-    const { action, index } = recording;
-    const keys = [...draft[action]];
-    if (index === undefined) keys.push(binding);
-    else keys[index] = binding;
-    const next = { ...draft, [action]: keys };
+    const next = { ...draft, [recording]: [binding] };
     try {
       validateShortcutMap(next, platform);
       change(next);
@@ -56,18 +50,19 @@ export function ShortcutSettings() {
   };
   return (
     <section className="settings-card shortcut-settings">
-      <div className="row between">
+      <div className="settings-card-header">
         <h3>{platform === "darwin" ? "macOS" : "Windows"} 단축키</h3>
         <button
           disabled={busy}
           onClick={() => change(structuredClone(defaultShortcuts[platform]))}
         >
-          전체 기본값 복원
+          전체 초기화
         </button>
       </div>
       <p className="hint">
-        현재 운영체제의 키만 표시합니다. 한 기능에 여러 키를 추가할 수 있고,
-        모든 키를 삭제하면 사용하지 않습니다. 변경 후 저장해 주세요.
+        현재 운영체제의 키만 표시합니다. 한 기능에 키 하나를 지정할 수 있고, X로
+        해제하면 사용하지 않습니다. 초기화는 기본 키를 복원합니다. 변경 후
+        저장해 주세요.
       </p>
       <p className="hint">
         복사는 선택한 텍스트가 없으면 아무 동작도 하지 않습니다. 명령 중단은
@@ -90,58 +85,45 @@ export function ShortcutSettings() {
                 <div className="shortcut-label">
                   {shortcutActions[action].label}
                 </div>
-                <div className="shortcut-bindings">
-                  {draft[action].length === 0 && (
+                <div className="shortcut-key">
+                  {draft[action][0] ? (
+                    <kbd>{formatShortcut(draft[action][0], platform)}</kbd>
+                  ) : (
                     <span className="hint">미지정 · 사용 안 함</span>
                   )}
-                  {draft[action].map((key, index) => (
-                    <span className="shortcut-binding" key={`${index}:${key}`}>
-                      <button
-                        aria-label={`${shortcutActions[action].label} 키 ${index + 1} 변경`}
-                        onClick={() => start(action, index)}
-                      >
-                        <kbd>{formatShortcut(key, platform)}</kbd>
-                      </button>
-                      <button
-                        aria-label={`${shortcutActions[action].label} 키 ${index + 1} 삭제`}
-                        onClick={() =>
-                          change({
-                            ...draft,
-                            [action]: draft[action].filter(
-                              (_, i) => i !== index,
-                            ),
-                          })
-                        }
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
+                </div>
+                <div className="shortcut-actions">
                   <button
-                    aria-label={`${shortcutActions[action].label} 키 추가`}
-                    disabled={draft[action].length >= 16}
+                    aria-label={`${shortcutActions[action].label} 키 변경`}
                     onClick={() => start(action)}
                   >
-                    키 추가
+                    키 변경
+                  </button>
+                  <IconButton
+                    label={`${shortcutActions[action].label} 단축키 해제`}
+                    disabled={!draft[action].length}
+                    onClick={() => change({ ...draft, [action]: [] })}
+                  >
+                    <X size={16} />
+                  </IconButton>
+                  <button
+                    aria-label={`${shortcutActions[action].label} 초기화`}
+                    onClick={() => {
+                      const next = {
+                        ...draft,
+                        [action]: [...defaultShortcuts[platform][action]],
+                      };
+                      try {
+                        validateShortcutMap(next, platform);
+                        change(next);
+                      } catch (error) {
+                        setError((error as Error).message);
+                      }
+                    }}
+                  >
+                    초기화
                   </button>
                 </div>
-                <button
-                  aria-label={`${shortcutActions[action].label} 기본값 복원`}
-                  onClick={() => {
-                    const next = {
-                      ...draft,
-                      [action]: [...defaultShortcuts[platform][action]],
-                    };
-                    try {
-                      validateShortcutMap(next, platform);
-                      change(next);
-                    } catch (error) {
-                      setError((error as Error).message);
-                    }
-                  }}
-                >
-                  기본값
-                </button>
               </div>
             ))}
         </fieldset>
@@ -193,7 +175,7 @@ export function ShortcutSettings() {
       {recording && (
         <Modal
           className="shortcut-recorder"
-          title={`${shortcutActions[recording.action].label} 단축키 등록`}
+          title={`${shortcutActions[recording].label} 단축키 변경`}
           onClose={() => setRecording(null)}
         >
           <label>
@@ -228,7 +210,7 @@ export function ShortcutSettings() {
               }}
             />
           </label>
-          <p className="hint">키를 누른 뒤 등록하세요. Esc로 취소합니다.</p>
+          <p className="hint">키를 누른 뒤 적용하세요. Esc로 취소합니다.</p>
           {recordError && (
             <p className="error-text" role="alert">
               {recordError}
@@ -237,7 +219,7 @@ export function ShortcutSettings() {
           <div className="modal-actions">
             <button onClick={() => setRecording(null)}>취소</button>
             <button className="primary" disabled={!binding} onClick={apply}>
-              등록
+              적용
             </button>
           </div>
         </Modal>

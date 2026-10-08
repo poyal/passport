@@ -17,6 +17,35 @@ const vault: Vault = {
   encryptString: (s) => Buffer.from(s.split("").reverse().join("")),
   decryptString: (b) => b.toString().split("").reverse().join(""),
 };
+it("loads old multi-key shortcut settings and persists one binding across reopen", async () => {
+  const dir = await fs.mkdtemp(
+    path.join(os.tmpdir(), "passport-shortcut-migration-"),
+  );
+  let store = new Store(dir, vault);
+  try {
+    const document = store.read();
+    document.settings.shortcuts.darwin.newTab = ["Meta+Y", "Meta+Shift+Y"];
+    document.settings.shortcuts.win32.paste = ["Ctrl+V", "Ctrl+Shift+V"];
+    document.settings.shortcuts.win32.copy = [];
+    store.db
+      .prepare("UPDATE metadata SET value=?")
+      .run(JSON.stringify(document));
+    store.close();
+    store = new Store(dir, vault);
+    const loaded = store.read();
+    expect(loaded.settings.shortcuts.darwin.newTab).toEqual(["Meta+Y"]);
+    expect(loaded.settings.shortcuts.win32.paste).toEqual(["Ctrl+V"]);
+    expect(loaded.settings.shortcuts.win32.copy).toEqual([]);
+    store.save(loaded);
+    store.close();
+    store = new Store(dir, vault);
+    expect(store.read().settings.shortcuts).toEqual(loaded.settings.shortcuts);
+    expect(store.db.pragma("quick_check", { simple: true })).toBe("ok");
+  } finally {
+    if (store.db.open) store.close();
+    await fs.rm(dir, { recursive: true, force: true });
+  }
+});
 it("upgrades v4 atomically, backs up and removes only multi-tab templates permanently", async () => {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), "passport-template-v4-"));
   let store = new Store(dir, vault);

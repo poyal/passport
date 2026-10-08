@@ -12,6 +12,7 @@ import { randomUUID } from "node:crypto";
 import { hostSchema, type Host } from "../../src/shared/model";
 import { sshFixture } from "../fixtures/ssh-server";
 import { closeCleanly } from "../fixtures/electron-exit";
+import { expectReadableSpacing } from "../fixtures/ui-spacing";
 let application: ElectronApplication,
   page: Page,
   directory: string,
@@ -219,7 +220,7 @@ test("profile account connects, paste is immediate and literal, automatic logs c
   server.input.splice(0);
   await page.locator(".xterm-helper-textarea").focus();
   await page.keyboard.press(
-    process.platform === "darwin" ? "Meta+v" : "Control+Shift+v",
+    process.platform === "darwin" ? "Meta+v" : "Control+v",
   );
   await expect
     .poll(() => server.input.join(""))
@@ -356,6 +357,8 @@ test("all main screens and settings tabs fit light and dark themes at wide, desk
       await page.getByRole("button", { name: "설정", exact: true }).click();
       for (const section of [
         "외형",
+        "로컬 터미널",
+        "AI 작업 알림",
         "그룹 관리",
         "인증 프로필",
         "세션 로그",
@@ -419,6 +422,7 @@ test("all main screens and settings tabs fit light and dark themes at wide, desk
           expect(geometry.cardsFit, title).toBe(true);
           expect(geometry.formFits, title).toBe(true);
           expect(geometry.fillsWidth, title).toBeGreaterThan(0.95);
+          await expectReadableSpacing(page);
         }
       }
       expect(

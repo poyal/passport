@@ -364,7 +364,7 @@
     {
       "id": "shortcuts-settings.editor",
       "file": "shortcuts-settings.spec.ts",
-      "title": "shortcut editor captures multiple keys, rejects conflicts and persists only the current OS"
+      "title": "shortcut editor replaces one key, rejects conflicts and persists only the current OS"
     },
     {
       "id": "shortcuts-settings.windows-routing",
@@ -380,6 +380,16 @@
       "id": "shortcuts-settings.files",
       "file": "shortcuts-settings.spec.ts",
       "title": "file shortcuts use custom bindings and retain rename and delete dialogs"
+    },
+    {
+      "id": "shortcuts-settings.control-spacing",
+      "file": "shortcuts-settings.spec.ts",
+      "title": "home and populated settings dialogs keep related controls and help separated"
+    },
+    {
+      "id": "updates.current-version-spacing",
+      "file": "updates.spec.ts",
+      "title": "an up-to-date result keeps its explanation separated from the status panel"
     }
   ]
 }

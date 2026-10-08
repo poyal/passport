@@ -10,6 +10,7 @@ import {
   normalizeShortcut,
   shortcutFromEvent,
   managedTerminalKey,
+  managedFileMenuKey,
   ignoreShortcutMenu,
 } from "../src/shared/shortcuts";
 
@@ -39,6 +40,8 @@ describe("platform shortcut settings", () => {
     expect(settings.win32.copy).toEqual(["Ctrl+C"]);
     expect(settings.win32.interrupt).toEqual(["Ctrl+Shift+C"]);
     expect(settings.darwin.copy).toEqual(["Meta+C"]);
+    for (const lane of Object.values(settings))
+      for (const keys of Object.values(lane)) expect(keys).toHaveLength(1);
     const key = event("c", { ctrlKey: true });
     expect(shortcutMatch(key, settings.win32.copy, false)).toBe(true);
     expect(shortcutMatch(key, settings.win32.interrupt, false)).toBe(false);
@@ -77,7 +80,25 @@ describe("platform shortcut settings", () => {
       /Windows.*복사.*새 탭.*중복/,
     );
     settings.win32.newTab = ["Ctrl+N", "Ctrl+n"];
-    expect(() => validateShortcuts(settings)).toThrow("중복");
+    expect(() => validateShortcuts(settings)).toThrow("한 개");
+  });
+  it("keeps only the first stored binding in both lanes without mutating input", () => {
+    const raw = structuredClone(defaultShortcuts);
+    raw.darwin.newTab = ["Meta+y", "Meta+Shift+F"];
+    raw.darwin.copy = [];
+    raw.win32.paste = ["Ctrl+v", "Ctrl+Shift+V"];
+    raw.win32.fileMenu = ["Shift+F10", "ContextMenu"];
+    raw.win32.zoomIn = ["Ctrl+Equal", "Ctrl+Shift+Equal"];
+    const before = structuredClone(raw);
+    const result = shortcutSettingsSchema.parse(raw);
+    expect(result.darwin.newTab).toEqual(["Meta+Y"]);
+    expect(result.darwin.copy).toEqual([]);
+    expect(result.win32.paste).toEqual(["Ctrl+V"]);
+    expect(result.win32.fileMenu).toEqual(["Shift+F10"]);
+    expect(result.win32.zoomIn).toEqual(["Ctrl+Equal"]);
+    expect(shortcutSettingsSchema.parse(result)).toEqual(result);
+    expect(raw).toEqual(before);
+    expect(() => validateShortcuts(result)).not.toThrow();
   });
   it("records physical keys across layouts, modifiers, symbols and function keys", () => {
     expect(
@@ -87,7 +108,7 @@ describe("platform shortcut settings", () => {
     expect(
       shortcutMatch(
         event("+", { code: "Equal", ctrlKey: true, shiftKey: true }),
-        defaultShortcuts.win32.zoomIn,
+        ["Ctrl+Shift+Equal"],
         false,
       ),
     ).toBe(true);
@@ -111,6 +132,40 @@ describe("platform shortcut settings", () => {
       "Ctrl+",
     ])
       expect(() => normalizeShortcut(key, "darwin")).toThrow();
+  });
+  it("suppresses removed secondary defaults independently of editable defaults", () => {
+    for (const platform of ["darwin", "win32"] as const) {
+      const mac = platform === "darwin";
+      const plus = event("+", {
+        code: "Equal",
+        ctrlKey: !mac,
+        metaKey: mac,
+        shiftKey: true,
+      });
+      expect(shortcutMatch(plus, defaultShortcuts[platform].zoomIn, mac)).toBe(
+        false,
+      );
+      expect(managedTerminalKey(plus, platform)).toBe(true);
+      for (const menu of [
+        event("F10", { shiftKey: true }),
+        event("ContextMenu"),
+      ]) {
+        expect(managedFileMenuKey(menu, platform)).toBe(true);
+        const settings = structuredClone(defaultShortcuts);
+        settings[platform].fileMenu = [];
+        expect(ignoreShortcutMenu("files", menu, settings, platform)).toBe(
+          true,
+        );
+        expect(ignoreShortcutMenu("editing", menu, settings, platform)).toBe(
+          false,
+        );
+      }
+    }
+    const paste = event("v", { ctrlKey: true, shiftKey: true });
+    expect(shortcutMatch(paste, defaultShortcuts.win32.paste, false)).toBe(
+      false,
+    );
+    expect(managedTerminalKey(paste, "win32")).toBe(true);
   });
   it("preserves explicit removal and blocks old xterm control bindings", () => {
     const settings = structuredClone(defaultShortcuts);
@@ -140,6 +195,7 @@ describe("platform shortcut settings", () => {
     const document = emptyDocument();
     document.settings.shortcuts.win32.copy = [];
     document.settings.shortcuts.darwin.newTab = ["Meta+Y", "Meta+Shift+Y"];
+    const expected = shortcutSettingsSchema.parse(document.settings.shortcuts);
     const decoded = await decodePortable(
       await encodePortable({
         format: "passport",
@@ -148,12 +204,19 @@ describe("platform shortcut settings", () => {
         profiles: [],
       }),
     );
-    expect(decoded.document.settings.shortcuts).toEqual(
-      document.settings.shortcuts,
+    expect(decoded.document.settings.shortcuts).toEqual(expected);
+    expect(documentSchema.parse(document).settings.shortcuts).toEqual(expected);
+    // An old, unencrypted backup must migrate at decoding, not only encoding.
+    const oldBackup = await decodePortable(
+      JSON.stringify({
+        format: "passport",
+        version: 2,
+        document,
+        profiles: [],
+      }),
     );
-    expect(documentSchema.parse(document).settings.shortcuts).toEqual(
-      document.settings.shortcuts,
-    );
+    expect(oldBackup.document.settings.shortcuts).toEqual(expected);
+    expect(document.settings.shortcuts.darwin.newTab).toHaveLength(2);
     const migrated = shortcutSettingsSchema.parse(migrateShortcuts(legacy));
     expect(migrateShortcuts(migrated)).toEqual(migrated);
   });

@@ -96,6 +96,8 @@ flowchart TD
 
 `src/shared/shortcuts.ts`는 공통 기능 목록·키 정규화·영역별 충돌 검사를 소유하고 `darwin`·`win32`별 기본값과 저장값만 분리한다. renderer와 shared에서 main 플랫폼 구현을 가져오지 않는다. 설정은 현재 OS만 편집하며, 두 OS 값을 함께 저장·이전·내보낸다. 빈 키 배열은 해제이므로 기본값으로 덮지 않는다.
 
+기능당 키는 하나다. 저장 형식은 배열을 유지하며 공통 schema가 기존 문서·백업·가져오기·저장의 복수 배열을 첫 번째 키 하나로 정규화한다. 입력 객체를 변경하지 않으며 두 OS에 동일하게 적용한다. 기본값도 하나로 유지한다. xterm·Chromium·메뉴의 기본 동작 차단 목록은 편집 가능한 기본값과 분리한다. 이전 보조 키인 Windows Ctrl+Shift+V, ⌘/Ctrl+Shift+=, ContextMenu는 새로 지정하지 않으면 실행하지 않으며 변경·해제 후에도 기본 동작으로 새어 나가지 않아야 한다.
+
 `window.keyboardContext` IPC는 현재 창의 `standard`·`editing`·`terminal`·`files`·`dialog`·`recording`만 받는다. 공통 메인 호출부는 `before-input-event`에서 해당 영역이 소유한 키의 네이티브 메뉴 처리를 차단해 renderer로 전달한다. 일반 입력칸과 관련 없는 메뉴 키는 기존 동작을 유지한다. 키 등록 중에는 메뉴 단축키 실행을 막고, 창 종료·탐색 시 문맥을 버린다. 실제 OS 키 선점·IME는 주입 검사와 구분한다.
 
 ## 3. 계약 명세

@@ -1074,7 +1074,7 @@ function Snippets({ workspace }: { workspace: Workspace }) {
             <div className="row">
               <Braces size={16} />
               <strong>{s.name}</strong>
-              <button className="text-button" onClick={() => setDraft(s)}>
+              <button className="row-action" onClick={() => setDraft(s)}>
                 편집
               </button>
             </div>

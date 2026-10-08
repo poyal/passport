@@ -597,9 +597,7 @@ export function Settings() {
             <div className="page-heading">
               <div>
                 <h1>단축키</h1>
-                <p>
-                  앱·터미널·파일 기능의 단축키를 추가하거나 변경·해제하세요.
-                </p>
+                <p>앱·터미널·파일 기능의 단축키를 변경하거나 해제하세요.</p>
               </div>
             </div>
             <ShortcutSettings />

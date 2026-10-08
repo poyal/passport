@@ -728,10 +728,7 @@ export function WorkspaceOperations({ workspace }: { workspace: Workspace }) {
       </button>
       <small className="hint">
         접속부터 자동 기록하며 최대 30일 보관합니다.
-        <button
-          className="text-button"
-          onClick={() => app.openSettings("logs")}
-        >
+        <button onClick={() => app.openSettings("logs")}>
           로그 보기 및 보관 설정
         </button>
       </small>
@@ -827,7 +824,7 @@ export function TunnelSettings() {
       )}
       <div className="settings-stack">
         {app.document.tunnels.map((rule) => (
-          <section className="settings-card" key={rule.id}>
+          <section className="settings-card tunnel-card" key={rule.id}>
             <div className="row">
               <strong>{rule.name}</strong>
               <span className="pill">
@@ -1244,7 +1241,6 @@ export function LogSettings() {
                     {current.bookmarks.map((b, i) => (
                       <button
                         key={i}
-                        className="text-button"
                         onClick={() => {
                           setQuery("");
                           read(selected, b.offset, "");

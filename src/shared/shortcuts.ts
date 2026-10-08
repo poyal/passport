@@ -36,12 +36,12 @@ const defaults = (platform: ShortcutPlatform): ShortcutMap => {
   const mod = platform === "darwin" ? "Meta" : "Ctrl";
   return {
     copy: [`${mod}+C`],
-    paste: platform === "darwin" ? ["Meta+V"] : ["Ctrl+V", "Ctrl+Shift+V"],
+    paste: [`${mod}+V`],
     interrupt: [platform === "darwin" ? "Ctrl+C" : "Ctrl+Shift+C"],
     eof: ["Ctrl+D"],
     suspend: ["Ctrl+Z"],
     cliImage: [platform === "darwin" ? "Ctrl+V" : "Alt+V"],
-    zoomIn: [`${mod}+Equal`, `${mod}+Shift+Equal`],
+    zoomIn: [`${mod}+Equal`],
     zoomOut: [`${mod}+Minus`],
     zoomReset: [`${mod}+0`],
     search: [`${mod}+Shift+F`],
@@ -54,7 +54,7 @@ const defaults = (platform: ShortcutPlatform): ShortcutMap => {
     fileSelectAll: [`${mod}+A`],
     fileRename: ["F2"],
     fileDelete: ["Delete"],
-    fileMenu: ["Shift+F10", "ContextMenu"],
+    fileMenu: ["Shift+F10"],
   };
 };
 export const defaultShortcuts: ShortcutSettings = {
@@ -235,6 +235,10 @@ export function validateShortcutMap(
 ) {
   const seen: { action: ShortcutAction; key: string }[] = [];
   for (const action of shortcutActionIds) {
+    if (bindings[action].length > 1)
+      throw new Error(
+        `${shortcutActions[action].label}: 단축키는 한 개만 지정할 수 있습니다.`,
+      );
     for (const binding of bindings[action]) {
       const key = normalizeShortcut(binding, platform);
       const conflict = seen.find(
@@ -343,12 +347,14 @@ export const shortcutSettingsSchema = z.preprocess(
     })
     .transform((settings, ctx) => {
       try {
-        validateShortcuts(settings);
+        // Zod has cloned and checked the old array shape. Keep its first binding
+        // on load/import/save, including explicit removal, without mutating input.
         for (const platform of ["darwin", "win32"] as const)
           for (const action of shortcutActionIds)
-            settings[platform][action] = settings[platform][action].map(
-              (binding) => normalizeShortcut(binding, platform),
-            );
+            settings[platform][action] = settings[platform][action]
+              .slice(0, 1)
+              .map((binding) => normalizeShortcut(binding, platform));
+        validateShortcuts(settings);
         return settings;
       } catch (error) {
         ctx.addIssue({ code: "custom", message: (error as Error).message });
@@ -357,22 +363,57 @@ export const shortcutSettingsSchema = z.preprocess(
     }),
 );
 
+// Native/xterm fallbacks are independent of editable defaults. In particular,
+// former secondary defaults must stay suppressed after migration or removal.
+const nativeTerminalKeys: Record<ShortcutPlatform, readonly string[]> = {
+  darwin: [
+    "Ctrl+C",
+    "Ctrl+D",
+    "Ctrl+Z",
+    "Ctrl+V",
+    "Meta+C",
+    "Meta+V",
+    "Meta+Equal",
+    "Meta+Shift+Equal",
+    "Meta+Minus",
+    "Meta+0",
+  ],
+  win32: [
+    "Ctrl+C",
+    "Ctrl+D",
+    "Ctrl+Z",
+    "Ctrl+V",
+    "Ctrl+Shift+C",
+    "Ctrl+Shift+V",
+    "Alt+V",
+    "Ctrl+Equal",
+    "Ctrl+Shift+Equal",
+    "Ctrl+Minus",
+    "Ctrl+0",
+  ],
+};
+
+export function managedFileMenuKey(
+  event: ShortcutEvent,
+  platform: ShortcutPlatform,
+) {
+  return shortcutMatch(
+    event,
+    ["Shift+F10", "ContextMenu"],
+    platform === "darwin",
+  );
+}
+
 /** Old control bindings must not leak into xterm after reassignment or removal. */
 export function managedTerminalKey(
   event: ShortcutEvent,
   platform: ShortcutPlatform,
 ) {
-  return [
-    "Ctrl+C",
-    "Ctrl+D",
-    "Ctrl+Z",
-    "Ctrl+V",
-    ...Object.entries(defaultShortcuts[platform])
-      .filter(
-        ([id]) => shortcutActions[id as ShortcutAction].scope === "terminal",
-      )
-      .flatMap(([, keys]) => keys),
-  ].some((key) => shortcutMatch(event, key, platform === "darwin"));
+  return shortcutMatch(
+    event,
+    nativeTerminalKeys[platform],
+    platform === "darwin",
+  );
 }
 
 export type ShortcutContext =
@@ -389,6 +430,7 @@ export function ignoreShortcutMenu(
   const mac = platform === "darwin";
   if (context === "terminal" && managedTerminalKey(event, platform))
     return true;
+  if (context === "files" && managedFileMenuKey(event, platform)) return true;
   return shortcutActionIds.some((id) => {
     const scope = shortcutActions[id].scope;
     if (scope !== "app" && scope !== context) return false;

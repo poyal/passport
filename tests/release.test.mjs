@@ -329,7 +329,7 @@ test("GUI policy records platform exclusions and optional skips explicitly", () 
     platform: "darwin",
     mode: "hidden",
   });
-  assert.equal(coverage.passed, 60);
+  assert.equal(coverage.passed, 62);
   assert.equal(coverage.skipped, 9);
   assert.equal(
     coverage.tests.filter(

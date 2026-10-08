@@ -1,5 +1,28 @@
 # Windows 붙여넣기 검증 및 릴리즈 인계
 
+## 1.2.1 후속 Windows 배포 — 2026-10-08
+
+이번 변경은 Mac을 먼저 배포하고 Windows x64는 집의 Windows PC에서 이어서 검증·게시한다. **Mac과 같은 `v1.2.1` 태그를 체크아웃**하며, 이후 README·검증 기록만 갱신한 `main` 커밋으로 빌드하지 않는다. 소스나 버전을 임의로 바꾸거나 기존 태그를 이동하지 않는다. Windows 제품 수정이 필요하면 동일 소스 계약에 맞는 새 버전으로 진행한다.
+
+아래 환경 준비 조건을 충족한 깨끗한 작업 폴더에서 실행한다. 정식 검증은 실제 창·클립보드를 사용하므로 다른 작업을 방해하지 않는 데스크톱에서 실행한다.
+
+```powershell
+git fetch origin --tags
+git switch --detach v1.2.1
+npm.cmd run release:verify -- --desktop
+```
+
+출력된 `release/checks/<실행 ID>/verification.json`으로 게시 계획을 확인한다. `Passport-1.2.1-win-x64.exe` 추가와 기존 Mac DMG 보존이 표시되는지 확인한 뒤 게시한다. 검증에서 의존성 설치·빌드·전체 검사를 수행하므로 게시 전에 다시 빌드하지 않는다.
+
+```powershell
+npm.cmd run release:publish -- --manifest release/checks/<실행-ID>/verification.json
+npm.cmd run release:publish -- --manifest release/checks/<실행-ID>/verification.json --execute
+```
+
+게시 후 공개 EXE·합본 체크섬을 확인하고 README의 Windows 1.2.0 고정 링크와 플랫폼별 상태를 갱신한다. 특히 기존 복수 단축키의 첫 키 유지, **키 변경·X·초기화**, Ctrl+V 붙여넣기, 네 가지 셸·DPAPI·설치 범위를 확인한다. Ctrl+Shift+V는 직접 지정했을 때만 Passport 붙여넣기로 동작한다.
+
+## 이전 Windows 1.1.1 기록
+
 2026-10-03 Windows 11 x64에서 소스와 최종 EXE의 정식 로컬 검증을 통과하고 Windows 1.1.1을 공개했다. 사용자가 미게시 Windows 버전의 테스트 보정·버그픽스를 승인해 소스 태그 `v1.1.1-win-x64`를 사용했다. 기존 Mac `v1.1.1` 태그와 DMG는 유지했다. [게시 요약](benchmarks/github-release-windows-v1.1.1.json)에 출처·해시·범위를 기록했다. 실제 탐색기·AI 서비스·물리 IME·OS 알림·사용자 계정 업그레이드는 별도 확인 대상이다. 이후 릴리즈는 기본 버전·동일 소스 계약을 따른다.
 
 ## 준비와 자동 검사

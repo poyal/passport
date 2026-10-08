@@ -174,7 +174,7 @@ for (const shell of [
             ? "type "
             : "Get-Content -LiteralPath ",
       );
-      await page.keyboard.press("Control+Shift+v");
+      await page.keyboard.press("Control+v");
       await expect(page.locator(".xterm-rows")).toContainText(
         path
           .basename(file)

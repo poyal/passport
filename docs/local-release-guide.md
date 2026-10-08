@@ -250,6 +250,8 @@ Windows의 실제 사용자 계정 설치·제거·업그레이드, 물리 한�
 
 ## Actions 운영
 
+수동 검증 워크플로의 `target`은 `all`(기본값), `mac-arm64`, `win-x64` 중에서 선택한다. 한 플랫폼을 먼저 배포할 때는 그 대상만 검증하고 다른 OS 결과를 완료로 표시하지 않는다. 예를 들어 `gh workflow run desktop.yml --ref main -f target=mac-arm64`는 격리된 Mac runner에서만 정식 검증한다. 이 선택은 검사 종류를 줄이지 않으며 소스·설치본의 숨김 GUI와 데스크톱 검사를 모두 수행한다.
+
 Passport는 태그 push 게시 워크플로와 Windows 원격 게시 워크플로를 제거하고 2026-10-02 원격에서도 명시적으로 비활성화했다. `Desktop verification (manual diagnostics)`만 남겨 필요할 때 전용 runner에서 같은 `release:verify -- --desktop`을 실행한다. 이 워크플로는 저장소 읽기 권한만 가지며 공개 릴리즈를 게시하지 않는다. 다른 프로젝트에서도 검증 명령을 공통으로 만들고 CI 전용 검사를 따로 복제하지 않는 편이 유지보수에 유리하다. 페리로그처럼 검증된 파일만 업로드하는 가벼운 게시 Actions는 프로젝트 정책에 따라 유지할 수 있다.
 
 **기본 브랜치의 YAML 삭제만으로 과거 ref의 자동 게시까지 차단되지 않는다.** 태그 push는 해당 커밋/ref의 워크플로를 사용한다. 자동 게시를 중단하는 전환에서는 기존 게시 워크플로를 명시적으로 비활성화하고 상태를 재조회한다. 이미 실행·대기 중인 작업도 확인·처리한 뒤 변경한 워크플로를 원격에 반영한다. 태그를 push하기 전에 그 대상 커밋의 실제 워크플로에도 전환이 포함됐는지 확인한다. [GitHub 워크플로 선택 기준](https://docs.github.com/en/actions/concepts/workflows-and-actions/workflows#workflow-triggers) · [비활성화 방법](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/disable-and-enable-workflows).

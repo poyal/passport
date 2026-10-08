@@ -50,39 +50,43 @@ export function FontPicker({
   }, [family]);
   return (
     <div className="font-picker">
-      <label htmlFor={`${id}-search`}>글꼴 검색</label>
-      <input
-        id={`${id}-search`}
-        type="search"
-        value={query}
-        placeholder="이름으로 검색"
-        onChange={(event) => setQuery(event.target.value)}
-      />
-      <label htmlFor={`${id}-select`}>글꼴</label>
-      <select
-        id={`${id}-select`}
-        value={selected?.family || (value ? value : "")}
-        onChange={(event) => onChange(event.target.value)}
-      >
-        {inherit && <option value="">전체 설정 사용</option>}
-        {value && !selected && (
-          <option value={value}>{value} · 현재 PC에서 사용할 수 없음</option>
-        )}
-        {["OS 추천", "앱 내장", "설치 글꼴"].map((group) => {
-          const items = filtered.filter((option) => option.group === group);
-          return (
-            items.length > 0 && (
-              <optgroup label={group} key={group}>
-                {items.map((option) => (
-                  <option key={option.family} value={option.family}>
-                    {option.family}
-                  </option>
-                ))}
-              </optgroup>
-            )
-          );
-        })}
-      </select>
+      <div className="font-field">
+        <label htmlFor={`${id}-search`}>글꼴 검색</label>
+        <input
+          id={`${id}-search`}
+          type="search"
+          value={query}
+          placeholder="이름으로 검색"
+          onChange={(event) => setQuery(event.target.value)}
+        />
+      </div>
+      <div className="font-field">
+        <label htmlFor={`${id}-select`}>글꼴</label>
+        <select
+          id={`${id}-select`}
+          value={selected?.family || (value ? value : "")}
+          onChange={(event) => onChange(event.target.value)}
+        >
+          {inherit && <option value="">전체 설정 사용</option>}
+          {value && !selected && (
+            <option value={value}>{value} · 현재 PC에서 사용할 수 없음</option>
+          )}
+          {["OS 추천", "앱 내장", "설치 글꼴"].map((group) => {
+            const items = filtered.filter((option) => option.group === group);
+            return (
+              items.length > 0 && (
+                <optgroup label={group} key={group}>
+                  {items.map((option) => (
+                    <option key={option.family} value={option.family}>
+                      {option.family}
+                    </option>
+                  ))}
+                </optgroup>
+              )
+            );
+          })}
+        </select>
+      </div>
       {value && !selected && (
         <p className="hint" role="status">
           설치되지 않은 {value} 대신 JetBrains Mono를 사용합니다.

@@ -4,6 +4,9 @@ import { waitForLocalPrompt } from "../fixtures/terminal-ready";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { defaultShortcuts } from "../../src/shared/shortcuts";
+import { hostSchema } from "../../src/shared/model";
+import { randomUUID } from "node:crypto";
+import { expectReadableSpacing } from "../fixtures/ui-spacing";
 
 const suite = reusableApp({ name: "shortcuts-settings" });
 const os = process.platform === "darwin" ? "darwin" : "win32";
@@ -19,7 +22,7 @@ async function settings(page: Page, name: string) {
     .click();
 }
 
-test("shortcut editor captures multiple keys, rejects conflicts and persists only the current OS", async () => {
+test("shortcut editor replaces one key, rejects conflicts and persists only the current OS", async () => {
   const { page, application } = suite;
   const before = await boot(page);
   await settings(page, "단축키");
@@ -36,29 +39,33 @@ test("shortcut editor captures multiple keys, rejects conflicts and persists onl
     }),
   ).toHaveCount(0);
   await page
-    .getByRole("button", { name: "새 탭 · 로컬 터미널 키 추가", exact: true })
+    .getByRole("button", { name: "새 탭 · 로컬 터미널 키 변경", exact: true })
     .click();
   await page.getByLabel("키 조합", { exact: true }).press(`${mod}+Shift+n`);
   expect(await application.windows()).toHaveLength(1);
   expect((await boot(page)).document.workspaces).toHaveLength(0);
-  await page.getByRole("button", { name: "등록", exact: true }).click();
+  await page.getByRole("button", { name: "적용", exact: true }).click();
   await expect(page.getByRole("dialog").getByRole("alert")).toContainText(
     "중복",
   );
   await page.getByLabel("키 조합", { exact: true }).press(`${mod}+Shift+y`);
-  await page.getByRole("button", { name: "등록", exact: true }).click();
+  await page.getByRole("button", { name: "적용", exact: true }).click();
   await page
-    .getByRole("button", { name: "복사 키 1 삭제", exact: true })
+    .getByRole("button", { name: "복사 단축키 해제", exact: true })
     .click();
   await page.getByRole("button", { name: "단축키 저장", exact: true }).click();
   await expect(page.getByRole("status")).toContainText("저장했습니다");
   let saved = (await boot(page)).document.settings.shortcuts;
   expect(saved[os].newTab).toEqual([
-    `${os === "darwin" ? "Meta" : "Ctrl"}+N`,
     `${os === "darwin" ? "Meta" : "Ctrl"}+Shift+Y`,
   ]);
   expect(saved[os].copy).toEqual([]);
   expect(saved[other]).toEqual(before.document.settings.shortcuts[other]);
+  await expect(
+    page.getByRole("button", { name: "복사 단축키 해제", exact: true }),
+  ).toBeDisabled();
+  await page.keyboard.press(`${mod}+n`);
+  expect((await boot(page)).document.workspaces).toHaveLength(0);
   await settings(page, "외형");
   await page.getByRole("tab", { name: "터미널 설정", exact: true }).click();
   const fontQuery = page.getByLabel("글꼴 검색", { exact: true });
@@ -79,19 +86,25 @@ test("shortcut editor captures multiple keys, rejects conflicts and persists onl
     "사용 안 함",
   );
   await expect(
-    page.locator('[data-shortcut-action="newTab"] .shortcut-binding'),
-  ).toHaveCount(2);
+    page.locator('[data-shortcut-action="newTab"] .shortcut-key kbd'),
+  ).toHaveCount(1);
+  await page.getByRole("button", { name: "복사 초기화", exact: true }).click();
   await page
-    .getByRole("button", { name: "복사 기본값 복원", exact: true })
-    .click();
-  await page
-    .getByRole("button", { name: "새 탭 · 로컬 터미널 키 2 변경", exact: true })
+    .getByRole("button", { name: "새 탭 · 로컬 터미널 키 변경", exact: true })
     .click();
   await page.getByLabel("키 조합", { exact: true }).press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await page
-    .getByRole("button", { name: "전체 기본값 복원", exact: true })
-    .click();
+  await page.getByRole("button", { name: "변경 취소", exact: true }).click();
+  await expect(page.locator('[data-shortcut-action="copy"]')).toContainText(
+    "사용 안 함",
+  );
+  // The new binding works after reload; the replaced binding did not open a tab.
+  await page.keyboard.press(`${mod}+Shift+y`);
+  await expect
+    .poll(async () => (await boot(page)).document.workspaces.length)
+    .toBe(1);
+  await settings(page, "단축키");
+  await page.getByRole("button", { name: "전체 초기화", exact: true }).click();
   await page.getByRole("button", { name: "단축키 저장", exact: true }).click();
   await expect
     .poll(async () => (await boot(page)).document.settings.shortcuts[os])
@@ -188,6 +201,11 @@ test("Windows shortcut routing copies without interrupt and honors disabled cont
   const fontSize = () =>
     rows.evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
   const initial = await fontSize();
+  await page.keyboard.press("Control+Shift+v");
+  await page.keyboard.press("Control+Shift+Equal");
+  expect((await state()).reads).toBe(1);
+  expect((await state()).inputs).toHaveLength(2);
+  expect(await fontSize()).toBe(initial);
   await page.keyboard.press("Control+Equal");
   await expect.poll(fontSize).toBe(initial + 1);
   await page.evaluate(async () => {
@@ -215,6 +233,7 @@ test("Windows shortcut routing copies without interrupt and honors disabled cont
     "Control+d",
     "Control+z",
     "Control+Equal",
+    "Control+Shift+Equal",
   ])
     await page.keyboard.press(key);
   await page.waitForTimeout(80);
@@ -295,7 +314,10 @@ test("file shortcuts use custom bindings and retain rename and delete dialogs", 
   // A direct save IPC reply can arrive before React applies the document event.
   await settings(page, "단축키");
   await page
-    .getByRole("button", { name: "파일 컨텍스트 메뉴 키 1 삭제", exact: true })
+    .getByRole("button", {
+      name: "파일 컨텍스트 메뉴 단축키 해제",
+      exact: true,
+    })
     .click();
   await page.getByRole("button", { name: "단축키 저장", exact: true }).click();
   await expect(page.getByRole("status")).toContainText("저장했습니다");
@@ -307,18 +329,18 @@ test("file shortcuts use custom bindings and retain rename and delete dialogs", 
   await settings(page, "단축키");
   await page
     .getByRole("button", {
-      name: "파일 컨텍스트 메뉴 기본값 복원",
+      name: "파일 컨텍스트 메뉴 초기화",
       exact: true,
     })
     .click();
   await page.getByRole("button", { name: "단축키 저장", exact: true }).click();
   await expect(page.getByRole("status")).toContainText("저장했습니다");
   await page.getByRole("button", { name: "파일", exact: true }).click();
-  for (const key of ["Shift+F10", "ContextMenu"]) {
-    await renamed.press(key);
-    await expect(page.getByRole("menu")).toBeVisible();
-    await page.keyboard.press("Escape");
-  }
+  await renamed.press("ContextMenu");
+  await expect(page.getByRole("menu")).toHaveCount(0);
+  await renamed.press("Shift+F10");
+  await expect(page.getByRole("menu")).toBeVisible();
+  await page.keyboard.press("Escape");
 });
 
 test("settings cards and form controls scroll the page while log panes keep independent scrolling", async ({}, info) => {
@@ -417,6 +439,83 @@ test("settings cards and form controls scroll the page while log panes keep inde
   await settings(page, "세션 로그");
   await expect(content).toHaveCSS("overflow-y", "hidden");
   await expect(page.locator(".log-settings .settings-tab-panel")).toBeVisible();
+});
+
+test("home and populated settings dialogs keep related controls and help separated", async ({}, info) => {
+  const { page, application } = suite;
+  const host = hostSchema.parse({
+    id: randomUUID(),
+    name: "간격 검증 서버",
+    address: "127.0.0.1",
+    username: "tester",
+  });
+  await page.evaluate(async (host) => {
+    const { document } = await window.passport.call("bootstrap", undefined);
+    document.hosts = [host];
+    document.tunnels = [
+      {
+        id: crypto.randomUUID(),
+        hostId: host.id,
+        name: "간격 검증 터널",
+        kind: "local",
+        bindAddress: "127.0.0.1",
+        bindPort: 15432,
+        targetAddress: "127.0.0.1",
+        targetPort: 5432,
+      },
+    ];
+    await window.passport.call("save", document);
+  }, host);
+  await application.evaluate(({ BrowserWindow }) =>
+    BrowserWindow.getAllWindows()[0].setContentSize(1024, 680),
+  );
+  for (const mode of ["dark", "light"] as const) {
+    await page.evaluate(async (mode) => {
+      const { document } = await window.passport.call("bootstrap", undefined);
+      document.settings.colorMode = mode;
+      await window.passport.call("save", document);
+    }, mode);
+    const capture = async (name: string) => {
+      await page.screenshot({ path: info.outputPath(`${name}-${mode}.png`) });
+      await expectReadableSpacing(page);
+      const dialog = page.getByRole("dialog");
+      if (await dialog.count()) {
+        expect(
+          await dialog.evaluate((el) => el.scrollWidth <= el.clientWidth + 1),
+        ).toBe(true);
+        await dialog.getByRole("button", { name: "닫기", exact: true }).click();
+      }
+    };
+    await page.getByRole("button", { name: "시작", exact: true }).click();
+    await capture("home");
+    await settings(page, "포트 포워딩");
+    await capture("tunnel-list");
+    await page.getByRole("button", { name: "새 규칙", exact: true }).click();
+    await capture("tunnel-dialog");
+    await settings(page, "로컬 터미널");
+    await page.getByRole("button", { name: "추가", exact: true }).click();
+    await capture("profile-dialog");
+    await settings(page, "인증 프로필");
+    await page
+      .getByRole("button", { name: "프로필 등록", exact: true })
+      .click();
+    await page.getByRole("dialog").locator("select").selectOption("key");
+    await capture("credential-dialog");
+    await settings(page, "외형");
+    await page.getByRole("tab", { name: "테마", exact: true }).click();
+    await page
+      .getByRole("button", { name: "현재 테마에서 만들기", exact: true })
+      .click();
+    await capture("theme-dialog");
+    await settings(page, "단축키");
+    await page
+      .getByRole("button", { name: "출력 검색 키 변경", exact: true })
+      .click();
+    await capture("shortcut-dialog");
+    await page.getByRole("button", { name: "알림함", exact: true }).click();
+    await expect(page.locator(".activity-view .empty")).toBeVisible();
+    await capture("activity-empty");
+  }
 });
 
 test.afterEach(async () => {

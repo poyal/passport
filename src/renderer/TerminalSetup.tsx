@@ -578,7 +578,7 @@ export function TerminalSettings() {
         </details>
       </section>
       <section className="settings-card">
-        <div className="row">
+        <div className="settings-card-header">
           <h3>사용자 프로파일</h3>
           <button
             onClick={() =>
@@ -678,6 +678,7 @@ function ProfileEditor({
   return (
     <Modal title="시작 프로파일 편집" onClose={onClose} wide>
       <form
+        className="profile-editor-form"
         onSubmit={(e) => {
           e.preventDefault();
           const parsed = startupProfileSchema.safeParse(profile);

@@ -17,7 +17,7 @@ import { quotePastePaths } from "../../src/shared/paste";
 let application: ElectronApplication, page: Page, directory: string;
 let nativeBoard: string;
 const mod = process.platform === "darwin" ? "Meta" : "Control";
-const pasteKey = process.platform === "darwin" ? "Meta+v" : "Control+Shift+v";
+const pasteKey = process.platform === "darwin" ? "Meta+v" : "Control+v";
 const suite = reusableApp({ name: "paste-e2e" });
 test.beforeEach(async () => {
   application = suite.application;

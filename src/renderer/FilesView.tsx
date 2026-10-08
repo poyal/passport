@@ -1,5 +1,5 @@
 import {
-  defaultShortcuts,
+  managedFileMenuKey,
   shortcutMatch,
   shortcutPlatform,
 } from "../shared/shortcuts";
@@ -628,7 +628,6 @@ function FilePanel({
         </IconButton>
         <button
           ref={menuButtonRef}
-          className="subtle"
           aria-haspopup="menu"
           aria-expanded={!!menu?.toolbar}
           onClick={(e) => {
@@ -743,14 +742,7 @@ function FilePanel({
             return;
           // Chromium also generates contextmenu from these keys on Windows.
           // Cancel that default even when the configured binding was removed.
-          if (
-            shortcutMatch(
-              e.nativeEvent,
-              defaultShortcuts[platform].fileMenu,
-              mac,
-            )
-          )
-            e.preventDefault();
+          if (managedFileMenuKey(e.nativeEvent, platform)) e.preventDefault();
           if (shortcutMatch(e.nativeEvent, keys.fileMenu, mac)) {
             e.preventDefault();
             const r = e.currentTarget.getBoundingClientRect();

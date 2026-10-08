@@ -1,6 +1,6 @@
 {
   "name": "passport",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "private": true,
   "type": "module",
   "description": "로컬 AI와 SSH를 함께 사용하는 터미널 작업 공간",

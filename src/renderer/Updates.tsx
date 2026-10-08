@@ -8,7 +8,7 @@ export function UpdatesPanel() {
   const checking = state.status === "checking";
   return (
     <section className="settings-card update-card" aria-busy={checking}>
-      <div className="update-heading">
+      <div className="settings-card-header">
         <h3>업데이트</h3>
         <button
           type="button"

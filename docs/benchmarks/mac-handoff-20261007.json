@@ -1,0 +1,283 @@
+{
+  "createdAt": "2026-10-07T00:19:50.710405+00:00",
+  "purpose": "Verify the Windows-to-Mac handoff on the current Apple Silicon checkout",
+  "status": "preview-verified",
+  "version": "1.2.0",
+  "source": {
+    "commit": "ea2ffc072bbab8dbe4fc1f48007d73bc6f1cc28c",
+    "dirty": false,
+    "fingerprint": "09adb5969f9013095247f9b6217b3baec906792d8912bca8438ab59d54180b6f"
+  },
+  "environment": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "os": "27.0.0",
+    "node": "v25.6.0",
+    "npm": "11.8.0",
+    "cargo": "cargo 1.99.0 (5f94df478 2026-08-27)",
+    "electron": "44.4.5",
+    "macOS": "27.0.1",
+    "systemBuild": "26A434"
+  },
+  "command": "npm run release:verify -- --preview",
+  "buildEnvironment": {
+    "nodeBin": "/opt/homebrew/bin",
+    "PASSPORT_CARGO": "release/checks/20261002-2c60496-mac-arm64-release-toolchain/rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+    "CARGO_HOME": "release/checks/20261002-2c60496-mac-arm64-release-toolchain/cargo",
+    "RUSTUP_HOME": "release/checks/20261002-2c60496-mac-arm64-release-toolchain/rustup",
+    "shellIsolation": "Inherited environment; no ZDOTDIR override added for this run"
+  },
+  "startedAt": "2026-10-07T00:13:03.138Z",
+  "finishedAt": "2026-10-07T00:18:16.161Z",
+  "checks": [
+    {
+      "name": "dependencies",
+      "status": "passed"
+    },
+    {
+      "name": "ftp-fixtures",
+      "status": "passed"
+    },
+    {
+      "name": "build",
+      "status": "passed"
+    },
+    {
+      "name": "unit",
+      "status": "passed"
+    },
+    {
+      "name": "release-tests",
+      "status": "passed"
+    },
+    {
+      "name": "source-gui",
+      "status": "passed"
+    },
+    {
+      "name": "package",
+      "status": "passed"
+    },
+    {
+      "name": "installer",
+      "status": "passed"
+    },
+    {
+      "name": "packaged-smoke",
+      "status": "passed"
+    },
+    {
+      "name": "packaged-gui",
+      "status": "passed"
+    }
+  ],
+  "unit": {
+    "passed": 174,
+    "skipped": 6,
+    "failed": 0,
+    "skipReasons": {
+      "Windows-only": 4,
+      "optional Docker": 1,
+      "optional file stress": 1
+    }
+  },
+  "releaseTests": {
+    "passed": 73,
+    "skipped": 0,
+    "failed": 0
+  },
+  "gui": {
+    "source-gui": {
+      "stats": {
+        "startTime": "2026-10-07T00:13:50.040Z",
+        "duration": 100479.892,
+        "expected": 60,
+        "skipped": 9,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "lifecycle": {
+        "launches": 25,
+        "windows": 31,
+        "exits": 25,
+        "reusedTests": 17,
+        "auditedShutdowns": 25,
+        "shown": 0,
+        "focused": 0
+      },
+      "policyHash": "0f3a435efd11acdd72fade0c84576de246bbc53db6189f71c6e09cb0915919a9",
+      "skips": [
+        {
+          "file": "docker-ssh.spec.ts",
+          "title": "real Docker SSH and SFTP through the desktop application",
+          "reason": "optional feature not requested: docker"
+        },
+        {
+          "file": "stress.spec.ts",
+          "title": "16 visible terminals process 100 KiB/s each for ten minutes",
+          "reason": "optional feature not requested: stress"
+        },
+        {
+          "file": "throughput.spec.ts",
+          "title": "large terminal text remains interactive and bounded through 1 GiB",
+          "reason": "optional feature not requested: throughput"
+        },
+        {
+          "file": "windows-credentials.spec.ts",
+          "title": "Windows DPAPI protects stored credentials and reconnects after restart",
+          "reason": "not applicable on darwin"
+        },
+        {
+          "file": "windows-files.spec.ts",
+          "title": "Windows drive root remains browsable around protected system files",
+          "reason": "not applicable on darwin"
+        },
+        {
+          "file": "windows-shells.spec.ts",
+          "title": "Windows passport-bash applies a startup profile and accepts terminal input",
+          "reason": "not applicable on darwin"
+        },
+        {
+          "file": "windows-shells.spec.ts",
+          "title": "Windows cmd applies a startup profile and accepts terminal input",
+          "reason": "not applicable on darwin"
+        },
+        {
+          "file": "windows-shells.spec.ts",
+          "title": "Windows windows-powershell applies a startup profile and accepts terminal input",
+          "reason": "not applicable on darwin"
+        },
+        {
+          "file": "windows-shells.spec.ts",
+          "title": "Windows pwsh applies a startup profile and accepts terminal input",
+          "reason": "not applicable on darwin"
+        }
+      ]
+    },
+    "packaged-gui": {
+      "stats": {
+        "startTime": "2026-10-07T00:16:28.041Z",
+        "duration": 107933.41500000001,
+        "expected": 60,
+        "skipped": 9,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "lifecycle": {
+        "launches": 25,
+        "windows": 31,
+        "exits": 25,
+        "reusedTests": 17,
+        "auditedShutdowns": 25,
+        "shown": 0,
+        "focused": 0
+      },
+      "policyHash": "0f3a435efd11acdd72fade0c84576de246bbc53db6189f71c6e09cb0915919a9",
+      "skips": [
+        {
+          "file": "docker-ssh.spec.ts",
+          "title": "real Docker SSH and SFTP through the desktop application",
+          "reason": "optional feature not requested: docker"
+        },
+        {
+          "file": "stress.spec.ts",
+          "title": "16 visible terminals process 100 KiB/s each for ten minutes",
+          "reason": "optional feature not requested: stress"
+        },
+        {
+          "file": "throughput.spec.ts",
+          "title": "large terminal text remains interactive and bounded through 1 GiB",
+          "reason": "optional feature not requested: throughput"
+        },
+        {
+          "file": "windows-credentials.spec.ts",
+          "title": "Windows DPAPI protects stored credentials and reconnects after restart",
+          "reason": "not applicable on darwin"
+        },
+        {
+          "file": "windows-files.spec.ts",
+          "title": "Windows drive root remains browsable around protected system files",
+          "reason": "not applicable on darwin"
+        },
+        {
+          "file": "windows-shells.spec.ts",
+          "title": "Windows passport-bash applies a startup profile and accepts terminal input",
+          "reason": "not applicable on darwin"
+        },
+        {
+          "file": "windows-shells.spec.ts",
+          "title": "Windows cmd applies a startup profile and accepts terminal input",
+          "reason": "not applicable on darwin"
+        },
+        {
+          "file": "windows-shells.spec.ts",
+          "title": "Windows windows-powershell applies a startup profile and accepts terminal input",
+          "reason": "not applicable on darwin"
+        },
+        {
+          "file": "windows-shells.spec.ts",
+          "title": "Windows pwsh applies a startup profile and accepts terminal input",
+          "reason": "not applicable on darwin"
+        }
+      ]
+    }
+  },
+  "packagedSmoke": {
+    "packagedSmoke": "passed",
+    "localPTY": "passed",
+    "bundledHelper": "passed",
+    "shutdown": "passed",
+    "exitCode": 0,
+    "appVersion": "1.2.0",
+    "arch": "arm64",
+    "platform": "darwin",
+    "hosts": 0,
+    "fonts": 247,
+    "version": 2,
+    "nodeAvailable": false
+  },
+  "payloadComparison": {
+    "passed": true,
+    "entries": 708,
+    "path": "release/checks/20261007T001303Z-ea2ffc0-mac-arm64-local-release/payload-comparison.json",
+    "sha256": "61dcfc4f4d84146a4afe176020260bdd316dd48cdbe91ac4f1c3e91c0611e9ba"
+  },
+  "artifact": {
+    "name": "Passport-1.2.0-mac-arm64.dmg",
+    "path": "release/builds/20261007T001303Z-ea2ffc0-mac-arm64-local-release/Passport-1.2.0-mac-arm64.dmg",
+    "bytes": 169155991,
+    "sha256": "9d42b6b2609ea4fc5a3e9b9c4258582b7331836013475d92ce4e4b49b90aaee4"
+  },
+  "signature": {
+    "verification": "codesign --verify --deep --strict passed for the DMG payload",
+    "identity": "ad-hoc",
+    "notarized": false
+  },
+  "evidence": {
+    "verification": "release/checks/20261007T001303Z-ea2ffc0-mac-arm64-local-release/verification.json",
+    "verificationSha256": "5001a989a4415ea361496643bb7fa1a3e8a7198318f936d3246f6dcf04798f2f",
+    "receiptEvidenceAndInstallerHashesRechecked": 24
+  },
+  "previewApp": {
+    "link": "release/builds/Passport.app",
+    "relativeTarget": "20261007T001303Z-ea2ffc0-mac-arm64-local-release/mac-arm64/Passport.app"
+  },
+  "cleanup": {
+    "dmgUnmounted": true,
+    "releaseLockRemoved": true,
+    "buildAllocatedKiB": 590180,
+    "checksAllocatedKiB": 76976,
+    "existingArtifactsDeleted": false,
+    "newEvidenceReviewAfter": "2026-10-14",
+    "retentionReview": "No existing success folder with artifact.createdAt at least seven days old was found. Failed or unclassified folders require resolution/provenance review before becoming cleanup candidates. Preserve the preview target, two most recent successful builds, KEEP folders and recovery backups."
+  },
+  "limitations": [
+    "Hidden mode only: the four native desktop focus/clipboard tests were not run.",
+    "Physical IME, OS notifications, Finder interaction and external AI services were not manually verified.",
+    "Windows native tests were not run on this Mac; injected Windows adapters are unit coverage only.",
+    "Optional Docker, file stress, ten-minute UI stress and 1 GiB throughput were not run.",
+    "User-account installation, upgrade and uninstall were not performed.",
+    "This local preview installer is a new build and differs from the published 1.2.0 DMG. It cannot authorize publication."
+  ],
+  "repositoryChanges": "Verification documentation only, added after the clean-source pipeline completed; no product or test code changes."
+}

@@ -1,7 +1,7 @@
 import { Bell, CheckCheck, Trash2 } from "lucide-react";
 import { useApp } from "./context";
 import { api } from "./api";
-import { ToggleField } from "./components";
+import { Empty, ToggleField } from "./components";
 
 export function ActivityView() {
   const app = useApp();
@@ -30,17 +30,15 @@ export function ActivityView() {
         </div>
       </div>
       {!app.activities.length && (
-        <div className="empty-state">
-          <Bell size={30} />
-          <h3>아직 알림이 없습니다.</h3>
-          <p>
-            로컬 터미널의 AI 작업 알림 프로파일과 에이전트 연동을 켜면 여기에
-            모입니다.
-          </p>
+        <Empty
+          icon={<Bell size={30} />}
+          title="아직 알림이 없습니다."
+          description="로컬 터미널의 AI 작업 알림 프로파일과 에이전트 연동을 켜면 여기에 모입니다."
+        >
           <button onClick={() => app.openSettings("notifications")}>
             알림 설정
           </button>
-        </div>
+        </Empty>
       )}
       {app.activities.map((item) => (
         <article
@@ -184,7 +182,7 @@ export function NotificationSettings() {
           운영체제 권한이 꺼져 있으면 앱에서 알림을 보내도 배너가 표시되지
           않습니다.
         </p>
-        <div className="row wrap">
+        <div className="row">
           <button
             onClick={() =>
               void api

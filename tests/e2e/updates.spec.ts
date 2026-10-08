@@ -5,6 +5,7 @@ import {
   type Page,
 } from "@playwright/test";
 import { reusableApp } from "../fixtures/reusable-app";
+import { expectReadableSpacing } from "../fixtures/ui-spacing";
 
 let application: ElectronApplication, page: Page;
 const errors: string[] = [];
@@ -32,7 +33,10 @@ test.beforeEach(async () => {
     .getByRole("button", { name: "About", exact: true })
     .click();
 });
-test.afterEach(() => expect(errors).toEqual([]));
+test.afterEach(async () => {
+  expect(errors).toEqual([]);
+  await expectReadableSpacing(page);
+});
 
 async function mockRelease(
   version: string,
@@ -94,6 +98,7 @@ test("About checks updates, directs downloads to the correct installer, and show
   await expect(
     page.getByRole("button", { name: "확인 중…", exact: true }),
   ).toBeDisabled();
+  await expectReadableSpacing(page);
   await expect(page.locator(".update-result")).toContainText(
     `Passport ${nextVersion} 업데이트가 있습니다.`,
   );
@@ -129,6 +134,7 @@ test("About checks updates, directs downloads to the correct installer, and show
       await page.screenshot({
         path: info.outputPath(`updates-${colorMode}-${width}.png`),
       });
+      await expectReadableSpacing(page);
       const bounds = await page.locator(".update-card").boundingBox();
       expect(bounds!.x).toBeGreaterThanOrEqual(0);
       expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(width);
@@ -169,6 +175,15 @@ test("About checks updates, directs downloads to the correct installer, and show
       window.passport.call("updates.open", { target: "arbitrary" } as any),
     ),
   ).rejects.toThrow();
+});
+
+test("an up-to-date result keeps its explanation separated from the status panel", async () => {
+  await mockRelease(currentVersion);
+  await page
+    .getByRole("button", { name: "업데이트 확인", exact: true })
+    .click();
+  await expect(page.locator(".update-result")).toContainText("최신 버전");
+  await expectReadableSpacing(page);
 });
 
 test("an ahead-of-release installation never offers a downgrade", async () => {

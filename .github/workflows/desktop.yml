@@ -1,6 +1,15 @@
 name: Desktop verification (manual diagnostics)
 on:
   workflow_dispatch:
+    inputs:
+      target:
+        description: Verification platform
+        type: choice
+        default: all
+        options:
+          - all
+          - mac-arm64
+          - win-x64
 permissions:
   contents: read
 jobs:
@@ -8,11 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: windows-2025
-            target: win-x64
-          - os: macos-15
-            target: mac-arm64
+        include: ${{ fromJSON(inputs.target == 'mac-arm64' && '[{"os":"macos-15","target":"mac-arm64"}]' || inputs.target == 'win-x64' && '[{"os":"windows-2025","target":"win-x64"}]' || '[{"os":"windows-2025","target":"win-x64"},{"os":"macos-15","target":"mac-arm64"}]') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     steps:

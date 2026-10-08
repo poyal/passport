@@ -1,0 +1,99 @@
+{
+  "date": "2026-10-08",
+  "sourceCommit": "ea2ffc072bbab8dbe4fc1f48007d73bc6f1cc28c",
+  "sourceFingerprint": "8da829a3e6bb935427cb33b5e18184e39494b1f54cb104b834363826d3843ed1",
+  "dirty": true,
+  "platform": "mac-arm64",
+  "status": "preview-verified",
+  "appVersion": "1.2.0",
+  "app": "release/builds/20261008T005851Z-ea2ffc0-dirty-mac-arm64-shortcut-ui-preview/mac-arm64/Passport.app",
+  "previewLink": "release/builds/Passport.app",
+  "checks": {
+    "codesign": "passed: deep, strict",
+    "verifiedSourceBuildMatch": "passed",
+    "packagedSmoke": {
+      "status": "passed",
+      "lifecycle": {
+        "launches": 1,
+        "windows": 1,
+        "exits": 1,
+        "reusedTests": 0,
+        "auditedShutdowns": 1,
+        "shown": 0,
+        "focused": 0
+      }
+    },
+    "packagedGui": {
+      "directory": "release/checks/20261008T005952Z-ea2ffc0-dirty-mac-arm64-e2e-hidden",
+      "scope": "Related shortcut, update and usability suites; not a full release approval",
+      "startTime": "2026-10-08T00:59:52.800Z",
+      "duration": 38045.898,
+      "expected": 16,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0,
+      "lifecycle": {
+        "launches": 3,
+        "windows": 3,
+        "exits": 3,
+        "reusedTests": 8,
+        "auditedShutdowns": 3,
+        "shown": 0,
+        "focused": 0
+      }
+    }
+  },
+  "appArchive": {
+    "path": "release/builds/20261008T005851Z-ea2ffc0-dirty-mac-arm64-shortcut-ui-preview/mac-arm64/Passport.app/Contents/Resources/app.asar",
+    "sha256": "c047d995b7f8b523c8e752b05cf76f90326c2fa9640c4d75d0ea14c3cd861175",
+    "bytes": 76076307
+  },
+  "appFiles": {
+    "count": 708,
+    "bytes": 410322755,
+    "manifest": "release/checks/20261008T005851Z-ea2ffc0-dirty-mac-arm64-shortcut-ui-preview/app-files.json",
+    "sha256": "18e78898a78395aff297541f521c02ec7ea7e7102dfe9159390eb93d96b73a5b"
+  },
+  "artifacts": [
+    "release/builds/20261008T005851Z-ea2ffc0-dirty-mac-arm64-shortcut-ui-preview",
+    "release/checks/20261008T005851Z-ea2ffc0-dirty-mac-arm64-shortcut-ui-preview",
+    "release/checks/20261008T005952Z-ea2ffc0-dirty-mac-arm64-e2e-hidden"
+  ],
+  "evidenceSHA256": {
+    "release/checks/20261008T005851Z-ea2ffc0-dirty-mac-arm64-shortcut-ui-preview/build.log": "23ffe0b9057fdf6ba61acc3949c0818880a060e26b37a6c105b7e5f0c0423560",
+    "release/builds/20261008T005851Z-ea2ffc0-dirty-mac-arm64-shortcut-ui-preview/package.log": "caed225f7efa56dbcba4d88034b413034927be5c09cf462e99562897b021cedd",
+    "release/checks/20261008T005851Z-ea2ffc0-dirty-mac-arm64-shortcut-ui-preview/codesign.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "release/checks/20261008T005851Z-ea2ffc0-dirty-mac-arm64-shortcut-ui-preview/package-integrity.json": "49b556e2c7852cc2c244df598d12d09ff0c2878ea69ff5a7b054732969af74bd",
+    "release/checks/20261008T005851Z-ea2ffc0-dirty-mac-arm64-shortcut-ui-preview/packaged-smoke.log": "a94c32f765e164ec5b080da02f7b1b307ac9c13b90490ec173ea8d88b649e467",
+    "release/checks/20261008T005851Z-ea2ffc0-dirty-mac-arm64-shortcut-ui-preview/smoke-lifecycle.jsonl": "321b067e5ac5b74afe88f29753af5b60db5a3e0c0e6b33356a6ab01c6172d1a5",
+    "release/checks/20261008T005851Z-ea2ffc0-dirty-mac-arm64-shortcut-ui-preview/app-files.json": "18e78898a78395aff297541f521c02ec7ea7e7102dfe9159390eb93d96b73a5b",
+    "release/checks/20261008T005952Z-ea2ffc0-dirty-mac-arm64-e2e-hidden/artifact.json": "d0352766241dfb7e7f2bc1e7e248cbdfec571ebb73003653f4f539dbc0d5bc76",
+    "release/checks/20261008T005952Z-ea2ffc0-dirty-mac-arm64-e2e-hidden/report.json": "6a3502048ef1a4e23071e89ee1bf6b0a797bed0bca8ad79f61a9faa8ef78e98d",
+    "release/checks/20261008T005952Z-ea2ffc0-dirty-mac-arm64-e2e-hidden/lifecycle.jsonl": "b9e9f2c77a3f437576279936c3153011c49c951b051b2f44642d057f44712c03",
+    "release/builds/20261008T005851Z-ea2ffc0-dirty-mac-arm64-shortcut-ui-preview/artifact.json": "63ecd25647945d09aee76fb1d24ebe40a6030cfce665e2c4d13b9013132b96df",
+    "release/checks/20261008T005851Z-ea2ffc0-dirty-mac-arm64-shortcut-ui-preview/artifact.json": "63ecd25647945d09aee76fb1d24ebe40a6030cfce665e2c4d13b9013132b96df"
+  },
+  "retention": {
+    "candidateAfter": "2026-10-15",
+    "deleted": [],
+    "protected": [
+      "release/builds/20261008T005851Z-ea2ffc0-dirty-mac-arm64-shortcut-ui-preview/mac-arm64/Passport.app",
+      "20261007T001303Z-ea2ffc0-mac-arm64-local-release/mac-arm64/Passport.app",
+      "KEEP.md marked artifacts",
+      "Existing Rust toolchain",
+      "Recovery backups"
+    ],
+    "reviewRequired": [
+      "Older failed and unclassified builds need issue/source review before cleanup"
+    ],
+    "sizesKiB": {
+      "build": 424824,
+      "checks": 220,
+      "gui": 22332
+    }
+  },
+  "limitations": [
+    "Mac arm64 local test app; no DMG, publication or installed-app replacement",
+    "Related packaged hidden GUI only; native desktop and Windows native checks pending"
+  ]
+}

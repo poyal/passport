@@ -1,0 +1,147 @@
+{
+  "date": "2026-10-08",
+  "sourceCommit": "ea2ffc072bbab8dbe4fc1f48007d73bc6f1cc28c",
+  "dirty": true,
+  "platform": "mac-arm64",
+  "result": "Mac source checks passed; Windows native and desktop checks pending",
+  "checks": {
+    "types": "passed",
+    "unit": {
+      "passed": 175,
+      "skipped": 8,
+      "skipReasons": [
+        "Windows-only: 4",
+        "optional FTP/FTPS: 2",
+        "optional Docker: 1",
+        "optional file stress: 1"
+      ]
+    },
+    "releasePolicy": {
+      "passed": 73
+    },
+    "build": "passed using existing isolated Rust toolchain",
+    "hiddenGui": {
+      "startTime": "2026-10-08T00:52:36.226Z",
+      "duration": 56814.517,
+      "expected": 30,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0,
+      "directory": "release/checks/20261008T005235Z-ea2ffc0-dirty-mac-arm64-e2e-hidden",
+      "lifecycle": {
+        "launches": 7,
+        "windows": 7,
+        "exits": 7,
+        "reusedTests": 10,
+        "auditedShutdowns": 7,
+        "shown": 0,
+        "focused": 0
+      },
+      "screenshots": 149
+    },
+    "spacing": {
+      "themes": [
+        "dark",
+        "light"
+      ],
+      "windowSizes": [
+        [
+          1024,
+          680
+        ],
+        [
+          1440,
+          900
+        ],
+        [
+          1920,
+          1080
+        ]
+      ],
+      "assertions": [
+        "heading/button alignment",
+        "label/input spacing",
+        "help text separation",
+        "shortcut display borders and action geometry",
+        "horizontal overflow"
+      ],
+      "visualReview": [
+        "shortcut rows",
+        "updates with available release",
+        "font fields and appearance toggles"
+      ]
+    }
+  },
+  "implementationSHA256": {
+    "src/renderer/Activity.tsx": "05e53716ed9317b057a9d18204312568940069354c74414f0c71e021d7487377",
+    "src/renderer/Advanced.tsx": "21105b89750f37a3f89f01e5c4ebc888f3f550ff8dcb08f022280ad6ea6ad376",
+    "src/renderer/FilesView.tsx": "8bb5b584446609b47c2fdbbf20194a05ecf7a11e59455ceb05f853c55979643d",
+    "src/renderer/FontPicker.tsx": "1c28086ffe2a53fc0944b02f21af44819c265404d8a9209ac191078a9ff98391",
+    "src/renderer/Settings.tsx": "5c5bafa57e1e273e188dcefbb2af4db644942dbdcaf7b988d6023a12f7c86012",
+    "src/renderer/ShortcutSettings.tsx": "ddd122f251673ebe9afe93776e35c27c2cee0bbae3607890c6610f5b4b66476c",
+    "src/renderer/TerminalSetup.tsx": "08268362864734d388f14ada1ee50646053718a5e1b72e8d69185fc8b5d464cb",
+    "src/renderer/Updates.tsx": "aa388459a5d942f8d9c385c2f5c9d8c71d92872de67d893d533bd90cb2e3b466",
+    "src/renderer/styles.css": "b85c9198088b0c5323b43a8b5baaafeff9cd504685c0ed6bae1c6cb7e81d9317",
+    "src/shared/shortcuts.ts": "5c0d96fe49c521645fa5cc8bccc1e9458f04c2852379deb2aa2381dda25ab33c",
+    "tests/e2e/advanced.spec.ts": "340f88fa154931bcf11a06ec53a1c6bdf12a9f33e4380723c5978f787079e59b",
+    "tests/e2e/paste.spec.ts": "dbdd8154a631635e488c154d1eb0bc97b45151c2523fad022a01db73e0b158d3",
+    "tests/e2e/release-policy.json": "d4fa8de8a464b281827ab27cc4607c5a810bcd5408d84edcc6284d78a0ac3623",
+    "tests/e2e/shortcuts-settings.spec.ts": "ff9a166d0571efe3021756bcf2e22bac858f5ea4d81eda79bde878f61f1a6817",
+    "tests/e2e/updates.spec.ts": "a1dee83f63709a17ccd33c6c0437dbeda97b5719075d605304106024d864d2b5",
+    "tests/e2e/usability.spec.ts": "34a8f0d75d6588e4833fa47b4d8bee7bdbf751045e647a465db2bf104fe1728c",
+    "tests/e2e/windows-shells.spec.ts": "9a925900ffc27c83f01d24944c1186e8d6eb518547d5bcb33858397e8cab09cf",
+    "tests/release.test.mjs": "6e0e5275390e9c1abedec77dac4711e648fbed54ed4cf258107b4338801dfa18",
+    "tests/shortcuts.test.ts": "1caaa8702bac7e5ec5e396924a9c27c5c31bbed54f3246384a631d64deaaf5f1",
+    "tests/store.test.ts": "00ea68018a42756c0b3aff427920cd978968e1e7a52a52954d156fdb63b4695f",
+    "tests/fixtures/ui-spacing.ts": "5d5ebafb6fc68c4e19e9ff60ac18c61866954845c6461794e6a06be9b17bad49"
+  },
+  "buildFiles": [
+    {
+      "file": "dist/main/index.cjs",
+      "sha256": "d5b5eebb953d4d84ffb14afa3d82870a11adc506986be5b2f31ceb6c1bf22122"
+    },
+    {
+      "file": "dist/preload/index.cjs",
+      "sha256": "f1d510e44a1cfcc034df1f0a6495be5126b3c03fa19575968c846a5e64e85bd4"
+    },
+    {
+      "file": "dist/renderer/assets/index-DUfNqsN8.js",
+      "sha256": "ae098be12f96b42e30dac4b88f543ce4097111a1171205f6b50a554f59d82ca7"
+    },
+    {
+      "file": "dist/renderer/assets/index-TNQAASCP.css",
+      "sha256": "e7a5ac7bccdd5ab2ff9eb9f85b23a63690f3184afccecf40e8dd5347268a2f99"
+    }
+  ],
+  "evidenceSHA256": {
+    "release/checks/20261008T004956Z-ea2ffc0-dirty-mac-arm64-shortcut-ui-check/artifact.json": "2f301df9d750909a23cea3876416f849fbf9d393a3585764ebb35b1009058fbc",
+    "release/checks/20261008T004956Z-ea2ffc0-dirty-mac-arm64-shortcut-ui-check/check.log": "edbd5fe4fe7d61db2ce1ac0c660cb81f92bdd91aa20a31a5acf4337837245009",
+    "release/checks/20261008T004956Z-ea2ffc0-dirty-mac-arm64-shortcut-ui-check/test-release-retry.log": "081d652b27b947da6b388158ddd9c2c8d4453eef05f4bba2d3560e01300ceaee",
+    "release/checks/20261008T004956Z-ea2ffc0-dirty-mac-arm64-shortcut-ui-check/build-existing-toolchain.log": "1f2e913ae4ff007142e21d60a14b12a34d7174cb6454a69f0f98eba33d9216c8",
+    "release/checks/20261008T005235Z-ea2ffc0-dirty-mac-arm64-e2e-hidden/artifact.json": "1d15cc9f7471282ec8cd8b71a3769f297c259ce4ec8d015b210002fe1e610b7a",
+    "release/checks/20261008T005235Z-ea2ffc0-dirty-mac-arm64-e2e-hidden/report.json": "7f9d1384b8c7a2a8984b1e5b5f2ff643991b01cbb6046f3a9af5e61b146c69a6",
+    "release/checks/20261008T005235Z-ea2ffc0-dirty-mac-arm64-e2e-hidden/lifecycle.jsonl": "2d45b63618cdb6e2913b7a186d146555d48b5009ec6eeeb26100068fd0418e83"
+  },
+  "artifacts": [
+    "release/checks/20261008T004956Z-ea2ffc0-dirty-mac-arm64-shortcut-ui-check",
+    "release/checks/20261008T005235Z-ea2ffc0-dirty-mac-arm64-e2e-hidden"
+  ],
+  "resolvedFailures": [
+    "Release policy expected count updated from 60 to 62 for two added GUI cases",
+    "Cargo absent from PATH; used preserved Rust toolchain"
+  ],
+  "limitations": [
+    "Windows platform injection is not native Windows verification",
+    "Native desktop tests were not requested or run",
+    "Related source GUI only; no package, installation replacement or publication"
+  ],
+  "retention": {
+    "candidateAfter": "2026-10-15",
+    "deleted": [],
+    "protected": [
+      "release/builds/Passport.app target",
+      "existing Rust toolchain",
+      "existing backups"
+    ]
+  }
+}
