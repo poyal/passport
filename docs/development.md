@@ -40,6 +40,10 @@ npm run dev
 
 `scripts/patch-ssh2.mjs`는 ssh2 1.17.0의 DH group1 구현에서 Electron/BoringSSL이 제공하지 않는 이름 기반 `modp2` 대신 RFC 2409 §6.2의 동일한 소수를 명시적으로 지정한다. 설치·빌드·단위 시험에서 멱등적으로 적용하며 의존성 버전이나 패치 대상이 달라지면 중단한다. Passport는 현대 기본 협상 목록 뒤에 SHA-1 group14·GEX·group1을 항상 추가한다. 호스트별 옵션은 없으며 이전 `legacySSH` 필드는 파싱 과정에서 제외한다. 전역 `crypto` API를 변경하지 않는다.
 
+## 빌드 결과 보관
+
+`dist/`는 현재 컴파일 결과 한 세트, `build/`는 설치 스크립트·생성 아이콘·다운로드 캐시를 담는다. 특히 `build/installer.nsh`는 Git으로 관리하는 소스다. 테스트 앱은 `release/builds/`, 공개 설치본은 `release/packages/`에 두고 플랫폼별 최신·직전본을 유지한다. Mac 테스트 앱은 검증한 빌드에 연결된 `release/builds/Passport.app`으로 연다. 정리 범위와 백업·실패 자료의 보호 기준은 [산출물 보관 규칙](distribution.md#산출물-보관-규칙)을 따른다.
+
 ## 소스 구조
 
 | 경로            | 역할                                                          |

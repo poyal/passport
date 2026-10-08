@@ -22,7 +22,7 @@
 
 소스 `f4497cc2a337c5f5aa73d5834a2b99f06013020d`의 Mac DMG를 정식 로컬 절차로 검증한 뒤 동일 바이트로 게시했다. 단위·통합 131개, 배포 회귀 61개, 소스/최종 DMG의 숨김 GUI 각 53개와 실제 포커스 각 4개를 통과했다. 허용 생략은 단위 3개와 GUI 각 9개이며 최종 실패·재시도는 없다. 공개 파일 다운로드 해시도 확인했다. 사용자 Finder 전체 경로·이미지 첨부 표시도 확인했으며 Windows 실기·배포는 별도다.
 
-`release/builds/Passport.app`은 검증한 1.1.1 앱을 가리킨다. Mac은 Playwright 기본 정상 종료 뒤 실제 프로세스 종료를 확인하며 Windows는 기존 종료 순서를 유지한다. 초기 실패·검사 보완·검증 범위는 저장소 `docs/verification.md`와 `docs/benchmarks/github-release-v1.1.1.json`에 기록했다. README 작성 규칙은 `docs/README-작성-가이드.md`와 `AGENTS.md`에 연결했다.
+당시 `release/builds/Passport.app`은 검증한 1.1.1 앱을 가리켰다. 현재 링크는 최신 검증 기록을 따른다. Mac은 Playwright 기본 정상 종료 뒤 실제 프로세스 종료를 확인하며 Windows는 기존 종료 순서를 유지한다. 초기 실패·검사 보완·검증 범위는 저장소 `docs/verification.md`와 `docs/benchmarks/github-release-v1.1.1.json`에 기록했다. README 작성 규칙은 `docs/README-작성-가이드.md`와 `AGENTS.md`에 연결했다.
 
 기존 Mac/Windows 게시 Actions를 비활성화하고 수동 진단만 남겼다. 초기 Windows 1.1.1은 사용자 승인에 따라 버그픽스 소스 태그 `v1.1.1-win-x64`를 사용했다. 아래는 앞선 개발 단계별 기록이며 당시 미완료 항목을 현재 상태와 혼동하지 않는다.
 
@@ -283,6 +283,8 @@ git show 'v<버전>:.github/workflows/desktop.yml'
 실행 중인 게시 작업이 있으면 담당자와 소유 실행 ID를 확인해 완료 또는 취소 결과를 남긴다. 비활성화 자체가 기존 실행을 취소하지는 않는다. 삭제된 워크플로 조회 실패나 목록에서 안 보이는 것만으로 비활성화를 입증하지 않는다. ID·최종 상태·진행 중 작업·태그 커밋과 확인 시각을 기록한다. 확인 목적으로 과거 커밋에 시험 태그를 원격 push하지 않는다.
 
 ## 산출물과 보관
+
+[산출물 보관 규칙](distribution.md#산출물-보관-규칙)에 따라 플랫폼별 최근 검증 빌드 2개와 최신·직전 공개 설치 파일을 유지한다. 정리 요청이 있으면 초과 성공 빌드·오래된 검증 화면·다운로드 캐시를 출처 확인 후 정리한다. `build/installer.nsh`는 소스이고 `dist/`는 현재 컴파일 결과 한 세트이므로 폴더 전체 삭제 대상이 아니다. 보관 중인 릴리즈의 원본 receipt와 증거 파일은 경로·내용을 유지한다.
 
 - `release/builds/<실행 ID>/`: 만든 앱과 DMG·EXE.
 - `release/checks/<실행 ID>/`: 검증 기록·로그·GUI trace·임시 추출 파일.

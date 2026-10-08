@@ -1,0 +1,1256 @@
+{
+  "date": "2026-10-08",
+  "sourceCommit": "029e84145254fba38219f532dec370c2ed2472ed",
+  "platform": "mac-arm64",
+  "status": "completed",
+  "authorization": "User requested docs update and cleanup of surplus build/dist/release artifacts after latest+previous retention proposal.",
+  "policy": "Keep latest two verified builds and latest+previous public installers; protect KEEP, failure reproductions, tools, current dist and all recovery sets.",
+  "localEvidenceDirectory": "release/checks/20261008T014659Z-029e841-mac-arm64-artifact-cleanup",
+  "measuredBeforeKiB": {
+    "build": 117620,
+    "dist": 15600,
+    "release": 13646428
+  },
+  "measuredAfterKiB": {
+    "build": 900,
+    "dist": 15600,
+    "release": 4545076
+  },
+  "netReductionKiB": 9218072,
+  "removedAllocatedKiB": 9803788,
+  "deletedCounts": {
+    "build": 20,
+    "cache": 1,
+    "checks": 60,
+    "metadata": 2,
+    "package": 4
+  },
+  "apps": {
+    "before": 26,
+    "added": 1,
+    "deleted": 20,
+    "remaining": 7,
+    "currentAndPrevious": 2,
+    "KEEP": 1,
+    "failureReproduction": 1,
+    "recoveryBackups": 3,
+    "paths": [
+      "release/builds/20261002T082758Z-14059f1-mac-arm64-local-release/mac-arm64/Passport.app",
+      "release/builds/20261002T090906Z-f4497cc-mac-arm64-local-release/mac-arm64/Passport.app",
+      "release/builds/20261008T011624Z-7be5713-mac-arm64-local-release/mac-arm64/Passport.app",
+      "release/builds/20261008T010536Z-ea2ffc0-dirty-mac-arm64-button-style-preview/mac-arm64/Passport.app",
+      "release/backups/20261001T043201Z-legacy-mac-arm64-installed-color-backup-20261001-133159/Passport.app",
+      "release/backups/20261001T040553Z-legacy-mac-arm64-installed-backup-20261001-130506/Passport.app",
+      "release/backups/20261001T084610Z-4d2940c-dirty-mac-arm64-sidebar-install/Passport.app"
+    ]
+  },
+  "previewLink": {
+    "path": "release/builds/Passport.app",
+    "target": "20261008T011624Z-7be5713-mac-arm64-local-release/mac-arm64/Passport.app",
+    "version": "1.2.1",
+    "extractedFromPublishedDmg": true,
+    "smoke": {
+      "packagedSmoke": "passed",
+      "localPTY": "passed",
+      "bundledHelper": "passed",
+      "shutdown": "passed",
+      "exitCode": 0,
+      "appVersion": "1.2.1",
+      "arch": "arm64",
+      "platform": "darwin",
+      "hosts": 0,
+      "fonts": 247,
+      "version": 2,
+      "nodeAvailable": false
+    },
+    "lifecycle": {
+      "launch": 1,
+      "window": 1,
+      "exit": 1,
+      "shutdownAudit": 1,
+      "shown": 0,
+      "focused": 0
+    },
+    "integrity": {
+      "version": "1.2.1",
+      "app": "release/builds/20261008T011624Z-7be5713-mac-arm64-local-release/mac-arm64/Passport.app",
+      "sha256": {
+        "Contents/Resources/app.asar": "57d902a8624fd5130775eb233c3db737f18ac287439badf9091486985b261575",
+        "Contents/MacOS/Passport": "bf01b392439762ea94d3ead253dd1e5be2604c2322b107d7ae2c38776ba67540",
+        "Contents/Info.plist": "150dbff16e5bd4f863bef84d19366272c79350c63ab85cbac0b45c140a753c3e"
+      },
+      "codesign": "passed",
+      "sourceDmgSha256": "2a47391ce4e0e81c8af7d02fb96e308b88bc75ba7b9a39aa98e6f5e1f7e70188"
+    }
+  },
+  "retainedPublicInstallers": [
+    {
+      "path": "release/packages/v1.2.0/github/mac-arm64/Passport-1.2.0-mac-arm64.dmg",
+      "bytes": 170487205,
+      "sha256": "68a5b0d3fc8c8d054d26afcce51d6bdbb2ff54fac235ceb9e147fc3222ebc7a1"
+    },
+    {
+      "name": "Passport-1.2.1-mac-arm64.dmg",
+      "path": "release/packages/v1.2.1/local/mac-arm64/Passport-1.2.1-mac-arm64.dmg",
+      "bytes": 170489906,
+      "sha256": "2a47391ce4e0e81c8af7d02fb96e308b88bc75ba7b9a39aa98e6f5e1f7e70188"
+    }
+  ],
+  "checks": {
+    "latestReleaseEvidenceHashes": 33,
+    "latestReleaseReceiptSha256": "12c42f1b4617b0d0357418560f23aaa77235b81cac8fcc82ecf675ef585febd9",
+    "protectedFileHashesUnchanged": 10,
+    "KEEPMarkersUnchanged": 10,
+    "activeAppOrBuildAtDeletion": false,
+    "mountedPassportDmgAtDeletion": false,
+    "installedAppChanged": false,
+    "userDataChanged": false,
+    "fullBuildOrE2ERepeated": false
+  },
+  "deleted": [
+    {
+      "path": "release/builds/20260930T003146Z-legacy-mac-arm64-recheck-20260930",
+      "category": "build",
+      "allocatedKiB": 530404,
+      "reason": "Superseded build; latest two verified builds retained; provenance archived",
+      "status": "legacy-unclassified",
+      "sourceCommit": null,
+      "sha256": {
+        "release/builds/20260930T003146Z-legacy-mac-arm64-recheck-20260930/Passport-0.3.1-mac-arm64.dmg": "fbfd966fff3d28ce8306ddcb08cde8f1516a036ea978961f7c1cba04586a125d",
+        "release/builds/20260930T003146Z-legacy-mac-arm64-recheck-20260930/mac-arm64/Passport.app/Contents/Resources/app.asar": "1d224202b091d303c9841567b06c3ec2377d27e67f92d4e70f6b74fc24a6918c"
+      }
+    },
+    {
+      "path": "release/builds/20260930T010619Z-legacy-mac-arm64-v0.3.2",
+      "category": "build",
+      "allocatedKiB": 530408,
+      "reason": "Superseded build; latest two verified builds retained; provenance archived",
+      "status": "legacy-unclassified",
+      "sourceCommit": null,
+      "sha256": {
+        "release/builds/20260930T010619Z-legacy-mac-arm64-v0.3.2/Passport-0.3.2-mac-arm64.dmg": "bd3eb339ad3f979ed5bea310d8460b86ec106f62159156341fa5e55920b0bc7e",
+        "release/builds/20260930T010619Z-legacy-mac-arm64-v0.3.2/mac-arm64/Passport.app/Contents/Resources/app.asar": "ef4f8cb798802a64e0486a1a732861de3c359bf4fc98579c5d20146b01062931"
+      }
+    },
+    {
+      "path": "release/builds/20261001T031727Z-legacy-mac-arm64-mac-arm64",
+      "category": "build",
+      "allocatedKiB": 380788,
+      "reason": "Superseded build; latest two verified builds retained; provenance archived",
+      "status": "legacy-unclassified",
+      "sourceCommit": null,
+      "sha256": {
+        "release/builds/20261001T031727Z-legacy-mac-arm64-mac-arm64/mac-arm64/Passport.app/Contents/Resources/app.asar": "d29d3e7186501376bc20a190b6493093ae1541bfcdc4c9c89c241513abf713ee"
+      }
+    },
+    {
+      "path": "release/builds/20261001T031732Z-legacy-mac-arm64-local-ai-preview",
+      "category": "build",
+      "allocatedKiB": 381908,
+      "reason": "Superseded build; latest two verified builds retained; provenance archived",
+      "status": "legacy-unclassified",
+      "sourceCommit": null,
+      "sha256": {
+        "release/builds/20261001T031732Z-legacy-mac-arm64-local-ai-preview/mac-arm64/Passport.app/Contents/Resources/app.asar": "2ae741b4ac4fedd43b5fc6ffc7392d4556349a5fc8cf8316a28c8246afde1746"
+      }
+    },
+    {
+      "path": "release/builds/20261001T032624Z-legacy-mac-arm64-icon-fix-preview",
+      "category": "build",
+      "allocatedKiB": 381908,
+      "reason": "Superseded build; latest two verified builds retained; provenance archived",
+      "status": "legacy-unclassified",
+      "sourceCommit": null,
+      "sha256": {
+        "release/builds/20261001T032624Z-legacy-mac-arm64-icon-fix-preview/mac-arm64/Passport.app/Contents/Resources/app.asar": "0f4f5c53203597a20d2eb2d92534fa5355bfcc58ded0181ae1ebbd6b87766fe3"
+      }
+    },
+    {
+      "path": "release/builds/20261001T033725Z-legacy-mac-arm64-notification-fix-preview",
+      "category": "build",
+      "allocatedKiB": 382064,
+      "reason": "Superseded build; latest two verified builds retained; provenance archived",
+      "status": "legacy-unclassified",
+      "sourceCommit": null,
+      "sha256": {
+        "release/builds/20261001T033725Z-legacy-mac-arm64-notification-fix-preview/mac-arm64/Passport.app/Contents/Resources/app.asar": "945bf82a37ed0decf72b1c7aeb8a70fd7f6556415819993362c8da8f9c7ac068"
+      }
+    },
+    {
+      "path": "release/builds/20261001T040310Z-legacy-mac-arm64-startup-fix-preview",
+      "category": "build",
+      "allocatedKiB": 382064,
+      "reason": "Superseded build; latest two verified builds retained; provenance archived",
+      "status": "passed",
+      "sourceCommit": null,
+      "sha256": {
+        "release/builds/20261001T040310Z-legacy-mac-arm64-startup-fix-preview/mac-arm64/Passport.app/Contents/Resources/app.asar": "5862133a4f173ba0511c46c90e4c18915486dd73701427d0d7cf5cef33ab3342"
+      }
+    },
+    {
+      "path": "release/builds/20261001T040600Z-legacy-mac-arm64-local-terminal-preview",
+      "category": "build",
+      "allocatedKiB": 381908,
+      "reason": "Superseded build; latest two verified builds retained; provenance archived",
+      "status": "legacy-unclassified",
+      "sourceCommit": null,
+      "sha256": {
+        "release/builds/20261001T040600Z-legacy-mac-arm64-local-terminal-preview/mac-arm64/Passport.app/Contents/Resources/app.asar": "29b79dd851657136f40b36c2fdbb5b3b87a1b7b31baa867dfc50a2b04014de59"
+      }
+    },
+    {
+      "path": "release/builds/20261001T042905Z-legacy-mac-arm64-local-color-preview",
+      "category": "build",
+      "allocatedKiB": 382068,
+      "reason": "Superseded build; latest two verified builds retained; provenance archived",
+      "status": "passed",
+      "sourceCommit": null,
+      "sha256": {
+        "release/builds/20261001T042905Z-legacy-mac-arm64-local-color-preview/mac-arm64/Passport.app/Contents/Resources/app.asar": "ecfe749c5a49294619163f5df0045c735a552c6c7a47641865829bce1f41a2e2"
+      }
+    },
+    {
+      "path": "release/builds/20261001T082526Z-4d2940c-dirty-mac-arm64-sidebar",
+      "category": "build",
+      "allocatedKiB": 383924,
+      "reason": "Superseded build; latest two verified builds retained; provenance archived",
+      "status": "passed",
+      "sourceCommit": "4d2940c359269e78cab58813f2eb4d14b2a2b2ea",
+      "sha256": {
+        "release/builds/20261001T082526Z-4d2940c-dirty-mac-arm64-sidebar/mac-arm64/Passport.app/Contents/Resources/app.asar": "437c74c4ccfbab5f3eb1ea9e946355f2d6a8a98f579026d05b13c7d97cae375e"
+      }
+    },
+    {
+      "path": "release/builds/20261001T091600Z-4d2940c-dirty-mac-arm64-tab-templates",
+      "category": "build",
+      "allocatedKiB": 383936,
+      "reason": "Superseded build; latest two verified builds retained; provenance archived",
+      "status": "passed",
+      "sourceCommit": "4d2940c359269e78cab58813f2eb4d14b2a2b2ea",
+      "sha256": {
+        "release/builds/20261001T091600Z-4d2940c-dirty-mac-arm64-tab-templates/mac-arm64/Passport.app/Contents/Resources/app.asar": "3bfbe42185eaadf2c4ae5960b7525bbfd7a1f2ac758aa2116da04f26f2b5d9d0"
+      }
+    },
+    {
+      "path": "release/builds/20261001T092500Z-4d2940c-dirty-mac-arm64-group-drag",
+      "category": "build",
+      "allocatedKiB": 383932,
+      "reason": "Superseded build; latest two verified builds retained; provenance archived",
+      "status": "passed",
+      "sourceCommit": "4d2940c359269e78cab58813f2eb4d14b2a2b2ea",
+      "sha256": {
+        "release/builds/20261001T092500Z-4d2940c-dirty-mac-arm64-group-drag/mac-arm64/Passport.app/Contents/Resources/app.asar": "6552c1de134e48b898e776214a76af0e11d9717696ae9d62ab1edfd48b48e224"
+      }
+    },
+    {
+      "path": "release/builds/20261001T094800Z-4d2940c-dirty-mac-arm64-v1.1.0",
+      "category": "build",
+      "allocatedKiB": 534124,
+      "reason": "Superseded build; latest two verified builds retained; provenance archived",
+      "status": "superseded-before-publication",
+      "sourceCommit": "4d2940c359269e78cab58813f2eb4d14b2a2b2ea",
+      "sha256": {
+        "release/builds/20261001T094800Z-4d2940c-dirty-mac-arm64-v1.1.0/Passport-1.1.0-mac-arm64.dmg": "d0bc932ed45cb453d669e3751f167c00b9c5357aa0453630887c09cb5f78e20b",
+        "release/builds/20261001T094800Z-4d2940c-dirty-mac-arm64-v1.1.0/mac-arm64/Passport.app/Contents/Resources/app.asar": "db808f6cf70f93abb14f5e76025c4d65a14167382c10eec814f24f2688624dea"
+      }
+    },
+    {
+      "path": "release/builds/20261001T100100Z-42563e5-mac-arm64-v1.1.0",
+      "category": "build",
+      "allocatedKiB": 383932,
+      "reason": "Superseded build; latest two verified builds retained; provenance archived",
+      "status": "passed",
+      "sourceCommit": "42563e5e2131d554ab1251921141c98e3bf4a64b",
+      "sha256": {
+        "release/builds/20261001T100100Z-42563e5-mac-arm64-v1.1.0/mac-arm64/Passport.app/Contents/Resources/app.asar": "c7af40b66c95a738d27bccc69103b2910efc6a207fe4df1ea820452571573bea"
+      }
+    },
+    {
+      "path": "release/builds/20261002T075030Z-2c60496-dirty-mac-arm64-preview",
+      "category": "build",
+      "allocatedKiB": 404444,
+      "reason": "Superseded build; latest two verified builds retained; provenance archived",
+      "status": "verified-preview",
+      "sourceCommit": "2c6049681d9be1a93a62c121a5535e4a0737965d",
+      "sha256": {
+        "release/builds/20261002T075030Z-2c60496-dirty-mac-arm64-preview/mac-arm64/Passport.app/Contents/Resources/app.asar": "8a8843b4e92667a2e47ff956455a7803741e346f861ae35aac1926bc5aaf5a06"
+      }
+    },
+    {
+      "path": "release/builds/20261002T080358Z-2c60496-dirty-mac-arm64-finder-paths",
+      "category": "build",
+      "allocatedKiB": 404452,
+      "reason": "Superseded build; latest two verified builds retained; provenance archived",
+      "status": "verified-preview",
+      "sourceCommit": "2c6049681d9be1a93a62c121a5535e4a0737965d",
+      "sha256": {
+        "release/builds/20261002T080358Z-2c60496-dirty-mac-arm64-finder-paths/mac-arm64/Passport.app/Contents/Resources/app.asar": "c15cfb1faa0130aa57c74fb79a30bb58cfa996f20387542beb85265fa228e13b"
+      }
+    },
+    {
+      "path": "release/builds/20261006T002654Z-c7e776f-dirty-mac-arm64-terminal-links",
+      "category": "build",
+      "allocatedKiB": 404452,
+      "reason": "Superseded build; latest two verified builds retained; provenance archived",
+      "status": "passed",
+      "sourceCommit": "c7e776ff7107d150490e02347bf9fa6e40dab418",
+      "sha256": {
+        "release/builds/20261006T002654Z-c7e776f-dirty-mac-arm64-terminal-links/mac-arm64/Passport.app/Contents/Resources/app.asar": "b275e54ff622d8ffe5a9c9047ebc2ce2c50c4375b7354619501d503748f074fe"
+      }
+    },
+    {
+      "path": "release/builds/20261006T011216Z-c7e776f-dirty-mac-arm64-platform-split",
+      "category": "build",
+      "allocatedKiB": 404480,
+      "reason": "Superseded build; latest two verified builds retained; provenance archived",
+      "status": "passed",
+      "sourceCommit": "c7e776ff7107d150490e02347bf9fa6e40dab418",
+      "sha256": {
+        "release/builds/20261006T011216Z-c7e776f-dirty-mac-arm64-platform-split/mac-arm64/Passport.app/Contents/Resources/app.asar": "6f8b9163e2cff2dea9cb418fc209af440e4a46bf74c1bff2fc49ecfeffbd48ff"
+      }
+    },
+    {
+      "path": "release/builds/20261007T001303Z-ea2ffc0-mac-arm64-local-release",
+      "category": "build",
+      "allocatedKiB": 569696,
+      "reason": "Superseded build; latest two verified builds retained; provenance archived",
+      "status": "preview-verified",
+      "sourceCommit": "ea2ffc072bbab8dbe4fc1f48007d73bc6f1cc28c",
+      "sha256": {
+        "release/builds/20261007T001303Z-ea2ffc0-mac-arm64-local-release/Passport-1.2.0-mac-arm64.dmg": "9d42b6b2609ea4fc5a3e9b9c4258582b7331836013475d92ce4e4b49b90aaee4",
+        "release/builds/20261007T001303Z-ea2ffc0-mac-arm64-local-release/mac-arm64/Passport.app/Contents/Resources/app.asar": "e36f9aec990ee2cadb209cc4079381dcf87e17268d4ed1c08669f70480d52915"
+      }
+    },
+    {
+      "path": "release/builds/20261008T005851Z-ea2ffc0-dirty-mac-arm64-shortcut-ui-preview",
+      "category": "build",
+      "allocatedKiB": 414088,
+      "reason": "Superseded build; latest two verified builds retained; provenance archived",
+      "status": "preview-verified",
+      "sourceCommit": "ea2ffc072bbab8dbe4fc1f48007d73bc6f1cc28c",
+      "sha256": {
+        "release/builds/20261008T005851Z-ea2ffc0-dirty-mac-arm64-shortcut-ui-preview/mac-arm64/Passport.app/Contents/Resources/app.asar": "c047d995b7f8b523c8e752b05cf76f90326c2fa9640c4d75d0ea14c3cd861175"
+      }
+    },
+    {
+      "path": "release/checks/.DS_Store",
+      "category": "metadata",
+      "allocatedKiB": 12,
+      "reason": "Finder metadata",
+      "status": null,
+      "sourceCommit": null,
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20260930T044927Z-legacy-mac-arm64-recheck-ui-v0.3.4",
+      "category": "checks",
+      "allocatedKiB": 20276,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "legacy-unclassified",
+      "sourceCommit": null,
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20260930T064037Z-legacy-mac-arm64-recheck-ui-v1.0.1",
+      "category": "checks",
+      "allocatedKiB": 20104,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "legacy-unclassified",
+      "sourceCommit": null,
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20260930T075331Z-legacy-mac-arm64-recheck-updates-v1.0.1",
+      "category": "checks",
+      "allocatedKiB": 1040,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "legacy-unclassified",
+      "sourceCommit": null,
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20260930T090706Z-legacy-mac-arm64-recheck-spaces-v1.0.2",
+      "category": "checks",
+      "allocatedKiB": 23748,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "legacy-unclassified",
+      "sourceCommit": null,
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20260930T092444Z-legacy-mac-arm64-recheck-updates-v1.0.2",
+      "category": "checks",
+      "allocatedKiB": 208,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "legacy-unclassified",
+      "sourceCommit": null,
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261001T032711Z-legacy-mac-arm64-icon-review",
+      "category": "checks",
+      "allocatedKiB": 212,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "legacy-unclassified",
+      "sourceCommit": null,
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261001T081737Z-4d2940c-dirty-mac-arm64-cleanup",
+      "category": "checks",
+      "allocatedKiB": 80,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "4d2940c359269e78cab58813f2eb4d14b2a2b2ea",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261001T082526Z-4d2940c-dirty-mac-arm64-sidebar",
+      "category": "checks",
+      "allocatedKiB": 484,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "4d2940c359269e78cab58813f2eb4d14b2a2b2ea",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261001T090800Z-4d2940c-dirty-mac-arm64-tab-templates",
+      "category": "checks",
+      "allocatedKiB": 14188,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "4d2940c359269e78cab58813f2eb4d14b2a2b2ea",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261001T092500Z-4d2940c-dirty-mac-arm64-group-drag",
+      "category": "checks",
+      "allocatedKiB": 404,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "4d2940c359269e78cab58813f2eb4d14b2a2b2ea",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261002-2c60496-mac-arm64-background-e2e",
+      "category": "checks",
+      "allocatedKiB": 20,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "success",
+      "sourceCommit": "2c6049681d9be1a93a62c121a5535e4a0737965d",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261002-2c60496-mac-arm64-release-hardening",
+      "category": "checks",
+      "allocatedKiB": 200,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "scoped-checks-passed",
+      "sourceCommit": "2c6049681d9be1a93a62c121a5535e4a0737965d",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261002-terminal-experience",
+      "category": "checks",
+      "allocatedKiB": 20988,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed-scoped-validation",
+      "sourceCommit": "2c6049681d9be1a93a62c121a5535e4a0737965d",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261002T052242Z-2c60496-dirty-darwin-arm64-e2e-hidden",
+      "category": "checks",
+      "allocatedKiB": 116,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "2c6049681d9be1a93a62c121a5535e4a0737965d",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261002T052358Z-2c60496-dirty-darwin-arm64-e2e-hidden",
+      "category": "checks",
+      "allocatedKiB": 25760,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "2c6049681d9be1a93a62c121a5535e4a0737965d",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261002T052700Z-2c60496-dirty-darwin-arm64-e2e-passive",
+      "category": "checks",
+      "allocatedKiB": 116,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "2c6049681d9be1a93a62c121a5535e4a0737965d",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261002T064735Z-2c60496-dirty-mac-arm64-e2e-hidden",
+      "category": "checks",
+      "allocatedKiB": 116,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "2c6049681d9be1a93a62c121a5535e4a0737965d",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261002T065142Z-2c60496-dirty-mac-arm64-e2e-hidden",
+      "category": "checks",
+      "allocatedKiB": 26100,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "2c6049681d9be1a93a62c121a5535e4a0737965d",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261002T065725Z-2c60496-dirty-mac-arm64-e2e-hidden",
+      "category": "checks",
+      "allocatedKiB": 304,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "2c6049681d9be1a93a62c121a5535e4a0737965d",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261002T072940Z-2c60496-dirty-mac-arm64-paste",
+      "category": "checks",
+      "allocatedKiB": 76,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed-scoped-validation",
+      "sourceCommit": "2c6049681d9be1a93a62c121a5535e4a0737965d",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261002T073315Z-2c60496-dirty-mac-arm64-e2e-hidden",
+      "category": "checks",
+      "allocatedKiB": 24,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "2c6049681d9be1a93a62c121a5535e4a0737965d",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261002T074206Z-2c60496-dirty-mac-arm64-e2e-hidden",
+      "category": "checks",
+      "allocatedKiB": 26240,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "2c6049681d9be1a93a62c121a5535e4a0737965d",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261002T075030Z-2c60496-dirty-mac-arm64-preview",
+      "category": "checks",
+      "allocatedKiB": 28,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "verified-preview",
+      "sourceCommit": "2c6049681d9be1a93a62c121a5535e4a0737965d",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261002T075407Z-2c60496-dirty-mac-arm64-e2e-hidden",
+      "category": "checks",
+      "allocatedKiB": 300,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "2c6049681d9be1a93a62c121a5535e4a0737965d",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261002T080358Z-2c60496-dirty-mac-arm64-finder-paths",
+      "category": "checks",
+      "allocatedKiB": 84,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "verified-preview",
+      "sourceCommit": "2c6049681d9be1a93a62c121a5535e4a0737965d",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261002T080700Z-2c60496-dirty-mac-arm64-e2e-hidden",
+      "category": "checks",
+      "allocatedKiB": 24,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "2c6049681d9be1a93a62c121a5535e4a0737965d",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261002T080914Z-2c60496-dirty-mac-arm64-e2e-hidden",
+      "category": "checks",
+      "allocatedKiB": 24,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "2c6049681d9be1a93a62c121a5535e4a0737965d",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261002T083459Z-14059f1-dirty-mac-arm64-e2e-hidden",
+      "category": "checks",
+      "allocatedKiB": 820,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "14059f1b2521cbe3251abd962c9274647c951c7c",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261002T085322Z-e397a82-dirty-mac-arm64-e2e-desktop",
+      "category": "checks",
+      "allocatedKiB": 20,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "e397a82f60b49900c3b3014ef3388c6218b69978",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261002T085842Z-1ad00ed-dirty-mac-arm64-e2e-desktop",
+      "category": "checks",
+      "allocatedKiB": 20,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "1ad00eda29a3b1e2ec58a3e5c397ec9328298a88",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261006T002654Z-c7e776f-dirty-mac-arm64-terminal-links",
+      "category": "checks",
+      "allocatedKiB": 52,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "c7e776ff7107d150490e02347bf9fa6e40dab418",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261006T003130Z-c7e776f-dirty-mac-arm64-e2e-hidden",
+      "category": "checks",
+      "allocatedKiB": 860,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "c7e776ff7107d150490e02347bf9fa6e40dab418",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261006T003207Z-c7e776f-dirty-mac-arm64-e2e-hidden",
+      "category": "checks",
+      "allocatedKiB": 860,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "c7e776ff7107d150490e02347bf9fa6e40dab418",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261006T011216Z-c7e776f-dirty-mac-arm64-platform-split",
+      "category": "checks",
+      "allocatedKiB": 172,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "c7e776ff7107d150490e02347bf9fa6e40dab418",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261006T012259Z-c7e776f-dirty-mac-arm64-e2e-hidden",
+      "category": "checks",
+      "allocatedKiB": 24,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "c7e776ff7107d150490e02347bf9fa6e40dab418",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261006T012344Z-c7e776f-dirty-mac-arm64-e2e-hidden",
+      "category": "checks",
+      "allocatedKiB": 26176,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "c7e776ff7107d150490e02347bf9fa6e40dab418",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261006T012512Z-c7e776f-dirty-mac-arm64-e2e-hidden",
+      "category": "checks",
+      "allocatedKiB": 26208,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "c7e776ff7107d150490e02347bf9fa6e40dab418",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261006T012703Z-c7e776f-dirty-mac-arm64-e2e-desktop",
+      "category": "checks",
+      "allocatedKiB": 20,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "c7e776ff7107d150490e02347bf9fa6e40dab418",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261006T012714Z-c7e776f-dirty-mac-arm64-e2e-desktop",
+      "category": "checks",
+      "allocatedKiB": 20,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "c7e776ff7107d150490e02347bf9fa6e40dab418",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261006T014645Z-c7e776f-dirty-mac-arm64-e2e-hidden",
+      "category": "checks",
+      "allocatedKiB": 26180,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "c7e776ff7107d150490e02347bf9fa6e40dab418",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261006T014943Z-c7e776f-dirty-mac-arm64-e2e-hidden",
+      "category": "checks",
+      "allocatedKiB": 1716,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "c7e776ff7107d150490e02347bf9fa6e40dab418",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261006T015259Z-c7e776f-dirty-mac-arm64-e2e-hidden",
+      "category": "checks",
+      "allocatedKiB": 24,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "c7e776ff7107d150490e02347bf9fa6e40dab418",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261006T015530Z-c7e776f-dirty-mac-arm64-e2e-hidden",
+      "category": "checks",
+      "allocatedKiB": 26240,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "c7e776ff7107d150490e02347bf9fa6e40dab418",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261006T015552Z-c7e776f-dirty-mac-arm64-e2e-reuse",
+      "category": "checks",
+      "allocatedKiB": 88,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "c7e776ff7107d150490e02347bf9fa6e40dab418",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261006T015804Z-c7e776f-dirty-mac-arm64-e2e-hidden",
+      "category": "checks",
+      "allocatedKiB": 26296,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "c7e776ff7107d150490e02347bf9fa6e40dab418",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261006T020004Z-c7e776f-dirty-mac-arm64-e2e-hidden",
+      "category": "checks",
+      "allocatedKiB": 28,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "c7e776ff7107d150490e02347bf9fa6e40dab418",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261006T040020Z-c7e776f-dirty-mac-arm64-pre-push",
+      "category": "checks",
+      "allocatedKiB": 84,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "c7e776ff7107d150490e02347bf9fa6e40dab418",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261006T083609Z-9c2daea-dirty-mac-arm64-e2e-hidden",
+      "category": "checks",
+      "allocatedKiB": 324,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "9c2daeab4cd8fc518868fe424dbfe7705d807314",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261006T084128Z-9c2daea-dirty-mac-arm64-shortcuts",
+      "category": "checks",
+      "allocatedKiB": 68,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "9c2daeab4cd8fc518868fe424dbfe7705d807314",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261006T084244Z-9c2daea-dirty-mac-arm64-e2e-hidden",
+      "category": "checks",
+      "allocatedKiB": 17484,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "9c2daeab4cd8fc518868fe424dbfe7705d807314",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261006T084824Z-9c2daea-dirty-mac-arm64-e2e-hidden",
+      "category": "checks",
+      "allocatedKiB": 17480,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "9c2daeab4cd8fc518868fe424dbfe7705d807314",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261006T085348Z-9c2daea-dirty-mac-arm64-shortcut-release-review",
+      "category": "checks",
+      "allocatedKiB": 32,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "9c2daeab4cd8fc518868fe424dbfe7705d807314",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261006T085354Z-9c2daea-dirty-mac-arm64-e2e-hidden",
+      "category": "checks",
+      "allocatedKiB": 26736,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "9c2daeab4cd8fc518868fe424dbfe7705d807314",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261007T001303Z-ea2ffc0-mac-arm64-local-release",
+      "category": "checks",
+      "allocatedKiB": 76976,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "preview-verified",
+      "sourceCommit": "ea2ffc072bbab8dbe4fc1f48007d73bc6f1cc28c",
+      "sha256": {
+        "release/checks/20261007T001303Z-ea2ffc0-mac-arm64-local-release/python/lib/python3.9/site-packages/setuptools/cli-64.exe": "28b001bb9a72ae7a24242bfab248d767a1ac5dec981c672a3944f7a072375e9a",
+        "release/checks/20261007T001303Z-ea2ffc0-mac-arm64-local-release/python/lib/python3.9/site-packages/setuptools/gui-64.exe": "69828c857d4824b9f850b1e0597d2c134c91114b7a0774c41dffe33b0eb23721",
+        "release/checks/20261007T001303Z-ea2ffc0-mac-arm64-local-release/python/lib/python3.9/site-packages/setuptools/cli.exe": "75f12ea2f30d9c0d872dade345f30f562e6d93847b6a509ba53beec6d0b2c346",
+        "release/checks/20261007T001303Z-ea2ffc0-mac-arm64-local-release/python/lib/python3.9/site-packages/setuptools/cli-32.exe": "75f12ea2f30d9c0d872dade345f30f562e6d93847b6a509ba53beec6d0b2c346",
+        "release/checks/20261007T001303Z-ea2ffc0-mac-arm64-local-release/python/lib/python3.9/site-packages/setuptools/gui-32.exe": "5c1af46c7300e87a73dacf6cf41ce397e3f05df6bd9c7e227b4ac59f85769160",
+        "release/checks/20261007T001303Z-ea2ffc0-mac-arm64-local-release/python/lib/python3.9/site-packages/setuptools/gui.exe": "5c1af46c7300e87a73dacf6cf41ce397e3f05df6bd9c7e227b4ac59f85769160",
+        "release/checks/20261007T001303Z-ea2ffc0-mac-arm64-local-release/python/lib/python3.9/site-packages/pip/_vendor/distlib/w32.exe": "949b6765d794c53656c9afc45b90d9a2cfcae6bb30444086b29225f19242217b",
+        "release/checks/20261007T001303Z-ea2ffc0-mac-arm64-local-release/python/lib/python3.9/site-packages/pip/_vendor/distlib/t32.exe": "352df104254095ddf925514d99bfb5411c95b5386e90caf06557979f82e16844",
+        "release/checks/20261007T001303Z-ea2ffc0-mac-arm64-local-release/python/lib/python3.9/site-packages/pip/_vendor/distlib/w64.exe": "d1a473a0dd813bd3565b810dcb8ff8bc7907478a994c564d55200925894e0d32",
+        "release/checks/20261007T001303Z-ea2ffc0-mac-arm64-local-release/python/lib/python3.9/site-packages/pip/_vendor/distlib/t64.exe": "a00a877acefcad45953343ad56a22152f7aaba5fcf2a10215d84169d47fbcd1d"
+      }
+    },
+    {
+      "path": "release/checks/20261008T003746Z-ea2ffc0-dirty-mac-arm64-ui-plan-audit",
+      "category": "checks",
+      "allocatedKiB": 6072,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "ea2ffc072bbab8dbe4fc1f48007d73bc6f1cc28c",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261008T003956Z-ea2ffc0-dirty-mac-arm64-ui-plan-dialogs",
+      "category": "checks",
+      "allocatedKiB": 1744,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "ea2ffc072bbab8dbe4fc1f48007d73bc6f1cc28c",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261008T004956Z-ea2ffc0-dirty-mac-arm64-shortcut-ui-check",
+      "category": "checks",
+      "allocatedKiB": 48,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "ea2ffc072bbab8dbe4fc1f48007d73bc6f1cc28c",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261008T005235Z-ea2ffc0-dirty-mac-arm64-e2e-hidden",
+      "category": "checks",
+      "allocatedKiB": 27016,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "ea2ffc072bbab8dbe4fc1f48007d73bc6f1cc28c",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261008T005851Z-ea2ffc0-dirty-mac-arm64-shortcut-ui-preview",
+      "category": "checks",
+      "allocatedKiB": 224,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "preview-verified",
+      "sourceCommit": "ea2ffc072bbab8dbe4fc1f48007d73bc6f1cc28c",
+      "sha256": {}
+    },
+    {
+      "path": "release/checks/20261008T005952Z-ea2ffc0-dirty-mac-arm64-e2e-hidden",
+      "category": "checks",
+      "allocatedKiB": 22332,
+      "reason": "Superseded successful/legacy UI evidence; original metadata archived and long-term verification summaries retained",
+      "status": "passed",
+      "sourceCommit": "ea2ffc072bbab8dbe4fc1f48007d73bc6f1cc28c",
+      "sha256": {}
+    },
+    {
+      "path": "release/packages/v1.0.1",
+      "category": "package",
+      "allocatedKiB": 151024,
+      "reason": "Older Mac installer; latest 1.2.1 and previous public 1.2.0 retained",
+      "status": null,
+      "sourceCommit": null,
+      "sha256": {
+        "release/packages/v1.0.1/github/mac-arm64/Passport-1.0.1-mac-arm64.dmg": "8c4943db382f6b9f06fe2e7c823464f84b2bf52c4376ef9c3808d63035f5779e"
+      }
+    },
+    {
+      "path": "release/packages/v1.0.2",
+      "category": "package",
+      "allocatedKiB": 300732,
+      "reason": "Older Mac installer; latest 1.2.1 and previous public 1.2.0 retained",
+      "status": null,
+      "sourceCommit": null,
+      "sha256": {
+        "release/packages/v1.0.2/local/mac-arm64/Passport-1.0.2-mac-arm64.dmg": "a44abcbb68f3ecb2fb333cd01034dfba74eaadd212b5489328da30db8b634b58",
+        "release/packages/v1.0.2/github/mac-arm64/Passport-1.0.2-mac-arm64.dmg": "fe66cb02a0c24a3290d52b2c472b6c2a8fb64c4c3cd488913190870d7f36a77e"
+      }
+    },
+    {
+      "path": "release/packages/v1.1.0",
+      "category": "package",
+      "allocatedKiB": 151412,
+      "reason": "Older Mac installer; latest 1.2.1 and previous public 1.2.0 retained",
+      "status": null,
+      "sourceCommit": null,
+      "sha256": {
+        "release/packages/v1.1.0/github/mac-arm64/Passport-1.1.0-mac-arm64.dmg": "2d7fcb465b0651f7b8915566eb348e37e40f1aa98b6254047013db65d1d9c8ce"
+      }
+    },
+    {
+      "path": "release/packages/v1.1.1",
+      "category": "package",
+      "allocatedKiB": 165184,
+      "reason": "Older Mac installer; latest 1.2.1 and previous public 1.2.0 retained",
+      "status": null,
+      "sourceCommit": null,
+      "sha256": {
+        "release/packages/v1.1.1/local/mac-arm64/Passport-1.1.1-mac-arm64.dmg": "0820760270d00b9e02deded76ec73a9eb08c22c61cb8601d7eb470d00e9df187"
+      }
+    },
+    {
+      "path": "build/runtime-downloads",
+      "category": "cache",
+      "allocatedKiB": 116720,
+      "reason": "Re-downloadable runtime cache; build process check required before deletion",
+      "status": null,
+      "sourceCommit": null,
+      "sha256": {
+        "build/runtime-downloads/PortableGit-2.56.0-64-bit.7z.exe": "eceb5e061aa90df2f69ddd3e90f0030e1b8037a7829934bc40e4be1caa1accc1",
+        "build/runtime-downloads/PortableGit-2.56.0-arm64.7z.exe": "edd9bd32aefa5d2bd4b938c38c18ceca306a7f6b29a6951cd6a4bb16d9d28d8f"
+      }
+    },
+    {
+      "path": "release/.DS_Store",
+      "category": "metadata",
+      "allocatedKiB": 16,
+      "reason": "Finder metadata",
+      "status": null,
+      "sourceCommit": null,
+      "sha256": {}
+    }
+  ],
+  "preserved": [
+    {
+      "path": "release/builds/20261002T043438Z-2c60496-dirty-mac-arm64-local-release",
+      "allocatedKiB": 8,
+      "reason": "Explicit KEEP marker"
+    },
+    {
+      "path": "release/builds/20261002T044608Z-2c60496-dirty-mac-arm64-local-release",
+      "allocatedKiB": 8,
+      "reason": "Explicit KEEP marker"
+    },
+    {
+      "path": "release/builds/20261002T082758Z-14059f1-mac-arm64-local-release",
+      "allocatedKiB": 569620,
+      "reason": "Failed release reproduction; resolution/7-day retention not established"
+    },
+    {
+      "path": "release/builds/20261002T083652Z-a3bfe32-mac-arm64-local-release",
+      "allocatedKiB": 4,
+      "reason": "Failed release reproduction; resolution/7-day retention not established"
+    },
+    {
+      "path": "release/builds/20261002T084529Z-e397a82-mac-arm64-local-release",
+      "allocatedKiB": 4,
+      "reason": "Failed release reproduction; resolution/7-day retention not established"
+    },
+    {
+      "path": "release/builds/20261002T085410Z-1ad00ed-mac-arm64-local-release",
+      "allocatedKiB": 4,
+      "reason": "Failed release reproduction; resolution/7-day retention not established"
+    },
+    {
+      "path": "release/builds/20261002T090000Z-f4497cc-mac-arm64-local-release",
+      "allocatedKiB": 4,
+      "reason": "Failed release reproduction; resolution/7-day retention not established"
+    },
+    {
+      "path": "release/builds/20261002T090906Z-f4497cc-mac-arm64-local-release",
+      "allocatedKiB": 569624,
+      "reason": "Explicit KEEP marker"
+    },
+    {
+      "path": "release/builds/20261008T010536Z-ea2ffc0-dirty-mac-arm64-button-style-preview",
+      "allocatedKiB": 406508,
+      "reason": "Latest two verified Mac builds"
+    },
+    {
+      "path": "release/builds/20261008T011624Z-7be5713-mac-arm64-local-release",
+      "allocatedKiB": 570848,
+      "reason": "Latest two verified Mac builds"
+    },
+    {
+      "path": "release/builds/Passport.app",
+      "allocatedKiB": 0,
+      "reason": "Verified current preview symlink"
+    },
+    {
+      "path": "release/checks/20261001-v1.1.0",
+      "allocatedKiB": 56396,
+      "reason": "Failure or mixed historical evidence requires resolution review"
+    },
+    {
+      "path": "release/checks/20261002-2c60496-local-release-final",
+      "allocatedKiB": 496,
+      "reason": "Explicit KEEP marker"
+    },
+    {
+      "path": "release/checks/20261002-2c60496-mac-arm64-release-toolchain",
+      "allocatedKiB": 500612,
+      "reason": "Explicit KEEP marker"
+    },
+    {
+      "path": "release/checks/20261002-2c60496-mac-arm64-shutdown-regression",
+      "allocatedKiB": 2528,
+      "reason": "Explicit KEEP marker"
+    },
+    {
+      "path": "release/checks/20261002-release-tools",
+      "allocatedKiB": 52988,
+      "reason": "Current build/publication evidence or active verification tool"
+    },
+    {
+      "path": "release/checks/20261002T043438Z-2c60496-dirty-mac-arm64-local-release",
+      "allocatedKiB": 40420,
+      "reason": "Explicit KEEP marker"
+    },
+    {
+      "path": "release/checks/20261002T044608Z-2c60496-dirty-mac-arm64-local-release",
+      "allocatedKiB": 28588,
+      "reason": "Explicit KEEP marker"
+    },
+    {
+      "path": "release/checks/20261002T073236Z-2c60496-dirty-mac-arm64-e2e-hidden",
+      "allocatedKiB": 44,
+      "reason": "Failure or mixed historical evidence requires resolution review"
+    },
+    {
+      "path": "release/checks/20261002T073947Z-2c60496-dirty-mac-arm64-e2e-hidden",
+      "allocatedKiB": 96,
+      "reason": "Failure or mixed historical evidence requires resolution review"
+    },
+    {
+      "path": "release/checks/20261002T080542Z-2c60496-dirty-mac-arm64-e2e-hidden",
+      "allocatedKiB": 36,
+      "reason": "Failure or mixed historical evidence requires resolution review"
+    },
+    {
+      "path": "release/checks/20261002T082758Z-14059f1-mac-arm64-local-release",
+      "allocatedKiB": 26796,
+      "reason": "Failure or mixed historical evidence requires resolution review"
+    },
+    {
+      "path": "release/checks/20261002T083652Z-a3bfe32-mac-arm64-local-release",
+      "allocatedKiB": 48,
+      "reason": "Failure or mixed historical evidence requires resolution review"
+    },
+    {
+      "path": "release/checks/20261002T084529Z-e397a82-mac-arm64-local-release",
+      "allocatedKiB": 26664,
+      "reason": "Failure or mixed historical evidence requires resolution review"
+    },
+    {
+      "path": "release/checks/20261002T084940Z-e397a82-dirty-mac-arm64-e2e-desktop",
+      "allocatedKiB": 44,
+      "reason": "Failure or mixed historical evidence requires resolution review"
+    },
+    {
+      "path": "release/checks/20261002T085021Z-e397a82-dirty-mac-arm64-e2e-desktop",
+      "allocatedKiB": 52,
+      "reason": "Failure or mixed historical evidence requires resolution review"
+    },
+    {
+      "path": "release/checks/20261002T085152Z-e397a82-dirty-mac-arm64-e2e-desktop",
+      "allocatedKiB": 48,
+      "reason": "Failure or mixed historical evidence requires resolution review"
+    },
+    {
+      "path": "release/checks/20261002T085410Z-1ad00ed-mac-arm64-local-release",
+      "allocatedKiB": 26660,
+      "reason": "Failure or mixed historical evidence requires resolution review"
+    },
+    {
+      "path": "release/checks/20261002T090000Z-f4497cc-mac-arm64-local-release",
+      "allocatedKiB": 26356,
+      "reason": "Failure or mixed historical evidence requires resolution review"
+    },
+    {
+      "path": "release/checks/20261002T090906Z-f4497cc-mac-arm64-local-release",
+      "allocatedKiB": 52720,
+      "reason": "Explicit KEEP marker"
+    },
+    {
+      "path": "release/checks/20261006T002810Z-c7e776f-dirty-mac-arm64-e2e-hidden",
+      "allocatedKiB": 52,
+      "reason": "Failure or mixed historical evidence requires resolution review"
+    },
+    {
+      "path": "release/checks/20261006T002914Z-c7e776f-dirty-mac-arm64-e2e-hidden",
+      "allocatedKiB": 48,
+      "reason": "Failure or mixed historical evidence requires resolution review"
+    },
+    {
+      "path": "release/checks/20261006T002943Z-c7e776f-dirty-mac-arm64-e2e-hidden",
+      "allocatedKiB": 48,
+      "reason": "Failure or mixed historical evidence requires resolution review"
+    },
+    {
+      "path": "release/checks/20261006T003048Z-c7e776f-dirty-mac-arm64-e2e-hidden",
+      "allocatedKiB": 48,
+      "reason": "Failure or mixed historical evidence requires resolution review"
+    },
+    {
+      "path": "release/checks/20261006T011809Z-c7e776f-dirty-mac-arm64-e2e-hidden",
+      "allocatedKiB": 3816,
+      "reason": "Failure or mixed historical evidence requires resolution review"
+    },
+    {
+      "path": "release/checks/20261006T011928Z-c7e776f-dirty-mac-arm64-e2e-hidden",
+      "allocatedKiB": 9704,
+      "reason": "Failure or mixed historical evidence requires resolution review"
+    },
+    {
+      "path": "release/checks/20261006T012148Z-c7e776f-dirty-mac-arm64-e2e-hidden",
+      "allocatedKiB": 48,
+      "reason": "Failure or mixed historical evidence requires resolution review"
+    },
+    {
+      "path": "release/checks/20261006T015120Z-c7e776f-dirty-mac-arm64-e2e-hidden",
+      "allocatedKiB": 1028,
+      "reason": "Failure or mixed historical evidence requires resolution review"
+    },
+    {
+      "path": "release/checks/20261006T083804Z-9c2daea-dirty-mac-arm64-e2e-hidden",
+      "allocatedKiB": 100,
+      "reason": "Failure or mixed historical evidence requires resolution review"
+    },
+    {
+      "path": "release/checks/20261006T084004Z-9c2daea-dirty-mac-arm64-e2e-hidden",
+      "allocatedKiB": 96,
+      "reason": "Failure or mixed historical evidence requires resolution review"
+    },
+    {
+      "path": "release/checks/20261006T085114Z-9c2daea-dirty-mac-arm64-e2e-hidden",
+      "allocatedKiB": 9808,
+      "reason": "Explicit KEEP marker"
+    },
+    {
+      "path": "release/checks/20261008T010536Z-ea2ffc0-dirty-mac-arm64-button-style-preview",
+      "allocatedKiB": 676,
+      "reason": "Current build/publication evidence or active verification tool"
+    },
+    {
+      "path": "release/checks/20261008T010739Z-ea2ffc0-dirty-mac-arm64-e2e-hidden",
+      "allocatedKiB": 22680,
+      "reason": "Current build/publication evidence or active verification tool"
+    },
+    {
+      "path": "release/checks/20261008T011524Z-ea2ffc0-dirty-mac-arm64-v1.2.1-preflight",
+      "allocatedKiB": 12,
+      "reason": "Current build/publication evidence or active verification tool"
+    },
+    {
+      "path": "release/checks/20261008T011624Z-7be5713-mac-arm64-local-release",
+      "allocatedKiB": 29948,
+      "reason": "Current build/publication evidence or active verification tool"
+    },
+    {
+      "path": "release/checks/20261008T011650Z-7be5713-mac-arm64-v1.2.1-publication",
+      "allocatedKiB": 60,
+      "reason": "Current build/publication evidence or active verification tool"
+    },
+    {
+      "path": "release/checks/20261008T014659Z-029e841-mac-arm64-artifact-cleanup",
+      "allocatedKiB": 600,
+      "reason": "Current build/publication evidence or active verification tool"
+    },
+    {
+      "path": "release/checks/docs-screenshots",
+      "allocatedKiB": 48,
+      "reason": "Current build/publication evidence or active verification tool"
+    },
+    {
+      "path": "release/packages/v1.2.0",
+      "allocatedKiB": 180664,
+      "reason": "Latest and previous public Mac installers; download hashes verified"
+    },
+    {
+      "path": "release/packages/v1.2.1",
+      "allocatedKiB": 180292,
+      "reason": "Latest and previous public Mac installers; download hashes verified"
+    },
+    {
+      "path": "release/backups/20261001T040553Z-legacy-mac-arm64-installed-backup-20261001-130506",
+      "allocatedKiB": 382620,
+      "reason": "Recovery app and user database set; no installed-app replacement verification"
+    },
+    {
+      "path": "release/backups/20261001T043201Z-legacy-mac-arm64-installed-color-backup-20261001-133159",
+      "allocatedKiB": 382172,
+      "reason": "Recovery app and user database set; no installed-app replacement verification"
+    },
+    {
+      "path": "release/backups/20261001T084610Z-4d2940c-dirty-mac-arm64-sidebar-install",
+      "allocatedKiB": 382176,
+      "reason": "Recovery app and user database set; no installed-app replacement verification"
+    },
+    {
+      "path": "build/installer.nsh",
+      "allocatedKiB": 4,
+      "reason": "Tracked installer source or current generated build inputs/output"
+    },
+    {
+      "path": "build/icon.png",
+      "allocatedKiB": 896,
+      "reason": "Tracked installer source or current generated build inputs/output"
+    },
+    {
+      "path": "dist",
+      "allocatedKiB": 15600,
+      "reason": "Tracked installer source or current generated build inputs/output"
+    }
+  ],
+  "limitations": [
+    "No installation replacement; all three recovery sets remain because the replacement app has not been verified as the installed app.",
+    "KEEP and failed release reproduction apps remain in addition to the two current verified builds.",
+    "Failure and mixed historical checks retained for resolution review; no assumption that a later passing run resolves an earlier failure.",
+    "Windows artifacts are unchanged; Windows 1.2.1 remains pending.",
+    "du allocated KiB, not filesystem free-space accounting; adding latest app and previous public DMG is included in net reduction."
+  ],
+  "documentChecks": {
+    "localMarkdownTargets": "passed",
+    "gitDiffCheck": "passed",
+    "deletedHistoricalLinksUpdated": 4
+  }
+}
