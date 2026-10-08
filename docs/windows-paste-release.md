@@ -2,7 +2,7 @@
 
 ## 1.2.1 후속 Windows 배포 — 2026-10-08
 
-이번 변경은 Mac을 먼저 배포하고 Windows x64는 집의 Windows PC에서 이어서 검증·게시한다. **Mac과 같은 `v1.2.1` 태그를 체크아웃**하며, 이후 README·검증 기록만 갱신한 `main` 커밋으로 빌드하지 않는다. 소스나 버전을 임의로 바꾸거나 기존 태그를 이동하지 않는다. Windows 제품 수정이 필요하면 동일 소스 계약에 맞는 새 버전으로 진행한다.
+Mac 1.2.1은 `7be5713` 소스로 [공개 배포](https://github.com/poyal/passport/releases/tag/v1.2.1)했으며 Windows x64는 집의 Windows PC에서 이어서 검증·게시한다. **Mac과 같은 `v1.2.1` 태그를 체크아웃**하며, 이후 README·검증 기록만 갱신한 `main` 커밋으로 빌드하지 않는다. 소스나 버전을 임의로 바꾸거나 기존 태그를 이동하지 않는다. Windows 제품 수정이 필요하면 동일 소스 계약에 맞는 새 버전으로 진행한다.
 
 아래 환경 준비 조건을 충족한 깨끗한 작업 폴더에서 실행한다. 정식 검증은 실제 창·클립보드를 사용하므로 다른 작업을 방해하지 않는 데스크톱에서 실행한다.
 
@@ -19,7 +19,7 @@ npm.cmd run release:publish -- --manifest release/checks/<실행-ID>/verificatio
 npm.cmd run release:publish -- --manifest release/checks/<실행-ID>/verification.json --execute
 ```
 
-게시 후 공개 EXE·합본 체크섬을 확인하고 README의 Windows 1.2.0 고정 링크와 플랫폼별 상태를 갱신한다. 특히 기존 복수 단축키의 첫 키 유지, **키 변경·X·초기화**, Ctrl+V 붙여넣기, 네 가지 셸·DPAPI·설치 범위를 확인한다. Ctrl+Shift+V는 직접 지정했을 때만 Passport 붙여넣기로 동작한다.
+게시 후 공개 EXE·합본 체크섬을 확인하고 README의 Windows 1.2.0 고정 링크와 플랫폼별 상태를 갱신한다. GitHub Release 본문은 플랫폼 추가만으로 자동 변경되지 않으므로 `docs/releases/v1.2.1.md`의 Windows 후속 예정 안내를 실제 결과에 맞춰 수정하고 같은 내용으로 릴리즈 본문도 갱신한다. 문서 마무리는 게시 후 별도 커밋으로 남기며 태그를 이동하지 않는다. 특히 기존 복수 단축키의 첫 키 유지, **키 변경·X·초기화**, Ctrl+V 붙여넣기, 네 가지 셸·DPAPI·설치 범위를 확인한다. Ctrl+Shift+V는 직접 지정했을 때만 Passport 붙여넣기로 동작한다.
 
 ## 이전 Windows 1.1.1 기록
 

@@ -1,5 +1,24 @@
 # Passport 검증 기록
 
+## 1.2.1 Mac 공개 배포·Windows 후속 대기 — 2026-10-08
+
+단축키 편집·버튼 스타일·설정 간격을 개선한 소스 `7be5713234519a7670f92f536d7dd2f09dad7c9f`를 `v1.2.1`로 고정하고 [Mac 릴리즈](https://github.com/poyal/passport/releases/tag/v1.2.1)를 공개했다. [격리된 원격 Mac 검증](https://github.com/poyal/passport/actions/runs/37712059304)에서 만든 DMG를 이 Mac으로 내려받아 게시 도구로 원본 보고서·설치 파일 해시를 재확인하고, 재빌드 없이 업로드·다운로드 검증했다. Windows 작업은 실행하지 않았으며 기존 1.2.0의 Mac·Windows 자산 ID·크기·해시가 그대로임을 확인했다.
+
+| 검사 | 결과 |
+| --- | --- |
+| 타입·단위/통합·FTP/FTPS | 177 통과·6 허용 생략(Windows 전용 4, 선택 Docker·부하 각 1) |
+| 배포 정책·회귀 | 73 통과 |
+| 소스 / 최종 DMG 숨김 GUI | 각각 62 통과·9 허용 생략(Windows 전용 6, 선택 Docker·장시간 부하·대용량 출력 각 1) |
+| 소스 / 최종 DMG 데스크톱 | 각각 4 통과, 격리된 원격 Mac에서 실행 |
+| DMG·서명·실제 PTY·helper·SQLite·정상 종료 | 통과 |
+| 공개 파일 다운로드 해시·합본 체크섬 | 일치 |
+
+모든 필수 검사에 실패·재시도·flaky가 없다. 소스·패키지 숨김 GUI 각각 launch/exit/종료 감사 25회, 창 31개, 재사용 19개이며 표시·네이티브 포커스는 0회다. 실제 사용자 계정 설치·업그레이드, 물리 IME, OS 알림·외부 AI 서비스와 Windows 실기는 완료로 표시하지 않는다. Mac은 ad-hoc 서명이며 Developer ID·Apple 공증은 없다.
+
+공개 DMG는 **170,489,906바이트**, SHA-256은 `2a47391ce4e0e81c8af7d02fb96e308b88bc75ba7b9a39aa98e6f5e1f7e70188`이다. 빌드 DMG는 `release/builds/20261008T011624Z-7be5713-mac-arm64-local-release/` 약 163MiB, 원본 검사는 같은 실행 ID의 `release/checks/` 약 29MiB, 게시본은 `release/packages/v1.2.1/local/mac-arm64/`에 보관한다. 게시·이전 파일 보존 증거는 `release/checks/20261008T011650Z-7be5713-mac-arm64-v1.2.1-publication/`에 있다. 성공 자료는 2026-10-15 이후 정리 후보이며 최신·직전 공개 파일, 최근 성공 빌드 2회, 기존 미리보기 링크 대상·KEEP·도구 체인·복구 백업은 보호한다. 기존 자료와 설치본을 삭제·교체하지 않았다.
+
+README는 Mac 1.2.1과 Windows 1.2.0 다운로드를 구분한다. Windows 후속 EXE는 [인계 문서](windows-paste-release.md)에 따라 같은 `v1.2.1` 소스에서 검증해 추가한다. 게시 후 문서 상태만 별도 커밋으로 갱신하며 태그는 이동하지 않는다. [설치본·보고서 해시와 게시 요약](benchmarks/github-release-v1.2.1-mac.json).
+
 ## 동작 버튼 스타일 통일과 Mac 테스트 앱 — 2026-10-08
 
 아이콘·텍스트 버튼과 작업 도구의 투명 배경·테두리 제거 규칙, 새 탭 버튼의 점선 테두리를 없애 일반 동작 버튼의 공통 스타일을 사용하도록 정리했다. 단축키의 `키 변경`·X·`초기화`는 높이 34px, 테두리 1px, 모서리 6px와 동일한 테마 배경색을 사용한다. 탭·메뉴·주요 동작·위험 동작의 의미를 나타내는 상태 스타일은 유지한다.

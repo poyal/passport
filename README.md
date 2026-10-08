@@ -33,7 +33,7 @@
 | Mac · Apple Silicon(M 시리즈), macOS 14 이상 | `Passport-…-mac-arm64.dmg` | [최신 릴리즈](https://github.com/poyal/passport/releases/latest)                   |
 | Windows 11 · Intel / AMD(x64)                | `Passport-…-win-x64.exe`   | [Windows 1.2.0 릴리즈](https://github.com/poyal/passport/releases/tag/v1.2.0) |
 
-Mac은 최신 릴리즈에서, Windows는 현재 공개된 1.2.0 릴리즈에서 받으세요. Windows의 다음 설치 파일은 별도로 공개할 예정입니다. Intel Mac은 지원하지 않습니다. [플랫폼별 배포 상태와 변경 사항](docs/releases/README.md).
+Mac 1.2.1은 최신 릴리즈에서, Windows는 현재 공개된 1.2.0 릴리즈에서 받으세요. Windows 1.2.1 설치 파일은 별도로 공개할 예정입니다. Intel Mac은 지원하지 않습니다. [플랫폼별 배포 상태와 변경 사항](docs/releases/README.md).
 
 ### Mac
 
