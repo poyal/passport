@@ -30,10 +30,10 @@
 
 | 컴퓨터                                       | 선택할 파일                | 다운로드 안내                                                                      |
 | -------------------------------------------- | -------------------------- | ---------------------------------------------------------------------------------- |
-| Mac · Apple Silicon(M 시리즈), macOS 14 이상 | `Passport-…-mac-arm64.dmg` | [Mac 최신 1.2.2](https://github.com/poyal/passport/releases/tag/v1.2.2)                   |
+| Mac · Apple Silicon(M 시리즈), macOS 14 이상 | `Passport-…-mac-arm64.dmg` | [최신 릴리즈](https://github.com/poyal/passport/releases/latest)                   |
 | Windows 11 · Intel / AMD(x64)                | `Passport-…-win-x64.exe`   | [최신 릴리즈](https://github.com/poyal/passport/releases/latest)                   |
 
-Windows 최신 버전은 **1.2.3**, Mac 최신 버전은 **1.2.2**입니다. 이번 최신 릴리즈에는 Windows 설치 파일만 있으므로 Mac은 위의 1.2.2 링크를 사용하세요. Intel Mac은 지원하지 않습니다. [플랫폼별 배포 상태와 변경 사항](docs/releases/README.md).
+Mac·Windows x64 설치 파일을 최신 릴리즈에서 받을 수 있습니다. Intel Mac은 지원하지 않습니다. [플랫폼별 배포 상태와 변경 사항](docs/releases/README.md).
 
 ### Mac
 
@@ -143,7 +143,7 @@ Windows 1.2.0부터는 터미널 탭이나 패널을 닫으면 그 터미널에�
 
 ### CLI로 다른 로컬 터미널에 요청하기
 
-이 기능은 Windows 1.2.3에 추가되며 현재 공개된 Mac 1.2.2에는 포함되지 않습니다. Passport 안의 스크립트·AI 도구에서 다른 창의 로컬 터미널에도 입력하고 화면을 읽을 수 있습니다. [플랫폼별 배포 상태](docs/releases/README.md)를 확인하세요.
+Mac·Windows 1.2.3부터 사용할 수 있습니다. Passport 안의 스크립트·AI 도구에서 다른 창의 로컬 터미널에도 입력하고 화면을 읽을 수 있습니다. [플랫폼별 배포 상태](docs/releases/README.md)를 확인하세요.
 
 1. **설정 → 로컬 터미널 → CLI 접근**에서 **조회·입력**을 선택합니다. 화면만 읽으려면 **조회만**을 선택합니다. 기본은 **끔**이며 선택하면 바로 저장됩니다.
 2. 새 로컬 터미널을 열고 그 안에서 `passport identify`를 실행합니다. **내 패널 ID와 소속 탭 이름**이 표시됩니다. 설정을 바꾸면 기존 권한은 즉시 해제되므로 CLI를 실행할 터미널을 새로 여세요.

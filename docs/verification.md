@@ -1,5 +1,28 @@
 # Passport 검증 기록
 
+## 1.2.3 Mac 로컬 후속 배포 완료 — 2026-10-12
+
+Windows와 같은 `v1.2.3` 소스 `b67724017b3ea60f5efc35d1d6585d7024487450`를 이 Mac에서 정식 검증하고 [Mac 1.2.3 DMG](https://github.com/poyal/passport/releases/download/v1.2.3/Passport-1.2.3-mac-arm64.dmg)를 추가 게시했다. 사용자가 이 Mac의 창·포커스 검사를 명시적으로 허용했으며 원격 Actions는 실행하지 않았다. 게시 도구가 소스·태그·원본 보고서·설치본 해시를 다시 확인한 뒤 검증한 동일 파일을 업로드했다. [출처·해시·검증 요약](benchmarks/github-release-v1.2.3-mac.json).
+
+| 검사 | 결과 |
+| --- | --- |
+| 잠금 의존성 설치·FTP/FTPS 준비·Rust helper·타입·빌드 | 통과 |
+| 단위·통합 | 199 통과·6 허용 생략 |
+| 배포 정책·회귀 | 73 통과 |
+| 소스 / 최종 DMG 숨김 GUI | 72 / 72 통과, 각각 9 허용 생략 |
+| 소스 / 최종 DMG 실제 데스크톱 | 4 / 4 통과 |
+| DMG 무결성·읽기 전용 마운트·코드 서명·실제 PTY·정상 종료 | 통과 |
+| 인증 없는 공개 다운로드·SHA-256·합본 체크섬 | 일치 |
+| 기존 Windows EXE·직전 1.2.2 모든 자산·v1.2.3 태그 | 보존 |
+
+소스·최종 DMG의 숨김 GUI는 각각 앱 실행·정상 종료·종료 감사 27회, 재사용 27회, 표시·네이티브 포커스 0회다. CLI의 패널 식별·입력·화면 읽기·접근 권한 회귀도 양쪽에서 통과했다. 실패·재시도·flaky는 없다. GUI 생략은 Windows 전용 6개와 선택 Docker·부하·대용량 출력 3개이며 단위 생략은 Windows 전용 4개와 선택 Docker·부하 2개다.
+
+macOS 27.0.1 ARM64, Node 24.21.0, npm 11.19.0, Rust cargo 1.99.0, Electron 44.4.5에서 검사했다. 빈 `ZDOTDIR`로 사용자 zsh 초기화 파일을 격리했다. 정식 검증은 약 268초 걸렸으며 게시 전 재빌드는 하지 않았다. DMG는 **169,385,574바이트**, SHA-256은 `1168cbc04ff1f4b4555b013d15ffa03d1b36521b77c35541ef192c3afa963ad2`다. Mac은 ad-hoc 서명이며 Developer ID 서명·공증·Gatekeeper 승인을 검증한 것은 아니다.
+
+앱·원본 DMG는 `release/builds/20261012T131705Z-b677240-mac-arm64-local-release/`, 검증·게시·공개 다운로드 증거는 같은 실행 ID의 `release/checks/`, 게시한 동일 바이트는 `release/packages/v1.2.3/local/mac-arm64/`에 보관한다. `release/builds/Passport.app` 상대 링크는 이번 검증 앱으로 연결했다. Rust·GitHub CLI 도구 체인은 `release/checks/20261012T132000Z-b677240-mac-arm64-release-tooling/`에 격리 보관한다. 이번 작업을 시작할 때 이 체크아웃에는 기존 `release/` 산출물이 없었고 일반 성공 빌드는 현재 1개이므로 초과 정리 후보는 없다. 기존 자료 삭제나 사용자 설치본·DB 교체는 수행하지 않았다.
+
+`v1.2.3` 태그는 검증 소스에 고정하고 배포 상태·사용 안내 갱신은 후속 문서 전용 커밋으로 남긴다. 문서 변경에는 링크·앵커·내용·diff 확인만 수행한다. 실제 사용자 계정 설치·제거·업그레이드, 물리 IME·OS 알림·외부 AI 서비스·선택 부하 검사는 별도 확인 대상이다. Windows 실행 결과는 앞선 Windows 게시 기록을 따른다.
+
 ## 1.2.3 Windows 로컬 배포 완료 — 2026-10-12
 
 로컬 Windows x64에서 `b677240` 소스를 정식 검증하고 [Windows 1.2.3 EXE](https://github.com/poyal/passport/releases/download/v1.2.3/Passport-1.2.3-win-x64.exe)와 체크섬만 [공개 게시](https://github.com/poyal/passport/releases/tag/v1.2.3)했다. 사용자 승인으로 이 PC에서 실제 데스크톱 검사를 수행했으며 원격 Actions는 실행하지 않았다. Mac 빌드·검증·업로드는 수행하지 않았고 Mac 최신 공개판 1.2.2와 기존 릴리즈 자산을 보존했다. [출처·파일 해시·검증 요약](benchmarks/github-release-windows-v1.2.3.json).

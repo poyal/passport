@@ -2,7 +2,7 @@
 
 [사용자 매뉴얼](../README.md#terminal-cli) · [로컬 AI 안내](local-ai-workspaces.md)
 
-Passport 안에서 실행한 스크립트·AI 도구가 같은 앱의 다른 로컬 패널에 입력하고 화면을 읽을 수 있습니다. Windows 1.2.3에 추가되며 현재 공개된 Mac 1.2.2에는 포함되지 않습니다. 두 OS의 명령 형식은 같지만 Mac 네이티브 검증·배포는 별도입니다. [플랫폼별 배포 상태](releases/README.md)를 확인하세요.
+Passport 안에서 실행한 스크립트·AI 도구가 같은 앱의 다른 로컬 패널에 입력하고 화면을 읽을 수 있습니다. Mac·Windows 1.2.3부터 제공하며 두 OS의 명령 형식은 같습니다. [플랫폼별 배포 상태](releases/README.md)를 확인하세요.
 
 ## 켜기와 내 패널 확인
 

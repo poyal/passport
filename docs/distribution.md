@@ -6,7 +6,7 @@
 
 ## 현재 상태
 
-현재 **Windows x64는 1.2.3**, **Mac Apple Silicon은 1.2.2**다. [릴리즈 목록](releases/README.md)에서 플랫폼별 설치 파일을 받는다. Windows 1.2.3은 로컬 Windows PC에서 소스·최종 EXE의 숨김 GUI와 사용자가 허용한 실제 데스크톱 검사를 통과한 뒤 동일 파일을 게시했다. 원격 Actions와 Mac 빌드·업로드는 실행하지 않았다. [Windows 1.2.3 게시·검증 요약](benchmarks/github-release-windows-v1.2.3.json).
+현재 **Mac Apple Silicon·Windows x64 모두 1.2.3**이다. [릴리즈 목록](releases/README.md)에서 플랫폼별 설치 파일을 받는다. 두 설치본은 같은 `v1.2.3` 소스(`b677240`)를 각 OS의 로컬 PC에서 정식 검증하고 재빌드 없이 게시했다. 소스·최종 설치본의 숨김 GUI와 사용자가 허용한 실제 데스크톱 검사를 통과했으며 원격 Actions는 실행하지 않았다. Mac 후속 게시에서 기존 Windows EXE와 직전 1.2.2 자산을 보존하고 공개 다운로드 해시·합본 체크섬을 확인했다. [Mac 1.2.3 게시·검증 요약](benchmarks/github-release-v1.2.3-mac.json) · [Windows 1.2.3 게시·검증 요약](benchmarks/github-release-windows-v1.2.3.json).
 
 앞선 Mac·Windows 1.2.2는 같은 `v1.2.2` 소스(`e399c2b`)를 각 OS의 격리된 runner에서 정식 검증한 뒤 재빌드 없이 게시했다. 인증 없는 공개 다운로드의 바이트 수·해시와 합본 체크섬을 확인했으며, Windows 후속 게시에서 기존 Mac DMG와 직전 1.2.1 자산을 보존했다. [Mac 1.2.2 게시 요약](benchmarks/github-release-v1.2.2-mac.json) · [Windows 게시·검증 요약](benchmarks/github-release-windows-v1.2.2.json).
 

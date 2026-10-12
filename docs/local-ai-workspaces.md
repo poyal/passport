@@ -39,7 +39,7 @@ Finder·탐색기의 파일·폴더를 로컬 터미널 본문에 놓으면 파�
 
 ## AI 작업 알림
 
-터미널 간 요청·결과 확인은 알림과 독립적인 [터미널 CLI](terminal-cli.md)를 사용합니다. **CLI 접근**을 켠 새 로컬 터미널에서 `passport identify`, `passport send`, `passport read`를 사용할 수 있습니다. Windows 1.2.3에 추가되며 현재 공개된 Mac 1.2.2에는 포함되지 않습니다. [플랫폼별 배포 상태](releases/README.md)를 확인하세요.
+터미널 간 요청·결과 확인은 알림과 독립적인 [터미널 CLI](terminal-cli.md)를 사용합니다. **CLI 접근**을 켠 새 로컬 터미널에서 `passport identify`, `passport send`, `passport read`를 사용할 수 있습니다. Mac·Windows 1.2.3부터 제공합니다. [플랫폼별 배포 상태](releases/README.md)를 확인하세요.
 
 **설정 → AI 작업 알림**에서 Claude/Codex를 허용하고, 해당 터미널에 **AI 작업 알림** 시작 프로파일을 추가한다. 앱 셸의 실행 래퍼가 호출 단위 설정을 전달한다. 사용자 CLI 설정 파일, 프로젝트 신뢰와 승인 정책은 수정하지 않는다. 절대 경로로 CLI를 직접 실행하면 래퍼를 거치지 않는다.
 

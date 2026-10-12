@@ -4,6 +4,12 @@
 
 기본 배포 경로는 **대상 PC에서 로컬 검증 → 검증한 설치 파일 게시**다. 아래 과거 Actions 실행 기록과 인계 명령은 당시의 검증 출처이며, 새 배포 요청에서 원격 검증을 자동으로 반복하라는 지시가 아니다. 로컬 창 표시·포커스 제한을 이유로 원격 전체 검증으로 자동 전환하지 않는다. 숨김 검증과 별도 데스크톱 검증의 실행 조건은 그대로 지킨다.
 
+## 1.2.3 Mac 로컬 후속 배포 완료 — 2026-10-12
+
+Windows와 같은 `v1.2.3` 소스(`b677240`)를 로컬 Mac ARM64에서 정식 검증하고 [Mac 1.2.3 DMG](https://github.com/poyal/passport/releases/download/v1.2.3/Passport-1.2.3-mac-arm64.dmg)를 기존 릴리즈에 추가했다. 사용자가 이 Mac의 창·포커스 검사를 허용했으며 원격 Actions는 실행하지 않았다. 단위·통합 199개, 배포 회귀 73개, 소스·최종 DMG 숨김 GUI 각각 72개와 실제 데스크톱 각각 4개를 통과했다.
+
+검증한 파일을 재빌드 없이 게시했고 인증 없는 공개 다운로드의 크기·해시·합본 체크섬을 확인했다. 기존 Windows EXE의 ID·크기·해시·갱신 시각과 직전 1.2.2의 모든 자산은 보존했다. `v1.2.3` 태그를 이동하지 않으며 문서 마무리는 별도 커밋이다. [Mac 게시·검증 요약](benchmarks/github-release-v1.2.3-mac.json) · [검증 범위와 보관 위치](verification.md). 아래 Windows 선행 배포 기록의 Mac 미실행 상태는 당시의 범위다.
+
 ## 1.2.3 Windows 로컬 배포 완료 — 2026-10-12
 
 로컬 Windows x64에서 `b677240` 소스를 정식 검증하고 [Windows 1.2.3 EXE](https://github.com/poyal/passport/releases/download/v1.2.3/Passport-1.2.3-win-x64.exe)와 체크섬만 [공개 게시](https://github.com/poyal/passport/releases/tag/v1.2.3)했다. 사용자 승인으로 이 PC에서 실제 데스크톱 검사를 수행했으며 원격 Actions는 실행하지 않았다. Mac 빌드·검증·업로드는 수행하지 않았고 Mac 최신 공개판 1.2.2와 기존 릴리즈 자산을 보존했다. [출처·파일 해시·검증 요약](benchmarks/github-release-windows-v1.2.3.json).

@@ -73,7 +73,7 @@ Passport가 활성화된 동안 작동합니다. 새 창은 기본 셸·프로�
 
 ## 스니펫과 여러 터미널에 입력
 
-스크립트·AI 도구에서 특정 로컬 패널에 요청하고 화면을 읽으려면 [터미널 CLI](terminal-cli.md)를 사용합니다. **설정 → 로컬 터미널 → CLI 접근**을 켠 뒤 새 터미널에서 `passport identify`로 내 ID, `passport list`로 대상 ID를 확인합니다. CLI는 Windows 1.2.3에 추가되며 현재 공개된 Mac 1.2.2에는 포함되지 않습니다. [플랫폼별 배포 상태](releases/README.md)를 확인하세요.
+스크립트·AI 도구에서 특정 로컬 패널에 요청하고 화면을 읽으려면 [터미널 CLI](terminal-cli.md)를 사용합니다. **설정 → 로컬 터미널 → CLI 접근**을 켠 뒤 새 터미널에서 `passport identify`로 내 ID, `passport list`로 대상 ID를 확인합니다. CLI는 Mac·Windows 1.2.3부터 제공합니다. [플랫폼별 배포 상태](releases/README.md)를 확인하세요.
 
 1. 작업 탭에서 **스니펫 → 새 스니펫**을 선택합니다.
 2. 이름과 명령어를 입력합니다. `{{name}}`처럼 변수를 넣으면 사용할 때 값을 입력할 수 있습니다.
