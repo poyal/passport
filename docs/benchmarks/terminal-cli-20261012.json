@@ -1,0 +1,136 @@
+{
+  "createdAt": "2026-10-12T12:27:59.351Z",
+  "purpose": "Issue 3: Passport local terminal CLI implementation",
+  "source": "local",
+  "sourceCommit": "f5daca30cd0de888a7e7be0f74af6ec85cc049d0",
+  "dirty": true,
+  "platform": "win-x64",
+  "publicRelease": false,
+  "remoteActions": false,
+  "sourceFingerprint": "2ed5aed29d67c9a39dea60a18e27f1f100184cbcb72389d43b47c907c77efb3c",
+  "artifact": "release/checks/20261012T122201Z-f5daca3-dirty-win-x64-terminal-cli/artifact.json",
+  "build": "release/builds/20261012T122201Z-f5daca3-dirty-win-x64-terminal-cli",
+  "files": {
+    "app": {
+      "path": "C:\\Users\\ttt45\\Workspace\\personal\\passport\\release\\builds\\20261012T122201Z-f5daca3-dirty-win-x64-terminal-cli\\win-unpacked\\Passport.exe",
+      "sha256": "54109a40a175af4270a2c638d1a4bcd6f948e5e47120b6d6a317aa9c3822c0db"
+    },
+    "asar": {
+      "path": "C:\\Users\\ttt45\\Workspace\\personal\\passport\\release\\builds\\20261012T122201Z-f5daca3-dirty-win-x64-terminal-cli\\win-unpacked\\resources\\app.asar",
+      "sha256": "047112fae44f35fba61d147dcfc2b9f73c6b04e22efd0f8ccf693e68c7e2374b"
+    },
+    "cli": {
+      "path": "C:\\Users\\ttt45\\Workspace\\personal\\passport\\release\\builds\\20261012T122201Z-f5daca3-dirty-win-x64-terminal-cli\\win-unpacked\\resources\\terminal\\helper\\win32-x64\\passport.exe",
+      "sha256": "20b7f101c4bc245b4332c1ed4c29e32060d5ea6959ded2e4b32d3691ce964944"
+    }
+  },
+  "checks": {
+    "typecheck": "passed",
+    "build": "passed",
+    "unit": {
+      "total": 202,
+      "passedAfterTargetedRetry": 193,
+      "skipped": 9,
+      "initial": {
+        "passed": 190,
+        "failed": 3,
+        "skipped": 9
+      },
+      "environmentRetry": {
+        "files": [
+          "tests/runtime.test.ts",
+          "tests/windows-pty.test.ts"
+        ],
+        "passed": 8,
+        "failed": 0,
+        "skipped": 1
+      },
+      "finalFocused": {
+        "files": [
+          "tests/terminal-control.test.ts",
+          "tests/terminal-startup.test.ts",
+          "tests/terminal-env.test.ts",
+          "tests/platform.test.ts"
+        ],
+        "passed": 39,
+        "failed": 0,
+        "skipped": 2
+      },
+      "skippedReasons": {
+        "macOSOnly": 5,
+        "optionalDockerAndStress": 2,
+        "pythonFtpFixtureUnavailable": 2
+      }
+    },
+    "rustCli": {
+      "passed": 2,
+      "failed": 0
+    },
+    "releaseRegression": {
+      "passed": 72,
+      "failed": 0,
+      "skipped": 1
+    },
+    "sourceGui": {
+      "path": "release/checks/20261012T122235Z-f5daca3-dirty-win-x64-e2e-hidden",
+      "startTime": "2026-10-12T12:22:35.936Z",
+      "duration": 36425.812000000005,
+      "expected": 13,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0,
+      "lifecycle": {
+        "launches": 3,
+        "windows": 6,
+        "exits": 3,
+        "reusedTests": 10,
+        "auditedShutdowns": 3,
+        "shown": 0,
+        "focused": 0
+      },
+      "nativeProcessesPassed": true
+    },
+    "packagedGui": {
+      "path": "release/checks/20261012T122527Z-f5daca3-dirty-win-x64-e2e-hidden",
+      "startTime": "2026-10-12T12:25:27.830Z",
+      "duration": 34018.081000000006,
+      "expected": 7,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0,
+      "lifecycle": {
+        "launches": 2,
+        "windows": 5,
+        "exits": 2,
+        "reusedTests": 5,
+        "auditedShutdowns": 2,
+        "shown": 0,
+        "focused": 0
+      },
+      "nativeProcessesPassed": true
+    },
+    "documentation": "Edited Markdown file links, README explicit anchor and git diff --check passed"
+  },
+  "initialFailures": [
+    "Sandbox blocked esbuild ancestor lookup; same local build passed outside the sandbox.",
+    "Sandbox blocked PowerShell history/CIM access; affected existing PTY tests passed outside the sandbox.",
+    "Sandbox blocked the release timeout fixture tree kill. Identified fixture child was stopped and the local suite passed outside the sandbox.",
+    "Source E2E TUI fixture initially kept a prior cursor row; fixture now clears and homes its alternate screen.",
+    "Source E2E exposed an ambiguous CLI settings label; explicit accessible label added.",
+    "GUI policy expected count updated for three new required hidden cases."
+  ],
+  "pending": [
+    "macOS ARM64 native build and execution",
+    "Physical desktop interactions were not requested"
+  ],
+  "retention": {
+    "keep": [
+      "Current CLI development preview and its evidence",
+      "Latest and previous public installers and their evidence"
+    ],
+    "candidates": [
+      "Older successful builds from 2026-10-06 and earlier, only after checking running apps, KEEP markers, unresolved reproductions and recovery exceptions"
+    ],
+    "deleted": false
+  }
+}

@@ -20,7 +20,7 @@
 
 처음 사용한다면 **설치 → 로컬 터미널 열기 → SSH 호스트 등록 → 작업 구성 저장 → 백업** 순서로 시작하세요.
 
-[설치](#install) · [화면과 메뉴](#screens) · [로컬 터미널·AI](#local) · [SSH·분할](#ssh) · [붙여넣기](#paste) · [파일 전송](#files) · [템플릿](#templates) · [알림·외형](#settings) · [백업](#backup) · [업데이트](#update) · [문제 해결](#faq)
+[설치](#install) · [화면과 메뉴](#screens) · [로컬 터미널·AI](#local) · [터미널 CLI](#terminal-cli) · [SSH·분할](#ssh) · [붙여넣기](#paste) · [파일 전송](#files) · [템플릿](#templates) · [알림·외형](#settings) · [백업](#backup) · [업데이트](#update) · [문제 해결](#faq)
 
 <a id="install"></a>
 
@@ -138,6 +138,27 @@ Windows 1.2.0부터는 터미널 탭이나 패널을 닫으면 그 터미널에�
 | 터미널 붙여넣기              | ⌘V  | Ctrl+V                   |
 
 새 창을 열어도 기존 연결은 유지됩니다. **설정 → 단축키**에서 바꿀 수 있으며 사용자 지정 키를 우선합니다.
+
+<a id="terminal-cli"></a>
+
+### CLI로 다른 로컬 터미널에 요청하기
+
+이 기능은 Windows 1.2.3에 추가되며 현재 공개된 Mac 1.2.2에는 포함되지 않습니다. Passport 안의 스크립트·AI 도구에서 다른 창의 로컬 터미널에도 입력하고 화면을 읽을 수 있습니다. [플랫폼별 배포 상태](docs/releases/README.md)를 확인하세요.
+
+1. **설정 → 로컬 터미널 → CLI 접근**에서 **조회·입력**을 선택합니다. 화면만 읽으려면 **조회만**을 선택합니다. 기본은 **끔**이며 선택하면 바로 저장됩니다.
+2. 새 로컬 터미널을 열고 그 안에서 `passport identify`를 실행합니다. **내 패널 ID와 소속 탭 이름**이 표시됩니다. 설정을 바꾸면 기존 권한은 즉시 해제되므로 CLI를 실행할 터미널을 새로 여세요.
+3. `passport list`로 대상 패널 ID를 찾습니다. 한 탭을 분할했다면 패널마다 ID가 다릅니다. 자동화에서는 `--json`을 붙여 결과를 읽을 수 있습니다.
+4. 아래 `대상-ID`를 실제 ID로 바꿔 요청을 입력하고 결과를 읽습니다. `send`는 Enter를 추가하지 않습니다. 입력 내용을 확인한 뒤 `key ... enter`를 실행하세요.
+
+```sh
+passport send --pane 대상-ID "변경 내용을 검토해 주세요."
+passport key --pane 대상-ID enter
+passport read --pane 대상-ID --lines 20
+```
+
+위 명령은 Bash·zsh·PowerShell에서 같습니다. 긴 요청은 UTF-8 파일로 저장해 `passport send --pane 대상-ID --file request.txt`로 입력합니다. 입력과 Enter를 함께 보내려면 `--submit`을 붙입니다. 여러 줄은 대상 프로그램이 여러 줄 붙여넣기를 지원해야 하며, 미지원이면 입력하지 않고 오류를 반환합니다.
+
+SSH 패널은 지원하지 않습니다. 읽기는 터미널에 남아 있는 화면 텍스트이며, 전송 성공은 AI 작업 완료를 뜻하지 않습니다. 전체 옵션, Bash·PowerShell 예제와 오류 해결은 [터미널 CLI 사용법](docs/terminal-cli.md)을 확인하세요.
 
 <a id="ssh"></a>
 

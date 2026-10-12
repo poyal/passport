@@ -91,6 +91,8 @@ fixture 호출은 테스트 등록 시 한 번만 한다. `suite.application`, `
 
 ## 실행 횟수와 결과 확인
 
+`terminal-control.spec.ts`는 앱 하나를 재사용하고 각 사례에서 만든 로컬 PTY·추가 창·CLI 설정은 기존 문서 초기화 계약으로 복구한다. CLI는 실제 Passport PTY 안에서 시작한 coordinator의 자식 프로세스로 실행하며 접근 토큰을 테스트 프로세스·파일·trace로 추출하지 않는다. 임시 파일에는 요청 인자와 시험용 출력만 보관하고 사용자 데이터와 별개의 fixture 디렉터리를 정리한다. 권한 변경·재연결, 다른 창·비활성 패널·창 이동·연결 종료, 한글·파일·표준입력과 alternate 화면을 검사한다. Windows 셸 사례에는 패키지에 포함된 `passport --version`의 PATH 조회도 포함한다.
+
 [e2e.mjs](../scripts/e2e.mjs)는 `release/checks/<실행 ID>/`에 다음 자료를 보관한다.
 
 | 파일                  | 확인할 내용                                                                                        |

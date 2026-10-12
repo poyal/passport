@@ -49,7 +49,9 @@ export interface ClipboardPlatform {
   readFiles(items: ClipboardEntry[]): Promise<string[] | undefined>;
   readNativeFiles?: (pasteboardName?: string) => Promise<string[]>;
 }
+export type DesktopIdentity = { name: string; appId: string };
 export type DesktopContext = {
+  identity: DesktopIdentity;
   appPath: string;
   resourcesPath: string;
   executable: string;
@@ -60,6 +62,7 @@ export interface DesktopPlatform {
   initialize(
     app: Pick<App, "setActivationPolicy" | "setAppUserModelId">,
     mode: WindowMode,
+    identity: DesktopIdentity,
   ): void;
   windowOptions(
     context: DesktopContext,
@@ -85,4 +88,5 @@ export interface PlatformServices {
   readonly clipboard: ClipboardPlatform;
   readonly desktop: DesktopPlatform;
   createActivityEndpoint(): ActivityEndpoint;
+  createControlEndpoint(): ActivityEndpoint;
 }

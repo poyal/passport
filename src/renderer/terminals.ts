@@ -15,6 +15,7 @@ import { api } from "./api";
 import { availableFont, terminalFontFamily } from "../shared/fonts";
 import { loadTerminalFont } from "./fonts";
 import { PasteQueue } from "../shared/paste";
+import { readControlText } from "../shared/terminal-control";
 type Entry = {
   term: Terminal;
   fit: FitAddon;
@@ -390,6 +391,35 @@ export function disposeMissing(ids: Set<string>) {
   }
 }
 
+export async function inspectControlTerminal(
+  request: import("../shared/terminal-control").ControlInspectionRequest,
+): Promise<import("../shared/terminal-control").ControlInspection> {
+  const entry = terminals.get(request.paneId);
+  const base = {
+    requestId: request.requestId,
+    paneId: request.paneId,
+    sessionId: request.sessionId,
+  };
+  if (!entry) return { ...base, error: "NOT_READY" };
+  await new Promise<void>((resolve) => entry.term.write("", resolve));
+  if (
+    terminals.get(request.paneId) !== entry ||
+    (entry.sessionInstanceId ?? null) !== request.sessionId
+  )
+    return { ...base, error: "SESSION_CHANGED" };
+  if (entry.hydrating || entry.transferring)
+    return { ...base, error: "MOVING" };
+  const buffer = entry.term.buffer.active;
+  return {
+    ...base,
+    bracketedPaste: entry.term.modes.bracketedPasteMode,
+    backspace: entry.backspace,
+    ...(request.lines !== undefined
+      ? { ...readControlText(buffer, request.lines), buffer: buffer.type }
+      : {}),
+  };
+}
+
 export async function serializeTerminals(
   ids: string[],
   _appearance?: unknown,
@@ -402,6 +432,7 @@ export async function serializeTerminals(
           e.term.write("", () =>
             resolve({
               id,
+              sessionInstanceId: e.sessionInstanceId,
               data: e.serialize.serialize({ scrollback: 10000 }),
               cols: e.term.cols,
               rows: e.term.rows,
@@ -416,6 +447,7 @@ export function hydrateTerminals(snapshots: TerminalSnapshot[]) {
   for (const s of snapshots) {
     const e = ensureTerminal(s.id);
     e.connected = false;
+    e.sessionInstanceId = s.sessionInstanceId;
     e.term.resize(s.cols, s.rows);
     e.term.reset();
     e.hydrating = true;

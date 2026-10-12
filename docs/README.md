@@ -5,6 +5,7 @@
 ## 사용자 안내
 
 - [로컬 AI · SSH 작업 공간](local-ai-workspaces.md): 새 셸·프로파일·알림 사용법, 데이터 이행과 대상별 검증 범위.
+- [터미널 CLI](terminal-cli.md): 내 패널 ID, 다른 로컬 패널의 입력·화면 읽기, Bash·PowerShell 자동화와 접근 설정.
 - [사용 안내](user-guide.md): 호스트 연결, 탭·분할, 탭별 템플릿, 파일 전송, 스니펫, 외형, 백업과 문제 해결.
 - [설치 안내](../README.md#설치): Mac DMG·Windows EXE 다운로드, 최초 실행 허용, 업데이트와 파일 무결성 확인.
 - [릴리즈 노트](releases/README.md): 버전별 변경 사항·날짜·배포 상태와 설치 파일.

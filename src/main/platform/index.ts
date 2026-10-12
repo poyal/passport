@@ -17,6 +17,7 @@ const services: Record<string, PlatformServices> = {
     clipboard: createDarwinClipboard(),
     desktop: darwinDesktop,
     createActivityEndpoint: createDarwinActivityEndpoint,
+    createControlEndpoint: createDarwinActivityEndpoint,
   },
   win32: {
     id: "win32",
@@ -24,6 +25,7 @@ const services: Record<string, PlatformServices> = {
     clipboard: createWindowsClipboard(),
     desktop: windowsDesktop,
     createActivityEndpoint: createWindowsActivityEndpoint,
+    createControlEndpoint: createWindowsActivityEndpoint,
   },
 };
 export function selectPlatform(id: string): PlatformServices {

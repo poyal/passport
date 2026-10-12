@@ -1,0 +1,267 @@
+{
+  "createdAt": "2026-10-12T12:39:08.987Z",
+  "purpose": "Development app for local testing",
+  "source": "local",
+  "sourceCommit": "f5daca30cd0de888a7e7be0f74af6ec85cc049d0",
+  "dirty": true,
+  "sourceFingerprint": "ce133dbdaa2c62af98ea8e6756fda8bc708c037c145e6fa4d61fb32fb4d85a44",
+  "changedFiles": [
+    {
+      "status": " M",
+      "path": "README.md"
+    },
+    {
+      "status": " M",
+      "path": "docs/README.md"
+    },
+    {
+      "status": " M",
+      "path": "docs/development.md"
+    },
+    {
+      "status": " M",
+      "path": "docs/distribution.md"
+    },
+    {
+      "status": " M",
+      "path": "docs/e2e.md"
+    },
+    {
+      "status": " M",
+      "path": "docs/local-ai-workspaces.md"
+    },
+    {
+      "status": " M",
+      "path": "docs/platform-development.md"
+    },
+    {
+      "status": " M",
+      "path": "docs/user-guide.md"
+    },
+    {
+      "status": " M",
+      "path": "docs/verification.md"
+    },
+    {
+      "status": " M",
+      "path": "package.json"
+    },
+    {
+      "status": " M",
+      "path": "scripts/build-helper.mjs"
+    },
+    {
+      "status": " M",
+      "path": "scripts/check-resources.cjs"
+    },
+    {
+      "status": " M",
+      "path": "scripts/dev.mjs"
+    },
+    {
+      "status": " M",
+      "path": "src/main/index.ts"
+    },
+    {
+      "status": " M",
+      "path": "src/main/platform/contracts.ts"
+    },
+    {
+      "status": " M",
+      "path": "src/main/platform/darwin/desktop.ts"
+    },
+    {
+      "status": " M",
+      "path": "src/main/platform/index.ts"
+    },
+    {
+      "status": " M",
+      "path": "src/main/platform/win32/desktop.ts"
+    },
+    {
+      "status": " M",
+      "path": "src/main/startup.ts"
+    },
+    {
+      "status": " M",
+      "path": "src/main/terminal-env.ts"
+    },
+    {
+      "status": " M",
+      "path": "src/preload/index.ts"
+    },
+    {
+      "status": " M",
+      "path": "src/renderer/App.tsx"
+    },
+    {
+      "status": " M",
+      "path": "src/renderer/TerminalSetup.tsx"
+    },
+    {
+      "status": " M",
+      "path": "src/renderer/terminals.ts"
+    },
+    {
+      "status": " M",
+      "path": "src/shared/model.ts"
+    },
+    {
+      "status": " M",
+      "path": "src/shared/terminal-config.ts"
+    },
+    {
+      "status": " M",
+      "path": "tests/e2e/release-policy.json"
+    },
+    {
+      "status": " M",
+      "path": "tests/e2e/windows-shells.spec.ts"
+    },
+    {
+      "status": " M",
+      "path": "tests/platform.test.ts"
+    },
+    {
+      "status": " M",
+      "path": "tests/release.test.mjs"
+    },
+    {
+      "status": "??",
+      "path": "docs/benchmarks/terminal-cli-20261012.json"
+    },
+    {
+      "status": "??",
+      "path": "docs/terminal-cli.md"
+    },
+    {
+      "status": "??",
+      "path": "native/helper/src/bin/passport.rs"
+    },
+    {
+      "status": "??",
+      "path": "scripts/pack-dev.mjs"
+    },
+    {
+      "status": "??",
+      "path": "src/main/terminal-control.ts"
+    },
+    {
+      "status": "??",
+      "path": "src/shared/terminal-control.ts"
+    },
+    {
+      "status": "??",
+      "path": "tests/e2e/terminal-control.spec.ts"
+    },
+    {
+      "status": "??",
+      "path": "tests/terminal-control.test.ts"
+    }
+  ],
+  "platform": "win-x64",
+  "version": "1.2.2-dev",
+  "productName": "Passport-dev",
+  "appId": "io.passport.desktop.dev",
+  "status": "verified-development-preview",
+  "publishable": false,
+  "executable": "release\\builds\\20261012T123908Z-f5daca3-dirty-win-x64-dev\\win-unpacked\\Passport-dev.exe",
+  "checks": "release\\checks\\20261012T123908Z-f5daca3-dirty-win-x64-dev",
+  "files": [
+    {
+      "path": "release\\builds\\20261012T123908Z-f5daca3-dirty-win-x64-dev\\win-unpacked\\Passport-dev.exe",
+      "bytes": 246077440,
+      "sha256": "995200eb45b6aad28a4696005e650b4926a1d333dc224ba72e5302bb220c0bc4"
+    },
+    {
+      "path": "release\\builds\\20261012T123908Z-f5daca3-dirty-win-x64-dev\\win-unpacked\\resources\\app.asar",
+      "bytes": 76205983,
+      "sha256": "75ed266e62c0ded46cb97b36b397da943ea05206d9ab1cea3130cd5446b5995f"
+    },
+    {
+      "path": "release\\builds\\20261012T123908Z-f5daca3-dirty-win-x64-dev\\win-unpacked\\resources\\terminal\\helper\\win32-x64\\passport.exe",
+      "bytes": 288256,
+      "sha256": "a299c9680615acd8743e8cb66893f258d29b6667adaa6462e50b65aabb853cb4"
+    }
+  ],
+  "verifiedAt": "2026-10-12T12:41:23.538Z",
+  "packageBytes": 932912318,
+  "verification": {
+    "typecheck": "passed",
+    "build": "passed",
+    "unit": {
+      "passed": 20,
+      "skipped": 1,
+      "files": [
+        "platform.test.ts",
+        "test-window.test.ts"
+      ],
+      "skipReason": "macOS-only Unix socket"
+    },
+    "identity": {
+      "name": "Passport-dev",
+      "version": "1.2.2-dev",
+      "title": "Passport-dev",
+      "cliVersion": "Passport 1.2.2-dev (CLI protocol 1)",
+      "profileOverrideRespected": true,
+      "lifecycle": {
+        "launches": 1,
+        "windows": 1,
+        "exits": 1,
+        "reusedTests": 0,
+        "auditedShutdowns": 1,
+        "shown": 0,
+        "focused": 0
+      }
+    },
+    "packagedGui": {
+      "evidence": "release/checks/20261012T123949Z-f5daca3-dirty-win-x64-e2e-hidden",
+      "tests": {
+        "startTime": "2026-10-12T12:39:50.000Z",
+        "duration": 33208.025,
+        "expected": 7,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "lifecycle": {
+        "launches": 2,
+        "windows": 5,
+        "exits": 2,
+        "reusedTests": 5,
+        "auditedShutdowns": 2,
+        "shown": 0,
+        "focused": 0
+      },
+      "nativeProcesses": {
+        "roots": [
+          "c:\\users\\ttt45\\workspace\\personal\\passport\\release\\builds\\20261012t123908z-f5daca3-dirty-win-x64-dev\\win-unpacked\\resources\\app.asar.unpacked\\node_modules\\node-pty\\",
+          "c:\\users\\ttt45\\workspace\\personal\\passport\\release\\builds\\20261012t123908z-f5daca3-dirty-win-x64-dev\\win-unpacked\\resources\\terminal\\runtime\\"
+        ],
+        "residual": [],
+        "passed": true
+      }
+    },
+    "formattingAndDiffCheck": "passed",
+    "macOS": "pending-native-verification",
+    "desktop": "not-requested",
+    "published": false
+  },
+  "retention": {
+    "keep": [
+      "20261012T123908Z-f5daca3-dirty-win-x64-dev",
+      "20261012T122201Z-f5daca3-dirty-win-x64-terminal-cli",
+      "latest and previous public installers",
+      "KEEP-marked and recovery artifacts"
+    ],
+    "candidates": [
+      "2026-10-06 and older ordinary successful builds after preservation checks"
+    ],
+    "resolvedFailure": {
+      "run": "20261012T123653Z-f5daca3-dirty-win-x64-dev",
+      "eligibleAfter": "2026-10-19",
+      "reason": "Window title lost -dev; fixed and verified in the current run"
+    },
+    "deleted": []
+  }
+}

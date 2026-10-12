@@ -19,6 +19,14 @@ module.exports = async (context) => {
     throw new Error(
       `Build the ${platform}-${arch} native helper before packaging.`,
     );
+  const cli = path.join(
+    path.dirname(helper),
+    platform === "win32" ? "passport.exe" : "passport",
+  );
+  if (!fs.existsSync(cli))
+    throw new Error(
+      `Build the ${platform}-${arch} Passport CLI before packaging.`,
+    );
   if (platform === "win32") {
     const pinned = JSON.parse(
       fs.readFileSync(path.join(root, "runtime-manifest.json")),

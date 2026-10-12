@@ -1,7 +1,8 @@
 import { spawn } from "node:child_process";
 import { createServer } from "vite";
 import electron from "electron";
-import "./build.mjs";
+process.env.PASSPORT_BUILD_CHANNEL = "dev";
+await import("./build.mjs");
 const server = await createServer();
 await server.listen();
 const child = spawn(electron, ["."], {

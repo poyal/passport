@@ -57,6 +57,12 @@ import {
 } from "./portable";
 import { LocalSessions, availableShells } from "./local";
 import { ActivityService } from "./activity";
+import { TerminalControl, ControlInspector } from "./terminal-control";
+import {
+  controlInspectionSchema,
+  type ControlPanel,
+} from "../shared/terminal-control";
+import type { AppliedEnvironment } from "../shared/terminal-config";
 import { ActivityBanners } from "./activity-banners";
 import { prepareTerminalClipboard } from "./terminal-clipboard";
 import { prepareTerminalDrop } from "./terminal-drop";
@@ -87,9 +93,19 @@ import {
   presentWindow,
 } from "./test-window";
 
-app.setName("Passport");
+const developmentBuild =
+  app.getVersion().endsWith("-dev") ||
+  (!app.isPackaged && process.env.PASSPORT_BUILD_CHANNEL === "dev");
+const appIdentity = {
+  name: developmentBuild ? "Passport-dev" : "Passport",
+  appId: developmentBuild ? "io.passport.desktop.dev" : "io.passport.desktop",
+};
+const appVersion = developmentBuild
+  ? app.getVersion().replace(/-dev$/, "") + "-dev"
+  : app.getVersion();
+app.setName(appIdentity.name);
 const e2eWindowMode = testWindowMode(process.env);
-platform.desktop.initialize(app, e2eWindowMode);
+platform.desktop.initialize(app, e2eWindowMode, appIdentity);
 const e2eWindowAudit = {
   mode: e2eWindowMode,
   created: 0,
@@ -102,6 +118,8 @@ if (e2eWindowMode) {
 }
 if (process.env.PASSPORT_DATA_DIR)
   app.setPath("userData", path.resolve(process.env.PASSPORT_DATA_DIR));
+else if (developmentBuild)
+  app.setPath("userData", path.join(app.getPath("appData"), appIdentity.name));
 const desktopNotifications = {
   isSupported: () => Notification.isSupported(),
   create: (options: Electron.NotificationConstructorOptions) =>
@@ -142,6 +160,17 @@ let fonts: string[] = [];
 let updates: UpdateChecker;
 let locals: LocalSessions, logs: SessionLogs, tunnels: Tunnels;
 let activity: ActivityService;
+let terminalControl: TerminalControl;
+const localEnvironments = new Map<string, AppliedEnvironment>();
+const controlInspector = new ControlInspector((owner, request) => {
+  const destination = windows.get(owner);
+  if (!destination || destination.isDestroyed())
+    throw new Error("Window closed");
+  destination.webContents.send("passport:event", {
+    kind: "control-inspect",
+    request,
+  } satisfies AppEvent);
+});
 const focusedPanes = new Map<number, string | null>();
 const banners = new ActivityBanners<Notification>();
 function trackBanner(banner: Notification) {
@@ -173,6 +202,30 @@ const workspaceFor = (id: string) =>
     panes(w.root).some((p) => p.id === id),
   );
 const ownerOf = (id: string) => owners.get(workspaceFor(id)?.id || "");
+function controlPanels(): ControlPanel[] {
+  return (documentCache ??= store.read()).workspaces.flatMap((workspace) =>
+    panes(workspace.root)
+      .filter((pane) => pane.local)
+      .map((pane) => {
+        const environment = localEnvironments.get(pane.id);
+        return {
+          paneId: pane.id,
+          workspaceId: workspace.id,
+          workspaceName: workspace.name,
+          windowId: owners.get(workspace.id) ?? -1,
+          sessionId: environment?.sessionInstanceId ?? null,
+          status: locals.sessions.get(pane.id)?.alive
+            ? ("connected" as const)
+            : ("disconnected" as const),
+          shell: environment?.shell ?? pane.local!.shell,
+          launchCwd:
+            environment?.cwd ?? pane.local!.cwd ?? workspace.project?.cwd ?? "",
+          configuredAgent: environment?.agent ?? pane.local!.agent ?? null,
+          moving: moves.has(workspace.id),
+        };
+      }),
+  );
+}
 function isPaneViewed(paneId: string) {
   const owner = windows.get(ownerOf(paneId) ?? -1);
   return (
@@ -186,6 +239,16 @@ function isPaneViewed(paneId: string) {
 }
 function publishDocument(document = store.read()) {
   documentCache = document;
+  terminalControl?.configure(document.settings.terminal.cliAccess);
+  const localIds = new Set(
+    document.workspaces.flatMap((w) =>
+      panes(w.root)
+        .filter((p) => p.local)
+        .map((p) => p.id),
+    ),
+  );
+  for (const id of localEnvironments.keys())
+    if (!localIds.has(id)) localEnvironments.delete(id);
   for (const id of owners.keys())
     if (!document.workspaces.some((w) => w.id === id)) owners.delete(id);
   for (const w of windows.values())
@@ -198,6 +261,7 @@ function publishDocument(document = store.read()) {
       } satisfies AppEvent);
 }
 function closeSession(id: string) {
+  terminalControl?.unregister(id);
   activity?.unregister(id);
   logs?.stop(id);
   sessions.close(id);
@@ -246,6 +310,7 @@ const emit = (event: AppEvent, replay = false) => {
     ) {
       logs?.stop(event.state.id);
       activity?.unregister(event.state.id);
+      terminalControl?.unregister(event.state.id);
     }
   }
   if (event.kind === "output" && !replay) {
@@ -354,7 +419,7 @@ const bootstrap = (caller = window!): Bootstrap => {
   initialTerminals.delete(caller.id);
   return {
     document: store.read(),
-    appVersion: app.getVersion(),
+    appVersion,
     updateState: updates.state,
     profiles: store.profiles(),
     platform: process.platform,
@@ -377,6 +442,7 @@ const pathSchema = z
   );
 const idObject = z.object({ id: idSchema });
 const schemas: Record<Call, z.ZodType> = {
+  "control.reply": controlInspectionSchema,
   "terminal.create": z.undefined(),
   "window.create": z.undefined(),
   "window.keyboardContext": z.enum([
@@ -471,6 +537,7 @@ const schemas: Record<Call, z.ZodType> = {
       .array(
         z.object({
           id: idSchema,
+          sessionInstanceId: idSchema.optional(),
           data: z.string().max(16 * 1024 * 1024),
           cols: z.number().int().min(2).max(1000),
           rows: z.number().int().min(1).max(500),
@@ -663,6 +730,9 @@ async function call<K extends Call>(
   )
     throw new Error("이 창의 파일 연결이 아닙니다.");
   switch (name) {
+    case "control.reply":
+      controlInspector.reply(caller.id, i);
+      return;
     case "terminal.folder": {
       const result = await dialog.showOpenDialog(caller, {
         title: "프로젝트 폴더 선택",
@@ -750,6 +820,7 @@ async function call<K extends Call>(
         ),
       }));
       const saved = store.save(doc);
+      terminalControl.configure(doc.settings.terminal.cliAccess);
       activity.restrictAgents(doc.settings.notifications);
       if (
         doc.settings.autoLog !== previous.settings.autoLog ||
@@ -834,6 +905,7 @@ async function call<K extends Call>(
             current.settings.terminal,
             workspace,
           );
+          localEnvironments.set(i.id, snapshot);
           const integration = selectedProfiles(
             current.settings.terminal,
             workspace?.project?.profiles,
@@ -853,7 +925,10 @@ async function call<K extends Call>(
             current.settings.notifications,
             workspace,
             path.join(app.getPath("userData"), "shell-sessions"),
-            credentials,
+            {
+              ...credentials,
+              ...terminalControl.register(i.id, snapshot.sessionInstanceId),
+            },
             snapshot,
           );
           locals.open(i.id, pane.local, launch);
@@ -1360,7 +1435,7 @@ async function call<K extends Call>(
     case "window.list":
       return [...windows.values()].map((w) => ({
         id: w.id,
-        title: `Passport 창 ${w.id}`,
+        title: `${appIdentity.name} 창 ${w.id}`,
       }));
     case "window.move": {
       const workspace = store
@@ -1470,6 +1545,7 @@ async function createWindow(withLocalTerminal = false) {
     if (moves.size) throw new Error("창 이동이 완료된 후 다시 시도해 주세요.");
   }
   const desktopContext = {
+    identity: appIdentity,
     appPath: app.getAppPath(),
     resourcesPath: process.resourcesPath,
     executable: process.execPath,
@@ -1482,7 +1558,7 @@ async function createWindow(withLocalTerminal = false) {
     height: 900,
     minWidth: 1024,
     minHeight: 680,
-    title: "Passport",
+    title: appIdentity.name,
     backgroundColor: "#171b20",
     webPreferences: {
       preload: path.join(__dirname, "../preload/index.cjs"),
@@ -1494,6 +1570,8 @@ async function createWindow(withLocalTerminal = false) {
     },
   });
   platform.desktop.configureWindow(win, desktopContext, e2eWindowMode);
+  if (developmentBuild)
+    win.on("page-title-updated", (event) => event.preventDefault());
   if (e2eWindowMode) {
     e2eWindowAudit.created++;
     win.on("show", () => e2eWindowAudit.shown++);
@@ -1652,7 +1730,7 @@ void app
   .then(async () => {
     if (!ownsDataDirectory) return;
     updates = new UpdateChecker({
-      version: app.getVersion(),
+      version: appVersion,
       platform: process.platform,
       arch: process.arch,
       fetch: (url, init) => net.fetch(url, init),
@@ -1676,6 +1754,18 @@ void app
       error: (message) => emit({ kind: "notice", message }),
     });
     await activity.start();
+    terminalControl = new TerminalControl({
+      endpoint: platform.createControlEndpoint(),
+      panels: controlPanels,
+      tabMatches: (name) =>
+        (documentCache ??= store.read()).workspaces.filter(
+          (w) => w.name === name,
+        ).length,
+      inspect: controlInspector.inspect,
+      write: (id, data) => locals.input(id, data),
+    });
+    await terminalControl.start();
+    terminalControl.configure(store.read().settings.terminal.cliAccess);
     tunnels = new Tunnels(store, confirm, (state) =>
       emit({ kind: "tunnel", state }),
     );
@@ -1745,9 +1835,9 @@ void app
     Menu.setApplicationMenu(
       Menu.buildFromTemplate([
         {
-          label: "Passport",
+          label: appIdentity.name,
           submenu: [
-            { label: "Passport 정보", role: "about" },
+            { label: `${appIdentity.name} 정보`, role: "about" },
             { type: "separator" },
             { label: "종료", role: "quit" },
           ],
@@ -1824,7 +1914,9 @@ void app
     await createWindow();
     if (quitting) return;
     updates.start(
-      app.isPackaged && process.env.PASSPORT_DISABLE_UPDATE_CHECK !== "1",
+      app.isPackaged &&
+        !developmentBuild &&
+        process.env.PASSPORT_DISABLE_UPDATE_CHECK !== "1",
     );
     app.on("activate", () => {
       if (!window) void createWindow();
@@ -1859,6 +1951,7 @@ app.on("will-quit", (event) => {
   event.preventDefault();
   if (shutdown) return;
   shutdown = (async () => {
+    terminalControl?.configure("off");
     updates?.dispose();
     tunnels?.closeAll();
     sessions?.closeAll();
@@ -1867,6 +1960,7 @@ app.on("will-quit", (event) => {
     await locals?.shutdown();
     banners.close();
     await activity?.close();
+    await terminalControl?.close();
     store?.close();
     shutdownComplete = true;
     app.quit();

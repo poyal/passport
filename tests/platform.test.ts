@@ -29,6 +29,11 @@ const identity = {
   shell: "passport-bash" as const,
   sessionInstanceId: "test-generation",
 };
+const desktopIdentity = { name: "Passport", appId: "io.passport.desktop" };
+const developmentIdentity = {
+  name: "Passport-dev",
+  appId: "io.passport.desktop.dev",
+};
 
 it("selects explicit desktop implementations and never maps an unknown OS to macOS", () => {
   expect(selectPlatform("darwin").terminal.id).toBe("darwin");
@@ -216,9 +221,16 @@ it("sends POSIX escalation only while alive and cancels it on exit", () => {
   expect(kill.mock.calls).toEqual([[]]);
 });
 
-it.each([undefined, "hidden", "passive"] as WindowMode[])(
-  "configures Windows identity before showing a window in mode %s",
-  (mode) => {
+it.each(
+  ([undefined, "hidden", "passive"] as WindowMode[]).flatMap((mode) =>
+    [desktopIdentity, developmentIdentity].map((identity) => ({
+      mode,
+      identity,
+    })),
+  ),
+)(
+  "configures Windows $identity.name identity before showing a window in mode $mode",
+  ({ mode, identity }) => {
     const desktop = selectPlatform("win32").desktop;
     const events: string[] = [];
     let ready: (() => void) | undefined;
@@ -231,6 +243,7 @@ it.each([undefined, "hidden", "passive"] as WindowMode[])(
       show: vi.fn(() => events.push("shown")),
     };
     const context = {
+      identity,
       appPath: "D:\\Passport",
       resourcesPath: "D:\\Passport\\resources",
       executable: "D:\\Passport\\Passport.exe",
@@ -248,6 +261,8 @@ it.each([undefined, "hidden", "passive"] as WindowMode[])(
     );
     expect(win.setAppDetails.mock.calls[0]).toEqual([
       expect.objectContaining({
+        appId: identity.appId,
+        relaunchDisplayName: identity.name,
         appIconPath: "D:\\Passport\\resources\\icon.ico",
         relaunchCommand: '"D:\\Passport\\Passport.exe"',
       }),
@@ -264,12 +279,16 @@ it("keeps app initialization, Mac window lifetime and notification destinations 
   const app = { setActivationPolicy: vi.fn(), setAppUserModelId: vi.fn() };
   const mac = selectPlatform("darwin").desktop,
     win = selectPlatform("win32").desktop;
-  mac.initialize(app, undefined);
+  mac.initialize(app, undefined, desktopIdentity);
   expect(app.setActivationPolicy).not.toHaveBeenCalled();
-  mac.initialize(app, "hidden");
+  mac.initialize(app, "hidden", developmentIdentity);
   expect(app.setActivationPolicy).toHaveBeenCalledWith("accessory");
-  win.initialize(app, "hidden");
+  win.initialize(app, "hidden", desktopIdentity);
   expect(app.setAppUserModelId).toHaveBeenCalledWith("io.passport.desktop");
+  win.initialize(app, "hidden", developmentIdentity);
+  expect(app.setAppUserModelId).toHaveBeenLastCalledWith(
+    "io.passport.desktop.dev",
+  );
   expect(mac.quitOnLastWindow).toBe(false);
   expect(win.quitOnLastWindow).toBe(true);
   const shell = { openExternal: vi.fn(async () => {}) };

@@ -48,6 +48,7 @@ import {
   disposeMissing,
   serializeTerminals,
   hydrateTerminals,
+  inspectControlTerminal,
   setBroadcast,
   setTerminalSettings,
   setTerminalFonts,
@@ -211,7 +212,11 @@ export function App() {
   useEffect(() => {
     void refresh().catch((e) => setFatal(message(e)));
     const off = api.onEvent((event) => {
-      if (event.kind === "activity") {
+      if (event.kind === "control-inspect") {
+        void inspectControlTerminal(event.request)
+          .then((reply) => api.call("control.reply", reply))
+          .catch(() => {});
+      } else if (event.kind === "activity") {
         setActivities(event.items);
       } else if (event.kind === "activate-pane") {
         setActivation(event);
@@ -224,13 +229,18 @@ export function App() {
         );
         if (!known && !terminals.has(event.state.id)) return;
         const entry = ensureTerminal(event.state.id);
+        const generation =
+          event.state.environment?.sessionInstanceId ??
+          (event.state.status !== "connected"
+            ? entry.sessionInstanceId
+            : undefined);
         if (
           entry.connected !== (event.state.status === "connected") ||
-          entry.sessionInstanceId !== event.state.environment?.sessionInstanceId
+          entry.sessionInstanceId !== generation
         )
           entry.connectionRevision++;
         entry.connected = event.state.status === "connected";
-        entry.sessionInstanceId = event.state.environment?.sessionInstanceId;
+        entry.sessionInstanceId = generation;
         if (event.state.status === "error")
           notify(new Error(event.state.message || "서버 연결에 실패했습니다."));
         setStates((prev) => ({ ...prev, [event.state.id]: event.state }));

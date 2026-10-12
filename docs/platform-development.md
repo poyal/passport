@@ -159,13 +159,15 @@ Mac은 일반 `kill()` 뒤 아직 살아 있으면 1초 후 `SIGKILL`을 보낸�
 
 | 멤버 | 시점·결과 | 필수 조건 |
 | --- | --- | --- |
-| `initialize(app, mode)` | 앱 초기화 때 한 번, 창 생성 전 | Windows 앱 ID 설정. Mac hidden/passive만 accessory 정책 |
-| `windowOptions(context)` | `BrowserWindow` 생성 옵션 일부 반환 | 컨텍스트는 appPath·resourcesPath·executable·packaged. 보안 옵션 변경 금지 |
+| `initialize(app, mode, identity)` | 앱 초기화 때 한 번, 창 생성 전 | 공통 호출부가 정한 identity의 Windows 앱 ID 설정. Mac hidden/passive만 accessory 정책 |
+| `windowOptions(context)` | `BrowserWindow` 생성 옵션 일부 반환 | 컨텍스트는 identity·appPath·resourcesPath·executable·packaged. 보안 옵션 변경 금지 |
 | `configureWindow(win, context, mode)` | 생성 직후 창별 한 번 | Windows `setAppDetails` 뒤 정상 모드에서만 `ready-to-show` 등록 |
 | `quitOnLastWindow` | 마지막 창 닫힘 시 앱 종료 여부 | Windows true, Mac false. 실제 서비스 종료 정리는 공통 |
 | `openNotificationSettings(shell)` | OS 설정 URL을 여는 `Promise<void>` | 목적지는 고정, 실패는 reject |
 
 Windows 순서는 **AppUserModelID → `show: false` 생성 → ICO·재실행 정보 설정 → ready-to-show → show**다. 개발 실행과 패키지 실행의 아이콘 위치·재실행 인자를 모두 검사한다.
+
+`identity`는 공통 메인이 정한 `name`·`appId`다. 정식 앱은 `Passport`·`io.passport.desktop`, 개발 앱은 `Passport-dev`·`io.passport.desktop.dev`를 사용한다. Windows 앱 ID와 각 창의 재실행 정보는 같은 identity를 받는다. Mac 번들 ID·이름은 패키징에서 맞추고 초기화는 기존 표시 정책만 적용한다. `-dev` 버전 패키지와 `npm run dev`는 별도 `Passport-dev` 데이터 폴더를 사용하며 명시적인 `PASSPORT_DATA_DIR`가 우선한다. 개발 앱은 시작 시 공개 업데이트를 자동 조회하지 않는다.
 
 옵션 병합은 `windowOptions()` 다음 `testWindowOptions()`다. 숨김 정책이 마지막에 적용되어야 한다. `hidden`에서는 표시·네이티브 포커스 0회, `passive`는 `presentWindow()`의 `showInactive()`만 허용한다. `mode === undefined`일 때 정상 사용자 표시를 사용한다. 두 테스트 모드는 격리된 `PASSPORT_DATA_DIR`가 필수다. 숨김 E2E에서도 콘텍스트 격리·sandbox·CSP·탐색 차단을 완화하지 않는다.
 
@@ -176,6 +178,18 @@ Windows 순서는 **AppUserModelID → `show: false` 생성 → ICO·재실행 �
 `ActivityService.start()`가 `address`에 listen을 완료한 뒤 `listening()`을 호출한다. Mac 소켓 권한은 0600이며 Windows는 추가 파일 작업이 없다. 할당·listen·권한 설정 실패를 성공으로 처리하지 않는다. listen 또는 후속 권한 설정 실패 시 공통 서비스가 close하여 할당 자원을 회수한다.
 
 종료 순서는 연결 소켓 파괴 → 서버 close 대기 → `dispose()`다. `dispose()`는 자신이 만든 디렉터리만 삭제하고 반복 호출에도 안전해야 한다. 서버 수명·메시지 토큰·DB 저장은 `activity.ts`, native helper의 OS 전송 코드는 기존 Rust `#[cfg]`에 둔다.
+
+### 로컬 터미널 CLI
+
+`createControlEndpoint()`는 같은 `ActivityEndpoint` 수명 계약과 각 OS의 기존 endpoint 팩터리를 사용하되, 호출마다 별도의 주소·자원을 할당한다. 알림 endpoint·토큰·프로토콜과 공유하지 않는다. macOS는 0700 디렉터리와 0600 socket, Windows는 고유 local named pipe를 사용한다. TCP 서버나 OS별 세션 서비스를 추가하지 않는다.
+
+공통 `terminal-control.ts` 서비스는 버전 1 JSON 요청을 검증하고 세션별 권한, 최대 32개 연결, 2 MiB 요청 프레임, 5초 기한, 패널별 순서를 관리한다. CLI는 Rust helper 프로젝트의 별도 `passport` 바이너리이며 6초 통신 기한과 UTF-8 파일·표준입력을 처리한다. 앱 빌드·패키징은 helper와 CLI를 함께 포함한다. `startup.ts`는 시작 프로파일이 없는 셸에도 세션 전용 PATH를 연결한다.
+
+`settings.terminal.cliAccess`는 `off/read/write`이며 기존 문서는 `off`로 이행한다. 변경·종료·재연결 시 토큰과 대기 요청을 폐기한다. `PASSPORT_CONTROL_ENDPOINT`, `PASSPORT_CONTROL_TOKEN`, `PASSPORT_PANE_ID`, `PASSPORT_SESSION_ID`는 새 PTY에 전달하며 이전 앱 실행 환경에서 물려받은 값은 제거한다. 토큰은 DB·로그·renderer에 전달하지 않는다.
+
+화면·붙여넣기 모드는 소유 renderer에 `control-inspect` 이벤트로 요청하고 xterm의 대기 중인 쓰기가 완료된 뒤 읽는다. `control.reply`는 요청 ID·패널·세대·소유 창이 일치해야 수락한다. 비동기 확인 뒤에도 메인에서 호출자 권한, 대상 세대·소유 창·이동 상태·연결을 재검사한다. 입력과 선택적인 Enter는 한 번의 기존 `locals.input` 호출로 전달하며 기존 renderer 입력의 소유권 검사를 완화하지 않는다. 창 표시·포커스·방송을 발생시키지 않는다.
+
+창 이동 snapshot은 세대 ID도 전달하여 종료된 패널의 남은 화면을 읽을 수 있게 한다. 화면 복사본이나 별도 PTY 출력 모델·로그를 추가하지 않으며 기존 ACK/backpressure와 네이티브 종료 대기를 유지한다. 입력 성공과 AI 작업 완료는 구분한다. 사용 계약은 [터미널 CLI](terminal-cli.md)를 따른다.
 
 ## 4. 변경 시 지켜야 할 불변조건
 

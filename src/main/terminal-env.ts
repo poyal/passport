@@ -15,6 +15,10 @@ export function localTerminalEnv(
     "FORCE_COLOR",
     "CLICOLOR",
     "CLICOLOR_FORCE",
+    "PASSPORT_CONTROL_ENDPOINT",
+    "PASSPORT_CONTROL_TOKEN",
+    "PASSPORT_PANE_ID",
+    "PASSPORT_SESSION_ID",
   ]);
   for (const name of Object.keys(env))
     if (reset.has(name.toUpperCase())) delete env[name];

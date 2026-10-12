@@ -1,5 +1,36 @@
 # Passport 검증 기록
 
+## Windows 개발 빌드 `1.2.2-dev` — 2026-10-12
+
+`npm run pack:dev`로 앱 이름·실행 파일 `Passport-dev`, 앱·CLI 버전 `1.2.2-dev`, 별도 앱 ID·데이터 폴더를 적용했다. 기준 패키지 버전은 1.2.2를 유지한다. Windows 앱은 `release/builds/20261012T123908Z-f5daca3-dirty-win-x64-dev/win-unpacked/Passport-dev.exe`이며 설치 없이 실행한다. 개발 데이터는 `%APPDATA%/Passport-dev`에 저장하며 명시적인 `PASSPORT_DATA_DIR`가 우선한다. [빌드 사용법](development.md#환경-준비) · [출처·해시·검증 요약](benchmarks/development-build-20261012.json).
+
+타입 검사·패키징, 플랫폼·숨김 창 단위 검사 20개(Unix socket 1개 생략), 앱 이름·버전·창 제목·CLI 버전·임시 프로필 경로의 숨김 실행 확인을 통과했다. 최종 패키지의 CLI 3개·Windows 셸 4개 GUI도 통과했다. GUI는 앱 실행·정상 종료·종료 감사 각 2회, 재사용 5회, 표시·네이티브 포커스 0회, 남은 PTY 프로세스 0개다. 빌드·이름 검사는 같은 실행 ID의 `release/checks/`, GUI는 `release/checks/20261012T123949Z-f5daca3-dirty-win-x64-e2e-hidden/`에 보관한다.
+
+첫 개발 패키지는 창 제목이 HTML 제목으로 바뀌는 문제로 검증에 실패했고 창 이벤트 처리 후 새 폴더에서 재빌드·검증했다. 초기 검사 도구의 지원되지 않는 앱 ID 조회도 제거했으며 Windows 앱 ID 전달은 플랫폼 단위 검사로 확인했다. 실패 폴더 `20261012T123653Z-f5daca3-dirty-win-x64-dev`는 해결 기록과 함께 2026-10-19까지 보존한다. 현재·직전 검증 미리보기와 공개 설치본·KEEP 자료를 유지하며 기존 파일은 삭제하지 않았다. macOS 실기와 실제 데스크톱 검사는 대기다. 원격 Actions·공개 배포·사용자 설치본 교체는 수행하지 않았다.
+
+## 로컬 터미널 CLI 개발 버전 — 2026-10-12
+
+`f5daca3` 기반 작업 트리에서 이슈 #3의 목록·내 패널 식별·텍스트/키 입력·화면 읽기, 설정의 CLI 접근 권한과 README 사용법을 구현했다. Windows x64에서 로컬로 빌드·검증했으며 원격 Actions와 공개 배포는 실행하지 않았다. [사용법](terminal-cli.md) · [검증 요약과 파일 해시](benchmarks/terminal-cli-20261012.json).
+
+| 검사 | 결과 |
+| --- | --- |
+| 타입 검사·앱 빌드 | 통과 |
+| 단위·통합 전체 실행과 실패 파일 재검사 | 고유 사례 193 통과·9 생략. 처음 190 통과·3 환경 실패·9 생략 후, 해당 두 파일은 8 통과·1 생략으로 재검사 완료 |
+| 최종 CLI·셸 초기화·환경·플랫폼 검사 | 39 통과·2 macOS 전용 생략 |
+| Rust CLI 인자·UTF-8 검사 | 2 통과 |
+| 배포 정책·회귀 | 72 통과·Windows 심볼릭 링크 검사 1 생략 |
+| 소스 숨김 GUI | CLI 3·기존 입력 6·Windows 셸 4, 총 13 통과 |
+| Windows 미리보기 패키지 숨김 GUI | CLI 3·Windows 셸 4, 총 7 통과 |
+| 문서 링크·README 앵커·`git diff --check` | 통과 |
+
+단위 검사 생략 9개는 macOS 전용 5개, 선택 Docker·부하 2개, Python FTP fixture 미설치 2개다. 최초 빌드·PTY·E2E·배포 timeout 검사는 샌드박스의 상위 디렉터리·PowerShell 기록·CIM·자식 프로세스 종료 권한 제한을 만났다. 동일 로컬 검사를 제한 밖에서 실행해 해소했으며 표시 모드로 전환하지 않았다. 초기 GUI 실패는 TUI fixture의 화면 초기화와 CLI 설정의 접근성 이름을 보완했다. 신규 GUI 3개에 맞춰 배포 정책의 필수 목록과 기대 개수를 갱신했다.
+
+소스 GUI의 앱 실행·종료·종료 감사는 각각 3회, 패키지는 각각 2회다. **두 실행 모두 표시·네이티브 포커스 0회**, 남은 PTY 프로세스 0개이며 최종 실패·재시도·flaky는 없다. 실제 Passport PTY에서 실행한 coordinator의 CLI 자식 프로세스로 검사하여 토큰을 파일·trace에 추출하지 않았다. 한글·파일·표준입력·끝 줄바꿈·Enter 분리, 다른 창·비활성 패널·창 이동·종료 후 읽기, TUI alternate 버퍼, 접근 권한 폐기·조회 전용·중복 이름·SSH 제외를 확인했다.
+
+미리보기는 `release/builds/20261012T122201Z-f5daca3-dirty-win-x64-terminal-cli/win-unpacked/`에 보관한다. 빌드·패키지 로그와 메타데이터는 같은 실행 ID의 `release/checks/`, 소스 GUI는 `release/checks/20261012T122235Z-f5daca3-dirty-win-x64-e2e-hidden/`, 패키지 GUI는 `release/checks/20261012T122527Z-f5daca3-dirty-win-x64-e2e-hidden/`에 있다. 현재 빌드는 설치 프로그램 없는 개발 미리보기이며 기존 사용자 설치본·DB를 교체하지 않았다.
+
+macOS ARM64 네이티브 빌드·동작과 실제 데스크톱 조작은 미검증이다. 두 OS의 endpoint 계약·패키징 코드는 함께 갱신했으며 Windows에서 통과한 공통 검사를 macOS 실기 결과로 표시하지 않는다. 새 미리보기와 증거, 최신·직전 공개 설치본은 보존한다. 2026-10-06 이전 일반 성공 빌드는 실행 중·KEEP·미해결 재현·복구 예외 검토 후 정리 후보이며 이번 작업에서 삭제하지 않았다.
+
 ## 1.2.2 Windows 공개 배포 완료 — 2026-10-12
 
 Mac과 같은 `v1.2.2` 소스 `e399c2bcbf85dcedc69aa5eebddbfbe82200752c`를 [격리된 Windows 검증](https://github.com/poyal/passport/actions/runs/38241471604)에서 검증하고 [Windows EXE](https://github.com/poyal/passport/releases/download/v1.2.2/Passport-1.2.2-win-x64.exe)를 추가했다. 원본 보고서·증거 파일·설치본 해시를 게시 도구로 재검사했으며 재빌드 없이 업로드했다. 인증 없는 공개 다운로드의 바이트 수·SHA-256과 합본 체크섬도 일치한다. 기존 Mac DMG의 자산 ID·크기·해시·갱신 시각과 직전 1.2.1의 모든 자산은 그대로다.

@@ -640,6 +640,30 @@ export function TerminalSettings() {
           기본은 꺼짐입니다. SSH 자동 기록 설정은 세션 로그에서 관리합니다.
         </p>
       </section>
+      <section className="settings-card">
+        <label>
+          CLI 접근
+          <select
+            aria-label="CLI 접근"
+            value={settings.cliAccess}
+            onChange={(event) =>
+              void save({
+                cliAccess: event.target.value as typeof settings.cliAccess,
+              })
+            }
+          >
+            <option value="off">끔</option>
+            <option value="read">조회만</option>
+            <option value="write">조회·입력</option>
+          </select>
+        </label>
+        <p className="hint">
+          Passport 안의 스크립트·AI 도구가 모든 창의 로컬 터미널을 조회하거나
+          입력할 수 있습니다. 변경하면 기존 CLI 권한은 즉시 해제됩니다. 새 로컬
+          터미널을 열어 passport --help로 시작하세요. SSH 패널은 지원하지
+          않습니다.
+        </p>
+      </section>
       {editing && (
         <ProfileEditor
           value={editing}

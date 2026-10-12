@@ -17,6 +17,14 @@ npm run dev
 
 React 화면은 Vite로 갱신된다. 메인 프로세스나 preload를 수정한 뒤에는 개발 앱을 재시작한다.
 
+`npm run dev`는 `Passport-dev` 이름과 `<기준 버전>-dev` 표시를 사용한다. 설치 없이 실행할 개발 앱 폴더는 다음 명령으로 만든다. Windows 런타임은 위의 `prepare:runtime` 명령으로 먼저 준비한다.
+
+```sh
+npm run pack:dev
+```
+
+현재 OS의 타입 검사·앱/helper/CLI 빌드·패키징을 수행하고 실행 파일 경로를 출력한다. Windows는 `release/builds/<실행 ID>/win-unpacked/Passport-dev.exe`, Mac은 `release/builds/<실행 ID>/mac-arm64/Passport-dev.app`이다. 앱·CLI 버전 모두 `-dev`로 끝나며 기준 `package.json` 버전은 변경하지 않는다. 빌드 로그와 출처는 `release/checks/<실행 ID>/`에 기록한다. 패키징 직후 상태는 `built-unverified`이며 실행 검증을 마친 뒤 검증 결과를 기록한다. Mac의 `release/builds/Passport.app` 링크도 검증이 끝난 뒤에만 갱신한다.
+
 빌드한 화면과 메인 프로세스를 함께 실행하려면 다음을 사용한다.
 
 ```sh
@@ -61,6 +69,8 @@ npm run dev
 ## 데이터와 별도 프로필
 
 기본 데이터 폴더는 macOS `~/Library/Application Support/Passport`, Windows `%APPDATA%/Passport`다. SQLite 메타데이터, OS로 보호한 자격 증명, SSH 호스트 키, 선택한 세션 로그와 최근 7개 일별 백업을 저장한다.
+
+`npm run dev`와 `pack:dev` 앱은 같은 위치의 **`Passport-dev`** 폴더를 사용한다. 정식 앱과 동시에 실행할 수 있으며 설정·연결·열린 탭을 자동으로 복사하지 않는다. `PASSPORT_DATA_DIR`를 지정하면 해당 경로를 우선 사용한다.
 
 `PASSPORT_DATA_DIR`로 테스트 전용 폴더를 지정할 수 있다. macOS 예시:
 

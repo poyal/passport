@@ -7,8 +7,8 @@ const icon = (context: DesktopContext) =>
     : path.win32.join(context.appPath, "build/icon.ico");
 export const windowsDesktop: DesktopPlatform = {
   quitOnLastWindow: true,
-  initialize(app) {
-    app.setAppUserModelId("io.passport.desktop");
+  initialize(app, _mode, identity) {
+    app.setAppUserModelId(identity.appId);
   },
   windowOptions: (context) => ({
     icon: icon(context),
@@ -17,13 +17,13 @@ export const windowsDesktop: DesktopPlatform = {
   }),
   configureWindow(win, context, mode) {
     win.setAppDetails({
-      appId: "io.passport.desktop",
+      appId: context.identity.appId,
       appIconPath: icon(context),
       appIconIndex: 0,
       relaunchCommand: context.packaged
         ? `"${context.executable}"`
         : `"${context.executable}" "${context.appPath}"`,
-      relaunchDisplayName: "Passport",
+      relaunchDisplayName: context.identity.name,
     });
     if (!mode) win.once("ready-to-show", () => win.show());
   },

@@ -25,6 +25,8 @@ Mac 설치본은 ad-hoc 서명이며 Developer ID 서명·Apple 공증을 포함
 
 파일 이름의 버전은 `package.json`을 따른다. `npm run pack`은 설치 프로그램 없이 현재 환경의 앱 폴더를 만든다. `release/`와 `dist/`는 생성물이며 저장소에 커밋하지 않는다. README는 최신 공개 릴리즈 링크를 기본으로 사용하되 플랫폼별 공개 버전이 다르면 해당 버전 링크와 상태를 표시한다.
 
+사용자에게 테스트용 개발 앱을 전달할 때는 **`npm run pack:dev`**를 사용한다. 앱 이름은 `Passport-dev`, 버전은 `<package.json 버전>-dev`, 앱 ID는 `io.passport.desktop.dev`이며 별도 데이터 폴더를 사용한다. Windows는 `Passport-dev.exe`, Mac은 `Passport-dev.app` 폴더를 `release/builds/<실행 ID>/`에 만든다. 로그·출처·해시는 대응하는 `release/checks/<실행 ID>/`에 기록하며 공개 게시나 설치본 교체는 수행하지 않는다. [개발 빌드 사용법](development.md#환경-준비)을 따른다.
+
 산출물의 저장 위치와 보관 기간은 [산출물 보관 규칙](#산출물-보관-규칙)을 따른다. 기존 명령의 루트 출력 경로는 아래에 명시한 전환 전 예외다.
 
 Mac 최소 버전 목표는 14이며 macOS 27 로컬 환경과 macOS 15 GitHub Actions에서 앱 실행을 확인했다. Windows 대상은 Windows 11 x64이며 각각의 설치 및 실행 검증을 구분한다. Intel Mac과 Rosetta 의존 Mac 패키지는 만들지 않는다.

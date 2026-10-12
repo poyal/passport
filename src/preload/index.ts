@@ -7,6 +7,7 @@ import type {
   Result,
 } from "../shared/model";
 const names: Call[] = [
+  "control.reply",
   "terminal.create",
   "window.create",
   "window.keyboardContext",

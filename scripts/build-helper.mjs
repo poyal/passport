@@ -5,6 +5,7 @@ import {
   chmodSync,
   readdirSync,
   writeFileSync,
+  readFileSync,
 } from "node:fs";
 import path from "node:path";
 const arch = process.env.PASSPORT_TARGET_ARCH || process.arch;
@@ -16,6 +17,11 @@ const targets = {
 const target = targets[`${platform}-${arch}`];
 if (!target) throw new Error(`Unsupported helper target: ${platform}-${arch}`);
 const cargo = process.env.PASSPORT_CARGO || "cargo";
+const version = JSON.parse(readFileSync("package.json", "utf8")).version;
+const appVersion =
+  process.env.PASSPORT_BUILD_CHANNEL === "dev"
+    ? version.replace(/-dev$/, "") + "-dev"
+    : version;
 const result = spawnSync(
   cargo,
   [
@@ -27,7 +33,13 @@ const result = spawnSync(
     "--target",
     target,
   ],
-  { stdio: "inherit" },
+  {
+    stdio: "inherit",
+    env: {
+      ...process.env,
+      PASSPORT_APP_VERSION: appVersion,
+    },
+  },
 );
 if (result.error || result.status)
   throw new Error(
@@ -41,6 +53,12 @@ copyFileSync(
   path.join(directory, name),
 );
 if (platform !== "win32") chmodSync(path.join(directory, name), 0o755);
+const cli = platform === "win32" ? "passport.exe" : "passport";
+copyFileSync(
+  path.join("native/helper/target", target, "release", cli),
+  path.join(directory, cli),
+);
+if (platform !== "win32") chmodSync(path.join(directory, cli), 0o755);
 const metadata = spawnSync(
   cargo,
   [

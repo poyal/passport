@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { controlModeSchema } from "./terminal-control";
 
 export const shellIdSchema = z.enum([
   "default",
@@ -69,6 +70,7 @@ export const terminalSettingsSchema = z.object({
   profileIds: z.array(z.string().max(128)).max(32).default([]),
   profiles: z.array(startupProfileSchema).max(100).default([]),
   autoLogLocal: z.boolean().default(false),
+  cliAccess: controlModeSchema.default("off"),
 });
 export type TerminalSettings = z.infer<typeof terminalSettingsSchema>;
 export const notificationSettingsSchema = z.object({
@@ -131,6 +133,7 @@ export function defaultTerminalSettings(
     profileIds: platform === "win32" && !legacy ? ["unix-shortcuts"] : [],
     profiles: [],
     autoLogLocal: false,
+    cliAccess: "off",
   };
 }
 export function selectedProfiles(

@@ -187,6 +187,15 @@ export function prepareLaunch(
   };
   env.PASSPORT_INIT_FAILED = "0";
   platform.terminal.configureEnvironment(env, snapshot, resourceRoot());
+  // Expose the bundled CLI even for a plain shell with no startup profiles.
+  // Change only this PTY's environment, including Windows' case-insensitive PATH.
+  const cliDirectory = path.dirname(helperPath());
+  const pathKey =
+    Object.keys(env).find((name) => name.toUpperCase() === "PATH") || "PATH";
+  const inheritedPath = env[pathKey] || "";
+  for (const key of Object.keys(env))
+    if (key.toUpperCase() === "PATH") delete env[key];
+  env.PATH = cliDirectory + path.delimiter + inheritedPath;
   if (!profiles.length && !config.agent) {
     // A plain shell needs no loader or execution-policy exception. In particular,
     // Bash keeps its native login/logout semantics when injection is disabled.

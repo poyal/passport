@@ -3,6 +3,21 @@
   "description": "Explicit release test inventory. IDs remain stable when titles are deliberately updated. Entries without overrides are required on macOS and Windows in hidden mode.",
   "tests": [
     {
+      "id": "terminal-control.input-read",
+      "file": "terminal-control.spec.ts",
+      "title": "CLI identifies its pane and preserves literal input and alternate-screen reads across windows"
+    },
+    {
+      "id": "terminal-control.ownership",
+      "file": "terminal-control.spec.ts",
+      "title": "CLI reads inactive and moved panes and retains the screen after disconnect"
+    },
+    {
+      "id": "terminal-control.permissions",
+      "file": "terminal-control.spec.ts",
+      "title": "CLI settings revoke existing access and reject ambiguous tabs and SSH targets"
+    },
+    {
       "id": "terminal-links.browser-open",
       "file": "terminal-links.spec.ts",
       "title": "terminal hyperlinks confirm the actual URL and open the browser without navigating the app"

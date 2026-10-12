@@ -130,6 +130,8 @@ for (const shell of [
       "한글 ' & project",
       "PASSPORT_ALIAS_OK",
     ];
+    commands.push("passport --version");
+    outputs.push("CLI protocol 1");
     for (const [index, command] of commands.entries()) {
       await page.keyboard.type(command, { delay: 20 });
       await page.keyboard.press("Enter");

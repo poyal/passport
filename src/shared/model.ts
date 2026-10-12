@@ -491,6 +491,10 @@ export type TransferJob = {
   cleanup?: string;
 };
 export type AppEvent =
+  | {
+      kind: "control-inspect";
+      request: import("./terminal-control").ControlInspectionRequest;
+    }
   | { kind: "activity"; items: Activity[] }
   | { kind: "activate-pane"; workspaceId: string; paneId: string }
   | { kind: "update"; state: import("./updates").UpdateState }
@@ -514,6 +518,7 @@ export type AppEvent =
   | { kind: "tunnel"; state: TunnelState };
 export type TerminalSnapshot = {
   id: string;
+  sessionInstanceId?: string;
   data: string;
   cols: number;
   rows: number;
@@ -548,6 +553,10 @@ export type ImportPasswordRequest = {
 export type Result<T> = { ok: true; value: T } | { ok: false; error: string };
 
 export interface Calls {
+  "control.reply": {
+    input: import("./terminal-control").ControlInspection;
+    output: void;
+  };
   "terminal.create": {
     input: undefined;
     output: { workspaceId: string; paneId: string };
