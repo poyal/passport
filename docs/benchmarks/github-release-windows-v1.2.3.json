@@ -1,0 +1,245 @@
+{
+  "createdAt": "2026-10-12T13:10:33.480Z",
+  "version": "1.2.3",
+  "status": "published-and-public-download-verified",
+  "source": {
+    "commit": "b67724017b3ea60f5efc35d1d6585d7024487450",
+    "dirty": false,
+    "fingerprint": "17e9cfa8c551c1642639b9c2793717ae391ff7878e70c9c252a4dd416da39dcf"
+  },
+  "sourceTag": "v1.2.3",
+  "targets": [
+    "win-x64"
+  ],
+  "publication": {
+    "mode": "publish",
+    "tag": "v1.2.3",
+    "sourceCommit": "b67724017b3ea60f5efc35d1d6585d7024487450",
+    "sourceTag": "v1.2.3",
+    "releaseCommit": "b67724017b3ea60f5efc35d1d6585d7024487450",
+    "targets": [
+      "win-x64"
+    ],
+    "upload": [
+      "Passport-1.2.3-win-x64.exe"
+    ],
+    "replace": [],
+    "preserve": [],
+    "updateChecksums": true,
+    "createDraft": true,
+    "publishDraft": true,
+    "status": "published-and-download-verified",
+    "url": "https://github.com/poyal/passport/releases/tag/v1.2.3",
+    "finishedAt": "2026-10-12T13:10:12.396Z"
+  },
+  "buildOrigin": "Local Windows x64; no remote Actions; no macOS build or upload",
+  "desktopAuthorization": "User explicitly allowed local desktop verification in this session",
+  "environment": {
+    "platform": "win32",
+    "arch": "x64",
+    "os": "10.0.26300",
+    "node": "v24.14.0",
+    "npm": "11.20.0",
+    "cargo": "cargo 1.99.0 (5f94df478 2026-08-27)",
+    "electron": "44.4.5"
+  },
+  "verification": "release\\checks\\20261012T125434Z-b677240-win-x64-local-release\\verification.json",
+  "checks": [
+    {
+      "name": "dependencies",
+      "status": "passed",
+      "startedAt": "2026-10-12T12:54:34.267Z",
+      "finishedAt": "2026-10-12T12:56:11.993Z"
+    },
+    {
+      "name": "ftp-fixtures",
+      "status": "passed",
+      "startedAt": "2026-10-12T12:56:11.996Z",
+      "finishedAt": "2026-10-12T12:56:12.138Z"
+    },
+    {
+      "name": "windows-tools",
+      "status": "passed",
+      "startedAt": "2026-10-12T12:56:12.141Z",
+      "finishedAt": "2026-10-12T12:56:12.722Z"
+    },
+    {
+      "name": "build",
+      "status": "passed",
+      "startedAt": "2026-10-12T12:56:12.725Z",
+      "finishedAt": "2026-10-12T12:56:18.087Z"
+    },
+    {
+      "name": "unit",
+      "status": "passed",
+      "startedAt": "2026-10-12T12:56:18.090Z",
+      "finishedAt": "2026-10-12T12:57:06.130Z"
+    },
+    {
+      "name": "release-tests",
+      "status": "passed",
+      "startedAt": "2026-10-12T12:57:06.133Z",
+      "finishedAt": "2026-10-12T12:57:17.534Z"
+    },
+    {
+      "name": "source-gui",
+      "status": "passed",
+      "tests": {
+        "startTime": "2026-10-12T12:57:19.013Z",
+        "duration": 129513.05099999999,
+        "expected": 77,
+        "skipped": 4,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "passed": 77,
+      "startedAt": "2026-10-12T12:57:17.536Z",
+      "finishedAt": "2026-10-12T12:59:28.844Z"
+    },
+    {
+      "name": "source-desktop",
+      "status": "passed",
+      "tests": {
+        "startTime": "2026-10-12T12:59:30.176Z",
+        "duration": 11023.85,
+        "expected": 4,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "passed": 4,
+      "startedAt": "2026-10-12T12:59:28.847Z",
+      "finishedAt": "2026-10-12T12:59:41.485Z"
+    },
+    {
+      "name": "package",
+      "status": "passed",
+      "startedAt": "2026-10-12T12:59:41.489Z",
+      "finishedAt": "2026-10-12T13:03:16.673Z"
+    },
+    {
+      "name": "installer",
+      "status": "passed",
+      "startedAt": "2026-10-12T13:03:17.128Z",
+      "finishedAt": "2026-10-12T13:03:34.726Z"
+    },
+    {
+      "name": "packaged-smoke",
+      "status": "passed",
+      "startedAt": "2026-10-12T13:03:34.729Z",
+      "finishedAt": "2026-10-12T13:03:38.956Z"
+    },
+    {
+      "name": "packaged-gui",
+      "status": "passed",
+      "tests": {
+        "startTime": "2026-10-12T13:03:40.348Z",
+        "duration": 133534.09,
+        "expected": 77,
+        "skipped": 4,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "passed": 77,
+      "startedAt": "2026-10-12T13:03:38.959Z",
+      "finishedAt": "2026-10-12T13:05:54.195Z"
+    },
+    {
+      "name": "packaged-desktop",
+      "status": "passed",
+      "tests": {
+        "startTime": "2026-10-12T13:05:55.529Z",
+        "duration": 10842.364,
+        "expected": 4,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "passed": 4,
+      "startedAt": "2026-10-12T13:05:54.198Z",
+      "finishedAt": "2026-10-12T13:06:06.652Z"
+    }
+  ],
+  "guiLifecycle": {
+    "source-gui": {
+      "launches": 31,
+      "windows": 40,
+      "exits": 31,
+      "reusedTests": 30,
+      "auditedShutdowns": 31,
+      "shown": 0,
+      "focused": 0
+    },
+    "source-desktop": {
+      "launches": 4,
+      "windows": 4,
+      "exits": 4,
+      "reusedTests": 0,
+      "auditedShutdowns": 0,
+      "shown": 0,
+      "focused": 0
+    },
+    "packaged-gui": {
+      "launches": 31,
+      "windows": 40,
+      "exits": 31,
+      "reusedTests": 30,
+      "auditedShutdowns": 31,
+      "shown": 0,
+      "focused": 0
+    },
+    "packaged-desktop": {
+      "launches": 4,
+      "windows": 4,
+      "exits": 4,
+      "reusedTests": 0,
+      "auditedShutdowns": 0,
+      "shown": 0,
+      "focused": 0
+    }
+  },
+  "artifact": {
+    "name": "Passport-1.2.3-win-x64.exe",
+    "path": "release/builds/20261012T125434Z-b677240-win-x64-local-release/Passport-1.2.3-win-x64.exe",
+    "bytes": 203912003,
+    "sha256": "b69be0f77abe5cf3816d16baba6ff5ca3676e1c68f575e7809c32bb8d6417f8f"
+  },
+  "publicAssets": [
+    {
+      "id": 633824913,
+      "name": "Passport-1.2.3-win-x64.exe",
+      "size": 203912003,
+      "digest": "sha256:b69be0f77abe5cf3816d16baba6ff5ca3676e1c68f575e7809c32bb8d6417f8f",
+      "updated_at": "2026-10-12T13:09:48Z"
+    },
+    {
+      "id": 633826391,
+      "name": "SHA256SUMS.txt",
+      "size": 93,
+      "digest": "sha256:3af2741e794180d22a6a5c6250668191191c052f6b1204b23e60ecdfe94ff5b0",
+      "updated_at": "2026-10-12T13:10:08Z"
+    }
+  ],
+  "unauthenticatedDownloadVerified": true,
+  "checksumVerified": true,
+  "previousReleaseAssetsUnchanged": true,
+  "macLatestRemains": "1.2.2",
+  "olderReleaseAssetsUnchanged": true,
+  "limitations": [
+    "Physical IME, OS notifications, real AI services, upgrade installation, and optional Docker/long stress tests are separate checks.",
+    "Windows installer UI/scope and extracted payload are checked; installing/uninstalling into a user account is a separate check."
+  ],
+  "retention": {
+    "keep": [
+      "Current verified release and evidence",
+      "Previous verified development preview",
+      "Latest and previous public installers for each platform",
+      "KEEP-marked, active, unresolved and recovery artifacts"
+    ],
+    "candidates": [
+      "Earlier ordinary successful Windows builds after preservation checks",
+      "The superseded 1.2.3 preparation candidate"
+    ],
+    "deleted": []
+  }
+}

@@ -1,5 +1,25 @@
 # Passport 검증 기록
 
+## 1.2.3 Windows 로컬 배포 완료 — 2026-10-12
+
+로컬 Windows x64에서 `b677240` 소스를 정식 검증하고 [Windows 1.2.3 EXE](https://github.com/poyal/passport/releases/download/v1.2.3/Passport-1.2.3-win-x64.exe)와 체크섬만 [공개 게시](https://github.com/poyal/passport/releases/tag/v1.2.3)했다. 사용자 승인으로 이 PC에서 실제 데스크톱 검사를 수행했으며 원격 Actions는 실행하지 않았다. Mac 빌드·검증·업로드는 수행하지 않았고 Mac 최신 공개판 1.2.2와 기존 릴리즈 자산을 보존했다. [출처·파일 해시·검증 요약](benchmarks/github-release-windows-v1.2.3.json).
+
+| 검사 | 결과 |
+| --- | --- |
+| 잠금 의존성 설치·네이티브 준비·타입·빌드 | 통과 |
+| 단위·통합·FTP/FTPS | 198 통과·7 허용 생략 |
+| 배포 정책·회귀 | 72 통과·Windows 심볼릭 링크 1 생략 |
+| 소스 / 최종 EXE 숨김 GUI | 77 / 77 통과, 각각 4 허용 생략 |
+| 소스 / 최종 EXE 실제 데스크톱 | 4 / 4 통과 |
+| NSIS 설치 범위·최종 페이로드 PTY·정상 종료 | 통과 |
+| 공개 다운로드·SHA-256·체크섬·기존 자산 보존 | 통과 |
+
+소스·패키지 숨김 GUI는 각각 앱 실행·정상 종료·종료 감사 31회, 재사용 30회, 표시·네이티브 포커스 0회다. 새 PTY 잔여 프로세스는 없으며 실패·재시도·flaky도 없다. GUI 생략은 Mac Finder 전용 1개와 선택 Docker·부하·대용량 출력 3개다. 단위 생략은 Mac 전용 5개와 선택 Docker·부하 2개다.
+
+최종 설치본은 `release/builds/20261012T125434Z-b677240-win-x64-local-release/`, 게시한 동일 바이트는 `release/packages/v1.2.3/local/win-x64/`, 원본 검증·게시·인증 없는 다운로드 증거는 `release/checks/20261012T125434Z-b677240-win-x64-local-release/`에 있다. `v1.2.3` 태그는 검증 소스에 고정하며 게시 결과 문서는 후속 문서 전용 커밋이다. SHA-256: `b69be0f77abe5cf3816d16baba6ff5ca3676e1c68f575e7809c32bb8d6417f8f`.
+
+현재·직전 검증 앱과 플랫폼별 최신·직전 공개 설치본, 실행 중·KEEP·미해결 재현·복구 자료를 보존한다. 이전 일반 성공 빌드와 정식 검증 전 준비용 1.2.3 후보는 보존 예외 확인 후 정리 후보이며 이번 작업에서 삭제하지 않았다. 기존 사용자 설치본·DB를 교체하지 않았다. 실제 사용자 계정 설치·제거·업그레이드, 물리 IME·OS 알림·외부 AI 서비스는 별도 확인 대상이다.
+
 ## Windows 개발 빌드 `1.2.2-dev` — 2026-10-12
 
 `npm run pack:dev`로 앱 이름·실행 파일 `Passport-dev`, 앱·CLI 버전 `1.2.2-dev`, 별도 앱 ID·데이터 폴더를 적용했다. 기준 패키지 버전은 1.2.2를 유지한다. Windows 앱은 `release/builds/20261012T123908Z-f5daca3-dirty-win-x64-dev/win-unpacked/Passport-dev.exe`이며 설치 없이 실행한다. 개발 데이터는 `%APPDATA%/Passport-dev`에 저장하며 명시적인 `PASSPORT_DATA_DIR`가 우선한다. [빌드 사용법](development.md#환경-준비) · [출처·해시·검증 요약](benchmarks/development-build-20261012.json).

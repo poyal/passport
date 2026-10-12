@@ -30,10 +30,10 @@
 
 | 컴퓨터                                       | 선택할 파일                | 다운로드 안내                                                                      |
 | -------------------------------------------- | -------------------------- | ---------------------------------------------------------------------------------- |
-| Mac · Apple Silicon(M 시리즈), macOS 14 이상 | `Passport-…-mac-arm64.dmg` | [최신 릴리즈](https://github.com/poyal/passport/releases/latest)                   |
+| Mac · Apple Silicon(M 시리즈), macOS 14 이상 | `Passport-…-mac-arm64.dmg` | [Mac 최신 1.2.2](https://github.com/poyal/passport/releases/tag/v1.2.2)                   |
 | Windows 11 · Intel / AMD(x64)                | `Passport-…-win-x64.exe`   | [최신 릴리즈](https://github.com/poyal/passport/releases/latest)                   |
 
-Mac·Windows x64 설치 파일을 최신 릴리즈에서 받을 수 있습니다. Intel Mac은 지원하지 않습니다. [플랫폼별 배포 상태와 변경 사항](docs/releases/README.md).
+Windows 최신 버전은 **1.2.3**, Mac 최신 버전은 **1.2.2**입니다. 이번 최신 릴리즈에는 Windows 설치 파일만 있으므로 Mac은 위의 1.2.2 링크를 사용하세요. Intel Mac은 지원하지 않습니다. [플랫폼별 배포 상태와 변경 사항](docs/releases/README.md).
 
 ### Mac
 
@@ -55,7 +55,7 @@ Mac·Windows x64 설치 파일을 최신 릴리즈에서 받을 수 있습니다
 
 ### Mac에서 개발자를 확인할 수 없다고 나올 때
 
-1. [공식 GitHub 릴리즈](https://github.com/poyal/passport/releases/latest)에서 받은 Passport인지 확인합니다.
+1. [공식 Mac 릴리즈](https://github.com/poyal/passport/releases/tag/v1.2.2)에서 받은 Passport인지 확인합니다.
 2. **응용 프로그램** 폴더의 Passport를 한 번 실행해 경고를 확인하고 닫습니다.
 3. **시스템 설정 → 개인정보 보호 및 보안**을 열고 **보안** 영역까지 아래로 스크롤합니다.
 4. Passport 실행이 차단되었다는 안내 옆의 **그래도 열기**를 누릅니다. 요청되면 Mac 로그인 암호 또는 Touch ID로 인증합니다.

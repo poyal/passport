@@ -4,6 +4,12 @@
 
 기본 배포 경로는 **대상 PC에서 로컬 검증 → 검증한 설치 파일 게시**다. 아래 과거 Actions 실행 기록과 인계 명령은 당시의 검증 출처이며, 새 배포 요청에서 원격 검증을 자동으로 반복하라는 지시가 아니다. 로컬 창 표시·포커스 제한을 이유로 원격 전체 검증으로 자동 전환하지 않는다. 숨김 검증과 별도 데스크톱 검증의 실행 조건은 그대로 지킨다.
 
+## 1.2.3 Windows 로컬 배포 완료 — 2026-10-12
+
+로컬 Windows x64에서 `b677240` 소스를 정식 검증하고 [Windows 1.2.3 EXE](https://github.com/poyal/passport/releases/download/v1.2.3/Passport-1.2.3-win-x64.exe)와 체크섬만 [공개 게시](https://github.com/poyal/passport/releases/tag/v1.2.3)했다. 사용자 승인으로 이 PC에서 실제 데스크톱 검사를 수행했으며 원격 Actions는 실행하지 않았다. Mac 빌드·검증·업로드는 수행하지 않았고 Mac 최신 공개판 1.2.2와 기존 릴리즈 자산을 보존했다. [출처·파일 해시·검증 요약](benchmarks/github-release-windows-v1.2.3.json).
+
+검증 소스와 최종 EXE의 숨김 GUI는 각각 77개, 실제 데스크톱 검사는 각각 4개를 통과했다. 게시 전에 소스·태그·증거·설치본 해시를 재확인했으며 게시 단계에서 재빌드하지 않았다. 인증 없는 공개 EXE 다운로드·체크섬도 일치한다. 사용자 설치본 교체와 Mac 후속 배포는 별도다.
+
 ## 1.2.2 Windows 후속 배포 완료 — 2026-10-12
 
 같은 `v1.2.2` 소스(`e399c2b`)의 Windows x64를 [격리된 Windows 검증](https://github.com/poyal/passport/actions/runs/38241471604)에서 정식 검증하고 원본 설치본·보고서를 이 PC에서 재확인한 뒤 재빌드 없이 게시했다. 소스·최종 EXE 숨김 GUI는 각각 74개·74개 통과, 허용 생략은 각각 4개·4개다. 데스크톱 검사는 각각 4개·4개 통과했다. 공개 EXE 다운로드 해시·합본 체크섬이 일치하고 기존 Mac DMG·태그와 직전 1.2.1 자산을 보존했다. 이 PC에서는 데스크톱 검사를 실행하지 않았다. [Windows 게시·검증 요약](benchmarks/github-release-windows-v1.2.2.json)와 [완료된 Windows 인계](windows-paste-release.md)를 따른다.
