@@ -31,9 +31,9 @@
 | 컴퓨터                                       | 선택할 파일                | 다운로드 안내                                                                      |
 | -------------------------------------------- | -------------------------- | ---------------------------------------------------------------------------------- |
 | Mac · Apple Silicon(M 시리즈), macOS 14 이상 | `Passport-…-mac-arm64.dmg` | [최신 릴리즈](https://github.com/poyal/passport/releases/latest)                   |
-| Windows 11 · Intel / AMD(x64)                | `Passport-…-win-x64.exe`   | [Windows 1.2.1 릴리즈](https://github.com/poyal/passport/releases/tag/v1.2.1) |
+| Windows 11 · Intel / AMD(x64)                | `Passport-…-win-x64.exe`   | [최신 릴리즈](https://github.com/poyal/passport/releases/latest)                   |
 
-현재 Mac 최신 버전은 **1.2.2**, Windows 최신 버전은 **1.2.1**입니다. Windows 설치 파일은 위의 1.2.1 링크에서 받으세요. Intel Mac은 지원하지 않습니다. [플랫폼별 배포 상태와 변경 사항](docs/releases/README.md).
+Mac·Windows x64 설치 파일을 최신 릴리즈에서 받을 수 있습니다. Intel Mac은 지원하지 않습니다. [플랫폼별 배포 상태와 변경 사항](docs/releases/README.md).
 
 ### Mac
 
@@ -69,7 +69,7 @@
 
 ### Windows에서 PC 보호·신뢰할 수 없음 경고가 나올 때
 
-1. [공식 Windows 릴리즈](https://github.com/poyal/passport/releases/tag/v1.2.1)에서 받은 `Passport-…-win-x64.exe`인지 확인합니다.
+1. [최신 공식 릴리즈](https://github.com/poyal/passport/releases/latest)에서 받은 `Passport-…-win-x64.exe`인지 확인합니다.
 2. 설치 파일을 실행할 때 **Windows의 PC 보호** 또는 인식할 수 없는 앱이라는 SmartScreen 경고가 표시되면 **추가 정보**를 누릅니다.
 3. 앱 이름이 다운로드한 Passport 설치 파일인지 확인한 뒤 **실행**을 선택합니다. 영문 Windows에서는 **More info → Run anyway**입니다. 서명이 없어 게시자는 **알 수 없는 게시자**로 표시될 수 있습니다.
 4. 설치를 마친 뒤 시작 메뉴에서 **Passport**를 실행합니다.

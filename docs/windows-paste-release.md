@@ -1,16 +1,20 @@
 # Windows 붙여넣기 검증 및 릴리즈 인계
 
-## 1.2.2 Windows 후속 검증·배포 대기 — 2026-10-12
+## 1.2.2 Windows 배포 완료 — 2026-10-12
 
-이번 요청에서는 Mac ARM64만 1.2.2로 게시했다. Windows의 최신 공개 설치 파일은 [1.2.1 EXE](https://github.com/poyal/passport/releases/tag/v1.2.1)이며 이번 변경의 Windows 실기 검증은 수행하지 않았다. 다음 Windows 배포는 Mac과 같은 `v1.2.2` 소스 `e399c2bcbf85dcedc69aa5eebddbfbe82200752c`를 사용한다. 기존 Mac DMG·태그를 보존하며 별도 검증을 통과한 EXE만 추가한다.
+Mac과 같은 `v1.2.2` 소스 `e399c2bcbf85dcedc69aa5eebddbfbe82200752c`로 Windows x64 EXE를 [공개 배포](https://github.com/poyal/passport/releases/tag/v1.2.2)했다. [격리된 Windows 검증](https://github.com/poyal/passport/actions/runs/38241471604)에서 만든 원본 설치본과 보고서를 내려받아 게시 도구로 재검사하고 재빌드 없이 게시했다. 기존 Mac DMG·태그와 직전 1.2.1 자산은 보존했다. [Windows 게시·검증 요약](benchmarks/github-release-windows-v1.2.2.json).
 
-후속 배포를 진행할 때 격리된 Windows runner에서 다음 명령으로 정식 검증한다. 이 명령은 이번 Mac 배포에서는 실행하지 않았다.
+소스·최종 EXE 숨김 GUI는 각각 74개·74개 통과, 허용 생략은 각각 4개·4개다. 데스크톱 검사는 각각 4개·4개 통과했다. 파일 드롭·대상 패널 호버, 자기 패널 드롭 거절, 붙여넣기와의 입력 순서, 연결 변경 시 폐기, Shift+Enter 변경·해제·초기화와 기존 네 가지 셸·클립보드·DPAPI·NSIS 설치 범위를 확인했다. 탐색기의 물리 파일·폴더 드래그, 실제 CLI의 파일 해석·줄바꿈, 사용자 계정 설치·제거·업그레이드, 물리 IME·OS 알림·외부 AI 서비스는 별도 확인 대상이다. Windows 설치본은 코드 서명이 없다.
+
+이번 실행은 [운영 가이드의 격리된 runner 절차](local-release-guide.md#actions-운영)를 사용했다.
 
 ```powershell
 gh workflow run desktop.yml --repo poyal/passport --ref v1.2.2 -f target=win-x64
 ```
 
-파일·폴더 드롭과 패널별 호버, 자기 패널 드롭 거절, 붙여넣기와의 입력 순서, 연결 변경 시 폐기, Shift+Enter 변경·해제·초기화를 확인한다. 네 가지 셸의 경로 인용과 기존 클립보드·IME·창 이동 회귀도 유지한다. 탐색기의 실제 파일·폴더 드래그와 CLI의 줄바꿈·파일 해석은 주입 GUI 검사와 구분해 기록한다. 정식 결과의 `release/builds/`·`release/checks/`를 같은 소스 체크아웃에 상대 경로 그대로 보관하고 아래 공통 게시 절차를 따른다.
+검증 결과의 `release/builds/<실행 ID>/`와 `release/checks/<실행 ID>/`를 상대 경로 그대로 같은 태그의 깨끗한 체크아웃에 내려받았다. `release:publish`의 게시 계획을 확인한 뒤 `--execute`로 게시했으며, 인증 없는 공개 EXE 다운로드 해시와 합본 체크섬도 일치했다. README의 Windows 1.2.1 고정 링크와 GitHub 릴리즈 본문을 갱신했다. 검증 소스·태그는 유지하고 게시 문서는 별도 커밋으로 기록한다.
+
+이 PC에서는 창·포커스를 사용하는 검사와 사용자 설치본·DB 변경을 하지 않았다. 이후 제품 수정은 동일 소스 계약에 맞는 새 버전으로 진행한다.
 
 ## 1.2.1 Windows 배포 완료 — 2026-10-08
 

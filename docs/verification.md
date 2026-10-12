@@ -1,5 +1,27 @@
 # Passport 검증 기록
 
+## 1.2.2 Windows 공개 배포 완료 — 2026-10-12
+
+Mac과 같은 `v1.2.2` 소스 `e399c2bcbf85dcedc69aa5eebddbfbe82200752c`를 [격리된 Windows 검증](https://github.com/poyal/passport/actions/runs/38241471604)에서 검증하고 [Windows EXE](https://github.com/poyal/passport/releases/download/v1.2.2/Passport-1.2.2-win-x64.exe)를 추가했다. 원본 보고서·증거 파일·설치본 해시를 게시 도구로 재검사했으며 재빌드 없이 업로드했다. 인증 없는 공개 다운로드의 바이트 수·SHA-256과 합본 체크섬도 일치한다. 기존 Mac DMG의 자산 ID·크기·해시·갱신 시각과 직전 1.2.1의 모든 자산은 그대로다.
+
+| 검사 | 결과 |
+| --- | --- |
+| 타입·단위/통합·FTP/FTPS | 180 통과·7 허용 생략 |
+| 배포 정책·회귀 | 72 통과·1 생략 |
+| 소스 / 최종 EXE 숨김 GUI | 74 / 74 통과, 각각 4 / 4 허용 생략 |
+| 소스 / 최종 EXE 데스크톱 | 4 / 4 통과, 격리된 원격 Windows에서 실행 |
+| NSIS 현재 사용자 설치 범위·추출 페이로드·실제 PTY·helper·정상 종료 | 통과 |
+| 네 가지 Windows 셸·DPAPI 저장과 재시작 | 통과 |
+| 공개 EXE 다운로드 해시·합본 체크섬 | 일치 |
+
+필수 검사에 실패·재시도·flaky는 없다. 소스/패키지 숨김 GUI의 launch·exit·종료 감사는 각각 30회·30회, 창은 36개·36개, 재사용은 28개·28개다. **표시·네이티브 포커스는 모두 0회**이며 네이티브 프로세스 종료 감사도 통과했다. 파일 드롭·줄바꿈 GUI와 실제 탐색기·CLI 조작 검증을 구분한다. 탐색기의 물리 파일·폴더 드래그, 실제 CLI의 파일 해석·줄바꿈, 사용자 계정 설치·제거·업그레이드, 물리 IME·OS 알림·외부 AI 서비스는 별도 확인 대상이다. Windows 설치본은 코드 서명이 없다.
+
+공개 EXE는 **203,965,700바이트**, SHA-256은 `c1892c6a5dc79bf74a93a840e4686fe2fdf4e17f93d38d2bd61e8cb5cddbf7b8`다. 설치본은 `release/builds/20261012T111619Z-e399c2b-win-x64-local-release/`, 원본 검사는 같은 ID의 `release/checks/`, 게시본은 `release/packages/v1.2.2/local/win-x64/`에 보관한다. 게시·공개 다운로드 증거는 `release/checks/20261012T111542Z-e399c2b-win-x64-v1.2.2-publication/`에 있다. 원격 자료는 같은 소스 체크아웃에서 검증·게시한 뒤 원래 상대 경로로 옮기고 모든 증거·설치본 해시를 다시 확인했다.
+
+최신·직전 Windows 공개 설치본 1.2.2·1.2.1과 최근 검증 빌드 2개, 연결된 원본 증거를 보존한다. 더 오래된 성공 빌드와 1.2.0 이하 로컬 설치 파일은 실행 중·KEEP·미해결 재현·복구 예외를 제외한 정리 후보로만 기록했다. 기존 산출물 삭제, 이 PC의 데스크톱 검사, 사용자 설치본·DB 교체는 하지 않았다.
+
+README·배포·인계·릴리즈 본문을 실제 공개 상태로 맞췄으며 문서만 확인하고 전체 빌드·E2E를 반복하지 않았다. `v1.2.2` 태그는 유지하고 게시 결과 문서는 별도 커밋으로 푸시한다. [Windows 게시·검증 요약](benchmarks/github-release-windows-v1.2.2.json).
+
 ## 1.2.2 Mac 공개 배포 완료 — 2026-10-12
 
 사용자가 최신 파일 드롭 수정본의 테스트 완료를 알리고 Mac만 새 버전으로 게시하도록 요청했다. 앱·잠금 파일을 1.2.2로 올린 소스 `e399c2bcbf85dcedc69aa5eebddbfbe82200752c`를 `v1.2.2`로 고정하고 [Mac 릴리즈](https://github.com/poyal/passport/releases/tag/v1.2.2)를 공개했다. [격리된 Mac 검증](https://github.com/poyal/passport/actions/runs/38220956330)에서 만든 원본 DMG·보고서·증거 해시를 게시 도구로 재검사하고 재빌드 없이 업로드했다. 인증 없는 공개 다운로드의 바이트 수·SHA-256과 체크섬도 일치한다. 기존 1.2.1 Mac·Windows 자산의 ID·크기·해시·갱신 시각은 그대로다.
