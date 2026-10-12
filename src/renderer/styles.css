@@ -827,6 +827,55 @@ summary {
   height: 5px;
   margin: 0 5px;
 }
+.terminal-body {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+.terminal-pane.file-drop-target {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+.terminal-pane.file-drop-blocked {
+  border-color: var(--danger);
+  box-shadow: inset 0 0 0 2px var(--danger);
+}
+.file-drop-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 20px;
+  text-align: center;
+  pointer-events: none;
+  color: var(--text);
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  border: 2px solid var(--accent);
+  border-radius: 0 0 6px 6px;
+}
+.file-drop-overlay > svg {
+  color: var(--accent);
+}
+.file-drop-overlay > span {
+  color: var(--muted);
+  font-size: 12px;
+}
+.file-drop-name {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.file-drop-blocked .file-drop-overlay {
+  border-color: var(--danger);
+}
+.file-drop-blocked .file-drop-overlay > svg {
+  color: var(--danger);
+}
 .terminal-mount {
   flex: 1;
   min-height: 0;

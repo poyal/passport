@@ -59,6 +59,8 @@ import { LocalSessions, availableShells } from "./local";
 import { ActivityService } from "./activity";
 import { ActivityBanners } from "./activity-banners";
 import { prepareTerminalClipboard } from "./terminal-clipboard";
+import { prepareTerminalDrop } from "./terminal-drop";
+import { sshFileDropMessage } from "../shared/paste";
 import { terminalLinkURL } from "./terminal-links";
 import { platform } from "./platform";
 import { prepareLaunch, previewEnvironment } from "./startup";
@@ -387,6 +389,11 @@ const schemas: Record<Call, z.ZodType> = {
   ]),
   "terminal.folder": z.undefined(),
   "terminal.link": z.object({ id: idSchema, url: z.string().max(8192) }),
+  "terminal.drop": z.object({
+    id: idSchema,
+    paths: z.array(z.string().min(1).max(32768)).min(1).max(1000),
+    sessionInstanceId: idSchema,
+  }),
   "terminal.preview": z.object({
     local: localShellSchema,
     workspaceId: idSchema.optional(),
@@ -477,6 +484,7 @@ const schemas: Record<Call, z.ZodType> = {
     id: idSchema,
     data: z.string().max(262144),
     binary: z.boolean().optional(),
+    sessionInstanceId: idSchema.optional(),
   }),
   "session.resize": z.object({
     id: idSchema,
@@ -893,6 +901,14 @@ async function call<K extends Call>(
       closeSession(i.id);
       return;
     case "session.input":
+      if (
+        i.sessionInstanceId &&
+        (!locals.sessions.get(i.id)?.alive ||
+          moves.has(workspaceFor(i.id)?.id || "") ||
+          locals.sessions.get(i.id)?.launch?.snapshot.sessionInstanceId !==
+            i.sessionInstanceId)
+      )
+        throw new Error("파일 드롭 대상 터미널 연결이 변경되었습니다.");
       if (locals.sessions.has(i.id)) locals.input(i.id, i.data);
       else sessions.input(i.id, i.data, i.binary);
       return;
@@ -966,6 +982,42 @@ async function call<K extends Call>(
     }
     case "clipboard.read":
       return clipboard.readText();
+    case "terminal.drop": {
+      assertOwned(i.id, caller);
+      const local = locals.sessions.get(i.id);
+      if (!local) {
+        if (
+          sessions.sessions.has(i.id) ||
+          store
+            .read()
+            .workspaces.flatMap((w) => panes(w.root))
+            .some((p) => p.id === i.id && !p.local)
+        )
+          throw new Error(sshFileDropMessage);
+        throw new Error("로컬 터미널에 연결한 뒤 파일·폴더를 드롭하세요.");
+      }
+      const snapshot = local.launch?.snapshot;
+      const check = () => {
+        assertOwned(i.id, caller);
+        if (
+          !snapshot ||
+          snapshot.sessionInstanceId !== i.sessionInstanceId ||
+          moves.has(workspaceFor(i.id)?.id || "") ||
+          !local.alive ||
+          locals.sessions.get(i.id) !== local ||
+          states.get(i.id)?.status !== "connected"
+        )
+          throw new Error("파일 드롭 대상 터미널 연결이 변경되었습니다.");
+      };
+      check();
+      const text = await prepareTerminalDrop({
+        paths: i.paths,
+        platform: process.platform,
+        shell: snapshot!.shell,
+        check,
+      });
+      return { text, sessionInstanceId: snapshot!.sessionInstanceId };
+    }
     case "clipboard.terminal": {
       assertOwned(i.id, caller);
       const local = locals.sessions.get(i.id);

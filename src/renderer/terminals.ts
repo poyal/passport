@@ -23,6 +23,9 @@ type Entry = {
   resize?: ResizeObserver;
   connected: boolean;
   connectionRevision: number;
+  sessionInstanceId?: string;
+  pasteSessionInstanceId?: string;
+  pasteQueue: PasteQueue;
   serialize: SerializeAddon;
   appearance?: Appearance;
   appearanceKey?: string;
@@ -32,6 +35,7 @@ type Entry = {
   composing: boolean;
   pasting?: boolean;
   hydrating?: boolean;
+  transferring?: boolean;
 };
 export const terminals = new Map<string, Entry>();
 let settings: PassportDocument["settings"] | undefined;
@@ -57,7 +61,11 @@ export function setTerminalSettings(
 export function configurePane(id: string, backspace: "DEL" | "BS") {
   ensureTerminal(id).backspace = backspace;
 }
-let pasteHandler: (text: string, ids: string[]) => void = () => {};
+let pasteHandler: (
+  text: string,
+  ids: string[],
+  sessionInstanceId?: string,
+) => void = () => {};
 let errorHandler: (error: unknown) => void = () => {};
 export function configureTerminals(
   paste: typeof pasteHandler,
@@ -102,6 +110,7 @@ export function ensureTerminal(id: string) {
     element,
     connected: false,
     connectionRevision: 0,
+    pasteQueue: new PasteQueue(),
     backspace: "DEL",
     composing: false,
   };
@@ -145,7 +154,14 @@ export function ensureTerminal(id: string) {
       void api
         .call("session.broadcast", { source: id, ids: broadcast, data })
         .catch(errorHandler);
-    else void api.call("session.input", { id, data }).catch(errorHandler);
+    else
+      void api
+        .call("session.input", {
+          id,
+          data,
+          sessionInstanceId: entry.pasteSessionInstanceId,
+        })
+        .catch(errorHandler);
   });
   term.onBinary((data) => {
     if (entry.connected && !entry.hydrating)
@@ -156,11 +172,10 @@ export function ensureTerminal(id: string) {
   term.onResize(({ cols, rows }) => {
     void api.call("session.resize", { id, cols, rows }).catch(errorHandler);
   });
-  const pasteQueue = new PasteQueue();
   const readPaste = () => {
     if (!entry.connected || entry.hydrating) return;
     const revision = entry.connectionRevision;
-    void pasteQueue.enqueue(
+    void entry.pasteQueue.enqueue(
       () => api.call("clipboard.terminal", { id }),
       () =>
         terminals.get(id) === entry &&
@@ -175,11 +190,26 @@ export function ensureTerminal(id: string) {
   };
   let suppressNativePaste = false;
   term.attachCustomKeyEventHandler((event) => {
-    if (!settings || !platform || event.isComposing) return true;
+    if (
+      !settings ||
+      !platform ||
+      event.isComposing ||
+      entry.composing ||
+      event.keyCode === 229
+    )
+      return true;
     const mac = platform === "darwin";
     const keys = settings.shortcuts[platform];
     const action = (
-      ["copy", "paste", "interrupt", "eof", "suspend", "cliImage"] as const
+      [
+        "copy",
+        "paste",
+        "interrupt",
+        "eof",
+        "suspend",
+        "cliImage",
+        "newline",
+      ] as const
     ).find((action) => shortcutMatch(event, keys[action], mac));
     if (action || managedTerminalKey(event, platform)) {
       event.preventDefault();
@@ -206,6 +236,7 @@ export function ensureTerminal(id: string) {
           eof: "\x04",
           suspend: "\x1a",
           cliImage: mac ? "\x16" : "\x1bv",
+          newline: "\x1b[13;2u",
         }[action];
         // Control actions and CLI image input belong to this pane, even during broadcast.
         void api.call("session.input", { id, data }).catch(errorHandler);
@@ -231,6 +262,48 @@ export function ensureTerminal(id: string) {
         .catch(errorHandler);
   });
   return entry;
+}
+
+export function dropTerminalFiles(id: string, files: File[]) {
+  const entry = terminals.get(id);
+  if (
+    !entry?.connected ||
+    entry.hydrating ||
+    entry.transferring ||
+    !entry.sessionInstanceId
+  ) {
+    errorHandler(new Error("로컬 터미널에 연결한 뒤 파일·폴더를 드롭하세요."));
+    return;
+  }
+  const revision = entry.connectionRevision;
+  const sessionInstanceId = entry.sessionInstanceId;
+  // Resolve the File objects synchronously in preload before the drop event ends.
+  const prepared = api.prepareTerminalDrop({ id, files, sessionInstanceId });
+  void entry.pasteQueue.enqueue(
+    () => prepared,
+    () =>
+      terminals.get(id) === entry &&
+      entry.connected &&
+      !entry.hydrating &&
+      !entry.transferring &&
+      entry.connectionRevision === revision &&
+      entry.sessionInstanceId === sessionInstanceId &&
+      entry.element.isConnected,
+    (value) => pasteHandler(value.text, [id], value.sessionInstanceId),
+    errorHandler,
+  );
+}
+export function setTerminalTransfer(ids: string[], active: boolean) {
+  for (const id of ids) {
+    const entry = terminals.get(id);
+    if (entry) {
+      entry.transferring = active;
+      entry.connectionRevision++;
+    }
+  }
+  window.dispatchEvent(
+    new CustomEvent("passport-terminal-transfer", { detail: { ids, active } }),
+  );
 }
 export function attachTerminal(
   id: string,

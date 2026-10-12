@@ -33,7 +33,12 @@ import { ActivityView } from "./Activity";
 import { Hosts } from "./Hosts";
 import { FilesView } from "./FilesView";
 import { WorkspaceTemplates } from "./WorkspaceTemplates";
-import { WorkspaceView, dragMime, dragGroupMime } from "./Workspaces";
+import {
+  WorkspaceView,
+  dragMime,
+  dragWorkspaceMime,
+  startLayoutDrag,
+} from "./Workspaces";
 import { Settings, SecretEditor, blankSecret } from "./Settings";
 import { IconButton, Modal, Tooltips } from "./components";
 import {
@@ -46,6 +51,7 @@ import {
   setBroadcast,
   setTerminalSettings,
   setTerminalFonts,
+  setTerminalTransfer,
 } from "./terminals";
 import {
   LOCAL_HOST_ID,
@@ -133,6 +139,21 @@ export function App() {
     return () => window.removeEventListener("unhandledrejection", rejection);
   }, [notify]);
   const selectionRestored = useRef(false);
+  useEffect(() => {
+    // Unhandled file drops must never navigate Electron to a local file.
+    // Terminal targets handle and stop their own events before this fallback.
+    const rejectFileDrop = (event: DragEvent) => {
+      if (!event.dataTransfer?.types.includes("Files")) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "none";
+    };
+    document.addEventListener("dragover", rejectFileDrop);
+    document.addEventListener("drop", rejectFileDrop);
+    return () => {
+      document.removeEventListener("dragover", rejectFileDrop);
+      document.removeEventListener("drop", rejectFileDrop);
+    };
+  }, []);
   const refresh = useCallback(async () => {
     const data = await api.call("bootstrap", undefined);
     if (updateRef.current) data.updateState = updateRef.current;
@@ -203,9 +224,13 @@ export function App() {
         );
         if (!known && !terminals.has(event.state.id)) return;
         const entry = ensureTerminal(event.state.id);
-        if (entry.connected !== (event.state.status === "connected"))
+        if (
+          entry.connected !== (event.state.status === "connected") ||
+          entry.sessionInstanceId !== event.state.environment?.sessionInstanceId
+        )
           entry.connectionRevision++;
         entry.connected = event.state.status === "connected";
+        entry.sessionInstanceId = event.state.environment?.sessionInstanceId;
         if (event.state.status === "error")
           notify(new Error(event.state.message || "서버 연결에 실패했습니다."));
         setStates((prev) => ({ ...prev, [event.state.id]: event.state }));
@@ -266,15 +291,16 @@ export function App() {
         const w = bootRef.current?.document.workspaces.find(
           (w) => w.id === event.workspaceId,
         );
-        if (w)
-          void serializeTerminals(
-            panes(w.root).map((p) => p.id),
-            sessionAppearance,
-          )
+        if (w) {
+          const ids = panes(w.root).map((p) => p.id);
+          setTerminalTransfer(ids, true);
+          void serializeTerminals(ids, sessionAppearance)
             .then((snapshots) =>
               api.call("window.snapshot", { token: event.token, snapshots }),
             )
-            .catch(notify);
+            .catch(notify)
+            .finally(() => setTerminalTransfer(ids, false));
+        }
       } else if (event.kind === "hydrate") {
         hydrateTerminals(event.snapshots);
         setSessionAppearance((p) => ({
@@ -443,28 +469,37 @@ export function App() {
       await connectPane(paneId, host.id);
     }
   };
-  const deliverPaste = (text: string, ids: string[]) => {
+  const deliverPaste = (
+    text: string,
+    ids: string[],
+    sessionInstanceId?: string,
+  ) => {
     const failures: string[] = [];
     for (const id of [...new Set(ids)]) {
       const entry = terminals.get(id);
       try {
         if (!entry?.connected) throw new Error("연결된 터미널이 없습니다.");
+        if (sessionInstanceId && entry.sessionInstanceId !== sessionInstanceId)
+          throw new Error("파일 드롭 대상 터미널 연결이 변경되었습니다.");
         const prepared = preparePaste(
           text,
           entry.term.modes.bracketedPasteMode,
         );
         entry.pasting = true;
+        entry.pasteSessionInstanceId = sessionInstanceId;
         try {
           entry.term.paste(prepared);
         } finally {
           entry.pasting = false;
+          entry.pasteSessionInstanceId = undefined;
         }
       } catch (error) {
         failures.push(message(error));
       }
     }
     if (failures.length) notify(new Error([...new Set(failures)].join("\n")));
-    if (ids.includes(activePane)) terminals.get(activePane)?.term.focus();
+    if (!sessionInstanceId && ids.includes(activePane))
+      terminals.get(activePane)?.term.focus();
   };
   const paste = (text: string, ids: string[]) => {
     const connected = [...new Set(ids)].filter(
@@ -880,18 +915,21 @@ export function App() {
                   key={w.id}
                   className={`app-tab workspace-tab ${active === w.id ? "active" : ""}`}
                   draggable
-                  onDragStart={(e) => {
-                    e.dataTransfer.setData(
-                      dragMime,
-                      JSON.stringify({ workspace: w.id, node: w.root.id }),
-                    );
-                    if (w.root.kind === "split")
-                      e.dataTransfer.setData(dragGroupMime, "1");
-                    e.dataTransfer.effectAllowed = "move";
-                  }}
+                  onDragStart={(e) =>
+                    startLayoutDrag(e.dataTransfer, w.id, w.root)
+                  }
                   onDragOver={(e) => {
                     if (e.dataTransfer.types.includes(dragMime)) {
+                      if (
+                        e.dataTransfer.types.includes(dragWorkspaceMime(w.id))
+                      ) {
+                        e.dataTransfer.dropEffect = "none";
+                        clearTimeout(tabHover.current);
+                        tabHover.current = undefined;
+                        return;
+                      }
                       e.preventDefault();
+                      e.dataTransfer.dropEffect = "move";
                       if (!tabHover.current)
                         tabHover.current = setTimeout(() => {
                           setActive(w.id);

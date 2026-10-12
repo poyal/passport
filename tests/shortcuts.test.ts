@@ -34,6 +34,65 @@ const event = (key: string, fields = {}) => ({
   ...fields,
 });
 describe("platform shortcut settings", () => {
+  it("adds newline to v1.2.1 OS maps without mutating or resetting custom bindings", async () => {
+    const old = structuredClone(defaultShortcuts) as any;
+    delete old.darwin.newline;
+    delete old.win32.newline;
+    old.darwin.copy = [];
+    old.win32.paste = ["Ctrl+Y"];
+    const before = structuredClone(old);
+    const parsed = shortcutSettingsSchema.parse(old);
+    expect(old).toEqual(before);
+    expect(parsed.darwin.newline).toEqual(["Shift+Enter"]);
+    expect(parsed.win32.newline).toEqual(["Shift+Enter"]);
+    expect(parsed.darwin.copy).toEqual([]);
+    expect(parsed.win32.paste).toEqual(["Ctrl+Y"]);
+    parsed.darwin.newline = [];
+    parsed.win32.newline = ["Ctrl+Enter"];
+    expect(shortcutSettingsSchema.parse(parsed)).toEqual(parsed);
+    const document = emptyDocument();
+    document.settings.shortcuts = old;
+    const backup = await decodePortable(
+      JSON.stringify({
+        format: "passport",
+        version: 2,
+        document,
+        profiles: [],
+      }),
+    );
+    expect(backup.document.settings.shortcuts.darwin.newline).toEqual([
+      "Shift+Enter",
+    ]);
+    delete old.darwin.copy;
+    expect(() => shortcutSettingsSchema.parse(old)).toThrow();
+  });
+  it("supports modified Enter and numpad Enter while protecting Enter and IME", () => {
+    for (const platform of ["darwin", "win32"] as const) {
+      const settings = structuredClone(defaultShortcuts);
+      for (const key of [
+        "Shift+Enter",
+        "Ctrl+Enter",
+        "Alt+Enter",
+        "Meta+Enter",
+      ])
+        expect(normalizeShortcut(key, platform)).toBe(key);
+      const enter = event("Enter", { code: "NumpadEnter", shiftKey: true });
+      expect(
+        shortcutMatch(enter, settings[platform].newline, platform === "darwin"),
+      ).toBe(true);
+      expect(shortcutFromEvent({ ...enter, keyCode: 229 })).toBeUndefined();
+      settings[platform].newline = [];
+      expect(ignoreShortcutMenu("terminal", enter, settings, platform)).toBe(
+        true,
+      );
+      expect(ignoreShortcutMenu("editing", enter, settings, platform)).toBe(
+        false,
+      );
+      expect(managedTerminalKey(event("Enter"), platform)).toBe(false);
+      settings[platform].newline = ["Ctrl+V"];
+      expect(() => validateShortcuts(settings)).toThrow("중복");
+    }
+  });
   it("uses independent valid defaults and copies without terminal interrupt on Windows", () => {
     const settings = emptyDocument().settings.shortcuts;
     expect(() => validateShortcuts(settings)).not.toThrow();

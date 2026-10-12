@@ -627,7 +627,12 @@ export interface Calls {
   };
   "session.close": { input: { id: string }; output: void };
   "session.input": {
-    input: { id: string; data: string; binary?: boolean };
+    input: {
+      id: string;
+      data: string;
+      binary?: boolean;
+      sessionInstanceId?: string;
+    };
     output: void;
   };
   "session.resize": {
@@ -691,6 +696,10 @@ export interface Calls {
     input: { id: string };
     output: import("./paste").TerminalClipboard;
   };
+  "terminal.drop": {
+    input: { id: string; paths: string[]; sessionInstanceId: string };
+    output: import("./paste").TerminalDrop;
+  };
   "clipboard.write": { input: { text: string }; output: void };
   "external.open": {
     input: { target: "github" | "issues" | "releases" | "email" };
@@ -699,6 +708,11 @@ export interface Calls {
 }
 export type Call = keyof Calls;
 export interface PassportAPI {
+  prepareTerminalDrop(input: {
+    id: string;
+    files: File[];
+    sessionInstanceId: string;
+  }): Promise<import("./paste").TerminalDrop>;
   call<K extends Call>(
     name: K,
     input: Calls[K]["input"],

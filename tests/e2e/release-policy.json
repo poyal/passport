@@ -89,6 +89,11 @@
       "title": "grouped tabs can reorder but cannot merge; their individual panels can still move"
     },
     {
+      "id": "layout-drag.self-drop",
+      "file": "layout-drag.spec.ts",
+      "title": "dragging a local tab or panel onto itself shows no split target and never saves"
+    },
+    {
       "id": "legacy.legacy-ssh-works-without-a-host-option-for-terminal-and-sftp-and",
       "file": "legacy.spec.ts",
       "title": "legacy SSH works without a host option for terminal and SFTP, and first-key confirmation can be disabled"
@@ -390,6 +395,36 @@
       "id": "updates.current-version-spacing",
       "file": "updates.spec.ts",
       "title": "an up-to-date result keeps its explanation separated from the status panel"
+    },
+    {
+      "id": "terminal-input.hover",
+      "file": "terminal-input.spec.ts",
+      "title": "file hover identifies one pane and rejects SSH without changing focus or layout"
+    },
+    {
+      "id": "terminal-input.file-paths",
+      "file": "terminal-input.spec.ts",
+      "title": "disk-backed file drops preserve text and paths and reject synthetic files"
+    },
+    {
+      "id": "terminal-input.reconnect",
+      "file": "terminal-input.spec.ts",
+      "title": "pending drops are discarded on reconnect and stale generations are rejected by main"
+    },
+    {
+      "id": "terminal-input.newline",
+      "file": "terminal-input.spec.ts",
+      "title": "newline sends Shift Enter once and preserves Enter, IME and disabled bindings"
+    },
+    {
+      "id": "terminal-input.newline-editor",
+      "file": "terminal-input.spec.ts",
+      "title": "newline editor records modified Enter and supports disable and reset"
+    },
+    {
+      "id": "terminal-input.order",
+      "file": "terminal-input.spec.ts",
+      "title": "file drops and clipboard paste retain gesture order"
     }
   ]
 }

@@ -1,5 +1,10 @@
 import type { ShellId } from "./terminal-config";
 
+export const sshFileDropMessage =
+  "SSH 터미널에서는 파일·폴더 드래그앤드롭을 지원하지 않습니다.";
+
+export type TerminalDrop = { text: string; sessionInstanceId: string };
+
 export type TerminalClipboard =
   | { kind: "empty" }
   | { kind: "text"; text: string }

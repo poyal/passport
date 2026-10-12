@@ -1,0 +1,229 @@
+{
+  "createdAt": "2026-10-12T07:45:29.701896+00:00",
+  "purpose": "File and folder drop parity with clipboard path paste",
+  "sourceCommit": "60c6a3c5214529d65f9689127b905e3e774fbc38",
+  "dirty": true,
+  "platform": "mac-arm64",
+  "source": "local",
+  "status": "preview-verified",
+  "version": "1.2.1",
+  "previousPreviewTarget": "20261012T070442Z-60c6a3c-dirty-mac-arm64-self-drop-preview/mac-arm64/Passport.app",
+  "changedFiles": [
+    "README.md",
+    "docs/architecture.md",
+    "docs/e2e.md",
+    "docs/local-ai-workspaces.md",
+    "docs/platform-development.md",
+    "docs/user-guide.md",
+    "docs/verification.md",
+    "src/main/index.ts",
+    "src/preload/index.ts",
+    "src/renderer/App.tsx",
+    "src/renderer/Workspaces.tsx",
+    "src/renderer/styles.css",
+    "src/renderer/terminals.ts",
+    "src/shared/model.ts",
+    "src/shared/paste.ts",
+    "src/shared/shortcuts.ts",
+    "tests/e2e/layout-drag.spec.ts",
+    "tests/e2e/release-policy.json",
+    "tests/release.test.mjs",
+    "tests/shortcuts.test.ts",
+    "docs/benchmarks/self-drop-preview-20261012.json",
+    "docs/benchmarks/terminal-input-20261012.json",
+    "docs/benchmarks/terminal-input-preview-20261012.json",
+    "src/main/terminal-drop.ts",
+    "tests/e2e/terminal-input.spec.ts",
+    "tests/terminal-drop.test.ts"
+  ],
+  "sourceSHA256": {
+    "README.md": "5a7c7f786bc94c588838103e103cd9665f7385bfb22efc449f81a3f487a14111",
+    "docs/architecture.md": "9fc32e4bb45cb600b96c0feac7a00a11b4b350d9c880c1cc5775dd15890bd8d0",
+    "docs/e2e.md": "15ee2a45c42edf7289f1ad7f481b2462333154f0d2bf828e5d7885f78697bc15",
+    "docs/local-ai-workspaces.md": "f72e0988fb01e27d3507420b4931b1860ea141644ef8912a2473a4e6f8dbc84f",
+    "docs/platform-development.md": "38ed5c65dab76e6e7812e031397c0641d0b9e1355656c13dc1518283416807c2",
+    "docs/user-guide.md": "66a3828e24f18983b8b827f5f4ec40595416275040eb9b0e1d1a91e9f7f22c7c",
+    "docs/verification.md": "59b620b7df1ce302bedfa23de5beddef604370014df05b7ad2dde16ea583f249",
+    "src/main/index.ts": "20791fd6073366eacafcb392292bd3fd3464a8e34c700f6053bea18dfa45efe4",
+    "src/preload/index.ts": "f05b1fb9a7b4fbd768bd06be602870ece5988999d82aac3de4a73ee87b6f0e20",
+    "src/renderer/App.tsx": "1c044f97a16f84a974ca94d61967ea1b26e0b9a1ad276a15eca718dc3d3bd9ce",
+    "src/renderer/Workspaces.tsx": "fe7009bb25b4e9affca39148f86ecd7ba65d22c1096eec94c28ba15acbf59e39",
+    "src/renderer/styles.css": "6494b8bd743b9adcc7e33b68c3e2ca6652a754a621fedd1c57a934600c36832d",
+    "src/renderer/terminals.ts": "bb100390edc535faef8863fcf65ef41eb664028a792eea72cf1ec0bcc5d211f9",
+    "src/shared/model.ts": "5c40118e5a30546d58712c0101dc76a01c5f680f702e87092b9f8832d8c07276",
+    "src/shared/paste.ts": "6371583f7f8a44c96f81ce94cdb0e1e80ae258336740692d74c5606fa141abd5",
+    "src/shared/shortcuts.ts": "838560c28f277d1d093d1fe1f897305da92f84b4e696d0792ae1e6901ec6085d",
+    "tests/e2e/layout-drag.spec.ts": "ec5a077ef12926778068b64201b293ff85fe841026c8fa13212c3cabc59b4c92",
+    "tests/e2e/release-policy.json": "fd9249f7b8a909ddcdbc31abe6ce7c3debd8e04af1c5ac677be8091ff70495a8",
+    "tests/release.test.mjs": "fe5e8e5252efb564f87beed54f5c77cd1fe2fe3cd5a8401191a491e59568f97d",
+    "tests/shortcuts.test.ts": "7c20c4db54da959bf8e27043cdaa70a2cdac26a42fe02fe20817ab3576eb10d6",
+    "docs/benchmarks/self-drop-preview-20261012.json": "10673de8cf21bdbc14bce5eb26972691ea3297a3d7d236c872bca1ea8483d714",
+    "docs/benchmarks/terminal-input-20261012.json": "f34b97ce1b23e126f56ebd427afa4e8437486176f82356f49c52ed36ced683d4",
+    "docs/benchmarks/terminal-input-preview-20261012.json": "831893e573888b7ef8861d9705dd8736de8ed0505618cc1d759ba47a583fdf1a",
+    "src/main/terminal-drop.ts": "64c2dc8e5a8a19eb5e23bd8aa56e642e56f704d891fd9ff711ff690ca33b938a",
+    "tests/e2e/terminal-input.spec.ts": "767cb38f45017472e8c88d6a4cb946f3997e74ab1005bf420f5c06cbb2b0a10f",
+    "tests/terminal-drop.test.ts": "b927828bc6fb7cd7610bab2b1f6c2db137744c9b3bfbf0eec3c35d2752325cc3"
+  },
+  "finishedAt": "2026-10-12T07:50:52.345068+00:00",
+  "build": "release/builds/20261012T074529Z-60c6a3c-dirty-mac-arm64-file-drop-preview",
+  "checks": "release/checks/20261012T074529Z-60c6a3c-dirty-mac-arm64-file-drop-preview",
+  "app": "release/builds/20261012T074529Z-60c6a3c-dirty-mac-arm64-file-drop-preview/mac-arm64/Passport.app",
+  "previewLink": "release/builds/Passport.app",
+  "compilation": "passed",
+  "unit": {
+    "passed": 10,
+    "failed": 0,
+    "scope": [
+      "terminal-drop.test.ts",
+      "paste.test.ts"
+    ]
+  },
+  "releasePolicy": {
+    "passed": 73,
+    "failed": 0
+  },
+  "codesign": "deep/strict passed (ad-hoc)",
+  "packageIntegrity": {
+    "status": "passed",
+    "files": [
+      {
+        "file": "dist/main/index.cjs",
+        "sha256": "f2cba1a80c7c969618dd35f159f0d26f48e6ee2280582eb916b92fb36e4c3b45",
+        "packagedMatch": true
+      },
+      {
+        "file": "dist/preload/index.cjs",
+        "sha256": "f44becc8fb7af92ad9eeaa4ecb463f80c7e203870f562ff03bd8bdb3f8b3b482",
+        "packagedMatch": true
+      },
+      {
+        "file": "dist/renderer/index.html",
+        "sha256": "febbeb6bc967f544e1a1346dbc80523947167d4706e2ac86956cb84d63c430a0",
+        "packagedMatch": true
+      },
+      {
+        "file": "dist/renderer/assets/index-BhQT-xA-.js",
+        "sha256": "f12e84182877dcc69040922c76bc61996847b38d73529f8a4f2cf2b613b2db26",
+        "packagedMatch": true
+      },
+      {
+        "file": "dist/renderer/assets/index-CqFO5Hxa.css",
+        "sha256": "a2e9770694a547e28042661cf5caf62b4731ab205142a2fcc169e58a2fe1107b",
+        "packagedMatch": true
+      }
+    ],
+    "appArchive": {
+      "path": "release/builds/20261012T074529Z-60c6a3c-dirty-mac-arm64-file-drop-preview/mac-arm64/Passport.app/Contents/Resources/app.asar",
+      "bytes": 76094275,
+      "sha256": "a790ea002af8232a5f7962d7b07e3cec67fad81e5149cf3190150fbdd2e02449"
+    }
+  },
+  "packagedSmoke": {
+    "packagedSmoke": "passed",
+    "localPTY": "passed",
+    "bundledHelper": "passed",
+    "shutdown": "passed",
+    "exitCode": 0,
+    "appVersion": "1.2.1",
+    "arch": "arm64",
+    "platform": "darwin",
+    "hosts": 0,
+    "fonts": 247,
+    "version": 2,
+    "nodeAvailable": false
+  },
+  "gui": {
+    "source": {
+      "directory": "release/checks/20261012T074634Z-60c6a3c-dirty-mac-arm64-e2e-hidden",
+      "stats": {
+        "startTime": "2026-10-12T07:46:34.959Z",
+        "duration": 11753.764000000001,
+        "expected": 13,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "lifecycle": {
+        "launches": 3,
+        "windows": 3,
+        "exits": 3,
+        "reusedTests": 10,
+        "auditedShutdowns": 3,
+        "shown": 0,
+        "focused": 0
+      }
+    },
+    "packaged": {
+      "directory": "release/checks/20261012T074919Z-60c6a3c-dirty-mac-arm64-e2e-hidden",
+      "stats": {
+        "startTime": "2026-10-12T07:49:19.902Z",
+        "duration": 11185.922,
+        "expected": 13,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "lifecycle": {
+        "launches": 3,
+        "windows": 3,
+        "exits": 3,
+        "reusedTests": 10,
+        "auditedShutdowns": 3,
+        "shown": 0,
+        "focused": 0
+      }
+    }
+  },
+  "lifecycleTotal": {
+    "launches": 7,
+    "windows": 7,
+    "exits": 7,
+    "auditedShutdowns": 7,
+    "shown": 0,
+    "focused": 0
+  },
+  "coverage": [
+    "Disk-backed image, Markdown, PDF, ZIP, extensionless and empty-file drops",
+    "Folder path preparation through main IPC and clipboard-comparison unit tests",
+    "Existing draft, path order and no Enter preserved",
+    "SSH, stale generation and pathless synthetic File rejection",
+    "Self-drop cancellation and legitimate layout movement"
+  ],
+  "limitations": [
+    "Windows native execution pending",
+    "Physical Finder/Explorer folder drag not tested",
+    "Live CLI file interpretation not tested",
+    "No installed-app replacement, deletion or publication"
+  ],
+  "retention": {
+    "protected": [
+      "release/builds/20261012T074529Z-60c6a3c-dirty-mac-arm64-file-drop-preview",
+      "release/builds/20261012T070442Z-60c6a3c-dirty-mac-arm64-self-drop-preview (currently running; also previous successful preview)",
+      "Public installation artifacts and their linked evidence",
+      "KEEP-marked folders, unresolved reproduction evidence, toolchains and backups"
+    ],
+    "cleanupCandidates": [
+      "release/builds/20261012T065653Z-60c6a3c-dirty-mac-arm64-terminal-input-preview",
+      "release/builds/20261008T010536Z-ea2ffc0-dirty-mac-arm64-button-style-preview"
+    ],
+    "deleted": [],
+    "sizesKiB": {
+      "release/builds/20261012T074529Z-60c6a3c-dirty-mac-arm64-file-drop-preview": 412460,
+      "release/checks/20261012T074529Z-60c6a3c-dirty-mac-arm64-file-drop-preview": 52,
+      "release/checks/20261012T074634Z-60c6a3c-dirty-mac-arm64-e2e-hidden": 468,
+      "release/checks/20261012T074919Z-60c6a3c-dirty-mac-arm64-e2e-hidden": 464
+    }
+  },
+  "evidenceSHA256": {
+    "release/builds/20261012T074529Z-60c6a3c-dirty-mac-arm64-file-drop-preview/package.log": "643a6b9e771787e2d3520f78cd24ef2624f42b4a479bc12d08c7f03db8ab183f",
+    "release/checks/20261012T074529Z-60c6a3c-dirty-mac-arm64-file-drop-preview/build.log": "9a19bf6faccdcb1a4fb0a2fc7f80176af64f23af22b2e3953632ba0808e86be9",
+    "release/checks/20261012T074529Z-60c6a3c-dirty-mac-arm64-file-drop-preview/codesign.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "release/checks/20261012T074529Z-60c6a3c-dirty-mac-arm64-file-drop-preview/smoke.log": "a090f298c21b151ef30ecda5bc9eb24f6b9fa1caa16d19ef24df06cb59f349b6",
+    "release/checks/20261012T074529Z-60c6a3c-dirty-mac-arm64-file-drop-preview/smoke-lifecycle.jsonl": "ffdb313fbe024e3d6808224971c98768f477d8300b77df6c01c56464d9022211",
+    "release/checks/20261012T074529Z-60c6a3c-dirty-mac-arm64-file-drop-preview/package-integrity.json": "3b8dbd2fbcaafafbf98aae07602d1f8b2003ac014c320120c1f8de4ce26f284e",
+    "release/checks/20261012T074529Z-60c6a3c-dirty-mac-arm64-file-drop-preview/packaged-gui.log": "0354876ecd1fe2412fae7d80464975c49a74ade01484d6b6f57e92d7264884df",
+    "release/checks/20261012T074529Z-60c6a3c-dirty-mac-arm64-file-drop-preview/source-gui.log": "7f159d2d6c666ca8313515f457726ae73345a48a835bcd000e00c1827a21aee5",
+    "release/checks/20261012T074529Z-60c6a3c-dirty-mac-arm64-file-drop-preview/release-policy.log": "0b21d6f88d2374516f1b8de118fda9e56d64fd737744f0e9b10b592c6f8ff54e",
+    "release/checks/20261012T074529Z-60c6a3c-dirty-mac-arm64-file-drop-preview/unit.log": "fb15c5dd472677838edc2f66eaef6aa00a624360f75eaf7062546e573d81c782"
+  }
+}

@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from "electron";
+import { contextBridge, ipcRenderer, webUtils } from "electron";
 import type {
   AppEvent,
   Calls,
@@ -12,6 +12,7 @@ const names: Call[] = [
   "window.keyboardContext",
   "terminal.folder",
   "terminal.link",
+  "terminal.drop",
   "terminal.preview",
   "activity.list",
   "activity.read",
@@ -70,6 +71,16 @@ const names: Call[] = [
   "external.open",
 ];
 const api: PassportAPI = {
+  async prepareTerminalDrop({ id, files, sessionInstanceId }) {
+    if (!Array.isArray(files) || !files.length || files.length > 1000)
+      throw new Error("드롭할 파일·폴더는 1~1,000개를 선택하세요.");
+    const paths = files.map((file) => webUtils.getPathForFile(file));
+    if (paths.some((file) => !file))
+      throw new Error(
+        "실제 파일 경로가 없는 항목입니다. 파일로 저장한 뒤 드롭하세요.",
+      );
+    return api.call("terminal.drop", { id, paths, sessionInstanceId });
+  },
   async call<K extends Call>(
     name: K,
     input: Calls[K]["input"],

@@ -1,5 +1,11 @@
 import { reusableApp } from "../fixtures/reusable-app";
-import { test, expect, type Page } from "@playwright/test";
+import {
+  test,
+  expect,
+  type Page,
+  type Locator,
+  type JSHandle,
+} from "@playwright/test";
 import { randomUUID as id } from "node:crypto";
 import { type Workspace, type Layout, type Pane } from "../../src/shared/model";
 import { LOCAL_HOST_ID } from "../../src/shared/advanced";
@@ -82,6 +88,106 @@ for (const direction of ["horizontal", "vertical"] as const) {
     await page.getByRole("button", { name: "취소", exact: true }).click();
   });
 }
+
+test("dragging a local tab or panel onto itself shows no split target and never saves", async () => {
+  const { page } = suite;
+  const a = pane(),
+    b = pane();
+  const first = { id: id(), name: "First local", root: a };
+  const second = { id: id(), name: "Second local", root: b };
+  await save(page, [first, second]);
+  const firstTab = page
+    .locator(".workspace-tab")
+    .filter({ hasText: first.name });
+  const secondTab = page
+    .locator(".workspace-tab")
+    .filter({ hasText: second.name });
+  await firstTab.getByRole("button", { name: first.name, exact: true }).click();
+  const target = page.locator(`[data-pane-id="${a.id}"]`);
+  const rect = (await target.boundingBox())!;
+  const before = await page.evaluate(
+    async () => (await window.passport.call("bootstrap", undefined)).document,
+  );
+  const acceptsDrop = (
+    target: Locator,
+    transfer: JSHandle<DataTransfer>,
+    position: { clientX?: number; clientY?: number } = {},
+  ) =>
+    target.evaluate(
+      (element, { transfer, position }) => {
+        const event = new DragEvent("dragover", {
+          bubbles: true,
+          cancelable: true,
+          dataTransfer: transfer,
+          ...position,
+        });
+        element.dispatchEvent(event);
+        return event.defaultPrevented;
+      },
+      { transfer, position },
+    );
+  for (const source of [firstTab, target.locator(".pane-title")]) {
+    const drag = await page.evaluateHandle(() => new DataTransfer());
+    await source.dispatchEvent("dragstart", { dataTransfer: drag });
+    // Native dragover exposes format names but protects the payload until drop.
+    const hover = await page.evaluateHandle((drag) => {
+      const value = new DataTransfer();
+      for (const type of drag.types) value.setData(type, "");
+      return value;
+    }, drag);
+    expect(await acceptsDrop(firstTab, hover)).toBe(false);
+    for (const [x, y] of [
+      [12, rect.height / 2],
+      [rect.width - 12, rect.height / 2],
+      [rect.width / 2, 12],
+      [rect.width / 2, rect.height - 12],
+    ]) {
+      const position = { clientX: rect.x + x, clientY: rect.y + y };
+      expect(await acceptsDrop(target, hover, position)).toBe(false);
+      await expect(page.locator(".drop-zone")).toHaveCount(0);
+      // Even a forced drop bypassing the browser's gate must not save a no-op.
+      await target.dispatchEvent("drop", { ...position, dataTransfer: drag });
+      expect(
+        await page.evaluate(
+          async () =>
+            (await window.passport.call("bootstrap", undefined)).document,
+        ),
+      ).toEqual(before);
+      await expect(page.locator(".toast")).toHaveCount(0);
+    }
+    await source.dispatchEvent("dragend", { dataTransfer: drag });
+    await hover.dispose();
+    await drag.dispose();
+  }
+  // Another local tab remains a valid split source; cancellation clears its hint.
+  const drag = await page.evaluateHandle(() => new DataTransfer());
+  await secondTab.dispatchEvent("dragstart", { dataTransfer: drag });
+  const position = {
+    dataTransfer: drag,
+    clientX: rect.x + rect.width - 12,
+    clientY: rect.y + rect.height / 2,
+  };
+  expect(await acceptsDrop(target, drag, position)).toBe(true);
+  await expect(target.locator(".drop-zone.right")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".drop-zone")).toHaveCount(0);
+  await secondTab.dispatchEvent("dragstart", { dataTransfer: drag });
+  await target.dispatchEvent("dragover", position);
+  await target.dispatchEvent("drop", position);
+  await expect
+    .poll(async () => {
+      const { document } = await page.evaluate(() =>
+        window.passport.call("bootstrap", undefined),
+      );
+      return document.workspaces.map((w) => ({
+        id: w.id,
+        panes: panes(w.root).map((p) => p.id),
+      }));
+    })
+    .toEqual([{ id: first.id, panes: [a.id, b.id] }]);
+  await expect(page.locator(".drop-zone")).toHaveCount(0);
+  await drag.dispose();
+});
 
 test("grouped tabs can reorder but cannot merge; their individual panels can still move", async () => {
   const { application: app, page } = suite;

@@ -9,6 +9,7 @@ export const shortcutActions = {
   eof: { label: "EOF 전송", scope: "terminal" },
   suspend: { label: "일시 정지", scope: "terminal" },
   cliImage: { label: "CLI 이미지 입력", scope: "terminal" },
+  newline: { label: "줄바꿈", scope: "terminal" },
   zoomIn: { label: "터미널 글자 확대", scope: "terminal" },
   zoomOut: { label: "터미널 글자 축소", scope: "terminal" },
   zoomReset: { label: "터미널 글자 크기 복원", scope: "terminal" },
@@ -41,6 +42,7 @@ const defaults = (platform: ShortcutPlatform): ShortcutMap => {
     eof: ["Ctrl+D"],
     suspend: ["Ctrl+Z"],
     cliImage: [platform === "darwin" ? "Ctrl+V" : "Alt+V"],
+    newline: ["Shift+Enter"],
     zoomIn: [`${mod}+Equal`],
     zoomOut: [`${mod}+Minus`],
     zoomReset: [`${mod}+0`],
@@ -105,6 +107,7 @@ const namedKeys = new Set([
   "PageUp",
   "PageDown",
   "ContextMenu",
+  "Enter",
 ]);
 export function normalizeShortcut(
   binding: string,
@@ -131,6 +134,7 @@ export function normalizeShortcut(
       namedKeys.has(key)
     ) ||
     (!mods.some((mod) => mod !== "Shift") &&
+      !(key === "Enter" && mods.includes("Shift")) &&
       !/^F\d+$/.test(key) &&
       !["Delete", "ContextMenu"].includes(key))
   )
@@ -143,10 +147,11 @@ export type ShortcutEvent = Pick<
   KeyboardEvent,
   "key" | "ctrlKey" | "metaKey" | "altKey" | "shiftKey"
 > &
-  Partial<Pick<KeyboardEvent, "code" | "isComposing">>;
+  Partial<Pick<KeyboardEvent, "code" | "isComposing" | "keyCode">>;
 export function shortcutFromEvent(event: ShortcutEvent): string | undefined {
   if (
     event.isComposing ||
+    event.keyCode === 229 ||
     [
       "Control",
       "Meta",
@@ -270,7 +275,26 @@ const legacyDefaults = {
 export function migrateShortcuts(raw: unknown): unknown {
   if (raw === undefined) return structuredClone(defaultShortcuts);
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return raw;
-  if ("darwin" in raw || "win32" in raw) return raw;
+  if ("darwin" in raw || "win32" in raw) {
+    // v1.2.1 already stores separate OS maps. Add only the new action;
+    // malformed existing fields must still fail validation, not be reset.
+    const result = { ...raw } as Record<string, unknown>;
+    for (const platform of ["darwin", "win32"] as const) {
+      const lane = result[platform];
+      if (
+        lane &&
+        typeof lane === "object" &&
+        !Array.isArray(lane) &&
+        !Object.hasOwn(lane, "newline")
+      ) {
+        result[platform] = {
+          ...lane,
+          newline: [...defaultShortcuts[platform].newline],
+        };
+      }
+    }
+    return result;
+  }
   const legacy = raw as Record<string, unknown>;
   if (
     Object.entries(legacy).some(
@@ -367,6 +391,7 @@ export const shortcutSettingsSchema = z.preprocess(
 // former secondary defaults must stay suppressed after migration or removal.
 const nativeTerminalKeys: Record<ShortcutPlatform, readonly string[]> = {
   darwin: [
+    "Shift+Enter",
     "Ctrl+C",
     "Ctrl+D",
     "Ctrl+Z",
@@ -379,6 +404,7 @@ const nativeTerminalKeys: Record<ShortcutPlatform, readonly string[]> = {
     "Meta+0",
   ],
   win32: [
+    "Shift+Enter",
     "Ctrl+C",
     "Ctrl+D",
     "Ctrl+Z",

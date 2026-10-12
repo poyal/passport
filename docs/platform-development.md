@@ -98,6 +98,10 @@ flowchart TD
 
 기능당 키는 하나다. 저장 형식은 배열을 유지하며 공통 schema가 기존 문서·백업·가져오기·저장의 복수 배열을 첫 번째 키 하나로 정규화한다. 입력 객체를 변경하지 않으며 두 OS에 동일하게 적용한다. 기본값도 하나로 유지한다. xterm·Chromium·메뉴의 기본 동작 차단 목록은 편집 가능한 기본값과 분리한다. 이전 보조 키인 Windows Ctrl+Shift+V, ⌘/Ctrl+Shift+=, ContextMenu는 새로 지정하지 않으면 실행하지 않으며 변경·해제 후에도 기본 동작으로 새어 나가지 않아야 한다.
 
+줄바꿈은 두 OS 모두 기본 `Shift+Enter`이며, 설정·백업에 이 항목만 없으면 기본값을 추가하고 기존 사용자 지정·해제 값은 유지한다. 수정키가 있는 Enter를 기록할 수 있으나 일반 Enter는 단축키로 등록하지 않는다. xterm 핸들러에서 해당 패널에 CSI-u `ESC [ 13 ; 2 u`를 한 번 보내고, 변경·해제된 기본 Shift+Enter가 CR로 전송되지 않게 차단한다. IME 조합·229 이벤트·키 반복과 일반 편집 영역을 구분한다.
+
+파일·폴더 드롭은 Electron 공통 preload의 `webUtils.getPathForFile`과 기존 셸별 `quotePastePaths`를 사용한다. 파일 클립보드처럼 확장자·내용·크기를 제한하지 않고 경로만 전달한다. macOS 파일 URL 또는 Windows 탐색기 경로를 renderer가 직접 추측하지 않는다. 플랫폼 계약은 변경하지 않으며, 두 OS의 실제 파일 드롭·CLI 처리는 네이티브 검증이 필요하다.
+
 `window.keyboardContext` IPC는 현재 창의 `standard`·`editing`·`terminal`·`files`·`dialog`·`recording`만 받는다. 공통 메인 호출부는 `before-input-event`에서 해당 영역이 소유한 키의 네이티브 메뉴 처리를 차단해 renderer로 전달한다. 일반 입력칸과 관련 없는 메뉴 키는 기존 동작을 유지한다. 키 등록 중에는 메뉴 단축키 실행을 막고, 창 종료·탐색 시 문맥을 버린다. 실제 OS 키 선점·IME는 주입 검사와 구분한다.
 
 ## 3. 계약 명세

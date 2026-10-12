@@ -37,6 +37,8 @@ PASSPORT_E2E_EXECUTABLE="$PWD/release/builds/Passport.app/Contents/MacOS/Passpor
 
 여러 파일을 하나의 전역 앱으로 묶지 않는다. 현재 fixture는 전체 DB나 모든 메인 프로세스 singleton을 초기화하는 범용 장치가 아니다. 파일이 달라지면 새 임시 데이터 폴더와 새 앱을 사용한다. 각 파일을 단독 실행하거나 중간 사례만 골라도 그 파일의 `beforeAll`부터 시작한다.
 
+`layout-drag.spec.ts`의 자기 자신 드롭 회귀는 로컬 탭·패널 헤더에서 시작한다. 드래그 중 데이터 보호 상태처럼 payload를 비우고 MIME 목록만 유지해 호버·드롭 허용 여부를 검사하며, 강제 drop에서도 배치와 문서 revision이 그대로인지 확인한다. 합성 DataTransfer의 dropEffect 값으로 네이티브 커서를 검증했다고 표시하지 않는다. 다른 로컬 탭의 정상 분할과 취소 후 안내 제거도 함께 확인한다.
+
 ## 재사용 fixture의 계약
 
 구현은 [reusable-app.ts](../tests/fixtures/reusable-app.ts), 초기화 회귀는 [reuse.spec.ts](../tests/e2e/reuse.spec.ts)다.
@@ -55,6 +57,8 @@ test("opens the host screen", async () => {
 ```
 
 `shortcuts-settings.spec.ts`는 같은 앱을 재사용하며 단축키 편집·휠 스크롤·파일 조작을 확인한다. Windows 플랫폼을 bootstrap에 주입하는 입력 검사는 Windows 네이티브 검증이 아니다. 사례 소유 IPC 캡처 상태는 afterEach에서 제거하며 기존 passport:call 모의는 fixture가 복구한다. 키보드 문맥은 페이지 탐색 시 제품 코드가 초기화하고 포커스에 따라 다시 설정한다.
+
+`terminal-input.spec.ts`도 파일당 앱 1개를 재사용한다. 임시 문서·이미지 파일을 file input으로 선택해 실제 파일 경로를 가진 `File`을 `DataTransfer`에 담으며, 경로 해석·검증은 실제 preload와 메인을 거친다. 폴더는 별도의 메인 IPC 검사와 파일 클립보드 비교 단위 검사로 확인하며, 이를 물리 폴더 드래그 검증으로 표시하지 않는다. `session.input`만 캡처해 fixture 내용이 실제 셸에서 실행되지 않게 한다. 연결 변경 검사에서 보류한 드롭 응답은 afterEach에서 해제하고 원래 IPC handler·사례 전역 변수를 복구·제거한다. 다음 사례는 공통 초기화 계약과 원래 handler 동일성을 다시 확인한다. Finder·탐색기에서 시작한 물리 드래그나 CLI의 이미지 해석 완료를 이 검사로 대신하지 않는다.
 
 단축키 편집 검사는 기능당 한 키의 변경·해제·초기화와 제거된 보조 키의 기본 동작 차단을 확인한다. `ui-spacing.ts`는 제목·버튼의 실제 중심, 라벨·입력과 안내문의 거리, 키 표시의 중첩 테두리를 측정한다. `usability.spec.ts`의 전체 설정 탭은 다크·라이트와 세 창 크기로 검사하고, `shortcuts-settings.spec.ts`의 시작 화면·데이터가 있는 목록·대화상자는 기존 문서 초기화 계약을 사용한다. 스크린샷과 가로 넘침 검사만으로 간격 검사를 대신하지 않는다.
 

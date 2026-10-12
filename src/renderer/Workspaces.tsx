@@ -23,6 +23,8 @@ import {
   ChevronUp,
   ChevronDown,
   Save,
+  FilePlus2,
+  Ban,
 } from "lucide-react";
 import type {
   Appearance,
@@ -40,7 +42,8 @@ import {
 } from "../shared/layout";
 import { paneHost, effectiveHost } from "../shared/advanced";
 import { WorkspaceOperations, ExecuteCommand } from "./Advanced";
-import { configurePane } from "./terminals";
+import { configurePane, dropTerminalFiles } from "./terminals";
+import { sshFileDropMessage } from "../shared/paste";
 import { themes, getTheme } from "../shared/themes";
 import { useApp } from "./context";
 import { api, uuid } from "./api";
@@ -59,6 +62,21 @@ import {
 } from "./components";
 export const dragMime = "application/x-passport-layout";
 export const dragGroupMime = "application/x-passport-group";
+export const dragWorkspaceMime = (id: string) =>
+  `application/x-passport-workspace-${id}`;
+const dragNodeMime = (id: string) => `application/x-passport-node-${id}`;
+export function startLayoutDrag(
+  transfer: DataTransfer,
+  workspace: string,
+  node: Layout,
+) {
+  transfer.setData(dragMime, JSON.stringify({ workspace, node: node.id }));
+  // Payloads are unreadable during native dragover; types remain available.
+  transfer.setData(dragWorkspaceMime(workspace), "1");
+  transfer.setData(dragNodeMime(node.id), "1");
+  if (node.kind === "split") transfer.setData(dragGroupMime, "1");
+  transfer.effectAllowed = "move";
+}
 type Edge = "left" | "right" | "top" | "bottom";
 const minimum = (n: Layout): [number, number] => {
   if (n.kind === "pane") return [320, 180];
@@ -82,6 +100,9 @@ function Leaf({
   const app = useApp(),
     host = paneHost(app.document, pane, app.boot.profiles);
   const container = useRef<HTMLDivElement>(null);
+  const dropBody = useRef<HTMLDivElement>(null);
+  const [fileHover, setFileHover] = useState(false);
+  const [transferring, setTransferring] = useState(false);
   const [edge, setEdge] = useState<Edge | null>(null),
     [search, setSearch] = useState<string | null>(null),
     [searchResults, setSearchResults] = useState({
@@ -98,6 +119,76 @@ function Leaf({
     [moveTarget, setMoveTarget] = useState(""),
     [moveEdge, setMoveEdge] = useState<Edge>("right");
   const status = app.sessionStates[pane.id]?.status ?? "disconnected";
+  const dropError = !pane.local
+    ? sshFileDropMessage
+    : moving || transferring || terminals.get(pane.id)?.hydrating
+      ? "패널 이동을 마친 뒤 파일·폴더를 드롭하세요."
+      : status !== "connected"
+        ? "로컬 터미널에 연결한 뒤 파일·폴더를 드롭하세요."
+        : null;
+  const isFileDrag = (event: DragEvent) =>
+    !event.dataTransfer.types.includes(dragMime) &&
+    event.dataTransfer.types.includes("Files");
+  useEffect(() => {
+    const transfer = (event: Event) => {
+      const { ids, active } = (
+        event as CustomEvent<{ ids: string[]; active: boolean }>
+      ).detail;
+      if (ids.includes(pane.id)) {
+        setTransferring(active);
+        setFileHover(false);
+      }
+    };
+    window.addEventListener("passport-terminal-transfer", transfer);
+    return () =>
+      window.removeEventListener("passport-terminal-transfer", transfer);
+  }, [pane.id]);
+  useEffect(() => {
+    const clear = () => {
+      setFileHover(false);
+      setEdge(null);
+    };
+    const over = (event: globalThis.DragEvent) => {
+      if (
+        !(event.target instanceof Node) ||
+        !dropBody.current?.contains(event.target)
+      )
+        clear();
+    };
+    const leave = (event: globalThis.DragEvent) => {
+      if (event.relatedTarget instanceof Node) {
+        if (!dropBody.current?.contains(event.relatedTarget)) clear();
+        return;
+      }
+      // Native drags may omit relatedTarget when crossing xterm children.
+      const rect = dropBody.current?.getBoundingClientRect();
+      if (
+        !rect ||
+        event.clientX < rect.left ||
+        event.clientX >= rect.right ||
+        event.clientY < rect.top ||
+        event.clientY >= rect.bottom
+      )
+        clear();
+    };
+    const key = (event: KeyboardEvent) => {
+      if (event.key === "Escape") clear();
+    };
+    window.addEventListener("blur", clear);
+    window.addEventListener("dragend", clear, true);
+    window.addEventListener("drop", clear, true);
+    window.addEventListener("dragover", over, true);
+    window.addEventListener("dragleave", leave);
+    window.addEventListener("keydown", key, true);
+    return () => {
+      window.removeEventListener("blur", clear);
+      window.removeEventListener("dragend", clear, true);
+      window.removeEventListener("drop", clear, true);
+      window.removeEventListener("dragover", over, true);
+      window.removeEventListener("dragleave", leave);
+      window.removeEventListener("keydown", key, true);
+    };
+  }, []);
   useEffect(() => {
     const handler = (e: Event) => {
       if ((e as CustomEvent).detail === pane.id) setSearch("");
@@ -234,6 +325,7 @@ function Leaf({
         : "bottom";
   };
   const handleDrop = async (event: DragEvent) => {
+    if (!event.dataTransfer.types.includes(dragMime)) return;
     event.preventDefault();
     const side = dropEdge(event);
     setEdge(null);
@@ -242,6 +334,7 @@ function Leaf({
         workspace: string;
         node: string;
       };
+      if (source.node === pane.id) return;
       const sourceWorkspace = app.document.workspaces.find(
         (w) => w.id === source.workspace,
       );
@@ -316,13 +409,16 @@ function Leaf({
   };
   return (
     <section
-      className={`terminal-pane ${app.activePane === pane.id ? "focused" : ""} ${app.activities.some((a) => a.paneId === pane.id && a.kind === "permission" && !a.resolved && a.available) ? "needs-input" : ""}`}
+      className={`terminal-pane ${app.activePane === pane.id ? "focused" : ""} ${fileHover ? `file-drop-target ${dropError ? "file-drop-blocked" : ""}` : ""} ${app.activities.some((a) => a.paneId === pane.id && a.kind === "permission" && !a.resolved && a.available) ? "needs-input" : ""}`}
       data-pane-id={pane.id}
       onMouseDown={() => app.setActivePane(pane.id)}
       onFocusCapture={() => app.setActivePane(pane.id)}
       onDragOver={(e) => {
         if (e.dataTransfer.types.includes(dragMime)) {
-          if (e.dataTransfer.types.includes(dragGroupMime)) {
+          if (
+            e.dataTransfer.types.includes(dragGroupMime) ||
+            e.dataTransfer.types.includes(dragNodeMime(pane.id))
+          ) {
             e.dataTransfer.dropEffect = "none";
             setEdge(null);
             return;
@@ -342,10 +438,7 @@ function Leaf({
           className="pane-title"
           draggable
           onDragStart={(e) =>
-            e.dataTransfer.setData(
-              dragMime,
-              JSON.stringify({ workspace: workspace.id, node: pane.id }),
-            )
+            startLayoutDrag(e.dataTransfer, workspace.id, pane)
           }
         >
           <TerminalIcon size={14} />
@@ -578,45 +671,94 @@ function Leaf({
         />
       )}
       <div
-        className="terminal-mount"
-        ref={container}
-        style={{
-          background: getTheme(
-            appearance.theme,
-            app.document.settings.customThemes,
-          ).theme.background,
-        }}
-        onKeyDownCapture={(e) => {
-          const keys =
-            app.document.settings.shortcuts[
-              shortcutPlatform(app.boot.platform)
-            ];
-          const action = (["zoomIn", "zoomOut", "zoomReset"] as const).find(
-            (action) =>
-              shortcutMatch(
-                e.nativeEvent,
-                keys[action],
-                app.boot.platform === "darwin",
-              ),
-          );
-          if (!action) return;
+        className="terminal-body"
+        ref={dropBody}
+        onDragEnter={(e) => {
+          if (!isFileDrag(e)) return;
           e.preventDefault();
           e.stopPropagation();
-          app.setSessionAppearance(pane.id, {
-            ...app.sessionAppearance[pane.id],
-            fontSize:
-              action === "zoomReset"
-                ? 14
-                : Math.max(
-                    8,
-                    Math.min(
-                      36,
-                      appearance.fontSize + (action === "zoomOut" ? -1 : 1),
-                    ),
-                  ),
-          });
+          setEdge(null);
+          setFileHover(true);
         }}
-      />
+        onDragOver={(e) => {
+          if (!isFileDrag(e)) return;
+          e.preventDefault();
+          e.stopPropagation();
+          e.dataTransfer.dropEffect = dropError ? "none" : "copy";
+          setEdge(null);
+          setFileHover(true);
+        }}
+        onDrop={(e) => {
+          if (!isFileDrag(e)) return;
+          e.preventDefault();
+          e.stopPropagation();
+          setFileHover(false);
+          if (dropError) {
+            app.notify(dropError);
+            return;
+          }
+          app.setActivePane(pane.id);
+          terminals.get(pane.id)?.term.focus();
+          dropTerminalFiles(pane.id, Array.from(e.dataTransfer.files));
+        }}
+      >
+        <div
+          className="terminal-mount"
+          ref={container}
+          style={{
+            background: getTheme(
+              appearance.theme,
+              app.document.settings.customThemes,
+            ).theme.background,
+          }}
+          onKeyDownCapture={(e) => {
+            const keys =
+              app.document.settings.shortcuts[
+                shortcutPlatform(app.boot.platform)
+              ];
+            const action = (["zoomIn", "zoomOut", "zoomReset"] as const).find(
+              (action) =>
+                shortcutMatch(
+                  e.nativeEvent,
+                  keys[action],
+                  app.boot.platform === "darwin",
+                ),
+            );
+            if (!action) return;
+            e.preventDefault();
+            e.stopPropagation();
+            app.setSessionAppearance(pane.id, {
+              ...app.sessionAppearance[pane.id],
+              fontSize:
+                action === "zoomReset"
+                  ? 14
+                  : Math.max(
+                      8,
+                      Math.min(
+                        36,
+                        appearance.fontSize + (action === "zoomOut" ? -1 : 1),
+                      ),
+                    ),
+            });
+          }}
+        />
+        {fileHover && (
+          <div className="file-drop-overlay" role="status">
+            {dropError ? (
+              <Ban size={28} aria-hidden="true" />
+            ) : (
+              <FilePlus2 size={28} aria-hidden="true" />
+            )}
+            <strong>{dropError || "이 터미널에 파일·폴더 경로 추가"}</strong>
+            <span className="file-drop-name">
+              {workspace.name} · {host.name} ·{" "}
+              {panes(workspace.root).findIndex((p) => p.id === pane.id) + 1}번
+              패널
+            </span>
+            {!dropError && <span>놓은 뒤 직접 전송하세요</span>}
+          </div>
+        )}
+      </div>
       {status !== "connected" && (
         <div className="connection-banner">
           <span className={`dot ${status}`} />
