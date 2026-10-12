@@ -1,5 +1,17 @@
 # Windows 붙여넣기 검증 및 릴리즈 인계
 
+## 1.2.2 Windows 후속 검증·배포 대기 — 2026-10-12
+
+이번 요청에서는 Mac ARM64만 1.2.2로 게시했다. Windows의 최신 공개 설치 파일은 [1.2.1 EXE](https://github.com/poyal/passport/releases/tag/v1.2.1)이며 이번 변경의 Windows 실기 검증은 수행하지 않았다. 다음 Windows 배포는 Mac과 같은 `v1.2.2` 소스 `e399c2bcbf85dcedc69aa5eebddbfbe82200752c`를 사용한다. 기존 Mac DMG·태그를 보존하며 별도 검증을 통과한 EXE만 추가한다.
+
+후속 배포를 진행할 때 격리된 Windows runner에서 다음 명령으로 정식 검증한다. 이 명령은 이번 Mac 배포에서는 실행하지 않았다.
+
+```powershell
+gh workflow run desktop.yml --repo poyal/passport --ref v1.2.2 -f target=win-x64
+```
+
+파일·폴더 드롭과 패널별 호버, 자기 패널 드롭 거절, 붙여넣기와의 입력 순서, 연결 변경 시 폐기, Shift+Enter 변경·해제·초기화를 확인한다. 네 가지 셸의 경로 인용과 기존 클립보드·IME·창 이동 회귀도 유지한다. 탐색기의 실제 파일·폴더 드래그와 CLI의 줄바꿈·파일 해석은 주입 GUI 검사와 구분해 기록한다. 정식 결과의 `release/builds/`·`release/checks/`를 같은 소스 체크아웃에 상대 경로 그대로 보관하고 아래 공통 게시 절차를 따른다.
+
 ## 1.2.1 Windows 배포 완료 — 2026-10-08
 
 Mac과 같은 `v1.2.1` 소스(`7be5713`)로 Windows x64 EXE를 [공개 배포](https://github.com/poyal/passport/releases/tag/v1.2.1)했다. [격리된 Windows 검증](https://github.com/poyal/passport/actions/runs/37772353610)에서 만든 설치본과 원본 보고서를 Windows PC로 내려받아 게시 도구로 재검사하고 재빌드 없이 게시했다. 기존 Mac DMG·태그와 직전 1.2.0 자산은 보존했다. [Windows 게시·검증 요약](benchmarks/github-release-windows-v1.2.1.json).

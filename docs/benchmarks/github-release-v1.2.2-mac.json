@@ -1,0 +1,406 @@
+{
+  "createdAt": "2026-10-12T08:13:14.917995+00:00",
+  "status": "published-and-download-verified",
+  "version": "1.2.2",
+  "source": {
+    "commit": "e399c2bcbf85dcedc69aa5eebddbfbe82200752c",
+    "dirty": false,
+    "fingerprint": "bafc6bdeb1a86638ac767df5f7adcc3f905f39d70cdc16d3bfe2a55448b869f6"
+  },
+  "sourceTag": "v1.2.2",
+  "publication": {
+    "mode": "publish",
+    "tag": "v1.2.2",
+    "sourceCommit": "e399c2bcbf85dcedc69aa5eebddbfbe82200752c",
+    "sourceTag": "v1.2.2",
+    "releaseCommit": "e399c2bcbf85dcedc69aa5eebddbfbe82200752c",
+    "targets": [
+      "mac-arm64"
+    ],
+    "upload": [
+      "Passport-1.2.2-mac-arm64.dmg"
+    ],
+    "replace": [],
+    "preserve": [],
+    "updateChecksums": true,
+    "createDraft": true,
+    "publishDraft": true,
+    "status": "published-and-download-verified",
+    "url": "https://github.com/poyal/passport/releases/tag/v1.2.2",
+    "finishedAt": "2026-10-12T08:10:45.030Z"
+  },
+  "buildOrigin": {
+    "source": "GitHub Actions: Mac-only manual desktop verification",
+    "runId": 38220956330,
+    "url": "https://github.com/poyal/passport/actions/runs/38220956330"
+  },
+  "publicationHost": "macOS arm64; uploaded verified DMG without rebuilding; no local desktop checks",
+  "manualAcceptance": "User reported the latest file-drop preview tested before requesting the Mac-only 1.2.2 release. Individual physical IME/CLI/upgrade checks were not specified.",
+  "publicAssets": [
+    {
+      "id": 633118356,
+      "name": "Passport-1.2.2-mac-arm64.dmg",
+      "size": 170479631,
+      "digest": "sha256:5e5f9a11d852acec2951109b9c8b67a4c32f78d8dd15799750797282f39bb729",
+      "browser_download_url": "https://github.com/poyal/passport/releases/download/v1.2.2/Passport-1.2.2-mac-arm64.dmg"
+    },
+    {
+      "id": 633119503,
+      "name": "SHA256SUMS.txt",
+      "size": 95,
+      "digest": "sha256:32aad82fc1af2deaf041c2b67963bfcd42f6e45087d7cc554b61a00d142e2dc0",
+      "browser_download_url": "https://github.com/poyal/passport/releases/download/v1.2.2/SHA256SUMS.txt"
+    }
+  ],
+  "publicDownload": {
+    "checkedAt": "2026-10-12T08:12:18.515457+00:00",
+    "url": "https://github.com/poyal/passport/releases/download/v1.2.2/Passport-1.2.2-mac-arm64.dmg",
+    "bytes": 170479631,
+    "sha256": "5e5f9a11d852acec2951109b9c8b67a4c32f78d8dd15799750797282f39bb729",
+    "authenticated": false,
+    "status": "matched"
+  },
+  "previousReleaseUnchanged": true,
+  "previousRelease": "v1.2.1",
+  "windows": {
+    "publishedVersion": "1.2.1",
+    "newVersion": "1.2.2",
+    "status": "not run; pending native verification and EXE publication",
+    "sourceTag": "v1.2.2",
+    "handoff": "docs/windows-paste-release.md"
+  },
+  "verification": {
+    "receipt": "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/verification.json",
+    "environment": {
+      "platform": "darwin",
+      "arch": "arm64",
+      "os": "24.6.0",
+      "node": "v24.20.0",
+      "npm": "11.19.0",
+      "cargo": "cargo 1.99.0 (5f94df478 2026-08-27)",
+      "electron": "44.4.5"
+    },
+    "unit": {
+      "passed": 181,
+      "skipped": 6,
+      "skipReasons": [
+        "Windows-only: 4",
+        "Optional Docker: 1",
+        "Optional stress: 1"
+      ]
+    },
+    "releaseTests": {
+      "passed": 73
+    },
+    "checks": [
+      {
+        "name": "dependencies",
+        "status": "passed",
+        "startedAt": "2026-10-12T08:00:40.505Z",
+        "finishedAt": "2026-10-12T08:01:01.655Z"
+      },
+      {
+        "name": "ftp-fixtures",
+        "status": "passed",
+        "startedAt": "2026-10-12T08:01:01.656Z",
+        "finishedAt": "2026-10-12T08:01:06.598Z"
+      },
+      {
+        "name": "build",
+        "status": "passed",
+        "startedAt": "2026-10-12T08:01:06.600Z",
+        "finishedAt": "2026-10-12T08:01:20.470Z"
+      },
+      {
+        "name": "unit",
+        "status": "passed",
+        "startedAt": "2026-10-12T08:01:20.497Z",
+        "finishedAt": "2026-10-12T08:01:37.936Z"
+      },
+      {
+        "name": "release-tests",
+        "status": "passed",
+        "startedAt": "2026-10-12T08:01:37.938Z",
+        "finishedAt": "2026-10-12T08:01:47.174Z"
+      },
+      {
+        "name": "source-gui",
+        "status": "passed",
+        "startedAt": "2026-10-12T08:01:47.176Z",
+        "finishedAt": "2026-10-12T08:04:16.713Z",
+        "tests": {
+          "startTime": "2026-10-12T08:01:49.021Z",
+          "duration": 147666.977,
+          "expected": 69,
+          "skipped": 9,
+          "unexpected": 0,
+          "flaky": 0
+        },
+        "mode": "hidden",
+        "policyHash": "d4890532f20410089f4e6b602bc02db0a1a2d147afbacca0bb4eef8392f623ec",
+        "allowedSkips": [
+          {
+            "id": "docker-ssh.real-docker-ssh-and-sftp-through-the-desktop-application",
+            "reason": "optional feature not requested: docker"
+          },
+          {
+            "id": "stress.16-visible-terminals-process-100-kib-s-each-for-ten-minutes",
+            "reason": "optional feature not requested: stress"
+          },
+          {
+            "id": "throughput.large-terminal-text-remains-interactive-and-bounded-through-1-gib",
+            "reason": "optional feature not requested: throughput"
+          },
+          {
+            "id": "windows-credentials.windows-dpapi-protects-stored-credentials-and-reconnects-after-re",
+            "reason": "not applicable on darwin"
+          },
+          {
+            "id": "windows-files.windows-drive-root-remains-browsable-around-protected-system-file",
+            "reason": "not applicable on darwin"
+          },
+          {
+            "id": "windows-shells.windows-passport-bash-applies-a-startup-profile-and-accepts-termi",
+            "reason": "not applicable on darwin"
+          },
+          {
+            "id": "windows-shells.windows-cmd-applies-a-startup-profile-and-accepts-terminal-input",
+            "reason": "not applicable on darwin"
+          },
+          {
+            "id": "windows-shells.windows-windows-powershell-applies-a-startup-profile-and-accepts",
+            "reason": "not applicable on darwin"
+          },
+          {
+            "id": "windows-shells.windows-pwsh-applies-a-startup-profile-and-accepts-terminal-input",
+            "reason": "not applicable on darwin"
+          }
+        ]
+      },
+      {
+        "name": "source-desktop",
+        "status": "passed",
+        "startedAt": "2026-10-12T08:04:16.716Z",
+        "finishedAt": "2026-10-12T08:04:29.188Z",
+        "tests": {
+          "startTime": "2026-10-12T08:04:18.053Z",
+          "duration": 11119.448999999999,
+          "expected": 4,
+          "skipped": 0,
+          "unexpected": 0,
+          "flaky": 0
+        },
+        "mode": "desktop",
+        "policyHash": "d4890532f20410089f4e6b602bc02db0a1a2d147afbacca0bb4eef8392f623ec",
+        "allowedSkips": []
+      },
+      {
+        "name": "package",
+        "status": "passed",
+        "startedAt": "2026-10-12T08:04:29.190Z",
+        "finishedAt": "2026-10-12T08:05:15.289Z"
+      },
+      {
+        "name": "installer",
+        "status": "passed",
+        "startedAt": "2026-10-12T08:05:15.566Z",
+        "finishedAt": "2026-10-12T08:05:23.500Z"
+      },
+      {
+        "name": "packaged-smoke",
+        "status": "passed",
+        "startedAt": "2026-10-12T08:05:23.501Z",
+        "finishedAt": "2026-10-12T08:05:28.701Z"
+      },
+      {
+        "name": "packaged-gui",
+        "status": "passed",
+        "startedAt": "2026-10-12T08:05:28.703Z",
+        "finishedAt": "2026-10-12T08:07:35.412Z",
+        "tests": {
+          "startTime": "2026-10-12T08:05:29.912Z",
+          "duration": 125486.09400000001,
+          "expected": 69,
+          "skipped": 9,
+          "unexpected": 0,
+          "flaky": 0
+        },
+        "mode": "hidden",
+        "policyHash": "d4890532f20410089f4e6b602bc02db0a1a2d147afbacca0bb4eef8392f623ec",
+        "allowedSkips": [
+          {
+            "id": "docker-ssh.real-docker-ssh-and-sftp-through-the-desktop-application",
+            "reason": "optional feature not requested: docker"
+          },
+          {
+            "id": "stress.16-visible-terminals-process-100-kib-s-each-for-ten-minutes",
+            "reason": "optional feature not requested: stress"
+          },
+          {
+            "id": "throughput.large-terminal-text-remains-interactive-and-bounded-through-1-gib",
+            "reason": "optional feature not requested: throughput"
+          },
+          {
+            "id": "windows-credentials.windows-dpapi-protects-stored-credentials-and-reconnects-after-re",
+            "reason": "not applicable on darwin"
+          },
+          {
+            "id": "windows-files.windows-drive-root-remains-browsable-around-protected-system-file",
+            "reason": "not applicable on darwin"
+          },
+          {
+            "id": "windows-shells.windows-passport-bash-applies-a-startup-profile-and-accepts-termi",
+            "reason": "not applicable on darwin"
+          },
+          {
+            "id": "windows-shells.windows-cmd-applies-a-startup-profile-and-accepts-terminal-input",
+            "reason": "not applicable on darwin"
+          },
+          {
+            "id": "windows-shells.windows-windows-powershell-applies-a-startup-profile-and-accepts",
+            "reason": "not applicable on darwin"
+          },
+          {
+            "id": "windows-shells.windows-pwsh-applies-a-startup-profile-and-accepts-terminal-input",
+            "reason": "not applicable on darwin"
+          }
+        ]
+      },
+      {
+        "name": "packaged-desktop",
+        "status": "passed",
+        "startedAt": "2026-10-12T08:07:35.414Z",
+        "finishedAt": "2026-10-12T08:07:45.794Z",
+        "tests": {
+          "startTime": "2026-10-12T08:07:36.432Z",
+          "duration": 9351.819,
+          "expected": 4,
+          "skipped": 0,
+          "unexpected": 0,
+          "flaky": 0
+        },
+        "mode": "desktop",
+        "policyHash": "d4890532f20410089f4e6b602bc02db0a1a2d147afbacca0bb4eef8392f623ec",
+        "allowedSkips": []
+      }
+    ],
+    "guiLifecycle": {
+      "source-gui": {
+        "launches": 26,
+        "windows": 32,
+        "exits": 26,
+        "reusedTests": 25,
+        "auditedShutdowns": 26,
+        "shown": 0,
+        "focused": 0
+      },
+      "source-desktop": {
+        "launches": 4,
+        "windows": 4,
+        "exits": 4,
+        "reusedTests": 0,
+        "auditedShutdowns": 0,
+        "shown": 0,
+        "focused": 0
+      },
+      "packaged-gui": {
+        "launches": 26,
+        "windows": 32,
+        "exits": 26,
+        "reusedTests": 25,
+        "auditedShutdowns": 26,
+        "shown": 0,
+        "focused": 0
+      },
+      "packaged-desktop": {
+        "launches": 4,
+        "windows": 4,
+        "exits": 4,
+        "reusedTests": 0,
+        "auditedShutdowns": 0,
+        "shown": 0,
+        "focused": 0
+      }
+    },
+    "limitations": [
+      "Physical IME, OS notifications, real AI services, upgrade installation, and optional Docker/long stress tests are separate checks.",
+      "Windows installer UI/scope and extracted payload are checked; installing/uninstalling into a user account is a separate check."
+    ]
+  },
+  "evidenceSHA256": {
+    "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/dependencies.log": "0914f705ddc4a449294eb0155c5885daf7cf430cf9bb43a4e817d0e5916b9b98",
+    "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/python-venv.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/python-requirements.log": "baa75d1d36d4ae5eb1b3acbd1a81d5026a9d257b899e37369f192283ac065bfa",
+    "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/ftp-fixtures.log": "af0c9b6e4cca116270461550acbc95300a119727765c0429fa829c2ca792b5d7",
+    "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/openssl.log": "adae53e0f4e32469d7530b12f245babdcf2fa29a9f6f1da8d0aa0b071972625f",
+    "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/build.log": "a524bb437428b4ade6aaa9f17e7632f7c654bba5ee2d7beac32df6159e5d0af4",
+    "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/unit.log": "eb5041152f465b996caeca627e940e5c290e197481dc5cf6f0a90dbc302be7ab",
+    "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/release-tests.log": "b5aebe1d575fd65d185d1ba413aae2803a8982682a2c5aa77ff457f690c122d8",
+    "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/source-gui-discovery.log": "562bfeffe874c420cadc8574dd5cb21179da358cb045410b6694ee6f094a81bc",
+    "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/source-gui-discovery.json": "ef6cb2871ef86f51e84ab8d374a344dedf497eeb56e85ad29b444a6584679a6b",
+    "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/source-gui.log": "1be2796a4bfefafa38e5fe7b73816f3619eaf07de76f3ca60ae0389ecd189c4a",
+    "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/source-gui-lifecycle.jsonl": "15ed2783cae2802a450e9ccd336844508a8f63ea1b20eac83488959efab4b7ab",
+    "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/source-gui.json": "2e9eb246fb992a4262e4c0bf2772b18874b872f8442bd4db3c42e26e48c221e3",
+    "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/source-desktop-discovery.log": "e5d85980a4a1fab68f6ad99b2a69ec2358fafa3bf7bd8b3efe803cb209c3a11a",
+    "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/source-desktop-discovery.json": "d288ac894f71dd72602fd967dc19be90a543c5ec4df24ea171b702b6f1066902",
+    "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/source-desktop.log": "b62eea25b3516d227f1a1f30cef357ce1b3fcdfea2336e671e65c29566000889",
+    "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/source-desktop-lifecycle.jsonl": "bf798f4a883cab846235e507b85c998a31494b78f24686058c69539d5b52272c",
+    "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/source-desktop.json": "29eab58a9335a4ce080272b8da302cec6dbaed3cb0f4017bb25ba049932fa2ee",
+    "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/package.log": "57f2b4d477898a35e63949b8c165c0f1db13e64a68e6dd78af81e12184360c32",
+    "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/dmg-verify.log": "3e1b75ad010ba8fb7f3b313892edf40133761baaa97912584120c6a8c0a894fe",
+    "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/dmg-mount.log": "1d4904a41a6e9d5a1b09fe3bdfac4fea4707b1fb8873f6a892417c15c0c4a4e7",
+    "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/codesign.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/packaged-smoke.log": "6360eab089c403bacc943bbf145744879416dea2dbf561b2dfe597c198dda093",
+    "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/packaged-gui-discovery.log": "562bfeffe874c420cadc8574dd5cb21179da358cb045410b6694ee6f094a81bc",
+    "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/packaged-gui-discovery.json": "858fc4a198cd8bac4f820278089cdf2c5158dc718ee84adc2ea49c4dd95688bf",
+    "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/packaged-gui.log": "59e1f3ba2f7eaaf54e0f5f6d9c7c62c813c3fdbf19f9a5c9c09ae7fcb3047762",
+    "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/packaged-gui-lifecycle.jsonl": "b09897736d6ec6e2b5ee6e4757c6d9159666c61db4a96a643cf8d76e1b0e4023",
+    "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/packaged-gui.json": "8681b4746236def265a8612c94fb3c2c5a360ae83160cbcf60f6aec507275b9a",
+    "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/packaged-desktop-discovery.log": "e5d85980a4a1fab68f6ad99b2a69ec2358fafa3bf7bd8b3efe803cb209c3a11a",
+    "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/packaged-desktop-discovery.json": "44eca3e107cc7c952658fc6466eac79bd67eef603388d416bbeceb5c6983d556",
+    "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/packaged-desktop.log": "a87414a30eec71f4cb64f5905a3ac9ef2085550e3d0d5853c4195f9c48914c95",
+    "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/packaged-desktop-lifecycle.jsonl": "5290b4fb1915f291b01614d92ab01db6515f8a02dbf2a296aa9a4b9930ede1fc",
+    "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/packaged-desktop.json": "c40c20ef3795e45a16325e94f447bee8df9244f79891f216fd0eb4666ed271fc",
+    "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release/verification.json": "bf74d0513f07056e7290a2dd828768d57824100bfea2dbe8d4531aedff6844c8",
+    "release/checks/20261012T080022Z-e399c2b-mac-arm64-v1.2.2-publication/publication-plan.log": "28162d01aa4430d6c325e41c5d6ad282c1efebd691a535cc2b7eaaaf896f58d8",
+    "release/checks/20261012T080022Z-e399c2b-mac-arm64-v1.2.2-publication/publication.log": "013c91e2c6dca845a7cb7f8ce9a8392800890cb07f2f10903f0a409000219efd",
+    "release/checks/20261012T080022Z-e399c2b-mac-arm64-v1.2.2-publication/public-release.json": "aa025b71e735b22e09b321bb910afd666493d1a97ee8862987391c751aa440c3",
+    "release/checks/20261012T080022Z-e399c2b-mac-arm64-v1.2.2-publication/SHA256SUMS.txt": "32aad82fc1af2deaf041c2b67963bfcd42f6e45087d7cc554b61a00d142e2dc0",
+    "release/checks/20261012T080022Z-e399c2b-mac-arm64-v1.2.2-publication/remote-run.json": "4eb967a5d7a473ee51a271ac8b3c3803b7e9c6ba8548eed1568683abca30a418",
+    "release/checks/20261012T080022Z-e399c2b-mac-arm64-v1.2.2-publication/remote-jobs.json": "a37d9ffef5749bdbbc28175fbc3ca9162818f5438b7995d2392c3eb994a8ecf8",
+    "release/checks/20261012T080022Z-e399c2b-mac-arm64-v1.2.2-publication/remote-artifacts.json": "bba2e93ec985d000ba2da92f7a4a61b844a497e0f69450318aed80d5ab6a3e3d",
+    "release/checks/20261012T080022Z-e399c2b-mac-arm64-v1.2.2-publication/public-download.json": "f8557f1755197c4f6d9c590e819fc556eb982b8686a96b6c52430f8e032ee715",
+    "release/checks/20261012T080022Z-e399c2b-mac-arm64-v1.2.2-publication/previous-release.json": "85be069b18b70f889ead3bf44ee7134611252fdc106f78eaf437c6b6fda3a304",
+    "release/checks/20261012T080022Z-e399c2b-mac-arm64-v1.2.2-publication/previous-release-after.json": "85be069b18b70f889ead3bf44ee7134611252fdc106f78eaf437c6b6fda3a304"
+  },
+  "retention": {
+    "deleted": [],
+    "artifacts": [
+      "release/builds/20261012T080040Z-e399c2b-mac-arm64-local-release",
+      "release/checks/20261012T080040Z-e399c2b-mac-arm64-local-release",
+      "release/packages/v1.2.2/local/mac-arm64",
+      "release/checks/20261012T080022Z-e399c2b-mac-arm64-v1.2.2-publication"
+    ],
+    "sizesKiB": {
+      "build": 166492,
+      "checks": 30440,
+      "packages": 180292,
+      "publication": 76
+    },
+    "previewLink": "release/builds/Passport.app",
+    "previewTarget": "20261012T074529Z-60c6a3c-dirty-mac-arm64-file-drop-preview/mac-arm64/Passport.app",
+    "protected": [
+      "Latest Mac public packages 1.2.2 and 1.2.1, with their original receipts and evidence",
+      "Latest Windows public package 1.2.1 and previous Windows package 1.2.0",
+      "Most recent two successful platform builds",
+      "Passport.app symlink target, running apps, unresolved reproductions, KEEP.md, toolchains and recovery backups"
+    ],
+    "cleanupCandidates": [
+      "Older successful Mac previews beyond the latest two, except protected link targets or running apps",
+      "Mac 1.2.0 local package archive, subject to KEEP and recovery exceptions"
+    ],
+    "reviewRequired": [
+      "No existing artifacts were deleted. Recheck running apps, KEEP markers and unresolved issues before any later cleanup."
+    ]
+  }
+}
