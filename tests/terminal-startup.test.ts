@@ -269,11 +269,11 @@ it("uses the global working directory for inherited panes while respecting expli
   const settings = defaultTerminalSettings(process.platform);
   settings.cwd = directory();
   const explicit = directory();
-  expect(previewEnvironment({ shell: "default", cwd: "" }, settings).cwd).toBe(
+  expect(previewEnvironment({ shell: settings.shell, cwd: "" }, settings).cwd).toBe(
     settings.cwd,
   );
   expect(
-    previewEnvironment({ shell: "default", cwd: explicit }, settings).cwd,
+    previewEnvironment({ shell: settings.shell, cwd: explicit }, settings).cwd,
   ).toBe(explicit);
   expect(() =>
     documentSchema.parse({
