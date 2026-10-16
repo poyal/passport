@@ -175,7 +175,7 @@ export function Settings() {
             label: "AI 작업 알림",
             icon: <Info size={16} />,
           },
-          { id: "sharing", label: "공유", icon: <Network size={16} /> },
+          { id: "sharing", label: "쪽지", icon: <Mail size={16} /> },
           { id: "tunnels", label: "포트 포워딩", icon: <Network size={16} /> },
           { id: "logs", label: "세션 로그", icon: <FileText size={16} /> },
           { id: "groups", label: "그룹 관리", icon: <FolderOpen size={16} /> },

@@ -30,7 +30,7 @@ export function validateCertificate(cert: string | Buffer) {
     Date.parse(parsed.validTo) <= Date.now() ||
     parsed.checkHost("passport-share") !== "passport-share"
   )
-    throw new Error("유효하지 않은 공유 기기 인증서입니다.");
+    throw new Error("유효하지 않은 쪽지 기기 인증서입니다.");
   return parsed;
 }
 export async function createIdentity(): Promise<ShareIdentity> {

@@ -815,14 +815,14 @@ async function call<K extends Call>(
       return;
     case "share.folder": {
       const result = await dialog.showOpenDialog(caller, {
-        title: "공유 파일 저장 폴더",
+        title: "쪽지 첨부 파일 저장 폴더",
         properties: ["openDirectory", "createDirectory"],
       });
       return result.canceled ? null : result.filePaths[0];
     }
     case "share.file": {
       const result = await dialog.showOpenDialog(caller, {
-        title: "공유할 파일",
+        title: "쪽지에 첨부할 파일",
         properties: ["openFile"],
         filters: [
           {
@@ -1863,8 +1863,8 @@ void app
           )
             return;
           const banner = desktopNotifications.create({
-            title: "Passport 공유 승인 요청",
-            body: "공유함에서 상대와 요청 내용을 확인해 주세요.",
+            title: "Passport 쪽지 승인 요청",
+            body: "쪽지에서 상대와 요청 내용을 확인해 주세요.",
             silent: !store.read().settings.notifications.sound,
           });
           trackBanner(banner);

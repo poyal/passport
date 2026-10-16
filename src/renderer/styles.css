@@ -16,6 +16,9 @@
   --hover: #2b363e;
   --selected: #233e3d;
   --danger: #ff838c;
+  --pending-ink: #f0c674;
+  --pending-bg: #342b1d;
+  --pending-line: #806333;
   --shadow: 0 18px 60px #0007;
   --space-control: 8px;
   --space-help: 12px;
@@ -39,6 +42,9 @@
   --hover: #e7edf1;
   --selected: #def1eb;
   --danger: #bc273e;
+  --pending-ink: #865400;
+  --pending-bg: #fff7e6;
+  --pending-line: #dcb565;
   --shadow: 0 18px 60px #25303b22;
 }
 * {
@@ -3531,6 +3537,118 @@ select:disabled {
 }
 
 /* Sharing surfaces never render executable documents or remote resources. */
+.modal.notes-guide {
+  width: min(880px, 100%);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 24px;
+}
+.notes-guide > header {
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+.notes-guide .notes-guide-intro {
+  margin: 0 0 20px;
+  color: var(--muted);
+}
+.notes-guide-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.notes-guide-nav button {
+  padding: 9px 14px;
+}
+.notes-guide-nav button[aria-pressed="true"] {
+  background: var(--selected);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.notes-guide-feedback {
+  min-height: 26px;
+  padding-top: 6px;
+  font-size: 12px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.notes-guide-body {
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: 8px;
+  overscroll-behavior: contain;
+}
+.notes-guide-body section + section {
+  border-top: 1px solid var(--line);
+  margin-top: 24px;
+  padding-top: 24px;
+}
+.notes-guide h3 {
+  font-size: 15px;
+  margin: 0 0 10px;
+}
+.notes-guide p {
+  font-size: 13px;
+  line-height: 1.8;
+  margin: 8px 0 14px;
+}
+.notes-guide figure {
+  margin: 18px 0 0;
+}
+.notes-guide img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.notes-guide figcaption {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.notes-guide-code {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+}
+.notes-guide-code > button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 7px;
+}
+.notes-guide-code pre,
+.notes-guide-prompt {
+  font-size: 12px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 0;
+}
+.notes-guide-code pre {
+  padding: 16px 48px 16px 16px;
+}
+.notes-guide-copy-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+.notes-guide-copy-heading button {
+  flex-shrink: 0;
+}
+.notes-guide-prompt {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px;
+}
 .sharing-view {
   height: 100%;
   overflow: auto;
@@ -3784,6 +3902,85 @@ select:disabled {
   border-right: 1px solid var(--line);
   padding: 14px;
 }
+.share-inbox-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 12px;
+}
+.share-inbox-filters button {
+  padding: 6px 8px;
+  font-size: 11px;
+  background: transparent;
+  border-color: transparent;
+}
+.share-inbox-filters button[aria-pressed="true"] {
+  background: var(--panel);
+  border-color: var(--line);
+  font-weight: 600;
+}
+.share-inbox-filters button span {
+  color: var(--accent);
+}
+.share-pending-badge {
+  display: inline-flex;
+  align-self: flex-start;
+  width: fit-content;
+  border-radius: 4px;
+  background: var(--pending-bg);
+  color: var(--pending-ink);
+  border: 1px solid var(--pending-line);
+  gap: 5px;
+  align-items: center;
+  padding: 3px 7px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.share-pending-summary {
+  padding: 14px 0 22px;
+}
+.share-pending-summary > svg {
+  color: var(--pending-ink);
+}
+.share-pending-summary h3 {
+  font-size: 20px;
+  margin: 16px 0 10px;
+}
+.share-pending-summary p {
+  color: var(--muted);
+  line-height: 1.7;
+}
+.share-pending-info {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 18px;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+.share-pending-info > div {
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr);
+  gap: 12px;
+}
+.share-pending-info dt {
+  color: var(--muted);
+}
+.share-pending-info dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.share-pending-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+.share-pending-actions button {
+  padding: 10px 20px;
+}
 .sharing-view .share-message-search {
   flex-direction: row;
   align-items: center;
@@ -3874,7 +4071,7 @@ select:disabled {
 .share-icon-button:hover {
   color: var(--accent);
 }
-.share-icon-button[aria-label="메시지 삭제"]:hover {
+.share-icon-button[aria-label="쪽지 삭제"]:hover {
   color: var(--danger);
 }
 .share-recipient {
@@ -4038,6 +4235,18 @@ select:disabled {
   border-color: var(--accent);
   box-shadow: inset 3px 0 var(--accent);
 }
+.share-message-list > button.pending {
+  background: var(--pending-bg);
+  border-color: var(--pending-line);
+  border-left: 3px solid var(--pending-line);
+}
+.share-message-list > button.pending.selected {
+  border-color: var(--pending-ink);
+  box-shadow: inset 3px 0 var(--pending-ink);
+}
+.share-message-list > button.pending:hover { border-color: var(--pending-ink); }
+.share-received-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
+.share-received-badge svg { color: var(--accent); }
 .share-attachment-detail > div:not(.share-attachment-actions) {
   flex: 1;
 }

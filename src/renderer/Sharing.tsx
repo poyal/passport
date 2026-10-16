@@ -14,7 +14,7 @@ import {
   Paperclip,
   Send,
   ShieldCheck,
-  Users,
+  Mail,
   Inbox,
   Search,
   Trash2,
@@ -25,12 +25,16 @@ import {
   AlertCircle,
   Pencil,
   ExternalLink,
+  BookOpen,
+  Clock3,
+  CheckCheck,
 } from "lucide-react";
 import { api, message } from "./api";
 import { useApp } from "./context";
 import { Modal } from "./components";
 import { MessageEditor } from "./MessageEditor";
 import { ShareRecipient } from "./ShareRecipient";
+import { SharingGuide } from "./SharingGuide";
 import {
   shareExtensions,
   shareLabel,
@@ -111,7 +115,7 @@ export function SharingSettings() {
     return () => clearTimeout(timer);
   }, [invitation]);
   if (!state || !draft)
-    return <p role="status">공유 설정을 불러오는 중입니다.</p>;
+    return <p role="status">쪽지 설정을 불러오는 중입니다.</p>;
   const change = (value: Partial<ShareSettings>) =>
     setDraft({ ...draft, ...value });
   const missingNetwork =
@@ -127,8 +131,8 @@ export function SharingSettings() {
     <div className="sharing-settings">
       <div className="page-heading">
         <div>
-          <h1>공유</h1>
-          <p>등록한 상대와 메시지·파일을 암호화해 주고받습니다.</p>
+          <h1>쪽지</h1>
+          <p>등록한 상대와 쪽지·파일을 암호화해 주고받습니다.</p>
         </div>
       </div>
       {(error || state.error) && (
@@ -145,7 +149,7 @@ export function SharingSettings() {
               checked={draft.enabled}
               onChange={(e) => change({ enabled: e.target.checked })}
             />
-            공유 사용
+            쪽지 사용
           </label>
           <label>
             사용할 네트워크
@@ -170,7 +174,7 @@ export function SharingSettings() {
             주변 사용자 검색 및 내 기기 표시
           </label>
           <p className="hint">
-            주변에 표시되어도 등록키와 상대 승인이 있어야 등록됩니다. 공유를 켠
+            주변에 표시되어도 등록키와 상대 승인이 있어야 등록됩니다. 쪽지를 켠
             뒤 새 로컬 터미널에서 passport share를 사용할 수 있습니다.
           </p>
           <label>
@@ -190,7 +194,7 @@ export function SharingSettings() {
             </div>
           </label>
           <label>
-            메시지 자동 정리
+            쪽지 자동 정리
             <select
               value={draft.retentionDays ?? "never"}
               onChange={(e) =>
@@ -209,14 +213,14 @@ export function SharingSettings() {
             </select>
           </label>
           <p className="hint">
-            기존 메시지에도 적용됩니다. 다운로드한 파일은 삭제하지 않습니다.
+            기존 쪽지에도 적용됩니다. 다운로드한 파일은 삭제하지 않습니다.
           </p>
         </fieldset>
         {(missingNetwork || missingDirectory) && (
           <p className="hint" role="status">
             {missingNetwork
-              ? "공유를 사용하려면 사용할 네트워크를 선택하세요."
-              : "공유를 사용하려면 기본 다운로드 폴더를 선택하세요."}
+              ? "쪽지를 사용하려면 사용할 네트워크를 선택하세요."
+              : "쪽지를 사용하려면 기본 다운로드 폴더를 선택하세요."}
           </p>
         )}
         <button
@@ -232,7 +236,7 @@ export function SharingSettings() {
             }).finally(() => setBusy(false));
           }}
         >
-          {busy ? "적용 중…" : "공유 설정 적용"}
+          {busy ? "적용 중…" : "쪽지 설정 적용"}
         </button>
         {state.endpoint && (
           <p className="hint">
@@ -343,8 +347,8 @@ export function SharingSettings() {
               void run(async () => {
                 if (
                   await app.confirm(
-                    "공유 기기키 초기화",
-                    "공유를 끄고 등록된 사용자와 기기키를 삭제합니다. 보관 메시지와 다운로드 파일은 유지됩니다. 상대도 기존 등록을 해제하고 새 등록키로 다시 등록해야 합니다.",
+                    "쪽지 기기키 초기화",
+                    "쪽지를 끄고 등록된 사용자와 기기키를 삭제합니다. 보관 쪽지와 다운로드 파일은 유지됩니다. 상대도 기존 등록을 해제하고 새 등록키로 다시 등록해야 합니다.",
                   )
                 ) {
                   const next = await api.call("share.reset", undefined);
@@ -355,7 +359,7 @@ export function SharingSettings() {
               })
             }
           >
-            공유 기기키 초기화
+            쪽지 기기키 초기화
           </button>
           <button
             onClick={() =>
@@ -508,7 +512,7 @@ class MarkdownBoundary extends Component<
   }
   render() {
     return this.state.failed ? (
-      <p>이 메시지를 표시할 수 없습니다. 원문 복사를 이용해 주세요.</p>
+      <p>이 쪽지를 표시할 수 없습니다. 원문 복사를 이용해 주세요.</p>
     ) : (
       this.props.children
     );
@@ -604,6 +608,13 @@ export function SharingView({
     [file, setFile] = useState(""),
     [selected, setSelected] = useState<ShareMessage>();
   const [sending, setSending] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
+  const [pendingId, setPendingId] = useState<string>();
+  const [approvalBusy, setApprovalBusy] = useState(false);
+  const [inboxFilter, setInboxFilter] = useState<
+    "all" | "pending" | "received"
+  >("all");
+  const selectionId = useRef<string | undefined>(undefined);
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<"inbox" | "send" | "friends">("inbox");
   const [copyingInvitation, setCopyingInvitation] = useState(false);
@@ -623,12 +634,52 @@ export function SharingView({
     if (selected && state && !state.messages.some((m) => m.id === selected.id))
       setSelected(undefined);
   }, [state, selected]);
-  if (!state) return <p role="status">공유함을 불러오는 중입니다.</p>;
-  const messages = state.messages.filter((item) =>
-    `${item.peerName} ${item.title} ${item.attachment?.name ?? ""}`
-      .toLocaleLowerCase()
-      .includes(search.trim().toLocaleLowerCase()),
+  useEffect(() => {
+    if (!pendingId || !state) return;
+    if (state.messages.some((item) => item.id === pendingId)) {
+      const id = pendingId;
+      void api
+        .call("share.message", { id })
+        .then((item) => {
+          if (selectionId.current !== id) return;
+          setSelected(item);
+          setPendingId(undefined);
+          setInboxFilter("all");
+        })
+        .catch(() => {});
+    } else if (!state.transfers.some((item) => item.id === pendingId)) {
+      setPendingId(undefined);
+    }
+  }, [pendingId, state]);
+  if (!state) return <p role="status">쪽지를 불러오는 중입니다.</p>;
+  const incoming = state.transfers.filter(
+    (item) => item.direction === "incoming",
   );
+  const pending = incoming.find((item) => item.id === pendingId);
+  const messages = [
+    ...state.messages.map((item) => ({ ...item, request: undefined })),
+    ...incoming.map((request) => ({
+      id: request.id,
+      peerName: request.peerName,
+      created: request.created,
+      title:
+        request.kind === "markdown"
+          ? "새 쪽지가 도착했습니다"
+          : "파일이 첨부된 쪽지",
+      attachment:
+        request.kind === "markdown" ? undefined : { name: request.name },
+      request,
+    })),
+  ]
+    .filter(
+      (item) =>
+        (inboxFilter === "all" ||
+          (inboxFilter === "pending" ? !!item.request : !item.request)) &&
+        `${item.peerName} ${item.title} ${item.attachment?.name ?? ""}`
+          .toLocaleLowerCase()
+          .includes(search.trim().toLocaleLowerCase()),
+    )
+    .sort((a, b) => b.created - a.created);
   const copy = (value: string) =>
     void run(async () => {
       await api.call("clipboard.write", { text: value });
@@ -639,11 +690,15 @@ export function SharingView({
       <div className="page-heading">
         <div>
           <h1>
-            <Users size={24} /> 공유함
+            <Mail size={24} /> 쪽지
           </h1>
-          <p>상대를 확인하고 승인한 메시지와 파일만 받습니다.</p>
+          <p>상대를 확인하고 승인한 쪽지와 파일만 받습니다.</p>
         </div>
         <div className="row share-actions">
+          <button onClick={() => setGuideOpen(true)}>
+            <BookOpen size={15} />
+            사용가이드
+          </button>
           <button
             disabled={!state.endpoint || copyingInvitation}
             title="5분 동안 사용할 일회용 등록키를 복사합니다."
@@ -661,7 +716,7 @@ export function SharingView({
             <Copy size={15} />
             {copyingInvitation ? "복사 중…" : "등록키 복사"}
           </button>
-          <button onClick={() => app.openSettings("sharing")}>공유 설정</button>
+          <button onClick={() => app.openSettings("sharing")}>쪽지 설정</button>
         </div>
       </div>
       {(error || state.error) && (
@@ -673,11 +728,11 @@ export function SharingView({
         <div className="share-disabled" role="status">
           <AlertCircle size={21} />
           <div>
-            <strong>공유가 꺼져 있습니다</strong>
-            <p>네트워크와 저장 폴더를 선택하고 공유를 켜 주세요.</p>
+            <strong>쪽지가 꺼져 있습니다</strong>
+            <p>네트워크와 저장 폴더를 선택하고 쪽지를 켜 주세요.</p>
           </div>
           <button onClick={() => app.openSettings("sharing")}>
-            공유 설정 열기
+            쪽지 설정 열기
           </button>
         </div>
       )}
@@ -727,10 +782,11 @@ export function SharingView({
           </div>
         </section>
       ))}
-      <div className="share-tabs" role="tablist" aria-label="공유함 보기">
+      {guideOpen && <SharingGuide onClose={() => setGuideOpen(false)} />}
+      <div className="share-tabs" role="tablist" aria-label="쪽지 보기">
         {(
           [
-            ["inbox", "받은 메시지"],
+            ["inbox", "받은 쪽지"],
             ["send", "보내기"],
             ["friends", "내 친구"],
           ] as const
@@ -777,9 +833,7 @@ export function SharingView({
         <div className="share-requests">
           {state.transfers
             .filter(
-              (transfer) =>
-                (tab === "inbox" && transfer.direction === "incoming") ||
-                (tab === "send" && transfer.direction === "outgoing"),
+              (transfer) => tab === "send" && transfer.direction === "outgoing",
             )
             .map((transfer) => (
               <section
@@ -793,10 +847,10 @@ export function SharingView({
                   </strong>
                   <span>
                     {transfer.kind === "message-file"
-                      ? "메시지 + 파일"
+                      ? "쪽지 + 파일"
                       : transfer.kind === "file"
                         ? "파일"
-                        : "메시지"}
+                        : "쪽지"}
                   </span>
                 </div>
                 <p>
@@ -836,7 +890,7 @@ export function SharingView({
                     >
                       {transfer.kind !== "markdown"
                         ? "승인하고 저장"
-                        : "메시지 받기"}
+                        : "쪽지 받기"}
                     </button>
                   </div>
                 ) : (
@@ -932,7 +986,7 @@ export function SharingView({
                   }}
                 >
                   <Send size={15} />
-                  {sending ? "준비 중…" : "메시지 보내기"}
+                  {sending ? "준비 중…" : "쪽지 보내기"}
                 </button>
               </div>
             </fieldset>
@@ -944,7 +998,7 @@ export function SharingView({
                   첨부 최대 100 MiB
                 </summary>
                 <p>
-                  메시지에 파일 하나를 함께 보낼 수 있습니다. 허용 형식:{" "}
+                  쪽지에 파일 하나를 함께 보낼 수 있습니다. 허용 형식:{" "}
                   {shareExtensions.join(", ")}
                 </p>
               </details>
@@ -955,15 +1009,15 @@ export function SharingView({
           <section className="settings-card share-inbox-card">
             <div className="share-section-heading">
               <h2>
-                받은 메시지{" "}
+                받은 쪽지{" "}
                 <span className="share-message-count">
-                  {state.messages.length}
+                  {state.messages.length + incoming.length}
                 </span>
               </h2>
               <button
                 className="share-icon-button"
-                title="보관 메시지 불러오기"
-                aria-label="보관 메시지 불러오기"
+                title="보관 쪽지 불러오기"
+                aria-label="보관 쪽지 불러오기"
                 onClick={() =>
                   void run(async () => {
                     await api.call("share.unlock", undefined);
@@ -979,25 +1033,66 @@ export function SharingView({
                 <label className="share-message-search">
                   <Search size={16} />
                   <input
-                    aria-label="받은 메시지 검색"
+                    aria-label="받은 쪽지 검색"
                     placeholder="보낸 사람, 제목, 파일명 검색"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                   />
                 </label>
+                <div
+                  className="share-inbox-filters"
+                  role="group"
+                  aria-label="쪽지 처리 상태"
+                >
+                  {(
+                    [
+                      ["all", "전체"],
+                      ["pending", "승인 대기"],
+                      ["received", "받은 쪽지"],
+                    ] as const
+                  ).map(([value, label]) => (
+                    <button
+                      key={value}
+                      aria-pressed={inboxFilter === value}
+                      onClick={() => {
+                        setInboxFilter(value);
+                        setSelected(undefined);
+                        setPendingId(undefined);
+                        selectionId.current = undefined;
+                      }}
+                    >
+                      {label}
+                      {value === "pending" && incoming.length > 0 && (
+                        <span>{incoming.length}</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
                 <div className="share-message-list">
                   {messages.map((item) => (
                     <button
-                      className={selected?.id === item.id ? "selected" : ""}
-                      aria-pressed={selected?.id === item.id}
-                      key={item.id}
-                      onClick={() =>
-                        void run(async () =>
-                          setSelected(
-                            await api.call("share.message", { id: item.id }),
-                          ),
-                        )
+                      className={
+                        (selected?.id === item.id || pendingId === item.id
+                          ? "selected "
+                          : "") + (item.request ? "pending" : "")
                       }
+                      aria-pressed={
+                        selected?.id === item.id || pendingId === item.id
+                      }
+                      key={item.id}
+                      onClick={() => {
+                        selectionId.current = item.id;
+                        setSelected(undefined);
+                        setPendingId(item.request ? item.id : undefined);
+                        if (!item.request)
+                          void run(async () => {
+                            const full = await api.call("share.message", {
+                              id: item.id,
+                            });
+                            if (selectionId.current === item.id)
+                              setSelected(full);
+                          });
+                      }}
                     >
                       <span className="share-message-meta">
                         <strong>{item.peerName}</strong>
@@ -1014,6 +1109,20 @@ export function SharingView({
                       <span className="share-message-title">
                         {item.title.replace(/^#{1,6}\s+/, "")}
                       </span>
+                      {item.request && (
+                        <span className="share-pending-badge">
+                          <Clock3 size={12} />
+                          {item.request.state === "pending"
+                            ? "승인 대기"
+                            : "받는 중"}
+                        </span>
+                      )}
+                      {!item.request && (
+                        <span className="share-received-badge">
+                          <CheckCheck size={13} />
+                          수신 완료
+                        </span>
+                      )}
                       {item.attachment && (
                         <small className="share-file-chip">
                           <Paperclip size={12} /> {item.attachment.name}
@@ -1025,7 +1134,9 @@ export function SharingView({
                     <p className="share-list-empty">
                       {search
                         ? "검색 결과가 없습니다."
-                        : "받은 메시지가 없습니다."}
+                        : inboxFilter === "pending"
+                          ? "승인 대기 중인 쪽지가 없습니다."
+                          : "받은 쪽지가 없습니다."}
                     </p>
                   )}
                 </div>
@@ -1036,7 +1147,107 @@ export function SharingView({
                     : `${state.settings.retentionDays}일 보관`}
                 </p>
               </aside>
-              {selected ? (
+              {pending ? (
+                <article className="share-message-reader share-pending-reader">
+                  <header className="share-reader-heading">
+                    <div className="share-sender">
+                      <span className="share-avatar" aria-hidden="true">
+                        {Array.from(pending.peerName)[0]}
+                      </span>
+                      <div>
+                        <strong>{pending.peerName}</strong>
+                        <time
+                          dateTime={new Date(pending.created).toISOString()}
+                        >
+                          {new Date(pending.created).toLocaleString()}
+                        </time>
+                      </div>
+                    </div>
+                    <span className="share-pending-badge">
+                      <Clock3 size={13} />
+                      {pending.state === "pending" ? "승인 대기" : "받는 중"}
+                    </span>
+                  </header>
+                  <div className="share-reader-body">
+                    <div className="share-pending-summary">
+                      <Clock3 size={32} strokeWidth={1.5} />
+                      <h3>
+                        {pending.state === "pending"
+                          ? "이 쪽지를 받을까요?"
+                          : "쪽지를 받고 있습니다"}
+                      </h3>
+                      <p>
+                        {pending.state === "pending"
+                          ? "보낸 친구와 첨부 정보를 확인하세요. 승인하면 본문이 전달됩니다."
+                          : "수신이 끝나면 이곳에 본문이 표시됩니다."}
+                      </p>
+                    </div>
+                    <dl className="share-pending-info">
+                      <div>
+                        <dt>내용</dt>
+                        <dd>
+                          {pending.kind === "markdown"
+                            ? "쪽지"
+                            : pending.kind === "file"
+                              ? "파일"
+                              : "쪽지 + 파일"}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>크기</dt>
+                        <dd>{(pending.bytes / 1024).toFixed(1)} KiB</dd>
+                      </div>
+                      {pending.kind !== "markdown" && (
+                        <>
+                          <div>
+                            <dt>첨부 파일</dt>
+                            <dd>{pending.name}</dd>
+                          </div>
+                          <div>
+                            <dt>저장 위치</dt>
+                            <dd>{state.settings.receiveDirectory}</dd>
+                          </div>
+                        </>
+                      )}
+                    </dl>
+                    {pending.state === "pending" && (
+                      <div className="share-pending-actions">
+                        <button
+                          disabled={approvalBusy}
+                          onClick={() => {
+                            setApprovalBusy(true);
+                            void run(() =>
+                              api.call("share.approve", {
+                                id: pending.id,
+                                accept: false,
+                              }),
+                            ).finally(() => setApprovalBusy(false));
+                          }}
+                        >
+                          거절
+                        </button>
+                        <button
+                          className="primary"
+                          disabled={approvalBusy}
+                          onClick={() => {
+                            setApprovalBusy(true);
+                            void run(() =>
+                              api.call("share.approve", {
+                                id: pending.id,
+                                accept: true,
+                              }),
+                            ).finally(() => setApprovalBusy(false));
+                          }}
+                        >
+                          {pending.kind === "markdown"
+                            ? "쪽지 받기"
+                            : "승인하고 저장"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </article>
+              ) : selected ? (
                 <article className="share-message-reader">
                   <header className="share-reader-heading">
                     <div className="share-sender">
@@ -1063,8 +1274,8 @@ export function SharingView({
                       </button>
                       <button
                         className="share-icon-button"
-                        title="메시지 삭제"
-                        aria-label="메시지 삭제"
+                        title="쪽지 삭제"
+                        aria-label="쪽지 삭제"
                         onClick={() =>
                           void run(async () => {
                             await api.call("share.deleteMessage", {
@@ -1131,13 +1342,13 @@ export function SharingView({
                   </span>
                   <h3>
                     {state.messages.length
-                      ? "메시지를 선택하세요"
-                      : "받은 메시지가 여기에 모입니다"}
+                      ? "쪽지를 선택하세요"
+                      : "받은 쪽지가 여기에 모입니다"}
                   </h3>
                   <p>
                     {state.messages.length
                       ? "본문과 첨부 파일을 한곳에서 확인하세요."
-                      : "상대의 요청을 승인하면 메시지를 읽을 수 있습니다."}
+                      : "상대의 요청을 승인하면 쪽지를 읽을 수 있습니다."}
                   </p>
                 </div>
               )}

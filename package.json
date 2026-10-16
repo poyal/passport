@@ -72,7 +72,7 @@
         }
       ],
       "extendInfo": {
-        "NSLocalNetworkUsageDescription": "등록한 Passport 사용자와 승인한 메시지·파일을 주고받기 위해 로컬 네트워크를 사용합니다.",
+        "NSLocalNetworkUsageDescription": "등록한 Passport 친구와 승인한 쪽지·파일을 주고받기 위해 로컬 네트워크를 사용합니다.",
         "NSBonjourServices": [
           "_passport-share._tcp"
         ]

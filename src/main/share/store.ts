@@ -88,7 +88,7 @@ export class ShareStore {
   private put(kind: string, id: string, value: unknown, created = Date.now()) {
     if (!this.vault.isEncryptionAvailable())
       throw new Error(
-        "암호화 저장소를 사용할 수 없습니다. 공유를 시작할 수 없습니다.",
+        "암호화 저장소를 사용할 수 없습니다. 쪽지를 시작할 수 없습니다.",
       );
     const encrypted = this.vault.encryptString(JSON.stringify(value));
     this.db
@@ -234,7 +234,7 @@ export class ShareStore {
     const row = this.db
       .prepare("SELECT data FROM records WHERE kind='message' AND id=?")
       .get(id) as { data: Buffer } | undefined;
-    if (!row) throw new Error("메시지가 없거나 보관 기간이 지났습니다.");
+    if (!row) throw new Error("쪽지가 없거나 보관 기간이 지났습니다.");
     return messageSchema.parse(JSON.parse(this.vault.decryptString(row.data)));
   }
   addMessage(message: ShareMessage) {
@@ -244,7 +244,7 @@ export class ShareStore {
       )
       .get() as { bytes: number | null };
     if ((total.bytes ?? 0) + Buffer.byteLength(message.markdown) > 1024 ** 3)
-      throw new Error("공유함이 1 GiB를 초과했습니다. 메시지를 정리해 주세요.");
+      throw new Error("쪽지가 1 GiB를 초과했습니다. 쪽지를 정리해 주세요.");
     this.put(
       "message",
       message.id,

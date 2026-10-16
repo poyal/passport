@@ -15,7 +15,7 @@ import {
   Bell,
   House,
   PanelLeft,
-  Users,
+  Mail,
 } from "lucide-react";
 import type {
   Appearance,
@@ -935,14 +935,14 @@ export function App() {
             </button>
             <button
               className={`app-tab fixed ${active === "sharing" ? "active" : ""}`}
-              aria-label="공유함"
+              aria-label="쪽지"
               onClick={() => {
                 setActive("sharing");
                 setShareInboxRevision((value) => value + 1);
               }}
             >
-              <Users size={15} />
-              공유함
+              <Mail size={15} />
+              쪽지
               {sharePending > 0 && (
                 <small
                   className="share-badge"

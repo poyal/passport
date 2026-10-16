@@ -72,11 +72,11 @@ export const shareOfferSchema = z
   .strict()
   .refine(
     (v) => v.kind !== "markdown" || v.bytes <= shareTextLimit,
-    "메시지는 256 KiB 이하여야 합니다.",
+    "쪽지는 256 KiB 이하여야 합니다.",
   )
   .refine(
     (v) => (v.kind === "message-file") === (v.message !== undefined),
-    "첨부 메시지 정보가 올바르지 않습니다.",
+    "첨부 쪽지 정보가 올바르지 않습니다.",
   );
 export type ShareOffer = z.infer<typeof shareOfferSchema>;
 export type SharePeer = {
@@ -143,11 +143,11 @@ export const shareSendSchema = z
   .strict()
   .refine(
     (v) => (v.text !== undefined) !== (v.markdownFile !== undefined),
-    "메시지를 입력하거나 Markdown 파일을 지정하세요. 첨부 파일은 함께 보낼 수 있습니다.",
+    "쪽지를 입력하거나 Markdown 파일을 지정하세요. 첨부 파일은 함께 보낼 수 있습니다.",
   )
   .refine(
     (v) => v.text === undefined || v.text.trim().length > 0,
-    "메시지를 입력하세요.",
+    "쪽지를 입력하세요.",
   );
 export type ShareSend = z.infer<typeof shareSendSchema>;
 export const shareControlSchema = z.discriminatedUnion("command", [
@@ -166,9 +166,9 @@ export type ShareControlCommand = z.infer<typeof shareControlSchema>;
 
 export function validateMarkdown(text: string) {
   if (new TextEncoder().encode(text).length > shareTextLimit)
-    throw new Error("메시지는 UTF-8 256 KiB 이하여야 합니다.");
+    throw new Error("쪽지는 UTF-8 256 KiB 이하여야 합니다.");
   if (/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]/.test(text))
-    throw new Error("메시지에 터미널 제어 문자를 사용할 수 없습니다.");
+    throw new Error("쪽지에 터미널 제어 문자를 사용할 수 없습니다.");
   return text;
 }
 

@@ -45,6 +45,9 @@ test.afterEach(async () => {
 });
 const snapshot = (page: Page) =>
   page.evaluate(() => window.passport.call("share.state", undefined));
+async function selectPending(page: Page) {
+  await page.locator(".share-message-list button.pending").first().click();
+}
 async function setTheme(page: Page, theme: "dark" | "light") {
   await page.evaluate(async (theme) => {
     const boot = await window.passport.call("bootstrap", undefined);
@@ -115,7 +118,7 @@ async function launch(name: string) {
       return "";
     };
   });
-  await page.getByRole("button", { name: "공유함", exact: true }).click();
+  await page.locator('.app-tab[aria-label="쪽지"]').click();
   const directory = path.join(root, name, "downloads");
   await page.evaluate(
     async ({ name, directory }) => {
@@ -128,11 +131,11 @@ async function launch(name: string) {
     },
     { name, directory },
   );
-  await page.getByRole("button", { name: "공유 설정", exact: true }).click();
+  await page.getByRole("button", { name: "쪽지 설정", exact: true }).click();
   await expect(page.getByLabel("내 표시 이름", { exact: true })).toHaveCount(0);
-  const apply = page.getByRole("button", { name: "공유 설정 적용" });
+  const apply = page.getByRole("button", { name: "쪽지 설정 적용" });
   await expect(apply).toBeDisabled();
-  await page.getByLabel("공유 사용", { exact: true }).check();
+  await page.getByLabel("쪽지 사용", { exact: true }).check();
   await expect(apply).toBeDisabled();
   await page.getByLabel("사용할 네트워크").selectOption("127.0.0.1");
   await expect(apply).toBeEnabled();
@@ -141,16 +144,16 @@ async function launch(name: string) {
     .poll(async () => (await snapshot(page)).endpoint?.address)
     .toBe("127.0.0.1");
   await expect(apply).toBeDisabled();
-  await page.getByLabel("메시지 자동 정리").selectOption("30");
+  await page.getByLabel("쪽지 자동 정리").selectOption("30");
   await expect(apply).toBeEnabled();
-  await page.getByLabel("메시지 자동 정리").selectOption("7");
+  await page.getByLabel("쪽지 자동 정리").selectOption("7");
   await expect(apply).toBeDisabled();
   return { app, page, directory };
 }
 async function pair() {
   const a = await launch("승민"),
     b = await launch("지수");
-  await b.page.getByRole("button", { name: "공유함", exact: true }).click();
+  await b.page.locator('.app-tab[aria-label="쪽지"]').click();
   await b.page
     .getByRole("button", { name: "등록키 복사", exact: true })
     .click();
@@ -163,7 +166,7 @@ async function pair() {
   await a.page.getByLabel("상대 별칭", { exact: true }).fill("지수");
   await a.page.getByLabel("상대에게 받은 등록키", { exact: true }).fill(key);
   await a.page.getByRole("button", { name: "등록 요청 보내기" }).click();
-  await b.page.getByRole("button", { name: "공유함", exact: true }).click();
+  await b.page.locator('.app-tab[aria-label="쪽지"]').click();
   await expect(
     b.page.getByRole("button", { name: "사용자 등록 승인" }),
   ).toBeVisible();
@@ -177,9 +180,9 @@ async function pair() {
     .fill("승민");
   await b.page.getByRole("button", { name: "사용자 등록 승인" }).click();
   await expect.poll(async () => (await snapshot(a.page)).peers.length).toBe(1);
-  await a.page.getByRole("button", { name: "공유함", exact: true }).click();
+  await a.page.locator('.app-tab[aria-label="쪽지"]').click();
   await expect(
-    a.page.getByRole("tab", { name: "받은 메시지", exact: true }),
+    a.page.getByRole("tab", { name: "받은 쪽지", exact: true }),
   ).toHaveAttribute("aria-selected", "true");
   await a.page.getByRole("tab", { name: /내 친구/ }).click();
   await expect(a.page.locator(".share-friends .share-peer strong")).toHaveText(
@@ -200,21 +203,21 @@ async function pair() {
   return { a, b };
 }
 
-test("validates sharing settings, formats message drafts and separates inbox, sending and friends with aligned controls", async () => {
+test("validates notes settings, guide copying, message drafts and inbox, sending and friends controls", async () => {
   const { app, page, directory } = await launch("sharing-ui");
-  const apply = page.getByRole("button", { name: "공유 설정 적용" });
-  await page.getByLabel("메시지 자동 정리").selectOption("30");
+  const apply = page.getByRole("button", { name: "쪽지 설정 적용" });
+  await page.getByLabel("쪽지 자동 정리").selectOption("30");
   await apply.click();
   await expect(apply).toBeDisabled();
   expect((await snapshot(page)).settings.retentionDays).toBe(30);
   await page.getByLabel("사용할 네트워크").selectOption("");
   await expect(apply).toBeDisabled();
   // A missing network must never prevent turning sharing off.
-  await page.getByLabel("공유 사용", { exact: true }).uncheck();
+  await page.getByLabel("쪽지 사용", { exact: true }).uncheck();
   await expect(apply).toBeEnabled();
   await apply.click();
   await expect(apply).toBeDisabled();
-  await page.getByRole("button", { name: "공유함", exact: true }).click();
+  await page.locator('.app-tab[aria-label="쪽지"]').click();
   await expect(
     page.getByRole("button", { name: "등록키 복사", exact: true }),
   ).toBeDisabled();
@@ -225,8 +228,8 @@ test("validates sharing settings, formats message drafts and separates inbox, se
       receiveDirectory: "",
     });
   });
-  await page.getByRole("button", { name: "공유 설정", exact: true }).click();
-  await page.getByLabel("공유 사용", { exact: true }).check();
+  await page.getByRole("button", { name: "쪽지 설정", exact: true }).click();
+  await page.getByLabel("쪽지 사용", { exact: true }).check();
   await page.getByLabel("사용할 네트워크").selectOption("127.0.0.1");
   await expect(apply).toBeDisabled();
   await app.evaluate(({ dialog }, directory) => {
@@ -249,7 +252,7 @@ test("validates sharing settings, formats message drafts and separates inbox, se
     for (const theme of ["dark", "light"] as const) {
       await setTheme(page, theme);
       const controls = page.locator(".share-actions").filter({
-        has: page.getByRole("button", { name: "공유 기기키 초기화" }),
+        has: page.getByRole("button", { name: "쪽지 기기키 초기화" }),
       });
       await controls.scrollIntoViewIfNeeded();
       const buttons = await controls.locator("button").evaluateAll((buttons) =>
@@ -267,12 +270,12 @@ test("validates sharing settings, formats message drafts and separates inbox, se
       });
     }
   }
-  await page.getByRole("button", { name: "공유함", exact: true }).click();
+  await page.locator('.app-tab[aria-label="쪽지"]').click();
   await expect(
-    page.getByRole("tab", { name: "받은 메시지", exact: true }),
+    page.getByRole("tab", { name: "받은 쪽지", exact: true }),
   ).toHaveAttribute("aria-selected", "true");
   await expect(
-    page.getByRole("textbox", { name: "Markdown 메시지", exact: true }),
+    page.getByRole("textbox", { name: "Markdown 쪽지", exact: true }),
   ).toHaveCount(0);
   for (const width of [1000, 1440]) {
     await app.evaluate(
@@ -306,11 +309,57 @@ test("validates sharing settings, formats message drafts and separates inbox, se
   await expect
     .poll(() => app.evaluate(() => (globalThis as any).__shareCopied))
     .toMatch(/^passport-pair:/);
+  await page.getByRole("button", { name: "사용가이드", exact: true }).click();
+  const guide = page.getByRole("dialog", { name: "사용가이드" });
+  await expect(
+    guide.getByRole("heading", { name: "1. 같은 네트워크에서 친구 등록" }),
+  ).toBeVisible();
+  await expect
+    .poll(() =>
+      guide
+        .locator("img")
+        .evaluateAll((images) =>
+          images.every(
+            (image) =>
+              (image as HTMLImageElement).complete &&
+              (image as HTMLImageElement).naturalWidth > 0,
+          ),
+        ),
+    )
+    .toBe(true);
+  await guide
+    .getByRole("button", { name: "Passport CLI", exact: true })
+    .click();
+  await guide
+    .getByRole("button", { name: "쪽지 명령 복사", exact: true })
+    .click();
+  expect(await app.evaluate(() => (globalThis as any).__shareCopied)).toContain(
+    "passport share status",
+  );
+  await guide
+    .getByRole("button", { name: "AI에게 전달하기", exact: true })
+    .click();
+  await guide
+    .getByRole("button", { name: "AI 안내문 복사", exact: true })
+    .click();
+  const copiedGuide = await app.evaluate(
+    () => (globalThis as any).__shareCopied,
+  );
+  expect(copiedGuide).toContain("delivered에서만 전달 완료");
+  expect(copiedGuide).toContain("--markdown-file");
+  expect(copiedGuide).toContain("passport identify");
+  expect(copiedGuide).not.toContain("passport-pair:");
+  await page.keyboard.press("Escape");
+  await expect(guide).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "사용가이드", exact: true }),
+  ).toBeFocused();
+  await page.getByRole("button", { name: "등록키 복사", exact: true }).click();
   const key = await app.evaluate(() => (globalThis as any).__shareCopied);
   await page.getByRole("button", { name: "등록키 복사", exact: true }).click();
   expect(await app.evaluate(() => (globalThis as any).__shareCopied)).toBe(key);
   await page.getByRole("tab", { name: "보내기", exact: true }).click();
-  const editor = page.getByRole("textbox", { name: "메시지", exact: true });
+  const editor = page.getByRole("textbox", { name: "쪽지", exact: true });
   await editor.fill("작업 결과");
   await page.getByRole("button", { name: "제목", exact: true }).click();
   await expect(page.locator(".tiptap h1")).toHaveText("작업 결과");
@@ -318,7 +367,7 @@ test("validates sharing settings, formats message drafts and separates inbox, se
     .getByRole("button", { name: "Markdown 원문", exact: true })
     .click();
   await expect(
-    page.getByRole("textbox", { name: "Markdown 메시지", exact: true }),
+    page.getByRole("textbox", { name: "Markdown 쪽지", exact: true }),
   ).toHaveValue(/^# 작업 결과\s*$/);
   await page.getByRole("button", { name: "서식 편집", exact: true }).click();
   await expect(page.locator(".tiptap h1")).toHaveText("작업 결과");
@@ -326,21 +375,21 @@ test("validates sharing settings, formats message drafts and separates inbox, se
     .getByRole("button", { name: "Markdown 원문", exact: true })
     .click();
   await expect(
-    page.getByRole("textbox", { name: "Markdown 메시지", exact: true }),
+    page.getByRole("textbox", { name: "Markdown 쪽지", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "보관 메시지 불러오기" }),
+    page.getByRole("button", { name: "보관 쪽지 불러오기" }),
   ).toHaveCount(0);
   await page
-    .getByRole("textbox", { name: "Markdown 메시지", exact: true })
+    .getByRole("textbox", { name: "Markdown 쪽지", exact: true })
     .fill("보내기 초안");
-  await page.getByRole("button", { name: "공유함", exact: true }).click();
+  await page.locator('.app-tab[aria-label="쪽지"]').click();
   await expect(
-    page.getByRole("tab", { name: "받은 메시지", exact: true }),
+    page.getByRole("tab", { name: "받은 쪽지", exact: true }),
   ).toHaveAttribute("aria-selected", "true");
   await page.getByRole("tab", { name: "보내기", exact: true }).click();
   await expect(
-    page.getByRole("textbox", { name: "Markdown 메시지", exact: true }),
+    page.getByRole("textbox", { name: "Markdown 쪽지", exact: true }),
   ).toHaveValue("보내기 초안");
   await page.getByRole("tab", { name: /내 친구/ }).click();
   await expect(page.locator(".share-friends")).toContainText(
@@ -350,10 +399,10 @@ test("validates sharing settings, formats message drafts and separates inbox, se
   await page.getByRole("tab", { name: /내 친구/ }).focus();
   await page.keyboard.press("Home");
   await expect(
-    page.getByRole("tab", { name: "받은 메시지", exact: true }),
+    page.getByRole("tab", { name: "받은 쪽지", exact: true }),
   ).toBeFocused();
   await expect(
-    page.getByRole("tab", { name: "받은 메시지", exact: true }),
+    page.getByRole("tab", { name: "받은 쪽지", exact: true }),
   ).toHaveAttribute("aria-selected", "true");
 });
 
@@ -370,18 +419,33 @@ test("pairs two devices, sends messages with optional attachments after one appr
     .fill("지수");
   await a.page.getByRole("option", { name: /지수/ }).click();
   await a.page
-    .getByRole("textbox", { name: "Markdown 메시지", exact: true })
+    .getByRole("textbox", { name: "Markdown 쪽지", exact: true })
     .fill(text);
   await a.page
-    .getByRole("button", { name: "메시지 보내기", exact: true })
+    .getByRole("button", { name: "쪽지 보내기", exact: true })
     .click();
+  await selectPending(b.page);
   await expect(
-    b.page.getByRole("button", { name: "메시지 받기", exact: true }),
+    b.page.getByRole("button", { name: "쪽지 받기", exact: true }),
   ).toBeVisible();
   expect((await snapshot(b.page)).messages).toEqual([]);
   await b.page
-    .getByRole("button", { name: "메시지 받기", exact: true })
+    .getByRole("group", { name: "쪽지 처리 상태" })
+    .getByRole("button", { name: "받은 쪽지", exact: true })
     .click();
+  await expect(b.page.locator(".share-message-list button")).toHaveCount(0);
+  await b.page
+    .getByRole("group", { name: "쪽지 처리 상태" })
+    .getByRole("button", { name: /승인 대기/ })
+    .click();
+  await expect(b.page.locator(".share-message-list button")).toHaveCount(1);
+  await expect(b.page.locator(".share-markdown")).toHaveCount(0);
+
+  await selectPending(b.page);
+  await b.page.getByRole("button", { name: "쪽지 받기", exact: true }).click();
+  await expect(
+    b.page.locator(".share-message-list button.pending"),
+  ).toHaveCount(0);
   await expect(b.page.locator(".share-message-list button")).toHaveCount(1);
   await b.page.locator(".share-message-list button").click();
   await expect(b.page.locator(".share-markdown h1")).toHaveText("작업 결과");
@@ -414,7 +478,7 @@ test("pairs two devices, sends messages with optional attachments after one appr
   }, file);
   await a.page.getByRole("button", { name: "파일 선택", exact: true }).click();
   await expect(
-    a.page.getByRole("button", { name: "메시지 보내기", exact: true }),
+    a.page.getByRole("button", { name: "쪽지 보내기", exact: true }),
   ).toBeDisabled();
   expect((await snapshot(b.page)).transfers).toEqual([]);
   await expect(a.page.locator(".share-attachment")).toContainText("첨부.html");
@@ -428,11 +492,12 @@ test("pairs two devices, sends messages with optional attachments after one appr
   await a.page.getByRole("button", { name: "파일 선택", exact: true }).click();
   await expect(a.page.locator(".share-attachment")).toContainText("첨부.html");
   await a.page
-    .getByRole("textbox", { name: "Markdown 메시지", exact: true })
+    .getByRole("textbox", { name: "Markdown 쪽지", exact: true })
     .fill("# 첨부 검토\n\n내용을 확인해 주세요.");
   await a.page
-    .getByRole("button", { name: "메시지 보내기", exact: true })
+    .getByRole("button", { name: "쪽지 보내기", exact: true })
     .click();
+  await selectPending(b.page);
   await expect(
     b.page.getByRole("button", { name: "승인하고 저장" }),
   ).toBeVisible();
@@ -449,7 +514,7 @@ test("pairs two devices, sends messages with optional attachments after one appr
   expect(await fs.readdir(b.directory)).toEqual(["첨부.html"]);
   await expect(b.page.locator(".share-message-list button")).toHaveCount(2);
   await b.page
-    .getByRole("textbox", { name: "받은 메시지 검색" })
+    .getByRole("textbox", { name: "받은 쪽지 검색" })
     .fill("첨부.html");
   await expect(b.page.locator(".share-message-list button")).toHaveCount(1);
   await b.page
@@ -460,7 +525,7 @@ test("pairs two devices, sends messages with optional attachments after one appr
   await expect(b.page.getByRole("region", { name: "첨부 파일" })).toContainText(
     "첨부.html",
   );
-  await b.page.getByRole("textbox", { name: "받은 메시지 검색" }).fill("");
+  await b.page.getByRole("textbox", { name: "받은 쪽지 검색" }).fill("");
   for (const theme of ["dark", "light"] as const) {
     await setTheme(b.page, theme);
     await b.page.screenshot({
@@ -504,28 +569,26 @@ test("pairs two devices, sends messages with optional attachments after one appr
     path.join(b.directory, "moved.html"),
     path.join(b.directory, "첨부.html"),
   );
-  await b.page
-    .getByRole("button", { name: "메시지 삭제", exact: true })
-    .click();
+  await b.page.getByRole("button", { name: "쪽지 삭제", exact: true }).click();
   await expect(b.page.locator(".share-message-list button")).toHaveCount(1);
   await b.page.locator(".share-message-list button").click();
-  await b.page
-    .getByRole("button", { name: "메시지 삭제", exact: true })
-    .click();
+  await b.page.getByRole("button", { name: "쪽지 삭제", exact: true }).click();
   await expect(b.page.locator(".share-message-list button")).toHaveCount(0);
   expect(await fs.readFile(path.join(b.directory, "첨부.html"), "utf8")).toBe(
     content,
   );
   const deeplyNested = ">".repeat(12000) + " unsafe nesting";
   await a.page
-    .getByRole("textbox", { name: "Markdown 메시지", exact: true })
+    .getByRole("textbox", { name: "Markdown 쪽지", exact: true })
     .fill(deeplyNested);
   await a.page
-    .getByRole("button", { name: "메시지 보내기", exact: true })
+    .getByRole("button", { name: "쪽지 보내기", exact: true })
     .click();
-  await b.page
-    .getByRole("button", { name: "메시지 받기", exact: true })
-    .click();
+  await selectPending(b.page);
+  await b.page.getByRole("button", { name: "쪽지 받기", exact: true }).click();
+  await expect(
+    b.page.locator(".share-message-list button.pending"),
+  ).toHaveCount(0);
   await b.page.locator(".share-message-list button").click();
   await expect(b.page.locator(".share-markdown .hint")).toContainText(
     "원문을 표시",
@@ -537,15 +600,17 @@ test("pairs two devices, sends messages with optional attachments after one appr
   );
   await a.page.getByRole("button", { name: "서식 편집", exact: true }).click();
   await a.page
-    .getByRole("textbox", { name: "메시지", exact: true })
+    .getByRole("textbox", { name: "쪽지", exact: true })
     .fill("서식 전송 확인");
   await a.page.getByRole("button", { name: "제목", exact: true }).click();
   await a.page
-    .getByRole("button", { name: "메시지 보내기", exact: true })
+    .getByRole("button", { name: "쪽지 보내기", exact: true })
     .click();
-  await b.page
-    .getByRole("button", { name: "메시지 받기", exact: true })
-    .click();
+  await selectPending(b.page);
+  await b.page.getByRole("button", { name: "쪽지 받기", exact: true }).click();
+  await expect(
+    b.page.locator(".share-message-list button.pending"),
+  ).toHaveCount(0);
   await b.page
     .locator(".share-message-list button")
     .filter({ hasText: "서식 전송 확인" })
@@ -554,8 +619,19 @@ test("pairs two devices, sends messages with optional attachments after one appr
     "서식 전송 확인",
   );
 
+  const beforeReject = (await snapshot(b.page)).messages.length;
+  await a.page.evaluate(() =>
+    window.passport.call("share.send", { to: "지수", text: "거절할 쪽지" }),
+  );
+  await selectPending(b.page);
+  await b.page.getByRole("button", { name: "거절", exact: true }).click();
+  await expect(
+    b.page.locator(".share-message-list button.pending"),
+  ).toHaveCount(0);
+  expect((await snapshot(b.page)).messages.length).toBe(beforeReject);
+  await expect(b.page.locator(".share-pending-reader")).toHaveCount(0);
   const peer = (await snapshot(a.page)).peers[0];
-  await a.page.getByRole("button", { name: "공유 설정", exact: true }).click();
+  await a.page.getByRole("button", { name: "쪽지 설정", exact: true }).click();
   await a.page.getByRole("button", { name: "지수 수정", exact: true }).click();
   const edit = a.page.getByRole("dialog", { name: "친구 수정" });
   await edit.getByLabel("이름", { exact: true }).fill("지수 새 이름");
@@ -569,7 +645,7 @@ test("pairs two devices, sends messages with optional attachments after one appr
   await edit.getByRole("button", { name: "저장", exact: true }).click();
   await expect(edit).toHaveCount(0);
   expect((await snapshot(a.page)).peers[0].name).toBe("지수 새 이름");
-  await a.page.getByRole("button", { name: "공유함", exact: true }).click();
+  await a.page.locator('.app-tab[aria-label="쪽지"]').click();
   await a.page.getByRole("tab", { name: "보내기", exact: true }).click();
   const recipient = a.page.getByRole("combobox", {
     name: "받는 사람",
@@ -579,7 +655,7 @@ test("pairs two devices, sends messages with optional attachments after one appr
   await expect(a.page.getByRole("option")).toHaveCount(1);
   await recipient.press("Enter");
   await expect(recipient).toHaveValue("지수 새 이름");
-  await a.page.getByRole("button", { name: "공유 설정", exact: true }).click();
+  await a.page.getByRole("button", { name: "쪽지 설정", exact: true }).click();
   await a.page
     .getByRole("button", { name: "지수 새 이름 삭제", exact: true })
     .click();
@@ -622,20 +698,23 @@ test("lets the real CLI send to a registered alias without terminal access and c
   expect((await cli(["share", "read", "invalid"])).ok).toBe(false);
   const request = await cli(
     ["share", "send", "--to", "지수", "--markdown-file", "-"],
-    "# CLI 메시지\n\n한글 본문",
+    "# CLI 쪽지\n\n한글 본문",
   );
   expect(request.ok).toBe(true);
   expect(request.value.state).toBe("preparing");
+  await selectPending(b.page);
   await expect(
-    b.page.getByRole("button", { name: "메시지 받기", exact: true }),
+    b.page.getByRole("button", { name: "쪽지 받기", exact: true }),
   ).toBeVisible();
   expect((await snapshot(b.page)).messages).toEqual([]);
   expect((await cli(["share", "status", request.value.id])).value.state).toBe(
     "pending",
   );
-  await b.page
-    .getByRole("button", { name: "메시지 받기", exact: true })
-    .click();
+  await selectPending(b.page);
+  await b.page.getByRole("button", { name: "쪽지 받기", exact: true }).click();
+  await expect(
+    b.page.locator(".share-message-list button.pending"),
+  ).toHaveCount(0);
   // Observe completion before starting the CLI process. Nesting the helper's
   // 10s command wait inside a 5s poll could abandon a still-running CLI call
   // and report its previous "pending" value after the receiver had saved it.
@@ -649,7 +728,7 @@ test("lets the real CLI send to a registered alias without terminal access and c
   expect(receipt.ok).toBe(true);
   expect(receipt.value.state).toBe("delivered");
   await b.page.locator(".share-message-list button").click();
-  await expect(b.page.locator(".share-markdown h1")).toHaveText("CLI 메시지");
+  await expect(b.page.locator(".share-markdown h1")).toHaveText("CLI 쪽지");
   const pending = await cli([
     "share",
     "send",
@@ -658,12 +737,13 @@ test("lets the real CLI send to a registered alias without terminal access and c
     "--text",
     "cancel me",
   ]);
+  await selectPending(b.page);
   await expect(
-    b.page.getByRole("button", { name: "메시지 받기", exact: true }),
+    b.page.getByRole("button", { name: "쪽지 받기", exact: true }),
   ).toBeVisible();
   expect((await cli(["share", "cancel", pending.value.id])).ok).toBe(true);
   await expect(
-    b.page.getByRole("button", { name: "메시지 받기", exact: true }),
+    b.page.getByRole("button", { name: "쪽지 받기", exact: true }),
   ).toHaveCount(0);
   await a.page.evaluate(async () => {
     const current = await window.passport.call("share.state", undefined);

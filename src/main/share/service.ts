@@ -224,7 +224,7 @@ export class ShareService {
       .catch(async (error) => {
         await this.stop();
         this.store.saveSettings({ ...settings, enabled: false });
-        this.error = publicError(error, "공유를 시작할 수 없습니다.");
+        this.error = publicError(error, "쪽지를 시작할 수 없습니다.");
         this.changed();
         throw error;
       });
@@ -235,7 +235,7 @@ export class ShareService {
     const epoch = this.epoch;
     const identity = await this.store.identity();
     if (this.closed || epoch !== this.epoch)
-      throw new Error("공유 설정이 변경되었습니다. 다시 시도하세요.");
+      throw new Error("쪽지 설정이 변경되었습니다. 다시 시도하세요.");
     this.identity = identity;
     this.peers = this.store.peers();
     this.unlocked = true;
@@ -261,7 +261,7 @@ export class ShareService {
   }
   private requireEnabled() {
     if (!this.enabled || !this.identity || !this.endpoint)
-      throw new Error("설정에서 공유를 켜 주세요.");
+      throw new Error("설정에서 쪽지를 켜 주세요.");
     return this.identity;
   }
   private peer(id: string) {
@@ -296,7 +296,7 @@ export class ShareService {
       await this.pairListener?.close();
       this.pairing = undefined;
       this.requireEnabled();
-      if (epoch !== this.epoch) throw new Error("공유 설정이 변경되었습니다.");
+      if (epoch !== this.epoch) throw new Error("쪽지 설정이 변경되었습니다.");
       const listener = new ShareListener(
         identity,
         [],
@@ -307,7 +307,7 @@ export class ShareService {
       const endpoint = await listener.listen(this.store.settings().address);
       if (epoch !== this.epoch || !this.enabled) {
         await listener.close();
-        throw new Error("공유 설정이 변경되었습니다.");
+        throw new Error("쪽지 설정이 변경되었습니다.");
       }
       const invite = {
         version: 1 as const,
@@ -512,8 +512,8 @@ export class ShareService {
             job,
             "cancelled",
             input.remove
-              ? "친구를 삭제해 공유 전송을 취소했습니다."
-              : "친구의 연결 주소가 변경되어 공유 전송을 취소했습니다.",
+              ? "친구를 삭제해 쪽지 전송을 취소했습니다."
+              : "친구의 연결 주소가 변경되어 쪽지 전송을 취소했습니다.",
           );
     if ((input.remove || addressChanged) && this.listener && this.identity) {
       this.listener.trust(this.identity, this.trusted());
@@ -528,7 +528,7 @@ export class ShareService {
       this.rate(id);
       const offer = shareOfferSchema.parse(await readJSON(req));
       if (epoch !== this.epoch || this.peer(id) !== peer)
-        throw new Error("공유 설정이 변경되었습니다.");
+        throw new Error("쪽지 설정이 변경되었습니다.");
       if (offer.kind !== "markdown") shareFileName(offer.name);
       if (this.jobs.has(offer.id))
         throw new Error("이미 사용한 전송 ID입니다.");
@@ -562,7 +562,7 @@ export class ShareService {
     const match = /^\/(status|upload|cancel)\/([a-f0-9-]{36})$/.exec(
       req.url ?? "",
     );
-    if (!match) throw new Error("지원하지 않는 공유 요청입니다.");
+    if (!match) throw new Error("지원하지 않는 쪽지 요청입니다.");
     const job = this.jobs.get(match[2]);
     if (!job || job.peer.id !== id || job.view.direction !== "incoming")
       throw new Error("허용되지 않은 전송입니다.");
@@ -614,7 +614,7 @@ export class ShareService {
           valid();
           size += chunk.length;
           if (size > job.offer.bytes)
-            throw new Error("메시지 크기가 다릅니다.");
+            throw new Error("쪽지 크기가 다릅니다.");
           chunks.push(chunk);
         }
         const data = Buffer.concat(chunks);
@@ -622,7 +622,7 @@ export class ShareService {
           size !== job.offer.bytes ||
           createHash("sha256").update(data).digest("hex") !== job.offer.hash
         )
-          throw new Error("메시지 무결성 검사에 실패했습니다.");
+          throw new Error("쪽지 무결성 검사에 실패했습니다.");
         const markdown = validateMarkdown(
           new TextDecoder("utf-8", { fatal: true }).decode(data),
         );
@@ -656,7 +656,7 @@ export class ShareService {
           offer.message
             ? (destination) => {
                 if (markdown === undefined)
-                  throw new Error("첨부 메시지가 없습니다.");
+                  throw new Error("첨부 쪽지가 없습니다.");
                 this.store.addMessage({
                   id: job.view.id,
                   title: markdown.trim().split(/\r?\n/, 1)[0].slice(0, 100),
@@ -737,7 +737,7 @@ export class ShareService {
         direction: "outgoing",
         state: "preparing",
         kind: input.file ? "message-file" : "markdown",
-        name: input.file ? path.basename(input.file) : "Markdown 메시지",
+        name: input.file ? path.basename(input.file) : "Markdown 쪽지",
         bytes: 0,
         received: 0,
         created: Date.now(),
@@ -760,7 +760,7 @@ export class ShareService {
             ),
           )
         : Buffer.from(validateMarkdown(input.text!));
-      if (!message.toString().trim()) throw new Error("메시지를 입력하세요.");
+      if (!message.toString().trim()) throw new Error("쪽지를 입력하세요.");
       const file = input.file ? await readSendFile(input.file) : undefined;
       const data = file ? Buffer.concat([message, file]) : message;
       this.peer(job.peer.id);
@@ -880,16 +880,16 @@ export class ShareService {
         ? job.view.direction === "incoming"
           ? job.view.kind !== "markdown"
             ? job.view.kind === "message-file"
-              ? "공유 메시지와 첨부 파일을 받았습니다."
-              : "공유 파일을 다운로드 폴더에 저장했습니다."
-            : "공유 메시지를 받았습니다."
+              ? "쪽지와 첨부 파일을 받았습니다."
+              : "쪽지 파일을 다운로드 폴더에 저장했습니다."
+            : "쪽지를 받았습니다."
           : "상대에게 전달했습니다."
         : error ||
             {
-              rejected: "상대가 공유 요청을 거절했습니다.",
-              expired: "공유 요청이 만료되었습니다.",
-              cancelled: "공유 전송을 취소했습니다.",
-              failed: "공유 전송에 실패했습니다.",
+              rejected: "상대가 쪽지 요청을 거절했습니다.",
+              expired: "쪽지 요청이 만료되었습니다.",
+              cancelled: "쪽지 전송을 취소했습니다.",
+              failed: "쪽지 전송에 실패했습니다.",
             }[state],
     );
     this.changed();
@@ -968,7 +968,7 @@ export class ShareService {
       !interfaces().some((i) => i.address === this.endpoint?.address)
     ) {
       this.error =
-        "선택한 네트워크 연결이 끊겼습니다. 공유 설정을 다시 적용하세요.";
+        "선택한 네트워크 연결이 끊겼습니다. 쪽지 설정을 다시 적용하세요.";
       void this.stop().then(() => this.changed());
     }
   }

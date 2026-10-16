@@ -218,7 +218,7 @@ export class TerminalControl {
       request.command === "share.cancel"
     ) {
       if (!this.sharing || !this.options.share?.enabled())
-        throw new ControlError("UNAUTHORIZED", "공유 기능이 꺼져 있습니다.");
+        throw new ControlError("UNAUTHORIZED", "쪽지 기능이 꺼져 있습니다.");
       authorize();
       return this.options.share.execute(request);
     }

@@ -85,7 +85,7 @@ it("requires message content with optional attachment and rejects mismatched upl
 });
 
 it("decodes split UTF-8 message bytes without mixing them into the attachment and rejects truncation or tampering", async () => {
-  const text = Buffer.from("# 한글 메시지"),
+  const text = Buffer.from("# 한글 쪽지"),
     file = Buffer.from("attachment");
   const message = {
     bytes: text.length,
@@ -271,7 +271,7 @@ it("matches completion events to the transfer result once on each device", async
     { timeout: 5000 },
   );
   expect(a.notices).toEqual(["상대에게 전달했습니다."]);
-  expect(b.notices).toEqual(["공유 메시지를 받았습니다."]);
+  expect(b.notices).toEqual(["쪽지를 받았습니다."]);
   a.service.cancel(accepted.id);
   expect(a.notices).toHaveLength(1);
   expect(
@@ -283,7 +283,7 @@ it("matches completion events to the transfer result once on each device", async
     () => expect(a.service.status(rejected.id).state).toBe("rejected"),
     { timeout: 5000 },
   );
-  expect(a.notices).toEqual(["상대가 공유 요청을 거절했습니다."]);
+  expect(a.notices).toEqual(["상대가 쪽지 요청을 거절했습니다."]);
   expect(b.notices).toHaveLength(1); // Receiver wording remains the user's reverted wording; see event audit.
   expect(b.store.messages()).toHaveLength(1);
   const cancelled = await start();
@@ -303,8 +303,8 @@ it("matches completion events to the transfer result once on each device", async
     () => expect(a.service.status(expired.id).state).toBe("expired"),
     { timeout: 5000 },
   );
-  expect(a.notices).toEqual(["공유 요청이 만료되었습니다."]);
-  expect(b.notices).toEqual(["공유 요청이 만료되었습니다."]);
+  expect(a.notices).toEqual(["쪽지 요청이 만료되었습니다."]);
+  expect(b.notices).toEqual(["쪽지 요청이 만료되었습니다."]);
 });
 
 it("removes legacy blocked friends on unlock and keeps valid friends without a block flag", async () => {
@@ -338,6 +338,82 @@ it("shares one identity across concurrent initialization and invalidates pending
   await pending;
   expect(await store.identity()).toBe(current);
   expect(fingerprint(current.cert)).not.toBe(fingerprint(identities[0].cert));
+});
+
+it("accepts every registered certificate when multiple friends have the same certificate subject", async () => {
+  const [server, ...friends] = await Promise.all(
+    Array.from({ length: 4 }, () => createIdentity()),
+  );
+  const listener = new ShareListener(
+    server,
+    friends.map((p) => p.cert),
+    false,
+    async (req, res, peer) => {
+      req.resume();
+      json(res, { id: peer.id });
+    },
+  );
+  cleanups.push(() => listener.close());
+  const endpoint = await listener.listen("127.0.0.1");
+  for (const friend of friends) {
+    await expect(
+      shareRequest(friend, endpoint, server.cert, "/probe", Buffer.from("{}")),
+    ).resolves.toEqual({ id: fingerprint(friend.cert) });
+  }
+  const wrongId = fingerprint(friends[1].cert);
+  await expect(
+    new Promise((resolve, reject) => {
+      const request = https.request(
+        {
+          ...friends[0],
+          ca: [server.cert],
+          hostname: endpoint.address,
+          port: endpoint.port,
+          servername: `${wrongId.slice(0, 32)}.${wrongId.slice(32)}.passport-share`,
+          checkServerIdentity: () => undefined,
+          rejectUnauthorized: true,
+          method: "POST",
+          path: "/probe",
+          agent: false,
+          minVersion: "TLSv1.3",
+          maxVersion: "TLSv1.3",
+        },
+        (response) => {
+          response.resume();
+          resolve(response.statusCode);
+        },
+      );
+      request.once("error", reject);
+      request.setTimeout(3000, () => request.destroy(new Error("timeout")));
+      request.end("{}");
+    }),
+  ).rejects.toThrow();
+  const stranger = await createIdentity();
+  await expect(
+    shareRequest(stranger, endpoint, server.cert, "/probe", Buffer.from("{}")),
+  ).rejects.toThrow();
+  listener.trust(
+    server,
+    friends.slice(1).map((p) => p.cert),
+  );
+  await expect(
+    shareRequest(
+      friends[0],
+      endpoint,
+      server.cert,
+      "/probe",
+      Buffer.from("{}"),
+    ),
+  ).rejects.toThrow();
+  await expect(
+    shareRequest(
+      friends[1],
+      endpoint,
+      server.cert,
+      "/probe",
+      Buffer.from("{}"),
+    ),
+  ).resolves.toEqual({ id: fingerprint(friends[1].cert) });
 });
 
 it("bounds the complete response time even when a trusted peer keeps sending bytes", async () => {

@@ -41,7 +41,7 @@ export function MessageEditor({
     editorProps: {
       attributes: {
         role: "textbox",
-        "aria-label": "메시지",
+        "aria-label": "쪽지",
         "aria-multiline": "true",
         "data-placeholder": "전달할 내용을 입력하세요…",
       },
@@ -163,11 +163,11 @@ export function MessageEditor({
   return (
     <div className="share-editor">
       <div className="share-editor-heading">
-        <span>메시지</span>
+        <span>쪽지</span>
         <div
           className="share-editor-mode"
           role="group"
-          aria-label="메시지 편집 모드"
+          aria-label="쪽지 편집 모드"
         >
           <button type="button" aria-pressed={!source} onClick={showEditor}>
             서식 편집
@@ -189,7 +189,7 @@ export function MessageEditor({
           <div
             className="share-format-toolbar"
             role="group"
-            aria-label="메시지 서식"
+            aria-label="쪽지 서식"
           >
             {actions.map(({ label, Icon, active, run }) => (
               <button
@@ -228,7 +228,7 @@ export function MessageEditor({
         )}
         {source ? (
           <textarea
-            aria-label="Markdown 메시지"
+            aria-label="Markdown 쪽지"
             value={value}
             disabled={disabled}
             onChange={(e) => onChange(e.target.value)}

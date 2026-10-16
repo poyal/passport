@@ -359,7 +359,7 @@ test("all main screens and settings tabs fit light and dark themes at wide, desk
         "외형",
         "로컬 터미널",
         "AI 작업 알림",
-        "공유",
+        "쪽지",
         "그룹 관리",
         "인증 프로필",
         "세션 로그",

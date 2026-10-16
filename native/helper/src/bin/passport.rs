@@ -24,7 +24,7 @@ Use --tab EXACT_NAME instead of --pane only for an unambiguous single local pane
 beginning with a dash. send adds no Enter unless --submit is specified.
 read returns up to 100 logical lines by default; --lines accepts 1..1000.
 Enable CLI access in Settings > Local terminal, then open a new local terminal.
-For sharing, enable Settings > Share and open a new local terminal. Sharing does
+For sharing, enable Settings > Notes (쪽지) and open a new local terminal. Sharing does
 not grant terminal read/write access. --markdown-file - reads Markdown from stdin.
 Run share friends --json first to find local aliases and device IDs.
 Use an exact alias with --to; if aliases repeat, use the device ID. No auto-discovery.

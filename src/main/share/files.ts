@@ -27,17 +27,17 @@ export async function* attachmentStream(
     if (chunks.length && remaining === 0) {
       const data = Buffer.concat(chunks);
       if (createHash("sha256").update(data).digest("hex") !== message.hash)
-        throw new Error("메시지 무결성 검사에 실패했습니다.");
+        throw new Error("쪽지 무결성 검사에 실패했습니다.");
       const markdown = validateMarkdown(
         new TextDecoder("utf-8", { fatal: true }).decode(data),
       );
-      if (!markdown.trim()) throw new Error("메시지를 입력하세요.");
+      if (!markdown.trim()) throw new Error("쪽지를 입력하세요.");
       received(markdown);
       chunks.length = 0;
     }
     if (chunk.length > take) yield chunk.subarray(take);
   }
-  if (remaining) throw new Error("메시지 크기가 다릅니다.");
+  if (remaining) throw new Error("쪽지 크기가 다릅니다.");
 }
 
 export function validateSignature(name: string, head: Buffer) {

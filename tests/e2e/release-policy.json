@@ -475,7 +475,7 @@
     {
       "id": "sharing.ui",
       "file": "sharing.spec.ts",
-      "title": "validates sharing settings, formats message drafts and separates inbox, sending and friends with aligned controls"
+      "title": "validates notes settings, guide copying, message drafts and inbox, sending and friends controls"
     },
     {
       "id": "sharing.1",
