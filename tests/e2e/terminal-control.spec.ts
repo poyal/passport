@@ -8,7 +8,8 @@ import { hostSchema } from "../../src/shared/model";
 
 const home = path.join(os.tmpdir(), `passport-cli-home-${randomUUID()}`);
 test.beforeAll(async () => {
-  await fs.mkdir(home, { recursive: true });
+  // Preserve the Downloads known folder inside the isolated Windows profile.
+  await fs.mkdir(path.join(home, "Downloads"), { recursive: true });
 });
 const suite = reusableApp({
   name: "terminal-control",

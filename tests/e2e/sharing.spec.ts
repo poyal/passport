@@ -18,6 +18,8 @@ const apps: ElectronApplication[] = [];
 const errors: string[] = [];
 test.beforeEach(async () => {
   root = await fs.mkdtemp(path.join(os.tmpdir(), "passport-share-e2e-"));
+  // Electron requires this known folder when USERPROFILE is isolated on Windows.
+  await fs.mkdir(path.join(root, "Downloads"));
   errors.length = 0;
 });
 test.afterEach(async () => {
