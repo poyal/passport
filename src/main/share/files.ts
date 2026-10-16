@@ -2,12 +2,43 @@ import fs from "node:fs/promises";
 import { constants, createReadStream } from "node:fs";
 import path from "node:path";
 import { createHash } from "node:crypto";
-import type { IncomingMessage } from "node:http";
 import {
   shareFileLimit,
   shareFileName,
+  validateMarkdown,
   type ShareOffer,
 } from "../../shared/share";
+
+// A message/attachment upload is UTF-8 message bytes followed by file bytes.
+// Validate the bounded message before yielding any attachment for publication.
+export async function* attachmentStream(
+  request: AsyncIterable<Buffer>,
+  message: NonNullable<ShareOffer["message"]>,
+  valid: () => void,
+  received: (markdown: string) => void,
+) {
+  const chunks: Buffer[] = [];
+  let remaining = message.bytes;
+  for await (const chunk of request) {
+    valid();
+    const take = Math.min(remaining, chunk.length);
+    if (take) chunks.push(chunk.subarray(0, take));
+    remaining -= take;
+    if (chunks.length && remaining === 0) {
+      const data = Buffer.concat(chunks);
+      if (createHash("sha256").update(data).digest("hex") !== message.hash)
+        throw new Error("메시지 무결성 검사에 실패했습니다.");
+      const markdown = validateMarkdown(
+        new TextDecoder("utf-8", { fatal: true }).decode(data),
+      );
+      if (!markdown.trim()) throw new Error("메시지를 입력하세요.");
+      received(markdown);
+      chunks.length = 0;
+    }
+    if (chunk.length > take) yield chunk.subarray(take);
+  }
+  if (remaining) throw new Error("메시지 크기가 다릅니다.");
+}
 
 export function validateSignature(name: string, head: Buffer) {
   const ext = name.split(".").pop()!.toLowerCase();
@@ -88,13 +119,14 @@ export async function secureDirectory(directory: string) {
   return fs.realpath(directory);
 }
 export async function receiveFile(
-  request: IncomingMessage,
+  request: AsyncIterable<Buffer>,
   offer: ShareOffer,
   directory: string,
   protect: (file: string) => Promise<void>,
   valid: () => void,
   progress: (bytes: number) => void,
   trackStaging: (directory: string) => Promise<() => unknown>,
+  published?: (file: string) => void,
 ) {
   const name = shareFileName(offer.name);
   const root = await secureDirectory(directory);
@@ -155,6 +187,7 @@ export async function receiveFile(
     if (!final) throw new Error("같은 이름의 파일이 너무 많습니다.");
     try {
       valid();
+      published?.(final);
     } catch (error) {
       await fs.unlink(final);
       throw error;

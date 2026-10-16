@@ -14,9 +14,8 @@ Usage:
   passport key --pane ID enter|esc|tab|backspace|ctrl-c|ctrl-d [--json]
   passport share friends [--json]
   passport share peers [--json]              (alias of friends)
-  passport share send --to NAME_OR_DEVICE_ID --text MARKDOWN [--json]
-  passport share send --to NAME_OR_DEVICE_ID --markdown-file FILE [--json]
-  passport share send --to NAME_OR_DEVICE_ID --file FILE [--json]
+  passport share send --to NAME_OR_DEVICE_ID --text MARKDOWN [--file FILE] [--json]
+  passport share send --to NAME_OR_DEVICE_ID --markdown-file FILE [--file FILE] [--json]
   passport share status TRANSFER_ID [--json]
   passport share cancel TRANSFER_ID [--json]
 
@@ -27,7 +26,7 @@ read returns up to 100 logical lines by default; --lines accepts 1..1000.
 Enable CLI access in Settings > Local terminal, then open a new local terminal.
 For sharing, enable Settings > Share and open a new local terminal. Sharing does
 not grant terminal read/write access. --markdown-file - reads Markdown from stdin.
-Run share friends --json first to find local aliases, device IDs and blocked status.
+Run share friends --json first to find local aliases and device IDs.
 Use an exact alias with --to; if aliases repeat, use the device ID. No auto-discovery.
 share send returns a transfer ID, NOT delivery confirmation. The recipient must
 approve every message/file. Poll share status. No receive/approve/execute commands.
@@ -135,14 +134,16 @@ fn parse_share(args: &[String]) -> Result<Value, Failure> {
     let mut index = 1;
     let mut to = None;
     let mut content: Option<(&str, String)> = None;
+    let mut attachment = None;
     let mut id = None;
     while index < args.len() {
         match args[index].as_str() {
             "--json" => {},
             "--to" if command == "send" && to.is_none() => to = Some(value(args, &mut index)?),
-            flag @ ("--text" | "--file" | "--markdown-file") if command == "send" && content.is_none() => {
+            "--file" if command == "send" && attachment.is_none() => attachment = Some(value(args, &mut index)?),
+            flag @ ("--text" | "--markdown-file") if command == "send" && content.is_none() => {
                 let input = value(args, &mut index)?;
-                let kind = match flag { "--file" => "file", "--markdown-file" => "markdownFile", _ => "text" };
+                let kind = if flag == "--markdown-file" { "markdownFile" } else { "text" };
                 content = Some((kind, input));
             },
             token if (command == "status" || command == "cancel") && !token.starts_with('-') && id.is_none() => id = Some(token.to_owned()),
@@ -153,9 +154,10 @@ fn parse_share(args: &[String]) -> Result<Value, Failure> {
     let mut request = json!({"command": format!("share.{command}")});
     if command == "send" {
         let to = to.ok_or_else(|| usage("Specify --to with an exact registered alias or device ID"))?;
-        let (mut kind, mut data) = content.ok_or_else(|| usage("Choose --text, --markdown-file or --file"))?;
+        let (mut kind, mut data) = content.ok_or_else(|| usage("Choose --text or --markdown-file; --file attaches a file to the message"))?;
         if kind == "markdownFile" && data == "-" { kind = "text"; data = read_text(io::stdin().lock())?; }
         if kind == "text" && data.len() as u64 > TEXT_LIMIT { return Err(usage("Markdown exceeds UTF-8 256 KiB")); }
+        if kind == "text" && data.trim().is_empty() { return Err(usage("A message is required")); }
         if kind != "text" {
             if data == "-" { return Err(usage("Binary file input requires a file path")); }
             let file = std::path::PathBuf::from(&data);
@@ -164,6 +166,12 @@ fn parse_share(args: &[String]) -> Result<Value, Failure> {
         }
         request["input"] = json!({"to":to});
         request["input"][kind] = json!(data);
+        if let Some(data) = attachment {
+            if data == "-" { return Err(usage("Attachment requires a file path")); }
+            let file = std::path::PathBuf::from(&data);
+            let absolute = if file.is_absolute() { file } else { env::current_dir().map_err(|_| fail("INPUT_READ", "Cannot resolve current directory"))?.join(file) };
+            request["input"]["file"] = json!(absolute.to_str().ok_or_else(|| usage("File path must be UTF-8"))?);
+        }
     } else if command == "status" || command == "cancel" {
         request["id"] = json!(id.ok_or_else(|| usage("A transfer ID is required"))?);
     }
@@ -240,8 +248,8 @@ fn display(response: &Value, command: &str, as_json: bool) -> i32 {
             },
             "identify" => println!("{}\t{}", safe(&value["paneId"]), safe(&value["workspaceName"])),
             "share.peers" => {
-                println!("DEVICE ID\tALIAS\tBLOCKED");
-                if let Some(peers) = value.as_array() { for peer in peers { println!("{}\t{}\t{}", safe(&peer["id"]), safe(&peer["name"]), peer["blocked"]); } }
+                println!("DEVICE ID\tALIAS");
+                if let Some(peers) = value.as_array() { for peer in peers { println!("{}\t{}", safe(&peer["id"]), safe(&peer["name"])); } }
             },
             "share.send" | "share.status" | "share.cancel" => println!("{}\t{}", safe(&value["id"]), safe(&value["state"])),
             "read" => {
@@ -313,6 +321,10 @@ mod tests {
         assert!(parse(&args(&["share", "read", "id"])).is_err());
         assert!(parse(&args(&["share", "send", "--to", "승민", "--text", "body", "--submit"])).is_err());
         assert!(parse(&args(&["share", "send", "--text", "body"])).is_err());
-        assert!(parse(&args(&["share", "send", "--to", "승민", "--text", "body", "--file", "x"])).is_err());
+        let attached = parse(&args(&["share", "send", "--to", "승민", "--text", "body", "--file", "x"])).unwrap();
+        assert_eq!(attached["input"]["text"], "body");
+        assert!(std::path::Path::new(attached["input"]["file"].as_str().unwrap()).is_absolute());
+        assert!(parse(&args(&["share", "send", "--to", "승민", "--file", "x"])).is_err());
+        assert!(parse(&args(&["share", "send", "--to", "승민", "--text", "  ", "--file", "x"])).is_err());
     }
 }

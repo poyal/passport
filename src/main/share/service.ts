@@ -2,7 +2,8 @@ import { randomBytes, randomUUID, createHash } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
-import Bonjour from "bonjour-service";
+import type Bonjour from "bonjour-service";
+import { createDiscovery } from "./discovery";
 import { z } from "zod";
 import {
   shareOfferSchema,
@@ -41,6 +42,7 @@ import {
   allowedAddress,
 } from "./network";
 import {
+  attachmentStream,
   readSendFile,
   receiveFile,
   secureDirectory,
@@ -187,7 +189,7 @@ export class ShareService {
       this.error = undefined;
       if (settings.enabled) {
         if (!interfaces().some((i) => i.address === settings.address))
-          throw new Error("사용할 LAN·VPN 인터페이스를 선택하세요.");
+          throw new Error("사용할 LAN 네트워크를 선택하세요.");
         await secureDirectory(settings.receiveDirectory);
         this.identity = await this.store.identity();
         await this.store.recoverStaging();
@@ -255,7 +257,7 @@ export class ShareService {
     return this.snapshot();
   }
   private trusted() {
-    return this.peers.filter((p) => !p.blocked).map((p) => p.cert);
+    return this.peers.map((p) => p.cert);
   }
   private requireEnabled() {
     if (!this.enabled || !this.identity || !this.endpoint)
@@ -264,8 +266,8 @@ export class ShareService {
   }
   private peer(id: string) {
     this.requireEnabled();
-    const peer = this.peers.find((p) => p.id === id && !p.blocked);
-    if (!peer) throw new Error("등록되지 않았거나 차단된 상대입니다.");
+    const peer = this.peers.find((p) => p.id === id);
+    if (!peer) throw new Error("등록되지 않은 상대입니다.");
     return peer;
   }
   private rate(key: string, max = 20) {
@@ -387,7 +389,6 @@ export class ShareService {
         cert: pair.request.cert,
         name: shareLabel.parse(alias),
         endpoint: pair.request.endpoint,
-        blocked: false,
       };
       this.store.savePeer(peer);
       this.peers.push(peer);
@@ -454,7 +455,6 @@ export class ShareService {
                   address: invite.endpoint.address,
                   port: result.endpoint.port,
                 },
-                blocked: false,
               };
               this.store.savePeer(peer);
               this.peers.push(peer);
@@ -480,31 +480,42 @@ export class ShareService {
     id: string,
     input: {
       name?: string;
-      blocked?: boolean;
       remove?: boolean;
       endpoint?: ShareEndpoint;
     },
   ) {
     const peer = this.peers.find((p) => p.id === id);
     if (!peer) throw new Error("상대를 찾을 수 없습니다.");
+    const addressChanged =
+      !!input.endpoint &&
+      (input.endpoint.address !== peer.endpoint.address ||
+        input.endpoint.port !== peer.endpoint.port);
     if (input.remove) {
       this.store.removePeer(id);
       this.peers = this.peers.filter((p) => p.id !== id);
     } else {
-      if (input.name !== undefined) peer.name = shareLabel.parse(input.name);
-      if (input.blocked !== undefined) peer.blocked = input.blocked;
+      const next = { ...peer };
+      if (input.name !== undefined) next.name = shareLabel.parse(input.name);
       if (input.endpoint) {
         const endpoint = shareEndpointSchema.parse(input.endpoint);
         if (!allowedAddress(endpoint.address))
-          throw new Error("LAN·VPN 주소만 사용할 수 있습니다.");
-        peer.endpoint = endpoint;
+          throw new Error("LAN 주소만 사용할 수 있습니다.");
+        next.endpoint = endpoint;
       }
-      this.store.savePeer(peer);
+      this.store.savePeer(next);
+      Object.assign(peer, next);
     }
-    if (input.remove || input.blocked)
+    if (input.remove || addressChanged)
       for (const job of this.jobs.values())
-        if (job.peer.id === id) this.finish(job, "cancelled");
-    if (this.listener && this.identity) {
+        if (job.peer.id === id)
+          this.finish(
+            job,
+            "cancelled",
+            input.remove
+              ? "친구를 삭제해 공유 전송을 취소했습니다."
+              : "친구의 연결 주소가 변경되어 공유 전송을 취소했습니다.",
+          );
+    if ((input.remove || addressChanged) && this.listener && this.identity) {
       this.listener.trust(this.identity, this.trusted());
       this.listener.disconnect();
     }
@@ -518,7 +529,7 @@ export class ShareService {
       const offer = shareOfferSchema.parse(await readJSON(req));
       if (epoch !== this.epoch || this.peer(id) !== peer)
         throw new Error("공유 설정이 변경되었습니다.");
-      if (offer.kind === "file") shareFileName(offer.name);
+      if (offer.kind !== "markdown") shareFileName(offer.name);
       if (this.jobs.has(offer.id))
         throw new Error("이미 사용한 전송 ID입니다.");
       if (
@@ -573,7 +584,8 @@ export class ShareService {
       !job.offer ||
       req.headers["content-type"] !== "application/octet-stream" ||
       req.headers["content-encoding"] ||
-      req.headers["content-length"] !== String(job.offer.bytes)
+      req.headers["content-length"] !==
+        String(job.offer.bytes + (job.offer.message?.bytes ?? 0))
     )
       throw new Error("먼저 수신 승인이 필요합니다.");
     if (
@@ -617,15 +629,23 @@ export class ShareService {
         valid();
         this.store.addMessage({
           id: job.view.id,
-          title: job.offer.name,
+          title:
+            markdown.trim().split(/\r?\n/, 1)[0].slice(0, 100) ||
+            job.offer.name,
           peerName: peer.name,
           created: Date.now(),
           markdown,
         });
       } else {
+        let markdown: string | undefined;
+        const offer = job.offer;
         await receiveFile(
-          req,
-          job.offer,
+          offer.message
+            ? attachmentStream(req, offer.message, valid, (text) => {
+                markdown = text;
+              })
+            : req,
+          offer,
           job.directory!,
           this.options.protect,
           valid,
@@ -633,6 +653,24 @@ export class ShareService {
             job.view.received = bytes;
           },
           (directory) => this.store.trackStaging(directory),
+          offer.message
+            ? (destination) => {
+                if (markdown === undefined)
+                  throw new Error("첨부 메시지가 없습니다.");
+                this.store.addMessage({
+                  id: job.view.id,
+                  title: markdown.trim().split(/\r?\n/, 1)[0].slice(0, 100),
+                  peerName: peer.name,
+                  created: Date.now(),
+                  markdown,
+                  attachment: {
+                    name: offer.name,
+                    path: destination,
+                    bytes: offer.bytes,
+                  },
+                });
+              }
+            : undefined,
         );
       }
       this.finish(job, "delivered");
@@ -659,7 +697,7 @@ export class ShareService {
       this.finish(job, "rejected");
       return;
     }
-    if (job.offer?.kind === "file")
+    if (job.offer && job.offer.kind !== "markdown")
       job.directory = await secureDirectory(
         this.store.settings().receiveDirectory,
       );
@@ -698,7 +736,7 @@ export class ShareService {
         peerName: peer.name,
         direction: "outgoing",
         state: "preparing",
-        kind: input.file ? "file" : "markdown",
+        kind: input.file ? "message-file" : "markdown",
         name: input.file ? path.basename(input.file) : "Markdown 메시지",
         bytes: 0,
         received: 0,
@@ -713,30 +751,41 @@ export class ShareService {
   private async sendJob(job: Job, input: ShareSend) {
     try {
       const identity = this.requireEnabled();
-      const data = input.file
-        ? await readSendFile(input.file)
-        : input.markdownFile
-          ? Buffer.from(
-              validateMarkdown(
-                new TextDecoder("utf-8", { fatal: true }).decode(
-                  await readSendFile(input.markdownFile, shareTextLimit),
-                ),
+      const message = input.markdownFile
+        ? Buffer.from(
+            validateMarkdown(
+              new TextDecoder("utf-8", { fatal: true }).decode(
+                await readSendFile(input.markdownFile, shareTextLimit),
               ),
-            )
-          : Buffer.from(validateMarkdown(input.text!));
+            ),
+          )
+        : Buffer.from(validateMarkdown(input.text!));
+      if (!message.toString().trim()) throw new Error("메시지를 입력하세요.");
+      const file = input.file ? await readSendFile(input.file) : undefined;
+      const data = file ? Buffer.concat([message, file]) : message;
       this.peer(job.peer.id);
       job.abort.signal.throwIfAborted();
       if (input.file) {
         shareFileName(job.view.name);
-        validateSignature(job.view.name, data.subarray(0, 4096));
+        validateSignature(job.view.name, file!.subarray(0, 4096));
       }
       job.data = data;
       const offer = shareOfferSchema.parse({
         id: job.view.id,
         kind: job.view.kind,
         name: job.view.name,
-        bytes: data.length,
-        hash: createHash("sha256").update(data).digest("hex"),
+        bytes: (file ?? message).length,
+        hash: createHash("sha256")
+          .update(file ?? message)
+          .digest("hex"),
+        ...(file
+          ? {
+              message: {
+                bytes: message.length,
+                hash: createHash("sha256").update(message).digest("hex"),
+              },
+            }
+          : {}),
       });
       job.offer = offer;
       job.view.bytes = data.length;
@@ -829,8 +878,10 @@ export class ShareService {
     this.options.completed?.(
       state === "delivered"
         ? job.view.direction === "incoming"
-          ? job.view.kind === "file"
-            ? "공유 파일을 다운로드 폴더에 저장했습니다."
+          ? job.view.kind !== "markdown"
+            ? job.view.kind === "message-file"
+              ? "공유 메시지와 첨부 파일을 받았습니다."
+              : "공유 파일을 다운로드 폴더에 저장했습니다."
             : "공유 메시지를 받았습니다."
           : "상대에게 전달했습니다."
         : error ||
@@ -875,10 +926,9 @@ export class ShareService {
     this.requireEnabled();
     switch (input.command) {
       case "share.peers":
-        return this.peers.map(({ id, name, blocked }) => ({
+        return this.peers.map(({ id, name }) => ({
           id,
           name,
-          blocked,
         }));
       case "share.send":
         return this.send(input.input);
@@ -889,7 +939,7 @@ export class ShareService {
         if (!job || job.view.direction !== "outgoing")
           throw new Error("발신 전송만 취소할 수 있습니다.");
         this.cancel(input.id);
-        return { id: input.id, state: "cancelled" };
+        return this.status(input.id);
       }
     }
   }
@@ -924,17 +974,13 @@ export class ShareService {
   }
   private startDiscovery(settings: ShareSettings) {
     try {
-      // multicast-dns receives this interface option through Bonjour's options.
-      this.bonjour = new Bonjour(
-        { interface: settings.address } as ConstructorParameters<
-          typeof Bonjour
-        >[0],
-        () => {
-          this.error =
-            "주변 검색을 사용할 수 없습니다. 등록키와 IP로 연결해 주세요.";
-          this.changed();
-        },
-      );
+      const epoch = this.epoch;
+      this.bonjour = createDiscovery(settings.address, () => {
+        if (this.closed || epoch !== this.epoch) return;
+        this.error =
+          "주변 검색을 사용할 수 없습니다. 등록키와 IP로 연결해 주세요.";
+        this.changed();
+      });
       const instance = randomUUID();
       const advertised = this.bonjour.publish({
         name: instance,

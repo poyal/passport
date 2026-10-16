@@ -1,5 +1,7 @@
 # Windows·macOS 개발 규칙
 
+공유 검색의 mDNS 수신 소켓은 wildcard 바인딩을 사용하되 multicast membership·발신과 광고 A 레코드는 선택한 IPv4 인터페이스로 제한한다. bonjour-service의 내부 multicast-dns `error`도 처리하며, 관련 결함은 수정 앱의 실제 Mac·Windows LAN 검색으로 확인한다. 1.3.1의 첨부 열기는 메시지 ID로 메인에서 저장 경로를 찾고 일반 파일을 확인한 뒤 공통 Electron `shell.openPath`를 호출한다. 자동 실행은 하지 않으며 플랫폼별 별도 수신·IPC 구현을 만들지 않는다.
+
 [문서 목록](README.md) · [환경 준비](development.md) · [전체 구현 구조](architecture.md) · [검증 기록](verification.md)
 
 이 문서는 `src/main/platform/`과 그 호출부를 변경할 때 따르는 개발 기준이다. **필수**는 리뷰와 검증에서 확인해야 하는 조건, **금지**는 기존 설계를 우회하는 변경, **예외**는 아래에 명시한 기존 경계다. 코드와 이 문서가 어긋나면 실제 동작을 확인하고 같은 변경에서 둘 다 수정한다. 과거 검증 기록을 현재 소스의 검증으로 대신하지 않는다.
@@ -354,4 +356,4 @@ macOS·Windows의 E2E 종료는 공통 `closeCleanly()`가 최종 `quit`까지 �
 
 Windows PowerShell 5.1의 .NET `File.WriteAllText`·`ReadAllText`는 ADS 경로를 거부하므로 `Set-Content`·`Get-Content`의 `-LiteralPath`·`-Stream Zone.Identifier`로 기록하고 재확인한다. 파일 경로는 계속 JSON 표준입력으로 전달하며, `IAttachmentExecute::Save`와 보호 실패 시 파일 미공개 조건은 유지한다. `tests/share.test.ts`의 Windows 네이티브 회귀는 한글·공백·셸 특수문자 파일명, 내용 보존, 실제 `ZoneId=3`, 없는 파일의 실패를 검사한다. 비 NTFS 목적지·정책 거부는 별도 실기 범위다.
 
-`tests/share.test.ts`는 Mac 실제 xattr와 Windows 명령 주입 경계를 검사한다. Mac의 Windows 주입 검사 통과는 Windows Attachment Execution Services·DPAPI·NTFS 실기 통과가 아니다. `sharing.spec.ts`는 두 격리 앱의 실제 TLS·승인·저장과 CLI를 검사하지만 safeStorage만 시험 소유 암호화로 대체하므로 Keychain/DPAPI 실기라고 기록하지 않는다. 양쪽 OS 실기·실제 LAN/VPN 검증 전 공개 배포는 보류한다.
+`tests/share.test.ts`는 Mac 실제 xattr와 Windows 명령 주입 경계를 검사한다. Mac의 Windows 주입 검사 통과는 Windows Attachment Execution Services·DPAPI·NTFS 실기 통과가 아니다. `sharing.spec.ts`는 두 격리 앱의 실제 TLS·승인·저장과 CLI를 검사하지만 safeStorage만 시험 소유 암호화로 대체하므로 Keychain/DPAPI 실기라고 기록하지 않는다. 양쪽 OS 실기·실제 LAN 검증 전 공개 배포는 보류한다.

@@ -25,14 +25,16 @@ test.beforeEach(async () => {
 test.afterEach(async () => {
   try {
     for (const app of apps.splice(0).reverse()) {
-      await app.evaluate(({ safeStorage, clipboard, dialog }) => {
+      await app.evaluate(({ safeStorage, clipboard, dialog, shell }) => {
         const original = (globalThis as any).__shareOriginal;
         if (!original) return;
         Object.assign(safeStorage, original.safeStorage);
         clipboard.writeText = original.writeText;
         dialog.showOpenDialog = original.showOpenDialog;
+        shell.openPath = original.openPath;
         delete (globalThis as any).__shareOriginal;
         delete (globalThis as any).__shareCopied;
+        delete (globalThis as any).__shareOpened;
       });
       await closeCleanly(app);
     }
@@ -66,7 +68,7 @@ async function launch(name: string) {
   apps.push(app);
   const page = await app.firstWindow();
   page.on("pageerror", (error) => errors.push(error.message));
-  await app.evaluate(({ safeStorage, clipboard, dialog }) => {
+  await app.evaluate(({ safeStorage, clipboard, dialog, shell }) => {
     const crypto = process.getBuiltinModule("node:crypto"),
       key = crypto.randomBytes(32);
     (globalThis as any).__shareOriginal = {
@@ -77,6 +79,7 @@ async function launch(name: string) {
       },
       writeText: clipboard.writeText,
       showOpenDialog: dialog.showOpenDialog,
+      openPath: shell.openPath,
     };
     // Test-owned encryption avoids prompting for the user's Keychain. The
     // actual network, file protection, IPC and renderer remain unmocked.
@@ -105,6 +108,11 @@ async function launch(name: string) {
     };
     clipboard.writeText = async (text) => {
       (globalThis as any).__shareCopied = text;
+    };
+    (globalThis as any).__shareOpened = [];
+    shell.openPath = async (file) => {
+      (globalThis as any).__shareOpened.push(file);
+      return "";
     };
   });
   await page.getByRole("button", { name: "공유함", exact: true }).click();
@@ -185,11 +193,14 @@ async function pair() {
   ).toHaveAttribute("aria-selected", "true");
   await expect(
     a.page.getByRole("combobox", { name: "받는 사람", exact: true }),
-  ).toHaveValue((await snapshot(a.page)).peers[0].id);
+  ).toHaveValue("지수");
+  await a.page
+    .getByRole("button", { name: "Markdown 원문", exact: true })
+    .click();
   return { a, b };
 }
 
-test("validates sharing settings and separates inbox, sending and friends with aligned controls", async () => {
+test("validates sharing settings, formats message drafts and separates inbox, sending and friends with aligned controls", async () => {
   const { app, page, directory } = await launch("sharing-ui");
   const apply = page.getByRole("button", { name: "공유 설정 적용" });
   await page.getByLabel("메시지 자동 정리").selectOption("30");
@@ -299,6 +310,21 @@ test("validates sharing settings and separates inbox, sending and friends with a
   await page.getByRole("button", { name: "등록키 복사", exact: true }).click();
   expect(await app.evaluate(() => (globalThis as any).__shareCopied)).toBe(key);
   await page.getByRole("tab", { name: "보내기", exact: true }).click();
+  const editor = page.getByRole("textbox", { name: "메시지", exact: true });
+  await editor.fill("작업 결과");
+  await page.getByRole("button", { name: "제목", exact: true }).click();
+  await expect(page.locator(".tiptap h1")).toHaveText("작업 결과");
+  await page
+    .getByRole("button", { name: "Markdown 원문", exact: true })
+    .click();
+  await expect(
+    page.getByRole("textbox", { name: "Markdown 메시지", exact: true }),
+  ).toHaveValue(/^# 작업 결과\s*$/);
+  await page.getByRole("button", { name: "서식 편집", exact: true }).click();
+  await expect(page.locator(".tiptap h1")).toHaveText("작업 결과");
+  await page
+    .getByRole("button", { name: "Markdown 원문", exact: true })
+    .click();
   await expect(
     page.getByRole("textbox", { name: "Markdown 메시지", exact: true }),
   ).toBeVisible();
@@ -331,7 +357,7 @@ test("validates sharing settings and separates inbox, sending and friends with a
   ).toHaveAttribute("aria-selected", "true");
 });
 
-test("pairs two devices, approves encrypted Markdown, renders inert content and saves protected attachments only", async () => {
+test("pairs two devices, sends messages with optional attachments after one approval and renders inert content", async () => {
   const { a, b } = await pair();
   const network: string[] = [];
   b.page.on("request", (req) => {
@@ -341,7 +367,8 @@ test("pairs two devices, approves encrypted Markdown, renders inert content and 
     '# 작업 결과\n\n[외부 링크](https://share-example.invalid/)\n\n![외부 이미지](https://share-example.invalid/pixel.png)\n\n<script>window.__shareExecuted=true</script>\n\n<iframe src="https://share-example.invalid/"></iframe>\n\n```sh\necho hello\n```';
   await a.page
     .getByRole("combobox", { name: "받는 사람", exact: true })
-    .selectOption((await snapshot(a.page)).peers[0].id);
+    .fill("지수");
+  await a.page.getByRole("option", { name: /지수/ }).click();
   await a.page
     .getByRole("textbox", { name: "Markdown 메시지", exact: true })
     .fill(text);
@@ -385,8 +412,26 @@ test("pairs two devices, approves encrypted Markdown, renders inert content and 
       filePaths: [file],
     });
   }, file);
+  await a.page.getByRole("button", { name: "파일 선택", exact: true }).click();
+  await expect(
+    a.page.getByRole("button", { name: "메시지 보내기", exact: true }),
+  ).toBeDisabled();
+  expect((await snapshot(b.page)).transfers).toEqual([]);
+  await expect(a.page.locator(".share-attachment")).toContainText("첨부.html");
+  await a.page.getByRole("button", { name: "첨부 제거" }).click();
+  await expect(a.page.locator(".share-attachment")).toHaveCount(0);
+  await a.page.getByRole("button", { name: "파일 선택", exact: true }).click();
+  // Cancelling a replacement picker preserves the selected attachment.
+  await a.app.evaluate(({ dialog }) => {
+    dialog.showOpenDialog = async () => ({ canceled: true, filePaths: [] });
+  });
+  await a.page.getByRole("button", { name: "파일 선택", exact: true }).click();
+  await expect(a.page.locator(".share-attachment")).toContainText("첨부.html");
   await a.page
-    .getByRole("button", { name: "파일 보내기", exact: true })
+    .getByRole("textbox", { name: "Markdown 메시지", exact: true })
+    .fill("# 첨부 검토\n\n내용을 확인해 주세요.");
+  await a.page
+    .getByRole("button", { name: "메시지 보내기", exact: true })
     .click();
   await expect(
     b.page.getByRole("button", { name: "승인하고 저장" }),
@@ -402,12 +447,68 @@ test("pairs two devices, approves encrypted Markdown, renders inert content and 
     .poll(async () => (await snapshot(b.page)).transfers.length)
     .toBe(0);
   expect(await fs.readdir(b.directory)).toEqual(["첨부.html"]);
+  await expect(b.page.locator(".share-message-list button")).toHaveCount(2);
+  await b.page
+    .getByRole("textbox", { name: "받은 메시지 검색" })
+    .fill("첨부.html");
   await expect(b.page.locator(".share-message-list button")).toHaveCount(1);
-  await expect(
-    b.page
-      .locator(".sharing-view")
-      .getByRole("button", { name: /파일 열기|실행|미리보기/ }),
-  ).toHaveCount(0);
+  await b.page
+    .locator(".share-message-list button")
+    .filter({ hasText: "첨부 검토" })
+    .click();
+  await expect(b.page.locator(".share-markdown h1")).toHaveText("첨부 검토");
+  await expect(b.page.getByRole("region", { name: "첨부 파일" })).toContainText(
+    "첨부.html",
+  );
+  await b.page.getByRole("textbox", { name: "받은 메시지 검색" }).fill("");
+  for (const theme of ["dark", "light"] as const) {
+    await setTheme(b.page, theme);
+    await b.page.screenshot({
+      path: test.info().outputPath(`received-message-${theme}.png`),
+    });
+    expect(
+      await b.page
+        .locator(".sharing-view")
+        .evaluate((el) => el.scrollWidth - el.clientWidth),
+    ).toBeLessThanOrEqual(1);
+  }
+  expect(await b.app.evaluate(() => (globalThis as any).__shareOpened)).toEqual(
+    [],
+  );
+  await b.page
+    .getByRole("button", { name: "첨부 경로 복사", exact: true })
+    .click();
+  expect(await b.app.evaluate(() => (globalThis as any).__shareCopied)).toBe(
+    path.join(b.directory, "첨부.html"),
+  );
+  await b.page
+    .getByRole("button", { name: "첨부 파일 열기", exact: true })
+    .click();
+  expect(await b.app.evaluate(() => (globalThis as any).__shareOpened)).toEqual(
+    [path.join(b.directory, "첨부.html")],
+  );
+  await fs.rename(
+    path.join(b.directory, "첨부.html"),
+    path.join(b.directory, "moved.html"),
+  );
+  await b.page
+    .getByRole("button", { name: "첨부 파일 열기", exact: true })
+    .click();
+  await expect(b.page.getByRole("alert")).toContainText(
+    "저장한 파일을 찾을 수 없습니다.",
+  );
+  expect(
+    await b.app.evaluate(() => (globalThis as any).__shareOpened),
+  ).toHaveLength(1);
+  await fs.rename(
+    path.join(b.directory, "moved.html"),
+    path.join(b.directory, "첨부.html"),
+  );
+  await b.page
+    .getByRole("button", { name: "메시지 삭제", exact: true })
+    .click();
+  await expect(b.page.locator(".share-message-list button")).toHaveCount(1);
+  await b.page.locator(".share-message-list button").click();
   await b.page
     .getByRole("button", { name: "메시지 삭제", exact: true })
     .click();
@@ -434,6 +535,59 @@ test("pairs two devices, approves encrypted Markdown, renders inert content and 
   expect(await b.app.evaluate(() => (globalThis as any).__shareCopied)).toBe(
     deeplyNested,
   );
+  await a.page.getByRole("button", { name: "서식 편집", exact: true }).click();
+  await a.page
+    .getByRole("textbox", { name: "메시지", exact: true })
+    .fill("서식 전송 확인");
+  await a.page.getByRole("button", { name: "제목", exact: true }).click();
+  await a.page
+    .getByRole("button", { name: "메시지 보내기", exact: true })
+    .click();
+  await b.page
+    .getByRole("button", { name: "메시지 받기", exact: true })
+    .click();
+  await b.page
+    .locator(".share-message-list button")
+    .filter({ hasText: "서식 전송 확인" })
+    .click();
+  await expect(b.page.locator(".share-markdown h1")).toHaveText(
+    "서식 전송 확인",
+  );
+
+  const peer = (await snapshot(a.page)).peers[0];
+  await a.page.getByRole("button", { name: "공유 설정", exact: true }).click();
+  await a.page.getByRole("button", { name: "지수 수정", exact: true }).click();
+  const edit = a.page.getByRole("dialog", { name: "친구 수정" });
+  await edit.getByLabel("이름", { exact: true }).fill("지수 새 이름");
+  await edit.getByLabel("연결 주소", { exact: true }).fill("invalid:0");
+  await edit.getByRole("button", { name: "저장", exact: true }).click();
+  await expect(edit.getByRole("alert")).toBeVisible();
+  expect((await snapshot(a.page)).peers[0].name).toBe("지수");
+  await edit
+    .getByLabel("연결 주소", { exact: true })
+    .fill(`${peer.endpoint.address}:${peer.endpoint.port}`);
+  await edit.getByRole("button", { name: "저장", exact: true }).click();
+  await expect(edit).toHaveCount(0);
+  expect((await snapshot(a.page)).peers[0].name).toBe("지수 새 이름");
+  await a.page.getByRole("button", { name: "공유함", exact: true }).click();
+  await a.page.getByRole("tab", { name: "보내기", exact: true }).click();
+  const recipient = a.page.getByRole("combobox", {
+    name: "받는 사람",
+    exact: true,
+  });
+  await recipient.fill(peer.id.slice(0, 10));
+  await expect(a.page.getByRole("option")).toHaveCount(1);
+  await recipient.press("Enter");
+  await expect(recipient).toHaveValue("지수 새 이름");
+  await a.page.getByRole("button", { name: "공유 설정", exact: true }).click();
+  await a.page
+    .getByRole("button", { name: "지수 새 이름 삭제", exact: true })
+    .click();
+  await a.page
+    .getByRole("dialog", { name: "친구 삭제" })
+    .getByRole("button", { name: "확인", exact: true })
+    .click();
+  await expect.poll(async () => (await snapshot(a.page)).peers.length).toBe(0);
 });
 
 test("lets the real CLI send to a registered alias without terminal access and cannot approve or read incoming messages", async () => {
@@ -461,7 +615,6 @@ test("lets the real CLI send to a registered alias without terminal access and c
   expect(friends.value[0]).toMatchObject({
     name: "지수",
     id: (await snapshot(a.page)).peers[0].id,
-    blocked: false,
   });
   expect((await cli(["share", "peers"])).value[0].name).toBe("지수");
   expect((await cli(["list"])).ok).toBe(false);

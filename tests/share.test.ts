@@ -28,14 +28,140 @@ import {
   validateMarkdown,
   shareSettingsSchema,
   shareControlSchema,
+  shareSendSchema,
+  shareOfferSchema,
 } from "../src/shared/share";
-import { validateSignature } from "../src/main/share/files";
+import { attachmentStream, validateSignature } from "../src/main/share/files";
 import { createDarwinDownload } from "../src/main/platform/darwin/download";
 import { createWindowsDownload } from "../src/main/platform/win32/download";
 import type { Vault } from "../src/main/store";
 import https from "node:https";
 
 const cleanups: (() => Promise<unknown>)[] = [];
+it("requires message content with optional attachment and rejects mismatched upload metadata", () => {
+  expect(
+    shareSendSchema.safeParse({ to: "peer", file: "report.pdf" }).success,
+  ).toBe(false);
+  expect(
+    shareSendSchema.safeParse({ to: "peer", text: " \n", file: "report.pdf" })
+      .success,
+  ).toBe(false);
+  expect(
+    shareSendSchema.safeParse({
+      to: "peer",
+      text: "보고서",
+      file: "report.pdf",
+    }).success,
+  ).toBe(true);
+  expect(
+    shareSendSchema.safeParse({
+      to: "peer",
+      markdownFile: "message.md",
+      file: "report.pdf",
+    }).success,
+  ).toBe(true);
+  expect(
+    shareSendSchema.safeParse({
+      to: "peer",
+      text: "hello",
+      markdownFile: "message.md",
+    }).success,
+  ).toBe(false);
+  const offer = {
+    id: randomUUID(),
+    kind: "message-file",
+    name: "report.txt",
+    bytes: 1,
+    hash: "a".repeat(64),
+  };
+  expect(shareOfferSchema.safeParse(offer).success).toBe(false);
+  expect(
+    shareOfferSchema.safeParse({
+      ...offer,
+      message: { bytes: 262145, hash: "a".repeat(64) },
+    }).success,
+  ).toBe(false);
+  expect(allowedAddress("100.64.0.1")).toBe(false);
+});
+
+it("decodes split UTF-8 message bytes without mixing them into the attachment and rejects truncation or tampering", async () => {
+  const text = Buffer.from("# 한글 메시지"),
+    file = Buffer.from("attachment");
+  const message = {
+    bytes: text.length,
+    hash: createHash("sha256").update(text).digest("hex"),
+  };
+  const collect = async (chunks: Buffer[], metadata = message) => {
+    let markdown: string | undefined;
+    const result: Buffer[] = [];
+    for await (const chunk of attachmentStream(
+      (async function* () {
+        yield* chunks;
+      })(),
+      metadata,
+      () => {},
+      (value) => {
+        markdown = value;
+      },
+    ))
+      result.push(chunk);
+    return { markdown, file: Buffer.concat(result) };
+  };
+  const body = Buffer.concat([text, file]);
+  for (const boundary of [1, 3, text.length, text.length + 1]) {
+    expect(
+      await collect([body.subarray(0, boundary), body.subarray(boundary)]),
+    ).toEqual({ markdown: text.toString(), file });
+  }
+  expect(await collect([text])).toEqual({
+    markdown: text.toString(),
+    file: Buffer.alloc(0),
+  });
+  await expect(collect([text.subarray(0, -1)])).rejects.toThrow(/크기/);
+  await expect(
+    collect([body], { ...message, hash: "0".repeat(64) }),
+  ).rejects.toThrow(/무결성/);
+});
+
+it("rolls back a protected attachment when its message cannot be stored", async () => {
+  const { a, b } = await paired();
+  const file = path.join(a.root, "report.txt");
+  await fs.writeFile(file, "report");
+  vi.spyOn(b.store, "addMessage").mockImplementation(() => {
+    throw new Error("message storage full");
+  });
+  const request = a.service.send({ to: "지수", text: "검토해 주세요", file });
+  await vi.waitFor(() =>
+    expect(b.service.snapshot().transfers).toHaveLength(1),
+  );
+  await b.service.approve(request.id, true);
+  await vi.waitFor(
+    () => expect(a.service.status(request.id).state).toBe("failed"),
+    { timeout: 5000 },
+  );
+  expect(b.store.messages()).toEqual([]);
+  expect(await fs.readdir(b.store.settings().receiveDirectory)).toEqual([]);
+});
+
+it("reports asynchronous discovery socket failures without throwing or stopping approved direct sharing", async () => {
+  const { service, store } = await fixture("discovery failure");
+  await service.configure({ ...store.settings(), discoverable: true });
+  const mdns = (
+    service as unknown as {
+      bonjour: { server: { mdns: { emit(name: string, error: Error): void } } };
+    }
+  ).bonjour.server.mdns;
+  expect(() =>
+    mdns.emit(
+      "error",
+      Object.assign(new Error("bind denied"), { code: "EACCES" }),
+    ),
+  ).not.toThrow();
+  expect(service.snapshot().error).toBe(
+    "주변 검색을 사용할 수 없습니다. 등록키와 IP로 연결해 주세요.",
+  );
+  expect(service.snapshot().endpoint?.address).toBe("127.0.0.1");
+});
 afterEach(async () => {
   vi.useRealTimers();
   vi.restoreAllMocks();
@@ -73,10 +199,12 @@ async function fixture(name: string, secure = vault()) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "passport-share-test-"));
   cleanups.push(() => fs.rm(root, { recursive: true, force: true }));
   const store = new ShareStore(root, secure, root);
+  const notices: string[] = [];
   const service = new ShareService(store, {
     protect: async () => {},
     changed: () => {},
     attention: () => {},
+    completed: (message) => notices.push(message),
   });
   cleanups.push(() => service.close());
   await service.configure({
@@ -91,6 +219,7 @@ async function fixture(name: string, secure = vault()) {
     service,
     identity: await store.identity(),
     endpoint: service.snapshot().endpoint!,
+    notices,
   };
 }
 async function paired() {
@@ -121,6 +250,73 @@ const sendJSON = (
     route,
     Buffer.from(JSON.stringify(body)),
   );
+
+it("matches completion events to the transfer result once on each device", async () => {
+  const { a, b } = await paired();
+  const start = async () => {
+    a.notices.length = b.notices.length = 0;
+    const transfer = a.service.send({ to: "지수", text: "이벤트 확인" });
+    await vi.waitFor(() =>
+      expect(b.service.snapshot().transfers).toHaveLength(1),
+    );
+    expect(a.notices).toEqual([]);
+    expect(b.notices).toEqual([]);
+    return transfer;
+  };
+  const accepted = await start();
+  await b.service.approve(accepted.id, true);
+  expect(b.notices).toEqual([]);
+  await vi.waitFor(
+    () => expect(a.service.status(accepted.id).state).toBe("delivered"),
+    { timeout: 5000 },
+  );
+  expect(a.notices).toEqual(["상대에게 전달했습니다."]);
+  expect(b.notices).toEqual(["공유 메시지를 받았습니다."]);
+  a.service.cancel(accepted.id);
+  expect(a.notices).toHaveLength(1);
+  expect(
+    a.service.control({ command: "share.cancel", id: accepted.id }),
+  ).toMatchObject({ state: "delivered" });
+  const rejected = await start();
+  await b.service.approve(rejected.id, false);
+  await vi.waitFor(
+    () => expect(a.service.status(rejected.id).state).toBe("rejected"),
+    { timeout: 5000 },
+  );
+  expect(a.notices).toEqual(["상대가 공유 요청을 거절했습니다."]);
+  expect(b.notices).toHaveLength(1); // Receiver wording remains the user's reverted wording; see event audit.
+  expect(b.store.messages()).toHaveLength(1);
+  const cancelled = await start();
+  a.service.cancel(cancelled.id);
+  await vi.waitFor(() =>
+    expect(b.service.snapshot().transfers).toHaveLength(0),
+  );
+  expect(a.service.status(cancelled.id).state).toBe("cancelled");
+  expect(a.notices).toHaveLength(1);
+  expect(b.notices).toHaveLength(1);
+  a.service.cancel(cancelled.id);
+  expect(a.notices).toHaveLength(1);
+  const expired = await start();
+  (b.service as any).jobs.get(expired.id).deadline = Date.now() - 1;
+  (b.service as any).sweep();
+  await vi.waitFor(
+    () => expect(a.service.status(expired.id).state).toBe("expired"),
+    { timeout: 5000 },
+  );
+  expect(a.notices).toEqual(["공유 요청이 만료되었습니다."]);
+  expect(b.notices).toEqual(["공유 요청이 만료되었습니다."]);
+});
+
+it("removes legacy blocked friends on unlock and keeps valid friends without a block flag", async () => {
+  const { a, b } = await paired();
+  const peer = a.store.peers()[0];
+  (a.store as any).put("peer", peer.id, { ...peer, blocked: false });
+  expect(a.store.peers()).toEqual([peer]);
+  expect(a.store.peers()[0]).not.toHaveProperty("blocked");
+  (a.store as any).put("peer", peer.id, { ...peer, blocked: true });
+  expect(a.store.peers()).toEqual([]);
+  expect(a.store.peers()).toEqual([]);
+});
 
 it("shares one identity across concurrent initialization and invalidates pending keys on reset", async () => {
   const root = await fs.mkdtemp(
@@ -318,7 +514,7 @@ it("does not transfer Markdown before approval and stores accepted messages encr
   ).toBe(false);
 });
 
-it("saves HTML and Markdown attachments without opening, rejects replay and preserves existing files", async () => {
+it("saves a message and protected attachment together after one approval, rejects replay and preserves existing files", async () => {
   const { a, b } = await paired();
   const source = path.join(a.root, "보고서.html"),
     data = "<script>throw new Error('must never run')</script>";
@@ -328,10 +524,13 @@ it("saves HTML and Markdown attachments without opening, rejects replay and pres
     path.join(b.store.settings().receiveDirectory, "보고서.html"),
     "existing",
   );
-  const transfer = a.service.send({ to: "지수", file: source });
+  const text = "# 보고서 검토 요청\n\n첨부 문서를 확인해 주세요.";
+  const transfer = a.service.send({ to: "지수", text, file: source });
   await vi.waitFor(() =>
     expect(b.service.snapshot().transfers).toHaveLength(1),
   );
+  expect(b.store.messages()).toEqual([]);
+  expect(b.service.snapshot().transfers[0].kind).toBe("message-file");
   await b.service.approve(transfer.id, true);
   await vi.waitFor(
     () => expect(a.service.status(transfer.id).state).toBe("delivered"),
@@ -353,7 +552,14 @@ it("saves HTML and Markdown attachments without opening, rejects replay and pres
     "보고서 (1).html",
     "보고서.html",
   ]);
-  expect(b.store.messages()).toEqual([]);
+  expect(b.store.message(transfer.id)).toMatchObject({
+    markdown: text,
+    attachment: {
+      name: "보고서.html",
+      path: path.join(b.store.settings().receiveDirectory, "보고서 (1).html"),
+      bytes: Buffer.byteLength(data),
+    },
+  });
   await expect(
     sendJSON(a, b, "/offer", {
       id: transfer.id,
@@ -365,7 +571,7 @@ it("saves HTML and Markdown attachments without opening, rejects replay and pres
   ).rejects.toThrow();
 });
 
-it("binds approval to the sender and digest and cancels when a peer is blocked", async () => {
+it("binds approval to the sender and digest and revokes trust when a peer is deleted", async () => {
   const { a, b } = await paired();
   const id = randomUUID();
   await sendJSON(a, b, "/offer", {
@@ -390,7 +596,7 @@ it("binds approval to the sender and digest and cancels when a peer is blocked",
   await vi.waitFor(() =>
     expect(b.service.snapshot().transfers).toHaveLength(1),
   );
-  b.service.updatePeer(fingerprint(a.identity.cert), { blocked: true });
+  b.service.updatePeer(fingerprint(a.identity.cert), { remove: true });
   expect(b.service.snapshot().transfers).toEqual([]);
   await expect(b.service.approve(transfer.id, true)).rejects.toThrow();
   await expect(sendJSON(a, b, `/status/${transfer.id}`, {})).rejects.toThrow();
@@ -494,7 +700,9 @@ it("marks macOS downloads and keeps Windows paths out of executable script text"
 it.skipIf(process.platform !== "win32")(
   "marks real Windows attachments with ZoneId 3 while preserving literal filenames and content",
   async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "passport-share-zone-"));
+    const root = await fs.mkdtemp(
+      path.join(os.tmpdir(), "passport-share-zone-"),
+    );
     cleanups.push(() => fs.rm(root, { recursive: true, force: true }));
     const file = path.join(root, "한글 ' [literal] ; $(not-a-command).txt");
     const content = "Harmless Passport download protection fixture.\r\n";
@@ -545,7 +753,7 @@ it("fails closed if OS attachment protection is unavailable and cleans partial d
   (b.service as any).options.protect = async () => {
     throw new Error("quarantine unavailable");
   };
-  const request = a.service.send({ to: "지수", file });
+  const request = a.service.send({ to: "지수", text: "첨부 문서", file });
   await vi.waitFor(() =>
     expect(b.service.snapshot().transfers).toHaveLength(1),
   );
@@ -555,6 +763,7 @@ it("fails closed if OS attachment protection is unavailable and cleans partial d
     { timeout: 5000 },
   );
   expect(await fs.readdir(b.store.settings().receiveDirectory)).toEqual([]);
+  expect(b.store.messages()).toEqual([]);
   await b.store.recoverStaging();
 });
 
@@ -623,7 +832,7 @@ it("rejects absent client certificates and TLS downgrade, and revokes old identi
 it("does not retain private source paths in failed completion receipts", async () => {
   const { a } = await paired();
   const file = path.join(a.root, "private-customer-document.pdf");
-  const request = a.service.send({ to: "지수", file });
+  const request = a.service.send({ to: "지수", text: "첨부 문서", file });
   await vi.waitFor(() =>
     expect(a.service.status(request.id).state).toBe("failed"),
   );

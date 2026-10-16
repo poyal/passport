@@ -20,6 +20,7 @@ const names: Call[] = [
   "share.cancel",
   "share.message",
   "share.deleteMessage",
+  "share.openAttachment",
   "share.folder",
   "share.file",
   "control.reply",

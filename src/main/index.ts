@@ -50,6 +50,7 @@ import {
   shareLabel,
   shareEndpointSchema,
   shareExtensions,
+  shareFileName,
 } from "../shared/share";
 import { Sessions, type TrustPrompt } from "./ssh";
 import { Files } from "./files";
@@ -470,7 +471,6 @@ const schemas: Record<Call, z.ZodType> = {
     .object({
       id: z.string().regex(/^[a-f0-9]{64}$/),
       name: shareLabel.optional(),
-      blocked: z.boolean().optional(),
       remove: z.boolean().optional(),
       endpoint: shareEndpointSchema.optional(),
     })
@@ -480,6 +480,7 @@ const schemas: Record<Call, z.ZodType> = {
   "share.cancel": idObject,
   "share.message": idObject,
   "share.deleteMessage": idObject,
+  "share.openAttachment": idObject,
   "share.folder": z.undefined(),
   "share.file": z.undefined(),
   "control.reply": controlInspectionSchema,
@@ -795,6 +796,19 @@ async function call<K extends Call>(
       return sharing.cancel(i.id);
     case "share.message":
       return sharing.store.message(i.id);
+    case "share.openAttachment": {
+      const attachment = sharing.store.message(i.id).attachment;
+      if (!attachment) throw new Error("첨부 파일이 없습니다.");
+      shareFileName(path.basename(attachment.path));
+      const file = await fs.lstat(attachment.path).catch(() => null);
+      if (!file?.isFile() || file.isSymbolicLink())
+        throw new Error(
+          "저장한 파일을 찾을 수 없습니다. 이동하거나 삭제했는지 확인하세요.",
+        );
+      const error = await shell.openPath(attachment.path);
+      if (error) throw new Error("기본 앱으로 파일을 열 수 없습니다.");
+      return;
+    }
     case "share.deleteMessage":
       sharing.store.removeMessage(i.id);
       emit({ kind: "share-changed" });

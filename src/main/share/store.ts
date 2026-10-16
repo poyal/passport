@@ -25,7 +25,6 @@ const peerSchema = z
     id: z.string(),
     name: shareLabel,
     endpoint: shareEndpointSchema,
-    blocked: z.boolean(),
     cert: z.string(),
   })
   .strict();
@@ -37,6 +36,14 @@ const messageSchema = z
     created: z.number(),
     title: z.string(),
     markdown: z.string(),
+    attachment: z
+      .object({
+        name: z.string(),
+        path: z.string(),
+        bytes: z.number().int().min(0),
+      })
+      .strict()
+      .optional(),
   })
   .strict();
 
@@ -119,7 +126,19 @@ export class ShareStore {
     return pending;
   }
   peers() {
-    return this.list("peer").map((value) => peerSchema.parse(value));
+    return this.list("peer").flatMap((value) => {
+      // 1.3.0 blocked contacts become deleted contacts when the encrypted
+      // address book is unlocked. Never silently restore their trust.
+      const { blocked, ...peer } = peerSchema
+        .extend({ blocked: z.boolean().optional() })
+        .parse(value);
+      if (blocked) {
+        this.removePeer(peer.id);
+        return [];
+      }
+      if (blocked !== undefined) this.put("peer", peer.id, peer);
+      return [peer];
+    });
   }
   savePeer(peer: StoredPeer) {
     validateCertificate(peer.cert);

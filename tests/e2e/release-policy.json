@@ -475,12 +475,12 @@
     {
       "id": "sharing.ui",
       "file": "sharing.spec.ts",
-      "title": "validates sharing settings and separates inbox, sending and friends with aligned controls"
+      "title": "validates sharing settings, formats message drafts and separates inbox, sending and friends with aligned controls"
     },
     {
       "id": "sharing.1",
       "file": "sharing.spec.ts",
-      "title": "pairs two devices, approves encrypted Markdown, renders inert content and saves protected attachments only"
+      "title": "pairs two devices, sends messages with optional attachments after one approval and renders inert content"
     },
     {
       "id": "sharing.2",

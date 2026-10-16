@@ -9,9 +9,28 @@ import {
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
-import { Copy, Download, Send, ShieldCheck, Users } from "lucide-react";
+import {
+  Copy,
+  Paperclip,
+  Send,
+  ShieldCheck,
+  Users,
+  Inbox,
+  Search,
+  Trash2,
+  FileText,
+  RefreshCw,
+  X,
+  Info,
+  AlertCircle,
+  Pencil,
+  ExternalLink,
+} from "lucide-react";
 import { api, message } from "./api";
 import { useApp } from "./context";
+import { Modal } from "./components";
+import { MessageEditor } from "./MessageEditor";
+import { ShareRecipient } from "./ShareRecipient";
 import {
   shareExtensions,
   shareLabel,
@@ -65,6 +84,13 @@ export function SharingSettings() {
     [key, setKey] = useState(""),
     [alias, setAlias] = useState(""),
     [invitation, setInvitation] = useState<{ key: string; expires: number }>();
+  const [editing, setEditing] = useState<{
+    id: string;
+    name: string;
+    address: string;
+    busy?: boolean;
+    error?: string;
+  }>();
   const app = useApp();
   useEffect(() => {
     if (!state) return;
@@ -348,64 +374,33 @@ export function SharingSettings() {
               <small className="share-fingerprint">{peer.id}</small>
               <small>
                 {peer.endpoint.address}:{peer.endpoint.port}
-                {peer.blocked ? " · 차단됨" : ""}
               </small>
             </div>
             <div className="row">
               <button
+                className="share-icon-button"
+                title="친구 수정"
+                aria-label={peer.name + " 수정"}
                 onClick={() =>
-                  void run(async () => {
-                    const name = await app.ask(
-                      "상대 별칭",
-                      "CLI에서 사용할 이름입니다.",
-                      peer.name,
-                    );
-                    if (name)
-                      await api.call("share.peer", { id: peer.id, name });
+                  setEditing({
+                    id: peer.id,
+                    name: peer.name,
+                    address: peer.endpoint.address + ":" + peer.endpoint.port,
                   })
                 }
               >
-                이름 수정
+                <Pencil size={17} />
               </button>
               <button
-                onClick={() =>
-                  void run(async () => {
-                    const address = await app.ask(
-                      "상대 연결 주소",
-                      "IP가 바뀌어도 등록된 기기 인증서는 같아야 합니다. IPv4:포트 형식으로 입력하세요.",
-                      `${peer.endpoint.address}:${peer.endpoint.port}`,
-                    );
-                    if (address) {
-                      const [host, port] = address.split(":");
-                      await api.call("share.peer", {
-                        id: peer.id,
-                        endpoint: { address: host, port: Number(port) },
-                      });
-                    }
-                  })
-                }
-              >
-                주소 수정
-              </button>
-              <button
-                onClick={() =>
-                  void run(() =>
-                    api.call("share.peer", {
-                      id: peer.id,
-                      blocked: !peer.blocked,
-                    }),
-                  )
-                }
-              >
-                {peer.blocked ? "차단 해제" : "차단"}
-              </button>
-              <button
+                className="share-icon-button"
+                title="친구 삭제"
+                aria-label={peer.name + " 삭제"}
                 onClick={() =>
                   void run(async () => {
                     if (
                       await app.confirm(
-                        "사용자 등록 해제",
-                        `${peer.name}의 연결과 대기 요청을 취소하고 등록을 해제할까요?`,
+                        "친구 삭제",
+                        `${peer.name}의 등록과 인증 신뢰를 삭제하고 진행 중인 전송·대기 요청을 취소할까요? 다시 연결하려면 서로 등록해야 합니다.`,
                       )
                     )
                       await api.call("share.peer", {
@@ -415,7 +410,7 @@ export function SharingSettings() {
                   })
                 }
               >
-                등록 해제
+                <Trash2 size={17} />
               </button>
             </div>
           </div>
@@ -424,6 +419,81 @@ export function SharingSettings() {
           <p className="hint">등록된 사용자가 없습니다.</p>
         )}
       </section>
+      {editing && (
+        <Modal
+          title="친구 수정"
+          onClose={() => {
+            if (!editing.busy) setEditing(undefined);
+          }}
+        >
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setEditing({ ...editing, busy: true, error: undefined });
+              try {
+                const [address, port, extra] = editing.address
+                  .trim()
+                  .split(":");
+                if (extra !== undefined)
+                  throw new Error("IPv4:포트 형식으로 입력하세요.");
+                await api.call("share.peer", {
+                  id: editing.id,
+                  name: shareLabel.parse(editing.name),
+                  endpoint: { address, port: Number(port) },
+                });
+                setState(await api.call("share.state", undefined));
+                setEditing(undefined);
+                app.notify("친구 정보를 수정했습니다.");
+              } catch (error) {
+                setEditing({ ...editing, busy: false, error: message(error) });
+              }
+            }}
+          >
+            <fieldset disabled={editing.busy} className="share-settings-fields">
+              <label>
+                이름
+                <input
+                  value={editing.name}
+                  maxLength={100}
+                  onChange={(e) =>
+                    setEditing({ ...editing, name: e.target.value })
+                  }
+                />
+              </label>
+              <label>
+                연결 주소
+                <input
+                  value={editing.address}
+                  placeholder="192.168.0.3:12345"
+                  onChange={(e) =>
+                    setEditing({ ...editing, address: e.target.value })
+                  }
+                />
+              </label>
+              <p className="hint">
+                이름은 내 앱에서만 사용합니다. 주소를 바꿔도 등록된 기기
+                인증서는 같아야 합니다.
+              </p>
+              {editing.error && (
+                <p className="share-error" role="alert">
+                  {editing.error}
+                </p>
+              )}
+              <div className="row">
+                <button type="button" onClick={() => setEditing(undefined)}>
+                  취소
+                </button>
+                <button
+                  className="primary"
+                  disabled={!editing.name.trim() || !editing.address.trim()}
+                >
+                  저장
+                </button>
+              </div>
+            </fieldset>
+          </form>
+        </Modal>
+      )}
     </div>
   );
 }
@@ -531,7 +601,10 @@ export function SharingView({
   const { state, error, run, refresh } = useShare();
   const [to, setTo] = useState(""),
     [text, setText] = useState(""),
+    [file, setFile] = useState(""),
     [selected, setSelected] = useState<ShareMessage>();
+  const [sending, setSending] = useState(false);
+  const [search, setSearch] = useState("");
   const [tab, setTab] = useState<"inbox" | "send" | "friends">("inbox");
   const [copyingInvitation, setCopyingInvitation] = useState(false);
   const [aliases, setAliases] = useState<Record<string, string>>({});
@@ -551,6 +624,11 @@ export function SharingView({
       setSelected(undefined);
   }, [state, selected]);
   if (!state) return <p role="status">공유함을 불러오는 중입니다.</p>;
+  const messages = state.messages.filter((item) =>
+    `${item.peerName} ${item.title} ${item.attachment?.name ?? ""}`
+      .toLocaleLowerCase()
+      .includes(search.trim().toLocaleLowerCase()),
+  );
   const copy = (value: string) =>
     void run(async () => {
       await api.call("clipboard.write", { text: value });
@@ -592,9 +670,16 @@ export function SharingView({
         </p>
       )}
       {!state.endpoint && (
-        <p className="share-empty">
-          공유가 꺼져 있습니다. 공유 설정에서 네트워크와 저장 폴더를 선택하세요.
-        </p>
+        <div className="share-disabled" role="status">
+          <AlertCircle size={21} />
+          <div>
+            <strong>공유가 꺼져 있습니다</strong>
+            <p>네트워크와 저장 폴더를 선택하고 공유를 켜 주세요.</p>
+          </div>
+          <button onClick={() => app.openSettings("sharing")}>
+            공유 설정 열기
+          </button>
+        </div>
       )}
       {state.requests.map((request) => (
         <section className="settings-card share-request" key={request.id}>
@@ -689,151 +774,196 @@ export function SharingView({
         id={`share-panel-${tab}`}
         aria-labelledby={`share-tab-${tab}`}
       >
-        {state.transfers
-          .filter(
-            (transfer) =>
-              (tab === "inbox" && transfer.direction === "incoming") ||
-              (tab === "send" && transfer.direction === "outgoing"),
-          )
-          .map((transfer) => (
-            <section className="settings-card share-request" key={transfer.id}>
-              <div className="row">
-                <strong>
-                  {transfer.peerName} ·{" "}
-                  {transfer.direction === "incoming" ? "받기" : "보내기"}
-                </strong>
-                <span>{transfer.kind === "file" ? "파일" : "Markdown"}</span>
-              </div>
-              <p>
-                {transfer.name} · {(transfer.bytes / 1024).toFixed(1)} KiB
-              </p>
-              {transfer.direction === "incoming" &&
-                transfer.kind === "file" && (
-                  <p className="hint">
-                    저장 위치: {state.settings.receiveDirectory}
-                  </p>
-                )}
-              {transfer.direction === "incoming" &&
-              transfer.state === "pending" ? (
+        <div className="share-requests">
+          {state.transfers
+            .filter(
+              (transfer) =>
+                (tab === "inbox" && transfer.direction === "incoming") ||
+                (tab === "send" && transfer.direction === "outgoing"),
+            )
+            .map((transfer) => (
+              <section
+                className="settings-card share-request"
+                key={transfer.id}
+              >
                 <div className="row">
-                  <button
-                    onClick={() =>
-                      void run(() =>
-                        api.call("share.approve", {
-                          id: transfer.id,
-                          accept: false,
-                        }),
-                      )
-                    }
-                  >
-                    거절
-                  </button>
-                  <button
-                    className="primary"
-                    onClick={() =>
-                      void run(() =>
-                        api.call("share.approve", {
-                          id: transfer.id,
-                          accept: true,
-                        }),
-                      )
-                    }
-                  >
-                    {transfer.kind === "file" ? "승인하고 저장" : "메시지 받기"}
-                  </button>
-                </div>
-              ) : (
-                <div className="row">
+                  <strong>
+                    {transfer.peerName} ·{" "}
+                    {transfer.direction === "incoming" ? "받기" : "보내기"}
+                  </strong>
                   <span>
-                    {
-                      {
-                        preparing: "준비 중",
-                        pending: "상대 승인 대기",
-                        accepted: "수신 승인 완료",
-                        sending: "전송 중",
-                        delivered: "전달 완료",
-                        rejected: "거절됨",
-                        expired: "만료됨",
-                        cancelled: "취소됨",
-                        failed: "실패",
-                      }[transfer.state]
-                    }
+                    {transfer.kind === "message-file"
+                      ? "메시지 + 파일"
+                      : transfer.kind === "file"
+                        ? "파일"
+                        : "메시지"}
                   </span>
-                  <button
-                    onClick={() =>
-                      void run(() =>
-                        api.call("share.cancel", { id: transfer.id }),
-                      )
-                    }
-                  >
-                    전송 취소
-                  </button>
                 </div>
-              )}
-            </section>
-          ))}
+                <p>
+                  {transfer.name} · {(transfer.bytes / 1024).toFixed(1)} KiB
+                </p>
+                {transfer.direction === "incoming" &&
+                  transfer.kind !== "markdown" && (
+                    <p className="hint">
+                      저장 위치: {state.settings.receiveDirectory}
+                    </p>
+                  )}
+                {transfer.direction === "incoming" &&
+                transfer.state === "pending" ? (
+                  <div className="row">
+                    <button
+                      onClick={() =>
+                        void run(() =>
+                          api.call("share.approve", {
+                            id: transfer.id,
+                            accept: false,
+                          }),
+                        )
+                      }
+                    >
+                      거절
+                    </button>
+                    <button
+                      className="primary"
+                      onClick={() =>
+                        void run(() =>
+                          api.call("share.approve", {
+                            id: transfer.id,
+                            accept: true,
+                          }),
+                        )
+                      }
+                    >
+                      {transfer.kind !== "markdown"
+                        ? "승인하고 저장"
+                        : "메시지 받기"}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="row">
+                    <span>
+                      {
+                        {
+                          preparing: "준비 중",
+                          pending: "상대 승인 대기",
+                          accepted: "수신 승인 완료",
+                          sending: "전송 중",
+                          delivered: "전달 완료",
+                          rejected: "거절됨",
+                          expired: "만료됨",
+                          cancelled: "취소됨",
+                          failed: "실패",
+                        }[transfer.state]
+                      }
+                    </span>
+                    <button
+                      onClick={() =>
+                        void run(() =>
+                          api.call("share.cancel", { id: transfer.id }),
+                        )
+                      }
+                    >
+                      전송 취소
+                    </button>
+                  </div>
+                )}
+              </section>
+            ))}
+        </div>
         {tab === "send" && (
           <section className="settings-card share-compose">
             <h2>보내기</h2>
-            <label>
-              받는 사람
-              <select value={to} onChange={(e) => setTo(e.target.value)}>
-                <option value="">등록된 상대 선택</option>
-                {state.peers
-                  .filter((p) => !p.blocked)
-                  .map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} · {p.id.slice(0, 8)}
-                    </option>
-                  ))}
-              </select>
-            </label>
-            <label>
-              Markdown 메시지
-              <textarea
+            <fieldset className="share-compose-fields" disabled={sending}>
+              <ShareRecipient peers={state.peers} value={to} onChange={setTo} />
+              <MessageEditor
                 value={text}
-                onChange={(e) => setText(e.target.value)}
-                placeholder="# 작업 결과"
+                onChange={setText}
+                disabled={sending}
               />
-            </label>
-            <div className="row">
-              <button
-                className="primary"
-                disabled={!to || !state.endpoint || !text}
-                onClick={() =>
-                  void run(async () => {
-                    await api.call("share.send", { to, text });
-                    setText("");
-                  })
-                }
-              >
-                <Send size={15} />
-                메시지 보내기
-              </button>
-              <button
-                disabled={!to || !state.endpoint}
-                onClick={() =>
-                  void run(async () => {
-                    const file = await api.call("share.file", undefined);
-                    if (file) await api.call("share.send", { to, file });
-                  })
-                }
-              >
-                <Download size={15} />
-                파일 보내기
-              </button>
+              <div className="share-compose-footer">
+                <div className="share-attachment-picker">
+                  <button
+                    onClick={() =>
+                      void run(async () => {
+                        const selectedFile = await api.call(
+                          "share.file",
+                          undefined,
+                        );
+                        if (selectedFile) setFile(selectedFile);
+                      })
+                    }
+                  >
+                    <Paperclip size={15} />
+                    파일 선택
+                  </button>
+                  {file ? (
+                    <div className="row share-attachment">
+                      <span title={file}>{file.split(/[\\/]/).pop()}</span>
+                      <button
+                        title="첨부 제거"
+                        aria-label="첨부 제거"
+                        onClick={() => setFile("")}
+                      >
+                        <X size={15} />
+                      </button>
+                    </div>
+                  ) : (
+                    <span className="hint">첨부 파일 없음</span>
+                  )}
+                </div>
+                <button
+                  className="primary"
+                  disabled={!to || !state.endpoint || !text.trim() || sending}
+                  onClick={async () => {
+                    setSending(true);
+                    try {
+                      await run(async () => {
+                        await api.call("share.send", {
+                          to,
+                          text,
+                          ...(file ? { file } : {}),
+                        });
+                        setText("");
+                        setFile("");
+                      });
+                    } finally {
+                      setSending(false);
+                    }
+                  }}
+                >
+                  <Send size={15} />
+                  {sending ? "준비 중…" : "메시지 보내기"}
+                </button>
+              </div>
+            </fieldset>
+            <div className="share-compose-help">
+              <span>상대가 승인하면 전달됩니다.</span>
+              <details>
+                <summary>
+                  <Info size={13} />
+                  첨부 최대 100 MiB
+                </summary>
+                <p>
+                  메시지에 파일 하나를 함께 보낼 수 있습니다. 허용 형식:{" "}
+                  {shareExtensions.join(", ")}
+                </p>
+              </details>
             </div>
-            <p className="hint">
-              파일은 최대 100 MiB이며 상대의 승인 후 저장됩니다. 허용 형식:{" "}
-              {shareExtensions.join(", ")}
-            </p>
           </section>
         )}
         {tab === "inbox" && (
-          <section className="settings-card">
+          <section className="settings-card share-inbox-card">
             <div className="share-section-heading">
-              <h2>받은 메시지</h2>
+              <h2>
+                받은 메시지{" "}
+                <span className="share-message-count">
+                  {state.messages.length}
+                </span>
+              </h2>
               <button
+                className="share-icon-button"
+                title="보관 메시지 불러오기"
+                aria-label="보관 메시지 불러오기"
                 onClick={() =>
                   void run(async () => {
                     await api.call("share.unlock", undefined);
@@ -841,61 +971,175 @@ export function SharingView({
                   })
                 }
               >
-                보관 메시지 불러오기
+                <RefreshCw size={17} />
               </button>
             </div>
-            <p className="hint">
-              최근 100개를 표시합니다.{" "}
-              {state.settings.retentionDays === null
-                ? "자동 정리를 하지 않습니다."
-                : `${state.settings.retentionDays}일 후 자동 정리합니다.`}
-            </p>
             <div className="share-inbox">
-              <div className="share-message-list">
-                {state.messages.map((item) => (
-                  <button
-                    className={selected?.id === item.id ? "selected" : ""}
-                    key={item.id}
-                    onClick={() =>
-                      void run(async () =>
-                        setSelected(
-                          await api.call("share.message", { id: item.id }),
-                        ),
-                      )
-                    }
-                  >
-                    <strong>{item.peerName}</strong>
-                    <span>{item.title}</span>
-                    <small>{new Date(item.created).toLocaleString()}</small>
-                  </button>
-                ))}
-                {!state.messages.length && (
-                  <p className="hint">받은 메시지가 없습니다.</p>
-                )}
-              </div>
-              {selected && (
-                <article>
-                  <div className="row">
-                    <strong>{selected.peerName}</strong>
-                    <button onClick={() => copy(selected.markdown)}>
-                      <Copy size={15} />
-                      전체 Markdown 복사
-                    </button>
+              <aside className="share-inbox-sidebar">
+                <label className="share-message-search">
+                  <Search size={16} />
+                  <input
+                    aria-label="받은 메시지 검색"
+                    placeholder="보낸 사람, 제목, 파일명 검색"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                </label>
+                <div className="share-message-list">
+                  {messages.map((item) => (
                     <button
+                      className={selected?.id === item.id ? "selected" : ""}
+                      aria-pressed={selected?.id === item.id}
+                      key={item.id}
                       onClick={() =>
-                        void run(async () => {
-                          await api.call("share.deleteMessage", {
-                            id: selected.id,
-                          });
-                          setSelected(undefined);
-                        })
+                        void run(async () =>
+                          setSelected(
+                            await api.call("share.message", { id: item.id }),
+                          ),
+                        )
                       }
                     >
-                      메시지 삭제
+                      <span className="share-message-meta">
+                        <strong>{item.peerName}</strong>
+                        <time
+                          dateTime={new Date(item.created).toISOString()}
+                          title={new Date(item.created).toLocaleString()}
+                        >
+                          {new Date(item.created).toLocaleDateString(
+                            undefined,
+                            { month: "short", day: "numeric" },
+                          )}
+                        </time>
+                      </span>
+                      <span className="share-message-title">
+                        {item.title.replace(/^#{1,6}\s+/, "")}
+                      </span>
+                      {item.attachment && (
+                        <small className="share-file-chip">
+                          <Paperclip size={12} /> {item.attachment.name}
+                        </small>
+                      )}
                     </button>
+                  ))}
+                  {!messages.length && (
+                    <p className="share-list-empty">
+                      {search
+                        ? "검색 결과가 없습니다."
+                        : "받은 메시지가 없습니다."}
+                    </p>
+                  )}
+                </div>
+                <p className="share-retention">
+                  최근 100개 ·{" "}
+                  {state.settings.retentionDays === null
+                    ? "자동 정리 안 함"
+                    : `${state.settings.retentionDays}일 보관`}
+                </p>
+              </aside>
+              {selected ? (
+                <article className="share-message-reader">
+                  <header className="share-reader-heading">
+                    <div className="share-sender">
+                      <span className="share-avatar" aria-hidden="true">
+                        {Array.from(selected.peerName)[0]}
+                      </span>
+                      <div>
+                        <strong>{selected.peerName}</strong>
+                        <time
+                          dateTime={new Date(selected.created).toISOString()}
+                        >
+                          {new Date(selected.created).toLocaleString()}
+                        </time>
+                      </div>
+                    </div>
+                    <div className="share-reader-actions">
+                      <button
+                        className="share-icon-button"
+                        title="전체 Markdown 복사"
+                        aria-label="전체 Markdown 복사"
+                        onClick={() => copy(selected.markdown)}
+                      >
+                        <Copy size={17} />
+                      </button>
+                      <button
+                        className="share-icon-button"
+                        title="메시지 삭제"
+                        aria-label="메시지 삭제"
+                        onClick={() =>
+                          void run(async () => {
+                            await api.call("share.deleteMessage", {
+                              id: selected.id,
+                            });
+                            setSelected(undefined);
+                          })
+                        }
+                      >
+                        <Trash2 size={17} />
+                      </button>
+                    </div>
+                  </header>
+                  <div className="share-reader-body">
+                    <SharedMarkdown text={selected.markdown} copy={copy} />
+                    {selected.attachment && (
+                      <section
+                        className="share-attachment-detail"
+                        aria-label="첨부 파일"
+                      >
+                        <span className="share-file-icon">
+                          <FileText size={22} />
+                        </span>
+                        <div>
+                          <strong>{selected.attachment.name}</strong>
+                          <p>
+                            {(selected.attachment.bytes / 1024).toFixed(1)} KiB
+                            · 수신 시 저장한 위치
+                          </p>
+                          <p className="hint">{selected.attachment.path}</p>
+                        </div>
+                        <div className="share-attachment-actions">
+                          <button
+                            className="share-icon-button"
+                            title="파일 열기"
+                            aria-label="첨부 파일 열기"
+                            onClick={() =>
+                              void run(() =>
+                                api.call("share.openAttachment", {
+                                  id: selected.id,
+                                }),
+                              )
+                            }
+                          >
+                            <ExternalLink size={17} />
+                          </button>
+                          <button
+                            className="share-icon-button"
+                            title="경로 복사"
+                            aria-label="첨부 경로 복사"
+                            onClick={() => copy(selected.attachment!.path)}
+                          >
+                            <Copy size={17} />
+                          </button>
+                        </div>
+                      </section>
+                    )}
                   </div>
-                  <SharedMarkdown text={selected.markdown} copy={copy} />
                 </article>
+              ) : (
+                <div className="share-reader-empty">
+                  <span>
+                    <Inbox size={30} strokeWidth={1.5} />
+                  </span>
+                  <h3>
+                    {state.messages.length
+                      ? "메시지를 선택하세요"
+                      : "받은 메시지가 여기에 모입니다"}
+                  </h3>
+                  <p>
+                    {state.messages.length
+                      ? "본문과 첨부 파일을 한곳에서 확인하세요."
+                      : "상대의 요청을 승인하면 메시지를 읽을 수 있습니다."}
+                  </p>
+                </div>
               )}
             </div>
           </section>
@@ -927,11 +1171,10 @@ export function SharingView({
                   <strong>{peer.name}</strong>
                   <small>
                     {peer.endpoint.address}:{peer.endpoint.port}
-                    {peer.blocked ? " · 차단됨" : ""}
                   </small>
                 </div>
                 <button
-                  disabled={peer.blocked || !state.endpoint}
+                  disabled={!state.endpoint}
                   aria-label={`${peer.name}에게 보내기`}
                   onClick={() => {
                     setTo(peer.id);

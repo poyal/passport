@@ -57,22 +57,32 @@ export const shareEndpointSchema = z
 export const shareOfferSchema = z
   .object({
     id: z.string().uuid(),
-    kind: z.enum(["markdown", "file"]),
+    kind: z.enum(["markdown", "file", "message-file"]),
     name: shareLabel,
     bytes: z.number().int().min(0).max(shareFileLimit),
     hash: z.string().regex(/^[a-f0-9]{64}$/),
+    message: z
+      .object({
+        bytes: z.number().int().min(1).max(shareTextLimit),
+        hash: z.string().regex(/^[a-f0-9]{64}$/),
+      })
+      .strict()
+      .optional(),
   })
   .strict()
   .refine(
     (v) => v.kind !== "markdown" || v.bytes <= shareTextLimit,
     "메시지는 256 KiB 이하여야 합니다.",
+  )
+  .refine(
+    (v) => (v.kind === "message-file") === (v.message !== undefined),
+    "첨부 메시지 정보가 올바르지 않습니다.",
   );
 export type ShareOffer = z.infer<typeof shareOfferSchema>;
 export type SharePeer = {
   id: string;
   name: string;
   endpoint: ShareEndpoint;
-  blocked: boolean;
 };
 export type ShareTransferState =
   | "preparing"
@@ -104,6 +114,7 @@ export type ShareMessage = {
   created: number;
   title: string;
   markdown: string;
+  attachment?: { name: string; path: string; bytes: number };
 };
 export type SharePairRequest = {
   id: string;
@@ -131,10 +142,12 @@ export const shareSendSchema = z
   })
   .strict()
   .refine(
-    (v) =>
-      [v.text, v.file, v.markdownFile].filter((v) => v !== undefined).length ===
-      1,
-    "텍스트, Markdown 파일, 첨부 파일 중 하나를 지정하세요.",
+    (v) => (v.text !== undefined) !== (v.markdownFile !== undefined),
+    "메시지를 입력하거나 Markdown 파일을 지정하세요. 첨부 파일은 함께 보낼 수 있습니다.",
+  )
+  .refine(
+    (v) => v.text === undefined || v.text.trim().length > 0,
+    "메시지를 입력하세요.",
   );
 export type ShareSend = z.infer<typeof shareSendSchema>;
 export const shareControlSchema = z.discriminatedUnion("command", [

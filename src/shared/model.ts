@@ -597,7 +597,6 @@ export interface Calls {
     input: {
       id: string;
       name?: string;
-      blocked?: boolean;
       remove?: boolean;
       endpoint?: import("./share").ShareEndpoint;
     };
@@ -614,6 +613,7 @@ export interface Calls {
     output: import("./share").ShareMessage;
   };
   "share.deleteMessage": { input: { id: string }; output: void };
+  "share.openAttachment": { input: { id: string }; output: void };
   "share.folder": { input: undefined; output: string | null };
   "share.file": { input: undefined; output: string | null };
   "control.reply": {

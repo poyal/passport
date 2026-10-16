@@ -18,7 +18,7 @@ npm.cmd run prepare:runtime -- x64
 npm.cmd run release:verify -- --desktop
 ```
 
-3. 공유의 실제 DPAPI 재시작 복구, Attachment Execution Services·Zone.Identifier, NTFS가 아닌 경로/보호 실패 처리, 내장 Git 실행·서명 신뢰, 두 PC의 등록·승인·취소·LAN/VPN 검증 결과를 [보안 검토 항목](security-review-20261016.md#공개-전-남은-검증)에 추가한다. 자동 시험의 모의 암호화를 실제 OS 검증으로 기록하지 않는다.
+3. 공유의 실제 DPAPI 재시작 복구, Attachment Execution Services·Zone.Identifier, NTFS가 아닌 경로/보호 실패 처리, 내장 Git 실행·서명 신뢰, 두 PC의 등록·승인·취소·LAN 검증 결과를 [보안 검토 항목](security-review-20261016.md#공개-전-남은-검증)에 추가한다. 자동 시험의 모의 암호화를 실제 OS 검증으로 기록하지 않는다.
 4. 같은 깨끗한 체크아웃에서 출력된 정식 검증 기록으로 게시 계획을 확인한다. 계획에 Windows EXE 추가와 체크섬 갱신만 있고 기존 Mac DMG가 보존되는지 확인한 뒤 게시한다. 실패·preview 기록은 일반 게시 도구에서 허용하지 않는다.
 
 ```powershell

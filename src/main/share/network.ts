@@ -26,8 +26,7 @@ export function allowedAddress(address: string) {
     a === 127 ||
     (a === 172 && b >= 16 && b <= 31) ||
     (a === 192 && b === 168) ||
-    (a === 169 && b === 254) ||
-    (a === 100 && b >= 64 && b <= 127)
+    (a === 169 && b === 254)
   );
 }
 export function validateEndpoint(endpoint: ShareEndpoint) {
@@ -37,7 +36,7 @@ export function validateEndpoint(endpoint: ShareEndpoint) {
     endpoint.port < 1 ||
     endpoint.port > 65535
   )
-    throw new Error("LAN·VPN의 IPv4 주소와 올바른 포트를 입력하세요.");
+    throw new Error("같은 LAN의 IPv4 주소와 올바른 포트를 입력하세요.");
 }
 export function remoteCertificate(socket: TLSSocket) {
   const raw = socket.getPeerCertificate()?.raw;
