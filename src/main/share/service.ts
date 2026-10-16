@@ -122,9 +122,11 @@ export class ShareService {
   private joins = new Set<AbortController>();
   private tasks = new Set<Promise<unknown>>();
   private bonjour?: Bonjour;
+  private discoveryBrowser?: ReturnType<Bonjour["find"]>;
+  private nextDiscoveryQuery = 0;
   private nearby = new Map<
     string,
-    { name: string; endpoint: ShareEndpoint; seen: number }
+    { name: string; endpoint: ShareEndpoint; seen: number; instance: string }
   >();
   private timer: ReturnType<typeof setInterval>;
   private error?: string;
@@ -169,7 +171,9 @@ export class ShareService {
         .filter((j) => !done.has(j.view.state))
         .map((j) => ({ ...j.view })),
       messages: this.unlocked ? this.store.messages() : [],
-      nearby: [...this.nearby.values()].map(({ seen: _, ...peer }) => peer),
+      nearby: [...this.nearby.values()].map(
+        ({ seen: _, instance: __, ...peer }) => peer,
+      ),
       interfaces: interfaces(),
       error: this.error,
     };
@@ -613,8 +617,7 @@ export class ShareService {
         for await (const chunk of req) {
           valid();
           size += chunk.length;
-          if (size > job.offer.bytes)
-            throw new Error("쪽지 크기가 다릅니다.");
+          if (size > job.offer.bytes) throw new Error("쪽지 크기가 다릅니다.");
           chunks.push(chunk);
         }
         const data = Buffer.concat(chunks);
@@ -960,8 +963,15 @@ export class ShareService {
     }
     for (const [key, calls] of this.rates)
       if (calls.every((t) => Date.now() - t >= 60000)) this.rates.delete(key);
+    let expiredNearby = false;
     for (const [id, peer] of this.nearby)
-      if (Date.now() - peer.seen > 120000) this.nearby.delete(id);
+      if (Date.now() - peer.seen > 120000) {
+        this.nearby.delete(id);
+        expiredNearby = true;
+      }
+    if (expiredNearby) this.changed();
+    if (this.bonjour && Date.now() >= this.nextDiscoveryQuery)
+      this.refreshDiscovery();
     if (this.unlocked && this.store.prune()) this.changed();
     if (
       this.enabled &&
@@ -1001,14 +1011,29 @@ export class ShareService {
             record.type !== "AAAA" &&
             (record.type !== "A" || record.data === settings.address),
         );
-      this.bonjour.find({ type: "passport-share" }, (service) => {
+      this.refreshDiscovery();
+    } catch {
+      this.error = "주변 검색을 시작할 수 없습니다.";
+    }
+  }
+  private refreshDiscovery() {
+    if (!this.bonjour) return;
+    // Bonjour emits `up` only once for unchanged advertisements. A fresh
+    // browser and query renew our bounded presence cache from actual replies,
+    // without restarting the advertised service or the TLS listener.
+    this.nextDiscoveryQuery = Date.now() + 60000;
+    this.discoveryBrowser?.stop();
+    const epoch = this.epoch;
+    try {
+      const up = (service: Bonjour.Service) => {
+        if (this.closed || epoch !== this.epoch) return;
         const address = service.referer?.address;
+        const key = `${address}:${service.port}`;
         if (
           !address ||
           !allowedAddress(address) ||
           (address === this.endpoint?.address &&
-            service.port === this.endpoint?.port) ||
-          this.nearby.size >= 100
+            service.port === this.endpoint?.port)
         )
           return;
         const parsed = shareLabel.safeParse(service.txt?.label);
@@ -1019,15 +1044,38 @@ export class ShareService {
           service.port > 65535
         )
           return;
-        this.nearby.set(`${address}:${service.port}`, {
+        for (const [id, peer] of this.nearby)
+          if (
+            peer.instance === service.fqdn &&
+            peer.endpoint.address === address &&
+            id !== key
+          )
+            this.nearby.delete(id);
+        if (this.nearby.size >= 100 && !this.nearby.has(key)) return;
+        this.nearby.set(key, {
           name: parsed.data,
           endpoint: { address, port: service.port },
           seen: Date.now(),
+          instance: service.fqdn,
         });
         this.changed();
+      };
+      const down: typeof up = (service) => {
+        if (this.closed || epoch !== this.epoch) return;
+        if (this.nearby.delete(`${service.referer?.address}:${service.port}`))
+          this.changed();
+      };
+      this.discoveryBrowser = this.bonjour.find({ type: "passport-share" }, up);
+      this.discoveryBrowser.on("down", down);
+      this.discoveryBrowser.on("txt-update", up);
+      this.discoveryBrowser.on("srv-update", (current, previous) => {
+        down(previous);
+        up(current);
       });
     } catch {
-      this.error = "주변 검색을 시작할 수 없습니다.";
+      this.error =
+        "주변 검색을 사용할 수 없습니다. 등록키와 IP로 연결해 주세요.";
+      this.changed();
     }
   }
   private async stop() {
@@ -1036,6 +1084,8 @@ export class ShareService {
     for (const join of this.joins) join.abort();
     this.joins.clear();
     for (const job of this.jobs.values()) this.finish(job, "cancelled");
+    this.discoveryBrowser?.stop();
+    this.discoveryBrowser = undefined;
     this.bonjour?.destroy();
     this.bonjour = undefined;
     this.nearby.clear();

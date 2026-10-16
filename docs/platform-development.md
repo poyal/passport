@@ -2,6 +2,8 @@
 
 공유 검색의 mDNS 수신 소켓은 wildcard 바인딩을 사용하되 multicast membership·발신과 광고 A 레코드는 선택한 IPv4 인터페이스로 제한한다. bonjour-service의 내부 multicast-dns `error`도 처리하며, 관련 결함은 수정 앱의 실제 Mac·Windows LAN 검색으로 확인한다. 1.3.1의 첨부 열기는 메시지 ID로 메인에서 저장 경로를 찾고 일반 파일을 확인한 뒤 공통 Electron `shell.openPath`를 호출한다. 자동 실행은 하지 않으며 플랫폼별 별도 수신·IPC 구현을 만들지 않는다.
 
+현재 bonjour-service의 `up`은 변경 없는 광고 응답마다 발생하지 않는다. 60초마다 이전 browser를 중지하고 새 query를 보내 실제 응답으로 120초 주변 목록 캐시를 갱신한다. 광고·TLS listener는 재시작하지 않으며 `down`·이름·포트 변경과 응답 없는 기기의 만료를 반영한다. 중지할 때 browser의 수신 리스너도 제거한다. 이 계약은 실제 DNS 응답을 라이브러리에 주입한 회귀와 2분을 넘기는 두 PC 실기로 확인한다.
+
 [문서 목록](README.md) · [환경 준비](development.md) · [전체 구현 구조](architecture.md) · [검증 기록](verification.md)
 
 이 문서는 `src/main/platform/`과 그 호출부를 변경할 때 따르는 개발 기준이다. **필수**는 리뷰와 검증에서 확인해야 하는 조건, **금지**는 기존 설계를 우회하는 변경, **예외**는 아래에 명시한 기존 경계다. 코드와 이 문서가 어긋나면 실제 동작을 확인하고 같은 변경에서 둘 다 수정한다. 과거 검증 기록을 현재 소스의 검증으로 대신하지 않는다.

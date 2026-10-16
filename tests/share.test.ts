@@ -162,6 +162,77 @@ it("reports asynchronous discovery socket failures without throwing or stopping 
   );
   expect(service.snapshot().endpoint?.address).toBe("127.0.0.1");
 });
+it("keeps unchanged nearby advertisements through cache renewal and removes goodbye or stale peers", async () => {
+  const { service, store } = await fixture("discovery renewal");
+  await service.configure({ ...store.settings(), discoverable: true });
+  const internal = service as unknown as {
+    bonjour: {
+      server: { mdns: { emit(name: string, ...args: unknown[]): void } };
+    };
+    sweep(): void;
+  };
+  const mdns = internal.bonjour.server.mdns;
+  const base = Date.now();
+  const now = vi.spyOn(Date, "now").mockReturnValue(base);
+  const packet = (port = 49300, label = "Nearby", ttl = 120) => ({
+    answers: [
+      {
+        name: "_passport-share._tcp.local",
+        type: "PTR",
+        ttl,
+        data: "fixture._passport-share._tcp.local",
+      },
+    ],
+    additionals: [
+      {
+        name: "fixture._passport-share._tcp.local",
+        type: "SRV",
+        ttl,
+        data: { port, target: "fixture.local", priority: 0, weight: 0 },
+      },
+      {
+        name: "fixture._passport-share._tcp.local",
+        type: "TXT",
+        ttl,
+        data: [Buffer.from(`label=${label}`)],
+      },
+      { name: "fixture.local", type: "A", ttl, data: "192.168.0.123" },
+    ],
+  });
+  const reply = (port = 49300, label = "Nearby", ttl = 120) =>
+    mdns.emit("response", packet(port, label, ttl), {
+      address: "192.168.0.123",
+      port: 5353,
+    });
+  reply();
+  expect(service.snapshot().nearby).toEqual([
+    { name: "Nearby", endpoint: { address: "192.168.0.123", port: 49300 } },
+  ]);
+  now.mockReturnValue(base + 90000);
+  internal.sweep();
+  reply();
+  now.mockReturnValue(base + 150000);
+  internal.sweep();
+  expect(service.snapshot().nearby).toHaveLength(1);
+  reply(49301, "Renamed");
+  reply(49302, "Renamed again");
+  expect(service.snapshot().nearby).toEqual([
+    {
+      name: "Renamed again",
+      endpoint: { address: "192.168.0.123", port: 49302 },
+    },
+  ]);
+  reply(49302, "Renamed again", 0);
+  expect(service.snapshot().nearby).toEqual([]);
+  reply();
+  now.mockReturnValue(base + 280000);
+  internal.sweep();
+  expect(service.snapshot().nearby).toEqual([]);
+  await service.configure({ ...store.settings(), enabled: false });
+  reply();
+  expect(service.snapshot().nearby).toEqual([]);
+});
+
 afterEach(async () => {
   vi.useRealTimers();
   vi.restoreAllMocks();
