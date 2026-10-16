@@ -632,7 +632,9 @@ it("saves a message and protected attachment together after one approval, reject
     markdown: text,
     attachment: {
       name: "보고서.html",
-      path: path.join(b.store.settings().receiveDirectory, "보고서 (1).html"),
+      path: await fs.realpath(
+        path.join(b.store.settings().receiveDirectory, "보고서 (1).html"),
+      ),
       bytes: Buffer.byteLength(data),
     },
   });
