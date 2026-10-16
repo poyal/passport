@@ -352,4 +352,6 @@ macOS·Windows의 E2E 종료는 공통 `closeCleanly()`가 최종 `quit`까지 �
 
 공통 `share/files.ts`가 크기·해시·경로·소유 임시 폴더·충돌 방지를 담당하며 OS 검사 후에도 다시 해시를 검사한다. 공유 서비스는 별도 TLS listener와 저장소를 사용하며 터미널 IPC를 네트워크에 노출하지 않는다. Mac 패키지는 `NSLocalNetworkUsageDescription`과 `_passport-share._tcp`의 Bonjour 사용 목적을 선언한다.
 
+Windows PowerShell 5.1의 .NET `File.WriteAllText`·`ReadAllText`는 ADS 경로를 거부하므로 `Set-Content`·`Get-Content`의 `-LiteralPath`·`-Stream Zone.Identifier`로 기록하고 재확인한다. 파일 경로는 계속 JSON 표준입력으로 전달하며, `IAttachmentExecute::Save`와 보호 실패 시 파일 미공개 조건은 유지한다. `tests/share.test.ts`의 Windows 네이티브 회귀는 한글·공백·셸 특수문자 파일명, 내용 보존, 실제 `ZoneId=3`, 없는 파일의 실패를 검사한다. 비 NTFS 목적지·정책 거부는 별도 실기 범위다.
+
 `tests/share.test.ts`는 Mac 실제 xattr와 Windows 명령 주입 경계를 검사한다. Mac의 Windows 주입 검사 통과는 Windows Attachment Execution Services·DPAPI·NTFS 실기 통과가 아니다. `sharing.spec.ts`는 두 격리 앱의 실제 TLS·승인·저장과 CLI를 검사하지만 safeStorage만 시험 소유 암호화로 대체하므로 Keychain/DPAPI 실기라고 기록하지 않는다. 양쪽 OS 실기·실제 LAN/VPN 검증 전 공개 배포는 보류한다.
