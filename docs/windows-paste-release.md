@@ -1,5 +1,35 @@
 # Windows 붙여넣기 검증 및 릴리즈 인계
 
+## 1.3.0 Windows 후속 배포 인계 — 2026-10-16
+
+사용자는 Mac만 먼저 게시하고 Windows는 집의 PC에서 진행하기로 했다. 현재 [1.3.0](https://github.com/poyal/passport/releases/tag/v1.3.0)에는 Mac DMG와 체크섬만 있다. Windows 최신 공개판은 1.2.3이며 이번 Mac에서 Windows 설치본을 만들거나 원격 Actions를 실행하지 않았다.
+
+Windows 1.3.0은 **`v1.3.0` / `359e207a11006446d786ee55bab94d0f874fdc03`** 소스를 사용한다. 이후 `main`의 변경은 문서 정리이므로 빌드 소스와 혼동하지 않는다. 태그를 옮기거나 Mac 파일을 교체하지 않는다.
+
+1. Windows 11 x64 PC에 아래 준비 절의 도구를 갖추고, 기존 작업 폴더가 깨끗한지 확인한다. 미커밋 작업이 있으면 별도 체크아웃을 사용한다.
+2. 아래 명령으로 소스·최종 EXE를 검증한다. `--desktop`은 창·포커스·클립보드를 사용하는 검사이므로 사용자가 실행 가능한 시점에 수행한다.
+
+```powershell
+git fetch origin --tags
+git switch --detach v1.3.0
+git rev-parse HEAD
+npm.cmd ci
+npm.cmd run prepare:runtime -- x64
+npm.cmd run release:verify -- --desktop
+```
+
+3. 공유의 실제 DPAPI 재시작 복구, Attachment Execution Services·Zone.Identifier, NTFS가 아닌 경로/보호 실패 처리, 내장 Git 실행·서명 신뢰, 두 PC의 등록·승인·취소·LAN/VPN 검증 결과를 [보안 검토 항목](security-review-20261016.md#공개-전-남은-검증)에 추가한다. 자동 시험의 모의 암호화를 실제 OS 검증으로 기록하지 않는다.
+4. 같은 깨끗한 체크아웃에서 출력된 정식 검증 기록으로 게시 계획을 확인한다. 계획에 Windows EXE 추가와 체크섬 갱신만 있고 기존 Mac DMG가 보존되는지 확인한 뒤 게시한다. 실패·preview 기록은 일반 게시 도구에서 허용하지 않는다.
+
+```powershell
+npm.cmd run release:publish -- --manifest release/checks/<실행-ID>/verification.json
+npm.cmd run release:publish -- --manifest release/checks/<실행-ID>/verification.json --execute
+```
+
+게시 후 공개 EXE 다운로드 해시, 합본 `SHA256SUMS.txt`, Mac DMG의 ID·크기·해시·갱신 시각 보존을 확인한다. README의 Windows 1.2.3 링크와 릴리즈 본문의 Mac 전용 안내를 갱신하고 결과 문서는 별도 커밋으로 남긴다. Mac 게시의 실기 연기 예외를 Windows 검사 통과로 해석하지 않는다.
+
+아래 버전별 기록과 1.1.1 명령은 과거 이력이다. 1.3.0에서는 위 소스와 명령을 사용한다.
+
 ## 1.2.2 Windows 배포 완료 — 2026-10-12
 
 Mac과 같은 `v1.2.2` 소스 `e399c2bcbf85dcedc69aa5eebddbfbe82200752c`로 Windows x64 EXE를 [공개 배포](https://github.com/poyal/passport/releases/tag/v1.2.2)했다. [격리된 Windows 검증](https://github.com/poyal/passport/actions/runs/38241471604)에서 만든 원본 설치본과 보고서를 내려받아 게시 도구로 재검사하고 재빌드 없이 게시했다. 기존 Mac DMG·태그와 직전 1.2.1 자산은 보존했다. [Windows 게시·검증 요약](benchmarks/github-release-windows-v1.2.2.json).

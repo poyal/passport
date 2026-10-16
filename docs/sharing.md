@@ -88,4 +88,6 @@ AI에게 “승민에게 이 문서를 보내 주세요”라고 요청하면 AI
 
 소스 검사와 loopback E2E를 실제 서로 다른 PC·LAN/VPN·OS 권한 검사로 표시하지 않습니다. Windows 네이티브 AES/Zone 보호와 DPAPI, macOS 서명 앱의 Keychain/로컬 네트워크 허용·거부, 실제 두 기기의 검색·방화벽·인터페이스 변경 검증이 끝나기 전에는 양쪽 OS 보안 검토와 공개 배포가 완료된 것으로 판정하지 않습니다. 실행 결과는 [검증 기록](verification.md)에 따릅니다.
 
+2026-10-16 Mac 1.3.0은 사용자가 남은 실기 검증을 추후 진행하고 Mac만 게시하도록 명시해 예외 배포했습니다. Windows 1.3.0은 미게시이며 위 실기 항목은 여전히 검증 대기입니다. [이번 보안 검토와 예외 범위](security-review-20261016.md).
+
 검토 근거: [Syncthing의 기기 인증 설명](https://docs.syncthing.net/users/security.html), [Electron safeStorage](https://www.electronjs.org/docs/latest/api/safe-storage), [react-markdown 보안](https://github.com/remarkjs/react-markdown#security), [OWASP 파일 수신 지침](https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html), [Microsoft IAttachmentExecute::Save](https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nf-shobjidl_core-iattachmentexecute-save), [Windows 파일 이름과 예약 장치명](https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file).

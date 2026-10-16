@@ -1,0 +1,105 @@
+{
+  "date": "2026-10-16",
+  "version": "1.3.0",
+  "status": "published-and-download-verified",
+  "url": "https://github.com/poyal/passport/releases/tag/v1.3.0",
+  "target": "mac-arm64",
+  "source": {
+    "commit": "359e207a11006446d786ee55bab94d0f874fdc03",
+    "tag": "v1.3.0",
+    "fingerprint": "def7a77f1cb33875573974cced084e2c32d9ef1be2937f4472adc5383adcd0fe",
+    "dirty": false
+  },
+  "authorization": {
+    "instruction": "그건 나중에 할테니 올려",
+    "scope": "1.3.0에 맥만올려 윈도우는 집가서 올릴게",
+    "method": "Explicit one-time exception via GitHub CLI; release policy and preview receipt unchanged"
+  },
+  "verification": {
+    "manifest": "release/checks/20261016T074758Z-359e207-mac-arm64-local-release/verification.json",
+    "manifestSha256": "51c47e6b4ae5895cc41cbe9db10a65e1ef81eaaffac7ce0bdf0f7621b9db4ff0",
+    "status": "preview-verified",
+    "formalVerificationPassed": false,
+    "evidenceHashesRechecked": 21,
+    "unitPassed": 224,
+    "releaseRegressionPassed": 73,
+    "rustCliPassed": 3,
+    "sourceGuiPassed": 81,
+    "packagedGuiPassed": 81,
+    "nativeDesktopExecuted": false,
+    "remoteActionsExecuted": false
+  },
+  "pending": [
+    "macOS Keychain and Local Network native permission checks",
+    "Windows native protection, runtime, installer and desktop verification",
+    "Two physical devices on LAN/VPN",
+    "macOS native desktop verification"
+  ],
+  "assets": [
+    {
+      "name": "Passport-1.3.0-mac-arm64.dmg",
+      "bytes": 170831382,
+      "sha256": "baa2e5374025b6f288331a8dcab798f8e32256a2460f35b78c1f0ec181d98fb9",
+      "authentication": "none",
+      "path": "release/packages/v1.3.0/github/mac-arm64/Passport-1.3.0-mac-arm64.dmg"
+    },
+    {
+      "name": "SHA256SUMS.txt",
+      "bytes": 95,
+      "sha256": "b4b1c6103c3078817905ff24d7f8a1793c95637a074a2aa9b5de859ef9b8cded",
+      "authentication": "none",
+      "path": "release/packages/v1.3.0/github/mac-arm64/SHA256SUMS.txt"
+    }
+  ],
+  "releaseAssets": [
+    {
+      "id": 646613918,
+      "name": "Passport-1.3.0-mac-arm64.dmg",
+      "size": 170831382,
+      "digest": "sha256:baa2e5374025b6f288331a8dcab798f8e32256a2460f35b78c1f0ec181d98fb9",
+      "updated_at": "2026-10-16T08:04:01Z"
+    },
+    {
+      "id": 646613921,
+      "name": "SHA256SUMS.txt",
+      "size": 95,
+      "digest": "sha256:b4b1c6103c3078817905ff24d7f8a1793c95637a074a2aa9b5de859ef9b8cded",
+      "updated_at": "2026-10-16T08:03:49Z"
+    }
+  ],
+  "preserved": {
+    "release": "v1.2.3",
+    "allAssetsUnchanged": true,
+    "windowsLatest": "1.2.3"
+  },
+  "windows130Published": false,
+  "publicationEvidence": "release/checks/20261016T080136Z-359e207-mac-arm64-publication",
+  "completedAt": "2026-10-16T08:05:42.274508+00:00",
+  "retention": {
+    "keep": [
+      "release/builds/20261016T074758Z-359e207-mac-arm64-local-release",
+      "release/checks/20261016T080136Z-359e207-mac-arm64-publication",
+      "release/packages/v1.3.0/local/mac-arm64",
+      "release/packages/v1.3.0/github/mac-arm64",
+      "release/builds/Passport.app"
+    ],
+    "reviewCandidates": "Resolved intermediate previews from 2026-10-16, after 2026-10-23 and only when cleanup is requested; see security-release-20261016.json",
+    "deleted": []
+  },
+  "notes": [
+    "No rebuild, tag move, existing asset replacement, desktop run or installed app replacement.",
+    "Source tag remains 359e207; release documentation follows in separate commits.",
+    "Public downloads were verified without authentication.",
+    "The 1.3.0 release contains only the Mac ARM64 DMG and SHA256SUMS.txt."
+  ],
+  "previewLink": {
+    "path": "release/builds/Passport.app",
+    "target": "20261016T074758Z-359e207-mac-arm64-local-release/mac-arm64/Passport.app",
+    "updatedBy": "Earlier final release verification, not publication"
+  },
+  "documentationVerification": {
+    "relativeLinksChecked": 215,
+    "invalidLinks": 0,
+    "receiptUnchanged": true
+  }
+}

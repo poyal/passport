@@ -31,11 +31,11 @@
 | 컴퓨터                                       | 선택할 파일                | 다운로드 안내                                                                      |
 | -------------------------------------------- | -------------------------- | ---------------------------------------------------------------------------------- |
 | Mac · Apple Silicon(M 시리즈), macOS 14 이상 | `Passport-…-mac-arm64.dmg` | [최신 릴리즈](https://github.com/poyal/passport/releases/latest)                   |
-| Windows 11 · Intel / AMD(x64)                | `Passport-…-win-x64.exe`   | [최신 릴리즈](https://github.com/poyal/passport/releases/latest)                   |
+| Windows 11 · Intel / AMD(x64)                | `Passport-…-win-x64.exe`   | [Windows 최신 1.2.3](https://github.com/poyal/passport/releases/tag/v1.2.3)         |
 
-Mac·Windows x64 설치 파일을 최신 릴리즈에서 받을 수 있습니다. Intel Mac은 지원하지 않습니다. [플랫폼별 배포 상태와 변경 사항](docs/releases/README.md).
+Mac 최신 버전은 1.3.0, Windows 최신 버전은 1.2.3입니다. 1.3.0 릴리즈에는 Mac 설치 파일만 있으므로 Windows는 위의 전용 링크를 이용하세요. Intel Mac은 지원하지 않습니다. [플랫폼별 배포 상태와 변경 사항](docs/releases/README.md).
 
-**메뉴가 보이지 않는 경우:** 아래의 공유함·탭 이름/아이콘/색상 설정·끊긴 연결 일괄 복구는 다음 버전에서 제공할 기능입니다. 현재 공개 설치판에는 아직 포함되지 않았습니다. 공개 여부는 위 릴리즈 목록에서 확인하세요.
+**메뉴가 보이지 않는 경우:** 아래의 공유함·탭 이름/아이콘/색상 설정·끊긴 연결 일괄 복구는 Mac 1.3.0부터 사용할 수 있습니다. Windows 1.2.3에는 아직 포함되지 않았습니다.
 
 ### Mac
 
@@ -71,7 +71,7 @@ Mac·Windows x64 설치 파일을 최신 릴리즈에서 받을 수 있습니다
 
 ### Windows에서 PC 보호·신뢰할 수 없음 경고가 나올 때
 
-1. [최신 공식 릴리즈](https://github.com/poyal/passport/releases/latest)에서 받은 `Passport-…-win-x64.exe`인지 확인합니다.
+1. [Windows 공식 릴리즈](https://github.com/poyal/passport/releases/tag/v1.2.3)에서 받은 `Passport-…-win-x64.exe`인지 확인합니다.
 2. 설치 파일을 실행할 때 **Windows의 PC 보호** 또는 인식할 수 없는 앱이라는 SmartScreen 경고가 표시되면 **추가 정보**를 누릅니다.
 3. 앱 이름이 다운로드한 Passport 설치 파일인지 확인한 뒤 **실행**을 선택합니다. 영문 Windows에서는 **More info → Run anyway**입니다. 서명이 없어 게시자는 **알 수 없는 게시자**로 표시될 수 있습니다.
 4. 설치를 마친 뒤 시작 메뉴에서 **Passport**를 실행합니다.
