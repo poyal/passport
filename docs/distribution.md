@@ -6,7 +6,7 @@
 
 ## 현재 상태
 
-현재 공개판은 **Mac Apple Silicon 1.3.0·Windows x64 1.2.3**이다. 양쪽 1.3.1은 같은 소스로 정식 검증 중이며 완료 후 게시한다. 기존 Mac 1.3.0 설치 파일·태그는 보존한다. 아래 1.2.3 합본 배포 설명은 이전 검증 기록이다. [릴리즈 목록](releases/README.md)에서 플랫폼별 설치 파일을 받는다. 두 설치본은 같은 `v1.2.3` 소스(`b677240`)를 각 OS의 로컬 PC에서 정식 검증하고 재빌드 없이 게시했다. 소스·최종 설치본의 숨김 GUI와 사용자가 허용한 실제 데스크톱 검사를 통과했으며 원격 Actions는 실행하지 않았다. Mac 후속 게시에서 기존 Windows EXE와 직전 1.2.2 자산을 보존하고 공개 다운로드 해시·합본 체크섬을 확인했다. [Mac 1.2.3 게시·검증 요약](benchmarks/github-release-v1.2.3-mac.json) · [Windows 1.2.3 게시·검증 요약](benchmarks/github-release-windows-v1.2.3.json).
+현재 공개판은 **Mac Apple Silicon·Windows x64 1.3.1**이다. 같은 `63f4897` 소스에서 양쪽 정식 검증과 실제 LAN·암호화 저장·다운로드 보호 검사를 마치고 검증한 파일을 재빌드 없이 게시했다. 기존 Mac 1.3.0 설치 파일·태그와 1.2.3 자산은 보존했다. [1.3.1 게시·검증 요약](benchmarks/github-release-v1.3.1.json). 아래 1.2.3 합본 배포 설명은 이전 검증 기록이다. [릴리즈 목록](releases/README.md)에서 플랫폼별 설치 파일을 받는다. 두 설치본은 같은 `v1.2.3` 소스(`b677240`)를 각 OS의 로컬 PC에서 정식 검증하고 재빌드 없이 게시했다. 소스·최종 설치본의 숨김 GUI와 사용자가 허용한 실제 데스크톱 검사를 통과했으며 원격 Actions는 실행하지 않았다. Mac 후속 게시에서 기존 Windows EXE와 직전 1.2.2 자산을 보존하고 공개 다운로드 해시·합본 체크섬을 확인했다. [Mac 1.2.3 게시·검증 요약](benchmarks/github-release-v1.2.3-mac.json) · [Windows 1.2.3 게시·검증 요약](benchmarks/github-release-windows-v1.2.3.json).
 
 앞선 Mac·Windows 1.2.2는 같은 `v1.2.2` 소스(`e399c2b`)를 각 OS의 격리된 runner에서 정식 검증한 뒤 재빌드 없이 게시했다. 인증 없는 공개 다운로드의 바이트 수·해시와 합본 체크섬을 확인했으며, Windows 후속 게시에서 기존 Mac DMG와 직전 1.2.1 자산을 보존했다. [Mac 1.2.2 게시 요약](benchmarks/github-release-v1.2.2-mac.json) · [Windows 게시·검증 요약](benchmarks/github-release-windows-v1.2.2.json).
 

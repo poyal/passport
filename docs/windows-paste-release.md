@@ -1,5 +1,9 @@
 # Windows 붙여넣기 검증 및 릴리즈 인계
 
+## 1.3.1 후속 작업 완료 — 2026-10-17
+
+Windows와 Mac을 같은 `63f4897` 소스로 검증해 [1.3.1](https://github.com/poyal/passport/releases/tag/v1.3.1)에 함께 게시했습니다. 아래 1.3.0 별도 Windows 인계는 1.3.1 합본 배포로 대체됐으며 새 배포에 적용하지 않습니다. 기존 Mac 1.3.0 태그·파일은 보존했습니다. [검증 기록](verification.md).
+
 ## 1.3.0 Windows 후속 배포 인계 — 2026-10-16
 
 사용자는 Mac만 먼저 게시하고 Windows는 집의 PC에서 진행하기로 했다. 현재 [1.3.0](https://github.com/poyal/passport/releases/tag/v1.3.0)에는 Mac DMG와 체크섬만 있다. Windows 최신 공개판은 1.2.3이며 이번 Mac에서 Windows 설치본을 만들거나 원격 Actions를 실행하지 않았다.

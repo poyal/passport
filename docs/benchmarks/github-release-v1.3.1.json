@@ -1,0 +1,491 @@
+{
+  "version": "1.3.1",
+  "sourceCommit": "63f4897f69d9a76468f77d1127d474dbd2598a86",
+  "url": "https://github.com/poyal/passport/releases/tag/v1.3.1",
+  "publicDownloads": [
+    {
+      "target": "win-x64",
+      "name": "Passport-1.3.1-win-x64.exe",
+      "sha256": "caab1ec10866da6c38fa2979bd056e277367519c4c3c777d1dbb1007233060a4",
+      "bytes": 207176201
+    },
+    {
+      "target": "mac-arm64",
+      "name": "Passport-1.3.1-mac-arm64.dmg",
+      "sha256": "970d3ece97102f8f62078fd52d40fc991f5127dcb7e703b1083ee95641ff14ef",
+      "bytes": 173316254
+    }
+  ],
+  "preserved": [
+    {
+      "tag": "v1.3.0",
+      "assets": [
+        {
+          "id": 646613918,
+          "name": "Passport-1.3.0-mac-arm64.dmg",
+          "size": 170831382,
+          "digest": "sha256:baa2e5374025b6f288331a8dcab798f8e32256a2460f35b78c1f0ec181d98fb9",
+          "updated_at": "2026-10-16T08:04:01Z"
+        },
+        {
+          "id": 646613921,
+          "name": "SHA256SUMS.txt",
+          "size": 95,
+          "digest": "sha256:b4b1c6103c3078817905ff24d7f8a1793c95637a074a2aa9b5de859ef9b8cded",
+          "updated_at": "2026-10-16T08:03:49Z"
+        }
+      ]
+    },
+    {
+      "tag": "v1.2.3",
+      "assets": [
+        {
+          "id": 633824913,
+          "name": "Passport-1.2.3-win-x64.exe",
+          "size": 203912003,
+          "digest": "sha256:b69be0f77abe5cf3816d16baba6ff5ca3676e1c68f575e7809c32bb8d6417f8f",
+          "updated_at": "2026-10-12T13:09:48Z"
+        },
+        {
+          "id": 633861772,
+          "name": "Passport-1.2.3-mac-arm64.dmg",
+          "size": 169385574,
+          "digest": "sha256:1168cbc04ff1f4b4555b013d15ffa03d1b36521b77c35541ef192c3afa963ad2",
+          "updated_at": "2026-10-12T13:24:14Z"
+        },
+        {
+          "id": 633863352,
+          "name": "SHA256SUMS.txt",
+          "size": 188,
+          "digest": "sha256:a5fae75bebee182fc697dc41163ea2c0e0b5a0b526634fba0061150cda9df695",
+          "updated_at": "2026-10-12T13:24:38Z"
+        }
+      ]
+    }
+  ],
+  "checkedAt": "2026-10-16T16:58:23.773Z",
+  "status": "passed",
+  "formal": [
+    {
+      "target": "win-x64",
+      "source": {
+        "commit": "63f4897f69d9a76468f77d1127d474dbd2598a86",
+        "dirty": false,
+        "fingerprint": "a3fd1eef9a7ca886be202f5674feb990709c6e8dabf072febd38e636a7ea2856"
+      },
+      "artifact": {
+        "name": "Passport-1.3.1-win-x64.exe",
+        "path": "release/builds/20261016T163700Z-63f4897-win-x64-local-release/Passport-1.3.1-win-x64.exe",
+        "bytes": 207176201,
+        "sha256": "caab1ec10866da6c38fa2979bd056e277367519c4c3c777d1dbb1007233060a4"
+      },
+      "checks": [
+        {
+          "name": "dependencies",
+          "status": "passed"
+        },
+        {
+          "name": "ftp-fixtures",
+          "status": "passed"
+        },
+        {
+          "name": "windows-tools",
+          "status": "passed"
+        },
+        {
+          "name": "build",
+          "status": "passed"
+        },
+        {
+          "name": "unit",
+          "status": "passed"
+        },
+        {
+          "name": "release-tests",
+          "status": "passed"
+        },
+        {
+          "name": "source-gui",
+          "status": "passed",
+          "tests": {
+            "startTime": "2026-10-16T16:40:24.845Z",
+            "duration": 183723.883,
+            "expected": 85,
+            "skipped": 5,
+            "unexpected": 0,
+            "flaky": 0
+          }
+        },
+        {
+          "name": "source-desktop",
+          "status": "passed",
+          "tests": {
+            "startTime": "2026-10-16T16:43:30.309Z",
+            "duration": 12776.445,
+            "expected": 4,
+            "skipped": 0,
+            "unexpected": 0,
+            "flaky": 0
+          }
+        },
+        {
+          "name": "package",
+          "status": "passed"
+        },
+        {
+          "name": "installer",
+          "status": "passed"
+        },
+        {
+          "name": "packaged-smoke",
+          "status": "passed"
+        },
+        {
+          "name": "packaged-gui",
+          "status": "passed",
+          "tests": {
+            "startTime": "2026-10-16T16:47:32.791Z",
+            "duration": 189814.601,
+            "expected": 85,
+            "skipped": 5,
+            "unexpected": 0,
+            "flaky": 0
+          }
+        },
+        {
+          "name": "packaged-desktop",
+          "status": "passed",
+          "tests": {
+            "startTime": "2026-10-16T16:50:44.397Z",
+            "duration": 12899.462,
+            "expected": 4,
+            "skipped": 0,
+            "unexpected": 0,
+            "flaky": 0
+          }
+        }
+      ],
+      "guiLifecycle": {
+        "source-gui": {
+          "launches": 37,
+          "windows": 46,
+          "exits": 37,
+          "reusedTests": 35,
+          "auditedShutdowns": 37,
+          "shown": 0,
+          "focused": 0
+        },
+        "source-desktop": {
+          "launches": 4,
+          "windows": 4,
+          "exits": 4,
+          "reusedTests": 0,
+          "auditedShutdowns": 0,
+          "shown": 0,
+          "focused": 0
+        },
+        "packaged-gui": {
+          "launches": 37,
+          "windows": 46,
+          "exits": 37,
+          "reusedTests": 35,
+          "auditedShutdowns": 37,
+          "shown": 0,
+          "focused": 0
+        },
+        "packaged-desktop": {
+          "launches": 4,
+          "windows": 4,
+          "exits": 4,
+          "reusedTests": 0,
+          "auditedShutdowns": 0,
+          "shown": 0,
+          "focused": 0
+        }
+      }
+    },
+    {
+      "target": "mac-arm64",
+      "source": {
+        "commit": "63f4897f69d9a76468f77d1127d474dbd2598a86",
+        "dirty": false,
+        "fingerprint": "a3fd1eef9a7ca886be202f5674feb990709c6e8dabf072febd38e636a7ea2856"
+      },
+      "artifact": {
+        "name": "Passport-1.3.1-mac-arm64.dmg",
+        "path": "release/builds/20261016T161050Z-63f4897-mac-arm64-local-release/Passport-1.3.1-mac-arm64.dmg",
+        "bytes": 173316254,
+        "sha256": "970d3ece97102f8f62078fd52d40fc991f5127dcb7e703b1083ee95641ff14ef"
+      },
+      "checks": [
+        {
+          "name": "dependencies",
+          "status": "passed"
+        },
+        {
+          "name": "ftp-fixtures",
+          "status": "passed"
+        },
+        {
+          "name": "build",
+          "status": "passed"
+        },
+        {
+          "name": "unit",
+          "status": "passed"
+        },
+        {
+          "name": "release-tests",
+          "status": "passed"
+        },
+        {
+          "name": "source-gui",
+          "status": "passed",
+          "tests": {
+            "startTime": "2026-10-16T16:11:49.610Z",
+            "duration": 112424.183,
+            "expected": 81,
+            "skipped": 9,
+            "unexpected": 0,
+            "flaky": 0
+          }
+        },
+        {
+          "name": "source-desktop",
+          "status": "passed",
+          "tests": {
+            "startTime": "2026-10-16T16:13:42.657Z",
+            "duration": 6979.074,
+            "expected": 4,
+            "skipped": 0,
+            "unexpected": 0,
+            "flaky": 0
+          }
+        },
+        {
+          "name": "package",
+          "status": "passed"
+        },
+        {
+          "name": "installer",
+          "status": "passed"
+        },
+        {
+          "name": "packaged-smoke",
+          "status": "passed"
+        },
+        {
+          "name": "packaged-gui",
+          "status": "passed",
+          "tests": {
+            "startTime": "2026-10-16T16:14:22.229Z",
+            "duration": 118122.959,
+            "expected": 81,
+            "skipped": 9,
+            "unexpected": 0,
+            "flaky": 0
+          }
+        },
+        {
+          "name": "packaged-desktop",
+          "status": "passed",
+          "tests": {
+            "startTime": "2026-10-16T16:16:20.967Z",
+            "duration": 7520.554,
+            "expected": 4,
+            "skipped": 0,
+            "unexpected": 0,
+            "flaky": 0
+          }
+        }
+      ],
+      "guiLifecycle": {
+        "source-gui": {
+          "launches": 33,
+          "windows": 42,
+          "exits": 33,
+          "reusedTests": 32,
+          "auditedShutdowns": 33,
+          "shown": 0,
+          "focused": 0
+        },
+        "source-desktop": {
+          "launches": 4,
+          "windows": 4,
+          "exits": 4,
+          "reusedTests": 0,
+          "auditedShutdowns": 0,
+          "shown": 0,
+          "focused": 0
+        },
+        "packaged-gui": {
+          "launches": 33,
+          "windows": 42,
+          "exits": 33,
+          "reusedTests": 32,
+          "auditedShutdowns": 33,
+          "shown": 0,
+          "focused": 0
+        },
+        "packaged-desktop": {
+          "launches": 4,
+          "windows": 4,
+          "exits": 4,
+          "reusedTests": 0,
+          "auditedShutdowns": 0,
+          "shown": 0,
+          "focused": 0
+        }
+      }
+    }
+  ],
+  "native": {
+    "windows": {
+      "dpapi": true,
+      "downloadProtection": true,
+      "exfatFailsClosed": true,
+      "unrelatedFilePreserved": true
+    },
+    "mac": {
+      "keychain": true,
+      "quarantine": true,
+      "denial": {
+        "status": "passed",
+        "mechanism": "macOS SSH background session denies login Keychain access",
+        "safeStorageMocked": false,
+        "encryptionAvailable": false,
+        "sharingDisabled": true,
+        "listenerAbsent": true,
+        "encryptedOrPlaintextRecordCount": 0,
+        "error": "암호화 저장소를 사용할 수 없습니다. 쪽지를 시작할 수 없습니다.",
+        "manualDenyButtonTested": false
+      }
+    }
+  },
+  "lan": {
+    "mac-local-network-denied": {
+      "status": "passed",
+      "time": "2026-10-16T16:21:28.817Z"
+    },
+    "mac-local-network-baseline": {
+      "status": "passed",
+      "time": "2026-10-16T16:20:38.284Z"
+    },
+    "mac-local-network-restored": {
+      "status": "passed",
+      "time": "2026-10-16T16:21:53.403Z"
+    },
+    "final-builds": {
+      "status": "passed",
+      "time": "2026-10-16T16:51:34.599Z"
+    },
+    "wrong-invitation": {
+      "status": "passed",
+      "time": "2026-10-16T16:51:35.682Z"
+    },
+    "registration-rejection": {
+      "status": "passed",
+      "time": "2026-10-16T16:51:38.642Z"
+    },
+    "registration-approval": {
+      "status": "passed",
+      "time": "2026-10-16T16:51:41.304Z"
+    },
+    "win-to-mac-message-rejection": {
+      "status": "passed",
+      "time": "2026-10-16T16:51:44.435Z"
+    },
+    "win-to-mac-markdown": {
+      "status": "passed",
+      "time": "2026-10-16T16:51:48.014Z"
+    },
+    "win-to-mac-file": {
+      "status": "passed",
+      "time": "2026-10-16T16:51:52.656Z",
+      "bytes": 131072,
+      "sha256": "02c9a68f567b8ec215d893cde67ae2da41ba3c9b838d0ba4d3d04ab3cdc58da6"
+    },
+    "mac-to-win-message-rejection": {
+      "status": "passed",
+      "time": "2026-10-16T16:51:55.725Z"
+    },
+    "mac-to-win-markdown": {
+      "status": "passed",
+      "time": "2026-10-16T16:51:58.884Z"
+    },
+    "mac-to-win-file": {
+      "status": "passed",
+      "time": "2026-10-16T16:52:02.943Z",
+      "bytes": 131072,
+      "sha256": "02c9a68f567b8ec215d893cde67ae2da41ba3c9b838d0ba4d3d04ab3cdc58da6"
+    },
+    "physical-multicast-discovery": {
+      "status": "passed",
+      "time": "2026-10-16T16:52:03.457Z"
+    },
+    "win-offline-guide-and-encrypted-records": {
+      "status": "passed",
+      "time": "2026-10-16T16:52:04.017Z"
+    },
+    "mac-offline-guide-and-encrypted-records": {
+      "status": "passed",
+      "time": "2026-10-16T16:52:05.162Z"
+    },
+    "win-pending-cancellation": {
+      "status": "passed",
+      "time": "2026-10-16T16:52:06.707Z"
+    },
+    "mac-pending-cancellation": {
+      "status": "passed",
+      "time": "2026-10-16T16:52:08.084Z"
+    },
+    "real-cli-lan-and-revocation": {
+      "status": "passed",
+      "time": "2026-10-16T16:52:16.874Z"
+    },
+    "inflight-off": {
+      "status": "passed",
+      "time": "2026-10-16T16:52:20.734Z"
+    },
+    "inflight-interface": {
+      "status": "passed",
+      "time": "2026-10-16T16:52:24.405Z"
+    },
+    "inflight-remove": {
+      "status": "passed",
+      "time": "2026-10-16T16:52:28.059Z"
+    },
+    "registration-after-deletion": {
+      "status": "passed",
+      "time": "2026-10-16T16:52:31.956Z"
+    },
+    "firewall-denied": {
+      "status": "passed",
+      "time": "2026-10-16T16:53:01.009Z"
+    },
+    "firewall-restored": {
+      "status": "passed",
+      "time": "2026-10-16T16:53:13.633Z"
+    },
+    "discovery-beyond-two-minutes": {
+      "status": "passed",
+      "time": "2026-10-16T16:55:57.307Z",
+      "durationMs": 155542
+    },
+    "final-app-errors": {
+      "status": "passed",
+      "time": "2026-10-16T16:56:05.930Z"
+    },
+    "final-app-shutdown": {
+      "status": "passed",
+      "time": "2026-10-16T16:57:00.274Z"
+    }
+  },
+  "evidence": "release/checks/20261016T161100Z-63f4897-release-1.3.1",
+  "limitations": [
+    "Mac ad-hoc signature; no Apple notarization or Developer ID update identity guarantee.",
+    "VPN explicitly excluded by the user.",
+    "Existing receiver rejection wording retained at the user request.",
+    "Physical IME, OS notifications, actual AI services, optional Docker/stress and clean-account install/upgrade are outside these automated and notes-native checks."
+  ]
+}
