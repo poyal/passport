@@ -835,10 +835,7 @@ export class ShareService {
           : "상대에게 전달했습니다."
         : error ||
             {
-              rejected:
-                job.view.direction === "incoming"
-                  ? "공유 요청을 거절했습니다."
-                  : "상대가 공유 요청을 거절했습니다.",
+              rejected: "상대가 공유 요청을 거절했습니다.",
               expired: "공유 요청이 만료되었습니다.",
               cancelled: "공유 전송을 취소했습니다.",
               failed: "공유 전송에 실패했습니다.",
