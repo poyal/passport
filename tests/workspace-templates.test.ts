@@ -63,6 +63,47 @@ function fixture() {
   };
 }
 describe("saved workspaces", () => {
+  it("preserves tab identity through independent template copies and portable round trips", async () => {
+    const { document } = fixture();
+    document.workspaces[0].icon = { kind: "emoji", value: "👩🏽‍💻" };
+    document.workspaces[0].color = "#EC4899";
+    const source = document.workspaces[0];
+    const clone = cloneWorkspaces(
+      [source],
+      source.id,
+      panes(source.root)[0].id,
+      id,
+    );
+    document.workspaceTemplates[0] = {
+      ...document.workspaceTemplates[0],
+      ...clone,
+    };
+    expect(clone.workspaces[0].icon).toEqual(source.icon);
+    expect(clone.workspaces[0].icon).not.toBe(source.icon);
+    const restored = await decodePortable(
+      await encodePortable({
+        format: "passport",
+        version: 2,
+        document,
+        profiles: [],
+      }),
+    );
+    expect(restored.document.workspaces[0]).toMatchObject({
+      color: "#ec4899",
+      icon: source.icon,
+    });
+    expect(restored.document.workspaceTemplates[0].workspaces[0]).toMatchObject(
+      { color: "#ec4899", icon: source.icon },
+    );
+    const legacy = fixture().document;
+    expect(migrateDocument(legacy).workspaces[0].icon).toBeUndefined();
+    for (const emoji of ["🇰🇷", "👍🏽", "🛠️"]) {
+      document.workspaces[0].icon = { kind: "emoji", value: emoji };
+      expect(documentSchema.safeParse(document).success).toBe(true);
+    }
+    document.workspaces[0].icon = { kind: "emoji", value: "🚀🚀" };
+    expect(documentSchema.safeParse(document).success).toBe(false);
+  });
   it("removes legacy multi-tab templates before validation and reports import omissions", async () => {
     const { document, template } = fixture();
     const second = cloneWorkspaces(document.workspaces, "", "", id)

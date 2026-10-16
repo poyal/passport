@@ -88,13 +88,9 @@ export function moveLayout(
         : [w],
   );
 }
-export function preparePaste(text: string, bracketed: boolean): string {
+export function preparePaste(text: string): string {
   const clean = text.replace(/[\r\n]+$/, "");
   if (/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/.test(clean))
     throw new Error("붙여넣기에 제어 문자를 사용할 수 없습니다.");
-  if (/[\r\n]/.test(clean) && !bracketed)
-    throw new Error(
-      "대상 셸에서 여러 줄 붙여넣기를 지원하지 않습니다. 한 줄로 편집해 주세요.",
-    );
   return clean;
 }

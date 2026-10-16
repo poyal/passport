@@ -86,12 +86,12 @@ describe("workspace layout", () => {
 });
 describe("safe paste", () => {
   it("strips trailing command execution newlines", () =>
-    expect(preparePaste("echo hello\r\n", false)).toBe("echo hello"));
-  it("rejects multiline on a shell without bracketed paste", () =>
-    expect(() => preparePaste("pwd\nls", false)).toThrow());
+    expect(preparePaste("echo hello\r\n")).toBe("echo hello"));
+  it("accepts multiline for xterm to deliver using the negotiated paste mode", () =>
+    expect(preparePaste("pwd\nls")).toBe("pwd\nls"));
   it("keeps multiline in bracketed mode but rejects terminal escapes", () => {
-    expect(preparePaste("pwd\nls", true)).toBe("pwd\nls");
-    expect(() => preparePaste("a\x1b[201~\nwhoami", true)).toThrow();
+    expect(preparePaste("pwd\nls")).toBe("pwd\nls");
+    expect(() => preparePaste("a\x1b[201~\nwhoami")).toThrow();
   });
 });
 describe("document validation", () => {

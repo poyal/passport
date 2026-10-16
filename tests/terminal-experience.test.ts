@@ -156,20 +156,20 @@ it("new local workspaces inherit the configured shell and enforce the shared ter
   document.settings.terminal.shell = "cmd";
   for (let index = 0; index < 32; index++)
     document.workspaces.push(
-      localWorkspace(document, "C:\\Users\\한글", randomUUID(), randomUUID()),
+      localWorkspace(document, randomUUID(), randomUUID()),
     );
   expect(document.workspaces[0].root).toMatchObject({
     kind: "pane",
     local: {
       shell: "cmd",
-      cwd: "C:\\Users\\한글",
+      cwd: "",
       profiles: { mode: "inherit", ids: [] },
     },
   });
   expect(() => assertTerminalCapacity(document)).toThrow("32개");
-  expect(() =>
-    localWorkspace(document, "/tmp", randomUUID(), randomUUID()),
-  ).toThrow("32개");
+  expect(() => localWorkspace(document, randomUUID(), randomUUID())).toThrow(
+    "32개",
+  );
   document.workspaces.pop();
   expect(() => assertTerminalCapacity(document)).not.toThrow();
 });

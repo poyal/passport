@@ -50,7 +50,7 @@ for (const direction of ["horizontal", "vertical"] as const) {
     const workspace = { id: id(), name: "Nested group", root };
     await save(page, [workspace]);
     await page
-      .getByRole("button", { name: "Nested group 3", exact: true })
+      .getByRole("button", { name: "Nested group", exact: true })
       .click();
     await expect(page.locator(".terminal-pane")).toHaveCount(3);
     await expect

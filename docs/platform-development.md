@@ -198,6 +198,7 @@ Windows 순서는 **AppUserModelID → `show: false` 생성 → ICO·재실행 �
 - **출력:** 256KiB backpressure, renderer 쓰기 완료 ACK, pause/resume과 종료 시 resume 순서를 유지한다. OS adapter가 별도 출력 큐를 만들지 않는다.
 - **종료:** 탭에서 제거한 PTY도 `pendingExits`가 추적한다. 모든 네이티브 종료 콜백 반환 후 DB/Electron을 종료한다. 창이 사라진 것만으로 성공 판정하지 않는다.
 - **셸:** `startup.ts`가 작성하는 Bash/Zsh/PowerShell/cmd 로더와 인용 규칙을 복제하지 않는다. 사용자 시작 파일·CLI 설정을 직접 수정하지 않는다.
+- **시작 기본값:** 프로젝트 기본 폴더와 프로파일은 공통 전역 설정을 사용한다. 폴더는 패널 직접 지정 → 전역 `terminal.cwd` → 홈 폴더, 프로파일은 패널 직접 지정 → 전역 선택 순서다. 이전 문서·템플릿의 탭별 `project`는 읽을 때 기존 패널의 개별 설정으로 이전해 보존한다. OS별 상속 규칙을 추가하지 않는다.
 - **클립보드:** 비동기 결과의 대상 재검사, 크기·경로 제한, 고정 외부 명령, timeout을 유지한다. Finder 표시 이름에서 경로를 추측하지 않는다.
 - **링크:** OSC 8은 renderer `linkHandler` → `terminal.link` → 메인 소유권/URL 검사 → 한국어 확인 → 소유권 재검사 → `shell.openExternal` 순서다. `window.open` 또는 모든 새 창 허용으로 우회하지 않는다.
 - **네이티브:** Windows ConPTY 수정 소스 해시, 강제 컴파일, 로더 대체 경로에 배치한 모듈·DLL·OpenConsole을 유지한다. OS 분리는 node-pty 재패치의 근거가 아니다.
@@ -342,3 +343,13 @@ Windows 인계에는 **같은 소스 커밋과 작업 트리 변경 내용의 �
 코드 구현 완료와 두 OS 검증 완료, 공개 게시 완료는 별개다. 이번 리팩터링을 기존 Windows 1.1.1 교체 게시 예외에 끼워 넣지 않는다. 게시·버전·태그·설치본 교체는 [배포 규칙](local-release-guide.md)에 따른 별도 작업이다. 원격 CI는 기존 수동 진단 구성을 유지하며 이 문서를 읽었다는 이유로 자동 실행하지 않는다.
 
 산출물은 `release/builds/`, `release/checks/`, `release/packages/`, `release/backups/`에 목적별로 보관하고 각 실행 폴더에 출처·소스·플랫폼·검증 상태를 남긴다. 검증한 Mac 미리보기만 `release/builds/Passport.app` 상대 링크로 연결한다. 생성물·사용자 DB를 Git에 추가하지 않으며, 종료 시 보존 대상과 정리 후보를 기록하되 기존 자료를 임의 삭제하지 않는다.
+
+macOS·Windows의 E2E 종료는 공통 `closeCleanly()`가 최종 `quit`까지 디버거를 유지하고, 연결 해제 후 실제 종료 코드 0·시그널 없음·창 감사를 확인한다. macOS 패키지에서도 비동기 정리 전에 디버거를 끊지 않는다. 10초 종료 제한을 늘리거나 강제 종료를 통과로 처리하지 않는다.
+
+## 9. 공유 다운로드 보호 계약
+
+`PlatformServices.protectDownload(file)`은 수신 후 검증한 임시 일반 파일에 OS 다운로드 보호를 적용하고 확인까지 끝낸 뒤 resolve한다. macOS는 `com.apple.quarantine`, Windows는 `IAttachmentExecute::Save`와 `Zone.Identifier`의 `ZoneId=3`을 사용한다. Windows는 `Prompt`, `Execute`, `SaveWithUI`를 호출하지 않으며 고정 PowerShell 스크립트에 파일 경로를 JSON 표준입력으로만 전달한다. 보호 API·표시·파일시스템이 실패하면 예외를 반환하고 공통 수신부는 파일을 공개하지 않는다.
+
+공통 `share/files.ts`가 크기·해시·경로·소유 임시 폴더·충돌 방지를 담당하며 OS 검사 후에도 다시 해시를 검사한다. 공유 서비스는 별도 TLS listener와 저장소를 사용하며 터미널 IPC를 네트워크에 노출하지 않는다. Mac 패키지는 `NSLocalNetworkUsageDescription`과 `_passport-share._tcp`의 Bonjour 사용 목적을 선언한다.
+
+`tests/share.test.ts`는 Mac 실제 xattr와 Windows 명령 주입 경계를 검사한다. Mac의 Windows 주입 검사 통과는 Windows Attachment Execution Services·DPAPI·NTFS 실기 통과가 아니다. `sharing.spec.ts`는 두 격리 앱의 실제 TLS·승인·저장과 CLI를 검사하지만 safeStorage만 시험 소유 암호화로 대체하므로 Keychain/DPAPI 실기라고 기록하지 않는다. 양쪽 OS 실기·실제 LAN/VPN 검증 전 공개 배포는 보류한다.

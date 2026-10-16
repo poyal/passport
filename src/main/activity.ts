@@ -1,5 +1,10 @@
 import net from "node:net";
-import { randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
+import {
+  createHash,
+  randomBytes,
+  randomUUID,
+  timingSafeEqual,
+} from "node:crypto";
 import { z } from "zod";
 import type Database from "better-sqlite3";
 import type { Activity } from "../shared/model";
@@ -24,6 +29,10 @@ const wire = z.object({
     "permission-candidate",
     "permission",
     "attention",
+    "input-candidate",
+    "input-required",
+    "input-resolved",
+    "tool-start",
   ]),
   run: z.string().max(160).default(""),
   agentRun: z.string().max(160).optional(),
@@ -31,6 +40,8 @@ const wire = z.object({
   turn: z.string().max(160).optional(),
   request: z.string().max(160).optional(),
   detail: z.string().max(4096).optional(),
+  summary: z.string().max(800).optional(),
+  exitCode: z.number().int().optional(),
 });
 type Wire = z.infer<typeof wire>;
 type Live = {
@@ -43,6 +54,9 @@ type Live = {
   since: number;
   parser: OscNotifications;
   enabled: { claude: boolean; codex: boolean };
+  turns: Map<string, { epoch: number; completed: boolean }>;
+  emitted: Set<string>;
+  pending: Map<string, { timer: ReturnType<typeof setTimeout>; event: Wire }>;
 };
 
 // Stream parser runs once on original PTY output in main. Snapshot replay never
@@ -82,13 +96,20 @@ export class OscNotifications {
     const value = this.value;
     this.value = "";
     this.state = 0;
-    if (value.startsWith("9;") || value.startsWith("777;notify;"))
+    if (
+      (value.startsWith("9;") && !/^9;[0-9]+(?:;|$)/.test(value)) ||
+      value.startsWith("777;notify;")
+    )
       this.receive(value);
   }
 }
 export class ActivityService {
   readonly live = new Map<string, Live>();
-  private rows: (Activity & { run?: string; request?: string })[] = [];
+  private rows: (Activity & {
+    run?: string;
+    request?: string;
+    session?: string;
+  })[] = [];
   private server = net.createServer((socket) => {
     if (this.sockets.size >= 32) {
       socket.destroy();
@@ -128,6 +149,7 @@ export class ActivityService {
       changed: (items: Activity[]) => void;
       notify: (item: Activity) => void;
       viewed?: (paneId: string) => boolean;
+      includeResponse?: () => boolean;
       ready: (paneId: string, generation: string, result?: string) => void;
       error: (message: string) => void;
     },
@@ -182,7 +204,10 @@ export class ActivityService {
       count: 0,
       since: Date.now(),
       enabled,
-      parser: new OscNotifications(() => this.attention(paneId)),
+      turns: new Map(),
+      emitted: new Set(),
+      pending: new Map(),
+      parser: new OscNotifications((value) => this.attention(paneId, value)),
     };
     this.live.set(paneId, entry);
     return {
@@ -195,6 +220,7 @@ export class ActivityService {
     const old = this.live.get(paneId);
     this.live.delete(paneId);
     if (old) {
+      for (const pending of old.pending.values()) clearTimeout(pending.timer);
       for (const row of this.rows)
         if (row.generation === old.generation) row.resolved = true;
       this.persist();
@@ -208,6 +234,11 @@ export class ActivityService {
           // Revocation applies immediately. Enabling again requires a fresh
           // session, so credentials from the revoked launch cannot revive.
           entry.enabled[source] = false;
+          for (const [key, pending] of entry.pending)
+            if (pending.event.source === source) {
+              clearTimeout(pending.timer);
+              entry.pending.delete(key);
+            }
           changed = true;
           for (const row of this.rows)
             if (row.generation === entry.generation && row.source === source)
@@ -254,69 +285,199 @@ export class ActivityService {
     if (event.source === "terminal" || !entry.enabled[event.source]) return;
     const run = event.agentRun || event.run;
     if (event.event === "run-start") {
-      if (run && entry.runs.size < 64) entry.runs.add(run);
+      if (run && entry.runs.size < 64) {
+        entry.runs.add(run);
+        let changed = false;
+        for (const row of this.rows)
+          if (
+            row.generation === entry.generation &&
+            row.source === event.source &&
+            row.kind === "failed" &&
+            !row.resolved &&
+            row.run &&
+            !entry.runs.has(row.run)
+          ) {
+            row.resolved = true;
+            changed = true;
+          }
+        if (changed) this.persist();
+      }
       return;
     }
     if (!run || !entry.runs.has(run)) return;
+    const scope = JSON.stringify([event.source, run, event.session || ""]);
+    const turn = entry.turns.get(scope) ?? { epoch: 0, completed: false };
+    entry.turns.set(scope, turn);
+    if (entry.turns.size > 256)
+      entry.turns.delete(entry.turns.keys().next().value!);
+    const matches = (row: (typeof this.rows)[number]) =>
+      row.generation === entry.generation &&
+      row.run === run &&
+      row.session === (event.session || "");
+    const cancelPending = (all = false) => {
+      for (const [key, pending] of entry.pending) {
+        if (
+          pending.event.source !== event.source ||
+          (pending.event.agentRun || pending.event.run) !== run
+        )
+          continue;
+        if (
+          event.event !== "run-end" &&
+          (pending.event.session || "") !== (event.session || "")
+        )
+          continue;
+        if (all || (event.request && pending.event.request === event.request)) {
+          clearTimeout(pending.timer);
+          entry.pending.delete(key);
+        }
+      }
+    };
+    const resolve = (all = false) => {
+      for (const row of this.rows)
+        if (
+          (event.event === "run-end"
+            ? row.generation === entry.generation && row.run === run
+            : matches(row)) &&
+          (all || (!!event.request && row.request === event.request))
+        )
+          row.resolved = true;
+    };
     if (
       [
+        "tool-start",
         "tool-done",
+        "input-resolved",
         "turn-start",
         "run-end",
         "session-end",
-        "turn-failed",
       ].includes(event.event)
     ) {
-      for (const row of this.rows)
+      const boundary = ["turn-start", "run-end", "session-end"].includes(
+        event.event,
+      );
+      cancelPending(boundary);
+      resolve(boundary);
+      if (
+        event.event === "turn-start" ||
+        (event.event === "tool-start" && turn.completed)
+      ) {
+        turn.epoch++;
+        turn.completed = false;
+      }
+      if (event.event === "run-end") {
+        entry.runs.delete(run);
         if (
-          row.generation === entry.generation &&
-          row.run === run &&
-          (event.event !== "tool-done" ||
-            (!!event.request && row.request === event.request))
-        )
-          row.resolved = true;
-      if (event.event === "run-end") entry.runs.delete(run);
+          event.exitCode !== undefined &&
+          ![0, 130, 143].includes(event.exitCode)
+        ) {
+          // A StopFailure may already have explained this failed run.
+          if (
+            this.rows.find(
+              (row) => row.generation === entry.generation && row.run === run,
+            )?.kind !== "failed"
+          )
+            this.add(entry, {
+              source: event.source,
+              kind: "failed",
+              title: `${event.source === "claude" ? "Claude Code" : "Codex"} · 실행 중단`,
+              body: "CLI가 오류로 종료되었습니다. 터미널에서 원인을 확인하세요.",
+              run,
+              session: event.session || "",
+            });
+        }
+      }
       this.persist();
       return;
     }
-    const key = `${event.source}:${run}:${event.event}:${event.turn || ""}:${event.request || ""}`;
-    if (!this.allow(entry, key)) return;
-    if (event.event === "stop-candidate")
-      for (const row of this.rows) {
-        // Reaching the root Stop hook confirms progress past previous waits. It
-        // does not confirm that other Stop hooks will let the agent finish.
-        if (row.generation === entry.generation && row.run === run)
-          row.resolved = true;
-      }
-    const kind: Activity["kind"] =
-      event.event === "completed"
-        ? "completed"
-        : event.event === "permission"
-          ? "permission"
-          : "attention";
-    const label =
-      event.event === "stop-candidate"
-        ? "응답 종료 신호"
-        : kind === "completed"
-          ? "응답 완료"
-          : kind === "permission"
-            ? "승인 필요"
+    // PermissionRequest can be answered by another hook; only the actual
+    // permission_prompt notification creates a user-facing approval alert.
+    if (event.event === "permission-candidate") return;
+    if (event.event === "input-candidate") {
+      const key = `${scope}:input:${event.request || "unknown"}`;
+      if (entry.pending.has(key) || entry.pending.size >= 64) return;
+      const timer = setTimeout(() => {
+        entry.pending.delete(key);
+        this.receive({ ...event, event: "input-required" });
+      }, 500);
+      entry.pending.set(key, { timer, event });
+      return;
+    }
+    const completed = ["completed", "stop-candidate"].includes(event.event);
+    const kind: Activity["kind"] = completed
+      ? "completed"
+      : event.event === "permission"
+        ? "permission"
+        : event.event === "input-required"
+          ? event.request
+            ? "input"
+            : "attention"
+          : event.event === "turn-failed"
+            ? "failed"
+            : "attention";
+    const key = JSON.stringify([
+      scope,
+      kind,
+      event.turn || turn.epoch,
+      event.request || "",
+    ]);
+    if (entry.emitted.has(key)) {
+      this.persist();
+      return;
+    }
+    if (completed || event.event === "turn-failed") {
+      cancelPending(true);
+      resolve(true);
+    }
+    if (event.event === "input-required") cancelPending();
+    entry.emitted.add(key);
+    if (entry.emitted.size > 512)
+      entry.emitted.delete(entry.emitted.values().next().value!);
+    if (completed) turn.completed = true;
+    const label = completed
+      ? "응답 완료"
+      : kind === "permission"
+        ? "승인 필요"
+        : kind === "input"
+          ? "답변 필요"
+          : kind === "failed"
+            ? "작업 중단 · 확인 필요"
             : "확인 필요";
+    const summary =
+      completed && this.callbacks.includeResponse?.() && event.summary
+        ? Array.from(
+            event.summary
+              .replace(/[\x00-\x1f\x7f-\x9f]/g, " ")
+              .replace(/\s+/g, " ")
+              .trim(),
+          )
+            .slice(0, 200)
+            .join("")
+        : "";
     this.add(entry, {
       source: event.source,
       kind,
       title: `${event.source === "claude" ? "Claude Code" : "Codex"} · ${label}`,
       body:
-        event.event === "stop-candidate"
-          ? "Stop 신호가 도착했습니다. 다른 훅이나 백그라운드 작업은 계속될 수 있습니다."
-          : "터미널에서 내용을 확인하세요.",
+        summary ||
+        (completed
+          ? "응답이 끝났습니다. 결과를 확인하거나 다음 작업을 입력하세요."
+          : kind === "failed"
+            ? "작업이 중단되었습니다. 터미널에서 원인을 확인하세요."
+            : "터미널에서 요청을 확인하세요."),
       run,
       request: event.request,
+      session: event.session || "",
     });
   }
-  private attention(paneId: string) {
+  private attention(paneId: string, value: string) {
     const entry = this.live.get(paneId);
-    if (entry && this.allow(entry, "osc"))
+    if (
+      entry &&
+      this.allow(
+        entry,
+        `osc:${createHash("sha256").update(value).digest("hex")}`,
+      )
+    )
       this.add(entry, {
         source: "terminal",
         kind: "attention",
@@ -329,6 +490,7 @@ export class ActivityService {
     event: Pick<Activity, "source" | "kind" | "title" | "body"> & {
       run?: string;
       request?: string;
+      session?: string;
     },
   ) {
     const workspaceId = this.callbacks.workspace(entry.paneId);
@@ -341,7 +503,7 @@ export class ActivityService {
       workspaceId,
       created: Date.now(),
       read: this.callbacks.viewed?.(entry.paneId) ?? false,
-      resolved: event.kind !== "permission",
+      resolved: !["permission", "input", "failed"].includes(event.kind),
     };
     this.rows.unshift(item);
     this.persist();
@@ -403,6 +565,8 @@ export class ActivityService {
     this.callbacks.changed(this.list());
   }
   async close() {
+    for (const entry of this.live.values())
+      for (const pending of entry.pending.values()) clearTimeout(pending.timer);
     this.live.clear();
     for (const socket of this.sockets) socket.destroy();
     if (this.server.listening)

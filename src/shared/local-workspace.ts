@@ -11,7 +11,6 @@ export function assertTerminalCapacity(document: PassportDocument) {
 }
 export function localWorkspace(
   document: PassportDocument,
-  home: string,
   id: string,
   paneId: string,
 ): Workspace {
@@ -19,14 +18,13 @@ export function localWorkspace(
   return {
     id,
     name: "로컬 터미널",
-    project: { cwd: home },
     root: {
       kind: "pane",
       id: paneId,
       hostId: "00000000-0000-4000-8000-000000000001",
       local: {
         shell: document.settings.terminal.shell,
-        cwd: home,
+        cwd: "",
         profiles: { mode: "inherit", ids: [] },
       },
     },

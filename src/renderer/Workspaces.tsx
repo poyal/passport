@@ -1,6 +1,12 @@
 import { shortcutMatch, shortcutPlatform } from "../shared/shortcuts";
 import { FontPicker } from "./FontPicker";
-import { useEffect, useRef, useState, type DragEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type DragEvent,
+  type CSSProperties,
+} from "react";
 import {
   Terminal as TerminalIcon,
   Maximize2,
@@ -19,7 +25,7 @@ import {
   Trash2,
   Check,
   Wrench,
-  Plug,
+  RotateCw,
   ChevronUp,
   ChevronDown,
   Save,
@@ -48,11 +54,7 @@ import { themes, getTheme } from "../shared/themes";
 import { useApp } from "./context";
 import { api, uuid } from "./api";
 import { attachTerminal, applyAppearance, terminals } from "./terminals";
-import {
-  TerminalChooser,
-  ProfileSelector,
-  type TerminalChoice,
-} from "./TerminalSetup";
+import { TerminalChooser, type TerminalChoice } from "./TerminalSetup";
 import {
   IconButton,
   Modal,
@@ -301,9 +303,6 @@ function Leaf({
           id,
           name: host.name,
           root: pane,
-          project: workspace.project
-            ? structuredClone(workspace.project)
-            : undefined,
         },
       ],
     }));
@@ -409,7 +408,7 @@ function Leaf({
   };
   return (
     <section
-      className={`terminal-pane ${app.activePane === pane.id ? "focused" : ""} ${fileHover ? `file-drop-target ${dropError ? "file-drop-blocked" : ""}` : ""} ${app.activities.some((a) => a.paneId === pane.id && a.kind === "permission" && !a.resolved && a.available) ? "needs-input" : ""}`}
+      className={`terminal-pane ${app.activePane === pane.id ? "focused" : ""} ${fileHover ? `file-drop-target ${dropError ? "file-drop-blocked" : ""}` : ""} ${app.activities.some((a) => a.paneId === pane.id && ["permission", "input", "failed"].includes(a.kind) && !a.resolved && a.available) ? "needs-input" : ""}`}
       data-pane-id={pane.id}
       onMouseDown={() => app.setActivePane(pane.id)}
       onFocusCapture={() => app.setActivePane(pane.id)}
@@ -455,7 +454,7 @@ function Leaf({
             {pane.local
               ? app.sessionStates[pane.id]?.environment?.cwd ||
                 pane.local.cwd ||
-                workspace.project?.cwd ||
+                app.document.settings.terminal.cwd ||
                 app.boot.home
               : `${host.username}@${host.address}`}
           </span>
@@ -989,10 +988,16 @@ function Branch({
     </div>
   );
 }
-export function WorkspaceView({ workspace }: { workspace: Workspace }) {
+export function WorkspaceView({
+  workspace,
+  onEdit,
+}: {
+  workspace: Workspace;
+  onEdit: () => void;
+}) {
   const app = useApp(),
     [maximized, setMaximized] = useState<string | null>(null),
-    [projectSettings, setProjectSettings] = useState(false),
+    [recovering, setRecovering] = useState(false),
     [tool, setTool] = useState<"snippets" | "appearance" | "operations" | null>(
       null,
     );
@@ -1014,6 +1019,10 @@ export function WorkspaceView({ workspace }: { workspace: Workspace }) {
   const ids = panes(workspace.root).map((p) => p.id),
     connected = ids.filter(
       (id) => app.sessionStates[id]?.status === "connected",
+    ),
+    disconnected = panes(workspace.root).filter(
+      (p) =>
+        !["connected", "connecting"].includes(app.sessionStates[p.id]?.status),
     );
   useEffect(() => {
     if (app.active === workspace.id && !ids.includes(app.activePane))
@@ -1021,21 +1030,50 @@ export function WorkspaceView({ workspace }: { workspace: Workspace }) {
   }, [app.active, app.activePane, workspace.id, ids.join(",")]);
   return (
     <div className="workspace-view">
-      {projectSettings && (
-        <ProjectSettings
-          workspace={workspace}
-          onClose={() => setProjectSettings(false)}
-        />
-      )}
-      <div className="workspace-bar">
+      <div
+        className={`workspace-bar ${workspace.color ? "colored" : ""}`}
+        style={
+          workspace.color
+            ? ({ "--tab-color": workspace.color } as CSSProperties)
+            : undefined
+        }
+      >
         <div className="row">
           <strong>{workspace.name}</strong>
-          <button onClick={() => setProjectSettings(true)}>
-            프로젝트 설정
-          </button>
+          <button onClick={onEdit}>탭 설정</button>
           <span className="pill">
             {connected.length} / {ids.length} 연결
           </span>
+          {(disconnected.length > 0 || recovering) && (
+            <IconButton
+              label={
+                recovering
+                  ? "연결 복구 중"
+                  : `끊긴 연결 복구 · ${disconnected.length}`
+              }
+              disabled={recovering}
+              onClick={() => {
+                if (recovering) return;
+                setRecovering(true);
+                const pending = [...disconnected];
+                const worker = async () => {
+                  for (;;) {
+                    const p = pending.shift();
+                    if (!p) return;
+                    await app.connectPane(p.id, p.hostId, true);
+                  }
+                };
+                void Promise.all(
+                  Array.from({ length: Math.min(4, pending.length) }, worker),
+                ).finally(() => setRecovering(false));
+              }}
+            >
+              <RotateCw
+                size={17}
+                className={recovering ? "update-spinning" : undefined}
+              />
+            </IconButton>
+          )}
         </div>
         <div className="row">
           <IconButton
@@ -1044,20 +1082,6 @@ export function WorkspaceView({ workspace }: { workspace: Workspace }) {
             onClick={() => app.saveTemplate(workspace.id)}
           >
             <Save size={17} />
-          </IconButton>
-          <IconButton
-            label="배치 연결"
-            onClick={() => {
-              for (const p of panes(workspace.root))
-                if (
-                  !["connected", "connecting"].includes(
-                    app.sessionStates[p.id]?.status,
-                  )
-                )
-                  void app.connectPane(p.id, p.hostId);
-            }}
-          >
-            <Plug size={17} />
           </IconButton>
           <IconButton
             label="현재 탭 연결 종료"
@@ -1581,76 +1605,5 @@ export function AppearancePanel({
         </>
       )}
     </div>
-  );
-}
-
-function ProjectSettings({
-  workspace,
-  onClose,
-}: {
-  workspace: Workspace;
-  onClose: () => void;
-}) {
-  const app = useApp();
-  const [project, setProject] = useState(
-    workspace.project || {
-      cwd: "",
-      profiles: { mode: "inherit" as const, ids: [] },
-    },
-  );
-  return (
-    <Modal title="작업 프로젝트 설정" onClose={onClose}>
-      <label>
-        기본 프로젝트 폴더
-        <div className="row">
-          <input
-            value={project.cwd}
-            placeholder={app.boot.home}
-            onChange={(e) => setProject({ ...project, cwd: e.target.value })}
-          />
-          <button
-            onClick={() =>
-              void api
-                .call("terminal.folder", undefined)
-                .then((cwd) => {
-                  if (cwd) setProject({ ...project, cwd });
-                })
-                .catch(app.notify)
-            }
-          >
-            폴더 선택
-          </button>
-        </div>
-      </label>
-      <ProfileSelector
-        shell={app.document.settings.terminal.shell}
-        value={project.profiles}
-        onChange={(profiles) => setProject({ ...project, profiles })}
-      />
-      <p className="hint">
-        이 작업에서 새로 여는 로컬 패널이 상속합니다. 패널에 직접 선택한 설정이
-        있으면 우선 적용합니다.
-      </p>
-      <div className="modal-actions">
-        <button onClick={onClose}>취소</button>
-        <button
-          className="primary"
-          onClick={() =>
-            void app
-              .update((d) => ({
-                ...d,
-                workspaces: d.workspaces.map((w) =>
-                  w.id === workspace.id ? { ...w, project } : w,
-                ),
-              }))
-              .then((ok) => {
-                if (ok) onClose();
-              })
-          }
-        >
-          저장
-        </button>
-      </div>
-    </Modal>
   );
 }

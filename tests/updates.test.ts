@@ -50,6 +50,7 @@ describe("GitHub release checks", () => {
     expect(compareVersions("1.0.1", "1.0.1")).toBe(0);
     for (const tag_name of [
       "v1.0.2-beta.1",
+      "v1.0.2-dev",
       "v01.0.2",
       "../x",
       "v1.0.2/other",
@@ -64,6 +65,26 @@ describe("GitHub release checks", () => {
     expect(() =>
       releaseDetails({ ...release(), prerelease: true }, "darwin", "arm64"),
     ).toThrow();
+  });
+  it("compares installed development previews without accepting development releases", async () => {
+    for (const [version, status] of [
+      ["1.0.1-dev", "available"],
+      ["1.0.2-dev", "current"],
+      ["1.0.3-dev", "current"],
+      ["1.0.1-preview", "error"],
+    ] as const) {
+      const checker = new UpdateChecker({
+        version,
+        platform: "darwin",
+        arch: "arm64",
+        fetch: async () => Response.json(release()),
+        emit: () => {},
+      });
+      const result = await checker.check();
+      expect(result.status).toBe(status);
+      expect(result.currentVersion).toBe(version);
+      checker.dispose();
+    }
   });
   it("selects only an uploaded installer for the exact platform, architecture, and repository", () => {
     expect(releaseDetails(release(), "darwin", "arm64").downloadURL).toMatch(

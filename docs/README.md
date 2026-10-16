@@ -44,3 +44,6 @@ README를 작성·수정할 때는 [README 작성 가이드](README-작성-가�
 - [v0.1 검증 기록](archive/verification-v0.1.md): 이전 버전 결과.
 - [검증 원시 데이터](benchmarks/): 부하·Docker·패키지 실행 결과 JSON.
 - [오픈소스 고지](../THIRD_PARTY_NOTICES.md): 설치본에도 포함하므로 저장소 루트에 유지한다.
+
+- [사용자 간 공유](sharing.md): 등록 승인, 암호화 메시지·파일 수신, CLI와 보관 설정
+- [1.3.0 후보 보안 재검토](security-review-20261016.md): 재현한 문제·의존성 감사·런타임 갱신·공개 전 실기 검증

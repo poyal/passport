@@ -174,7 +174,12 @@ export class UpdateChecker {
         this.options.platform,
         this.options.arch,
       );
-      const comparison = compareVersions(release.version, this.options.version);
+      // Local previews carry our explicit -dev suffix. Keep the release feed
+      // strict, but compare a preview against its numeric base version.
+      const comparison = compareVersions(
+        release.version,
+        this.options.version.replace(/-dev$/, ""),
+      );
       this.release = release;
       this.set({
         currentVersion: this.options.version,

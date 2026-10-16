@@ -54,7 +54,7 @@ export function ActivityView() {
               · {new Date(item.created).toLocaleString()} ·{" "}
               {!item.available
                 ? "터미널 종료됨"
-                : item.kind === "permission"
+                : ["permission", "input", "failed"].includes(item.kind)
                   ? item.resolved
                     ? "대기 해제됨"
                     : "입력 대기"
@@ -138,10 +138,12 @@ export function NotificationSettings() {
           시작 프로파일 설정
         </button>
         <p className="hint">
-          Claude Stop 신호는 ‘응답 종료 신호’, 실제 permission_prompt는 ‘승인
-          필요’로 구분합니다. 알림은 CLI에서 입력 대기를 확인한 뒤 늦게 도착할
-          수 있습니다. Codex의 기존 notify·TUI 설정은 보존하며, 이 경우 일부
-          알림은 생략될 수 있습니다.
+          승인·답변이 필요하거나 응답이 끝나면 알립니다. 시작·진행률과 같은
+          요청의 반복 알림은 제외합니다. 응답 완료는 전체 작업 성공을 뜻하지
+          않습니다. CLI 버전에 따라 입력 대기 신호가 늦게 오거나 제공되지 않을
+          수 있습니다. Codex의 기존 notify·TUI 설정은 보존하므로 설정 충돌 시
+          일부 알림 연동이 생략됩니다. 출처나 해제를 확인할 수 없는 신호는 일반
+          확인 알림으로 표시합니다.
         </p>
       </section>
       <section className="settings-card">
@@ -165,6 +167,15 @@ export function NotificationSettings() {
             데스크톱 배너도 요청합니다.
           </p>
         )}
+        <ToggleField
+          label="응답 내용 포함"
+          checked={settings.includeResponse}
+          onChange={(includeResponse) => void save({ includeResponse })}
+        />
+        <p className="hint">
+          켜면 이후 완료 알림에 마지막 응답을 최대 200자 저장합니다. 데스크톱에
+          표시하려면 아래 설명 표시도 켜세요.
+        </p>
         <ToggleField
           label="데스크톱 알림 설명 표시"
           checked={settings.preview}

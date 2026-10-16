@@ -42,6 +42,15 @@ import {
   type Activity,
 } from "../shared/model";
 import { Store } from "./store";
+import { ShareStore } from "./share/store";
+import { ShareService } from "./share/service";
+import {
+  shareSettingsSchema,
+  shareSendSchema,
+  shareLabel,
+  shareEndpointSchema,
+  shareExtensions,
+} from "../shared/share";
 import { Sessions, type TrustPrompt } from "./ssh";
 import { Files } from "./files";
 import { Transfers } from "./transfers";
@@ -161,6 +170,7 @@ let updates: UpdateChecker;
 let locals: LocalSessions, logs: SessionLogs, tunnels: Tunnels;
 let activity: ActivityService;
 let terminalControl: TerminalControl;
+let sharing: ShareService;
 const localEnvironments = new Map<string, AppliedEnvironment>();
 const controlInspector = new ControlInspector((owner, request) => {
   const destination = windows.get(owner);
@@ -219,7 +229,10 @@ function controlPanels(): ControlPanel[] {
             : ("disconnected" as const),
           shell: environment?.shell ?? pane.local!.shell,
           launchCwd:
-            environment?.cwd ?? pane.local!.cwd ?? workspace.project?.cwd ?? "",
+            environment?.cwd ||
+            pane.local!.cwd ||
+            store.read().settings.terminal.cwd ||
+            os.homedir(),
           configuredAgent: environment?.agent ?? pane.local!.agent ?? null,
           moving: moves.has(workspace.id),
         };
@@ -378,7 +391,7 @@ function desktopActivity(item: Activity) {
   )
     return;
   const banner = desktopNotifications.create({
-    title: item.title,
+    title: `${workspaceFor(item.paneId)?.name || "Passport"} · ${item.title}`,
     body: settings.preview ? item.body : "Passport에서 터미널을 확인하세요.",
     silent: !settings.sound,
   });
@@ -442,6 +455,33 @@ const pathSchema = z
   );
 const idObject = z.object({ id: idSchema });
 const schemas: Record<Call, z.ZodType> = {
+  "share.state": z.undefined(),
+  "share.unlock": z.undefined(),
+  "share.reset": z.undefined(),
+  "share.configure": shareSettingsSchema,
+  "share.invite": z.undefined(),
+  "share.join": z
+    .object({ key: z.string().max(16000), alias: shareLabel })
+    .strict(),
+  "share.pair": z
+    .object({ id: idSchema, accept: z.boolean(), alias: shareLabel.optional() })
+    .strict(),
+  "share.peer": z
+    .object({
+      id: z.string().regex(/^[a-f0-9]{64}$/),
+      name: shareLabel.optional(),
+      blocked: z.boolean().optional(),
+      remove: z.boolean().optional(),
+      endpoint: shareEndpointSchema.optional(),
+    })
+    .strict(),
+  "share.send": shareSendSchema,
+  "share.approve": z.object({ id: idSchema, accept: z.boolean() }).strict(),
+  "share.cancel": idObject,
+  "share.message": idObject,
+  "share.deleteMessage": idObject,
+  "share.folder": z.undefined(),
+  "share.file": z.undefined(),
   "control.reply": controlInspectionSchema,
   "terminal.create": z.undefined(),
   "window.create": z.undefined(),
@@ -491,6 +531,7 @@ const schemas: Record<Call, z.ZodType> = {
     id: idSchema,
     hostId: idSchema,
     secret: secretSchema.optional(),
+    onlyIfDisconnected: z.boolean().optional(),
   }),
   "session.execute": z.object({
     ids: z.array(idSchema).min(1).max(16),
@@ -730,6 +771,54 @@ async function call<K extends Call>(
   )
     throw new Error("이 창의 파일 연결이 아닙니다.");
   switch (name) {
+    case "share.state":
+      return sharing.snapshot();
+    case "share.unlock":
+      return sharing.unlock();
+    case "share.reset":
+      return sharing.resetIdentity();
+    case "share.configure":
+      return sharing.configure(i);
+    case "share.invite":
+      return sharing.invite();
+    case "share.join":
+      return sharing.join(i.key, i.alias);
+    case "share.pair":
+      return sharing.approvePair(i.id, i.accept, i.alias);
+    case "share.peer":
+      return sharing.updatePeer(i.id, i);
+    case "share.send":
+      return sharing.send(i);
+    case "share.approve":
+      return sharing.approve(i.id, i.accept);
+    case "share.cancel":
+      return sharing.cancel(i.id);
+    case "share.message":
+      return sharing.store.message(i.id);
+    case "share.deleteMessage":
+      sharing.store.removeMessage(i.id);
+      emit({ kind: "share-changed" });
+      return;
+    case "share.folder": {
+      const result = await dialog.showOpenDialog(caller, {
+        title: "공유 파일 저장 폴더",
+        properties: ["openDirectory", "createDirectory"],
+      });
+      return result.canceled ? null : result.filePaths[0];
+    }
+    case "share.file": {
+      const result = await dialog.showOpenDialog(caller, {
+        title: "공유할 파일",
+        properties: ["openFile"],
+        filters: [
+          {
+            name: "허용된 문서·이미지·압축파일",
+            extensions: [...shareExtensions],
+          },
+        ],
+      });
+      return result.canceled ? null : result.filePaths[0];
+    }
     case "control.reply":
       controlInspector.reply(caller.id, i);
       return;
@@ -742,8 +831,7 @@ async function call<K extends Call>(
     }
     case "terminal.preview": {
       const document = store.read();
-      const workspace = document.workspaces.find((w) => w.id === i.workspaceId);
-      return previewEnvironment(i.local, document.settings.terminal, workspace);
+      return previewEnvironment(i.local, document.settings.terminal);
     }
     case "terminal.create":
       return addLocalTerminal(caller);
@@ -890,25 +978,27 @@ async function call<K extends Call>(
       )
         throw new Error("현재 작업 배치에 없는 터미널입니다.");
       assertOwned(i.id, caller);
+      // No await between the authoritative state check and opening a session:
+      // open() publishes connecting synchronously before its first await.
+      if (
+        i.onlyIfDisconnected &&
+        ["connected", "connecting"].includes(states.get(i.id)?.status || "")
+      )
+        return;
       const pane = current.workspaces
         .flatMap((w) => panes(w.root))
         .find((p) => p.id === i.id)!;
       if (pane.local) {
         closeSession(i.id);
-        const workspace = current.workspaces.find((w) =>
-          panes(w.root).some((p) => p.id === i.id),
-        );
         let launch: ReturnType<typeof prepareLaunch> | undefined;
         try {
           const snapshot = previewEnvironment(
             pane.local,
             current.settings.terminal,
-            workspace,
           );
           localEnvironments.set(i.id, snapshot);
           const integration = selectedProfiles(
             current.settings.terminal,
-            workspace?.project?.profiles,
             pane.local.profiles,
           ).some((p) => p.integration === "ai-notifications");
           const credentials = activity.register(
@@ -923,7 +1013,6 @@ async function call<K extends Call>(
             pane.local,
             current.settings.terminal,
             current.settings.notifications,
-            workspace,
             path.join(app.getPath("userData"), "shell-sessions"),
             {
               ...credentials,
@@ -1530,7 +1619,7 @@ function addLocalTerminal(caller: BrowserWindow) {
   const doc = store.read(),
     workspaceId = randomUUID(),
     paneId = randomUUID();
-  const workspace = localWorkspace(doc, os.homedir(), workspaceId, paneId);
+  const workspace = localWorkspace(doc, workspaceId, paneId);
   const saved = store.save({
     ...doc,
     workspaces: [...doc.workspaces, workspace],
@@ -1738,6 +1827,50 @@ void app
     });
     fonts = await getFonts({ disableQuoting: true }).catch(() => []);
     store = new Store(app.getPath("userData"), safeStorage);
+    sharing = new ShareService(
+      new ShareStore(
+        app.getPath("userData"),
+        safeStorage,
+        app.getPath("downloads"),
+      ),
+      {
+        protect: platform.protectDownload,
+        completed: (message) => emit({ kind: "notice", message }),
+        changed: () => {
+          terminalControl?.configure(store.read().settings.terminal.cliAccess);
+          emit({ kind: "share-changed" });
+        },
+        attention: () => {
+          // Hidden E2E never creates native notification surfaces.
+          if (
+            e2eWindowMode ||
+            !desktopNotifications.isSupported() ||
+            store.read().settings.notifications.desktop === "off"
+          )
+            return;
+          const banner = desktopNotifications.create({
+            title: "Passport 공유 승인 요청",
+            body: "공유함에서 상대와 요청 내용을 확인해 주세요.",
+            silent: !store.read().settings.notifications.sound,
+          });
+          trackBanner(banner);
+          banner.once("click", () => {
+            const target = window;
+            if (target) {
+              presentWindow(target, e2eWindowMode);
+              target.webContents.send("passport:event", {
+                kind: "share-open",
+              } satisfies AppEvent);
+            }
+          });
+          banner.once("close", () => banners.delete(banner));
+          banner.once("failed", () => banners.delete(banner));
+          banner.show();
+        },
+      },
+    );
+    if (sharing.store.settings().enabled)
+      await sharing.configure(sharing.store.settings()).catch(() => {});
     logs = new SessionLogs(store, (message) =>
       emit({ kind: "notice", message }),
     );
@@ -1750,6 +1883,8 @@ void app
       },
       notify: desktopActivity,
       viewed: isPaneViewed,
+      includeResponse: () =>
+        store.read().settings.notifications.includeResponse,
       ready: (id, generation, result) => locals.ready(id, generation, result),
       error: (message) => emit({ kind: "notice", message }),
     });
@@ -1763,6 +1898,10 @@ void app
         ).length,
       inspect: controlInspector.inspect,
       write: (id, data) => locals.input(id, data),
+      share: {
+        enabled: () => sharing.enabled,
+        execute: (input) => sharing.control(input),
+      },
     });
     await terminalControl.start();
     terminalControl.configure(store.read().settings.terminal.cliAccess);
@@ -1961,6 +2100,7 @@ app.on("will-quit", (event) => {
     banners.close();
     await activity?.close();
     await terminalControl?.close();
+    await sharing?.close();
     store?.close();
     shutdownComplete = true;
     app.quit();

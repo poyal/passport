@@ -28,7 +28,11 @@ export type AppContextValue = {
   ) => Promise<Secret | undefined | null>;
   openHost: (host: Host) => Promise<void>;
   saveTemplate: (workspaceId?: string, templateId?: string) => void;
-  connectPane: (id: string, hostId: string) => Promise<void>;
+  connectPane: (
+    id: string,
+    hostId: string,
+    onlyIfDisconnected?: boolean,
+  ) => Promise<void>;
   settingsSection: string;
   openSettings: (section: string) => void;
   active: string;

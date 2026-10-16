@@ -89,4 +89,5 @@ export interface PlatformServices {
   readonly desktop: DesktopPlatform;
   createActivityEndpoint(): ActivityEndpoint;
   createControlEndpoint(): ActivityEndpoint;
+  protectDownload(file: string): Promise<void>;
 }

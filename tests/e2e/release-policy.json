@@ -440,6 +440,52 @@
       "id": "terminal-input.order",
       "file": "terminal-input.spec.ts",
       "title": "file drops and clipboard paste retain gesture order"
+    },
+    {
+      "id": "workspace-management.identity",
+      "file": "workspace-management.spec.ts",
+      "title": "workspace icon tiles emoji presets colors and extra panel counts survive editing and renderer reload"
+    },
+    {
+      "id": "workspace-management.global-defaults",
+      "file": "workspace-management.spec.ts",
+      "title": "global project defaults start new local tabs without changing an existing session"
+    },
+    {
+      "id": "workspace-management.groups",
+      "file": "workspace-management.spec.ts",
+      "title": "host group sections restore collapse after search and remove empty unassigned sections"
+    },
+    {
+      "id": "workspace-management.recovery",
+      "file": "workspace-management.spec.ts",
+      "title": "workspace recovery leaves healthy local sessions intact and reopens only disconnected panes"
+    },
+    {
+      "id": "workspace-management.recovery-auth",
+      "file": "workspace-management.spec.ts",
+      "title": "workspace recovery continues after cancelled and failed authentication with one prompt at a time"
+    },
+    {
+      "id": "workspace-management.openssh-paste",
+      "file": "workspace-management.spec.ts",
+      "title": "macOS local OpenSSH accepts multiline paste with and without bracketed paste",
+      "platforms": ["darwin"]
+    },
+    {
+      "id": "sharing.ui",
+      "file": "sharing.spec.ts",
+      "title": "validates sharing settings and separates inbox, sending and friends with aligned controls"
+    },
+    {
+      "id": "sharing.1",
+      "file": "sharing.spec.ts",
+      "title": "pairs two devices, approves encrypted Markdown, renders inert content and saves protected attachments only"
+    },
+    {
+      "id": "sharing.2",
+      "file": "sharing.spec.ts",
+      "title": "lets the real CLI send to a registered alias without terminal access and cannot approve or read incoming messages"
     }
   ]
 }

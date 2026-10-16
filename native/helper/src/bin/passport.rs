@@ -12,12 +12,25 @@ Usage:
   passport send --pane ID TEXT [--submit] [--json]
   passport send --pane ID --file FILE [--submit] [--json]
   passport key --pane ID enter|esc|tab|backspace|ctrl-c|ctrl-d [--json]
+  passport share friends [--json]
+  passport share peers [--json]              (alias of friends)
+  passport share send --to NAME_OR_DEVICE_ID --text MARKDOWN [--json]
+  passport share send --to NAME_OR_DEVICE_ID --markdown-file FILE [--json]
+  passport share send --to NAME_OR_DEVICE_ID --file FILE [--json]
+  passport share status TRANSFER_ID [--json]
+  passport share cancel TRANSFER_ID [--json]
 
 Use --tab EXACT_NAME instead of --pane only for an unambiguous single local pane.
 --file - reads UTF-8 from stdin (maximum 256 KiB). Use -- before literal text
 beginning with a dash. send adds no Enter unless --submit is specified.
 read returns up to 100 logical lines by default; --lines accepts 1..1000.
 Enable CLI access in Settings > Local terminal, then open a new local terminal.
+For sharing, enable Settings > Share and open a new local terminal. Sharing does
+not grant terminal read/write access. --markdown-file - reads Markdown from stdin.
+Run share friends --json first to find local aliases, device IDs and blocked status.
+Use an exact alias with --to; if aliases repeat, use the device ID. No auto-discovery.
+share send returns a transfer ID, NOT delivery confirmation. The recipient must
+approve every message/file. Poll share status. No receive/approve/execute commands.
 No automatic retries. A delivery timeout may mean input was already delivered.
 --help and --version work without a running app. Exit: 0 success, 1 runtime, 2 usage.";
 
@@ -42,6 +55,7 @@ fn read_text(reader: impl Read) -> Result<String, Failure> {
 }
 
 fn parse(args: &[String]) -> Result<Value, Failure> {
+    if args.first().map(String::as_str) == Some("share") { return parse_share(&args[1..]); }
     let mut command = None;
     let mut pane = None;
     let mut tab = None;
@@ -114,6 +128,48 @@ fn parse(args: &[String]) -> Result<Value, Failure> {
     Ok(request)
 }
 
+fn parse_share(args: &[String]) -> Result<Value, Failure> {
+    let command = args.first().ok_or_else(|| usage("share requires friends, send, status or cancel"))?;
+    let command = if command == "friends" { "peers" } else { command.as_str() };
+    if !["peers", "send", "status", "cancel"].contains(&command) { return Err(usage("Unknown share command; receiving and approvals are UI only")); }
+    let mut index = 1;
+    let mut to = None;
+    let mut content: Option<(&str, String)> = None;
+    let mut id = None;
+    while index < args.len() {
+        match args[index].as_str() {
+            "--json" => {},
+            "--to" if command == "send" && to.is_none() => to = Some(value(args, &mut index)?),
+            flag @ ("--text" | "--file" | "--markdown-file") if command == "send" && content.is_none() => {
+                let input = value(args, &mut index)?;
+                let kind = match flag { "--file" => "file", "--markdown-file" => "markdownFile", _ => "text" };
+                content = Some((kind, input));
+            },
+            token if (command == "status" || command == "cancel") && !token.starts_with('-') && id.is_none() => id = Some(token.to_owned()),
+            _ => return Err(usage("Invalid or repeated share option")),
+        }
+        index += 1;
+    }
+    let mut request = json!({"command": format!("share.{command}")});
+    if command == "send" {
+        let to = to.ok_or_else(|| usage("Specify --to with an exact registered alias or device ID"))?;
+        let (mut kind, mut data) = content.ok_or_else(|| usage("Choose --text, --markdown-file or --file"))?;
+        if kind == "markdownFile" && data == "-" { kind = "text"; data = read_text(io::stdin().lock())?; }
+        if kind == "text" && data.len() as u64 > TEXT_LIMIT { return Err(usage("Markdown exceeds UTF-8 256 KiB")); }
+        if kind != "text" {
+            if data == "-" { return Err(usage("Binary file input requires a file path")); }
+            let file = std::path::PathBuf::from(&data);
+            let absolute = if file.is_absolute() { file } else { env::current_dir().map_err(|_| fail("INPUT_READ", "Cannot resolve current directory"))?.join(file) };
+            data = absolute.to_str().ok_or_else(|| usage("File path must be UTF-8"))?.to_owned();
+        }
+        request["input"] = json!({"to":to});
+        request["input"][kind] = json!(data);
+    } else if command == "status" || command == "cancel" {
+        request["id"] = json!(id.ok_or_else(|| usage("A transfer ID is required"))?);
+    }
+    Ok(request)
+}
+
 fn exchange(stream: impl Read + Write, body: &str) -> Result<Value, Failure> {
     let mut stream = stream;
     stream.write_all(body.as_bytes()).map_err(|_| fail("DELIVERY_UNKNOWN", "Request write failed; input may have been delivered. Do not retry automatically."))?;
@@ -161,7 +217,7 @@ fn has_flag(args: &[String], flag: &str) -> bool {
         let arg = args[index].as_str();
         if arg == "--" { break; }
         if arg == flag { return true; }
-        if ["--pane", "--tab", "--lines", "--file"].contains(&arg) { index += 1; }
+        if ["--pane", "--tab", "--lines", "--file", "--to", "--text", "--markdown-file"].contains(&arg) { index += 1; }
         index += 1;
     }
     false
@@ -183,6 +239,11 @@ fn display(response: &Value, command: &str, as_json: bool) -> i32 {
                 }
             },
             "identify" => println!("{}\t{}", safe(&value["paneId"]), safe(&value["workspaceName"])),
+            "share.peers" => {
+                println!("DEVICE ID\tALIAS\tBLOCKED");
+                if let Some(peers) = value.as_array() { for peer in peers { println!("{}\t{}\t{}", safe(&peer["id"]), safe(&peer["name"]), peer["blocked"]); } }
+            },
+            "share.send" | "share.status" | "share.cancel" => println!("{}\t{}", safe(&value["id"]), safe(&value["state"])),
             "read" => {
                 print!("{}", value["text"].as_str().unwrap_or(""));
                 if value["truncated"] == true { eprintln!("[Passport: earlier output omitted]"); }
@@ -238,5 +299,20 @@ mod tests {
         assert!(read_text(&b"\xff"[..]).is_err());
         assert!(read_text(vec![b'x'; TEXT_LIMIT as usize + 1].as_slice()).is_err());
         assert_eq!(read_text("한글\r\n\n".as_bytes()).unwrap(), "한글\r\n\n");
+    }
+    #[test]
+    fn sharing_is_explicit_and_never_offers_receive_approval_or_execution() {
+        assert_eq!(parse(&args(&["share", "friends", "--json"])).unwrap(), parse(&args(&["share", "peers", "--json"])).unwrap());
+        assert!(parse(&args(&["share", "friends", "--to", "승민"])).is_err());
+        let request = parse(&args(&["share", "send", "--to", "승민", "--text", "# 결과\n\n본문", "--json"])).unwrap();
+        assert_eq!(request["command"], "share.send");
+        assert_eq!(request["input"]["text"], "# 결과\n\n본문");
+        assert!(!has_flag(&args(&["share", "send", "--to", "--help", "--text", "--json"]), "--help"));
+        assert!(!has_flag(&args(&["share", "send", "--to", "승민", "--text", "--json"]), "--json"));
+        assert!(parse(&args(&["share", "approve", "id"])).is_err());
+        assert!(parse(&args(&["share", "read", "id"])).is_err());
+        assert!(parse(&args(&["share", "send", "--to", "승민", "--text", "body", "--submit"])).is_err());
+        assert!(parse(&args(&["share", "send", "--text", "body"])).is_err());
+        assert!(parse(&args(&["share", "send", "--to", "승민", "--text", "body", "--file", "x"])).is_err());
     }
 }

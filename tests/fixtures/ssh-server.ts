@@ -5,7 +5,11 @@ import fs from "node:fs/promises";
 import type { Stats } from "node:fs";
 import path from "node:path";
 import type { AddressInfo } from "node:net";
-export async function sshFixture(root: string, algorithms?: Algorithms) {
+export async function sshFixture(
+  root: string,
+  algorithms?: Algorithms,
+  options = { bracketedPaste: true },
+) {
   root = await fs.realpath(root);
   const { privateKey } = generateKeyPairSync("rsa", {
     modulusLength: 2048,
@@ -66,7 +70,7 @@ export async function sshFixture(root: string, algorithms?: Algorithms) {
           const stream = accept();
           shells.push(stream);
           stream.write(
-            "\x1b[?2004h\x1b[32m테스트 서버에 연결되었습니다.\x1b[0m\r\n$ ",
+            `${options.bracketedPaste ? "\x1b[?2004h" : "\x1b[?2004l"}\x1b[32m테스트 서버에 연결되었습니다.\x1b[0m\r\n$ `,
           );
           stream.on("data", (chunk: Buffer) => {
             input.push(chunk.toString());

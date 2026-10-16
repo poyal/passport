@@ -1,9 +1,10 @@
+import { SharingView } from "./Sharing";
 import { shortcutPlatform, type ShortcutContext } from "../shared/shortcuts";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Server,
-  Folder,
   Terminal as TerminalIcon,
+  Folder,
   Plus,
   Settings as SettingsIcon,
   X,
@@ -14,6 +15,7 @@ import {
   Bell,
   House,
   PanelLeft,
+  Users,
 } from "lucide-react";
 import type {
   Appearance,
@@ -28,17 +30,13 @@ import type {
 import { panes, preparePaste } from "../shared/layout";
 import { api, uuid, message } from "./api";
 import { AppContext } from "./context";
+import { WorkspaceTab, WorkspaceEditor } from "./WorkspaceTabs";
 import { TemplateEditor } from "./TemplateEditor";
 import { ActivityView } from "./Activity";
 import { Hosts } from "./Hosts";
 import { FilesView } from "./FilesView";
 import { WorkspaceTemplates } from "./WorkspaceTemplates";
-import {
-  WorkspaceView,
-  dragMime,
-  dragWorkspaceMime,
-  startLayoutDrag,
-} from "./Workspaces";
+import { WorkspaceView } from "./Workspaces";
 import { Settings, SecretEditor, blankSecret } from "./Settings";
 import { IconButton, Modal, Tooltips } from "./components";
 import {
@@ -97,8 +95,11 @@ export function App() {
       workspaceId?: string;
       templateId?: string;
     } | null>(null),
+    [editingWorkspace, setEditingWorkspace] = useState<string | null>(null),
     [sidebarCollapsed, setSidebarCollapsed] = useState(false),
     [activities, setActivities] = useState<Activity[]>([]),
+    [sharePending, setSharePending] = useState(0),
+    [shareInboxRevision, setShareInboxRevision] = useState(0),
     [activation, setActivation] = useState<{
       workspaceId: string;
       paneId: string;
@@ -117,7 +118,6 @@ export function App() {
     updateRef = useRef<Bootstrap["updateState"] | null>(null),
     queue = useRef<Promise<unknown>>(Promise.resolve()),
     toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined),
-    tabHover = useRef<ReturnType<typeof setTimeout> | undefined>(undefined),
     statusRef = useRef(states),
     creatingWindow = useRef(false),
     startedInitialTerminal = useRef<string | undefined>(undefined);
@@ -216,6 +216,9 @@ export function App() {
         void inspectControlTerminal(event.request)
           .then((reply) => api.call("control.reply", reply))
           .catch(() => {});
+      } else if (event.kind === "share-open") {
+        setActive("sharing");
+        setShareInboxRevision((value) => value + 1);
       } else if (event.kind === "activity") {
         setActivities(event.items);
       } else if (event.kind === "activate-pane") {
@@ -340,6 +343,7 @@ export function App() {
       ![
         "home",
         "activity",
+        "sharing",
         "hosts",
         "files",
         "settings",
@@ -431,16 +435,25 @@ export function App() {
       ]),
     );
   };
-  const connectPane = async (id: string, hostId: string) => {
+  const connectPane = async (
+    id: string,
+    hostId: string,
+    onlyIfDisconnected = false,
+  ) => {
     try {
       const doc = bootRef.current?.document;
-      if (!doc) return;
+      if (
+        !doc ||
+        (onlyIfDisconnected &&
+          ["connected", "connecting"].includes(statusRef.current[id]?.status))
+      )
+        return;
       const pane = doc.workspaces
         .flatMap((w) => panes(w.root))
         .find((p) => p.id === id);
       if (pane?.local) {
         ensureTerminal(id);
-        await api.call("session.connect", { id, hostId });
+        await api.call("session.connect", { id, hostId, onlyIfDisconnected });
         return;
       }
       const raw = doc.hosts.find((h) => h.id === hostId);
@@ -449,7 +462,12 @@ export function App() {
       const secret = await credentials(host);
       if (secret === null) return;
       ensureTerminal(id);
-      await api.call("session.connect", { id, hostId, secret });
+      await api.call("session.connect", {
+        id,
+        hostId,
+        secret,
+        onlyIfDisconnected,
+      });
     } catch (e) {
       notify(e);
     }
@@ -491,10 +509,7 @@ export function App() {
         if (!entry?.connected) throw new Error("연결된 터미널이 없습니다.");
         if (sessionInstanceId && entry.sessionInstanceId !== sessionInstanceId)
           throw new Error("파일 드롭 대상 터미널 연결이 변경되었습니다.");
-        const prepared = preparePaste(
-          text,
-          entry.term.modes.bracketedPasteMode,
-        );
+        const prepared = preparePaste(text);
         entry.pasting = true;
         entry.pasteSessionInstanceId = sessionInstanceId;
         try {
@@ -918,101 +933,36 @@ export function App() {
               <Folder size={15} />
               파일
             </button>
+            <button
+              className={`app-tab fixed ${active === "sharing" ? "active" : ""}`}
+              aria-label="공유함"
+              onClick={() => {
+                setActive("sharing");
+                setShareInboxRevision((value) => value + 1);
+              }}
+            >
+              <Users size={15} />
+              공유함
+              {sharePending > 0 && (
+                <small
+                  className="share-badge"
+                  title={`${sharePending}건 승인 대기`}
+                >
+                  {sharePending}
+                </small>
+              )}
+            </button>
             {boot.document.workspaces
               .filter((w) => boot.workspaceOwners[w.id] === boot.windowId)
               .map((w) => (
-                <div
+                <WorkspaceTab
                   key={w.id}
-                  className={`app-tab workspace-tab ${active === w.id ? "active" : ""}`}
-                  draggable
-                  onDragStart={(e) =>
-                    startLayoutDrag(e.dataTransfer, w.id, w.root)
+                  workspace={w}
+                  onEdit={() =>
+                    setEditingWorkspace((current) => current ?? w.id)
                   }
-                  onDragOver={(e) => {
-                    if (e.dataTransfer.types.includes(dragMime)) {
-                      if (
-                        e.dataTransfer.types.includes(dragWorkspaceMime(w.id))
-                      ) {
-                        e.dataTransfer.dropEffect = "none";
-                        clearTimeout(tabHover.current);
-                        tabHover.current = undefined;
-                        return;
-                      }
-                      e.preventDefault();
-                      e.dataTransfer.dropEffect = "move";
-                      if (!tabHover.current)
-                        tabHover.current = setTimeout(() => {
-                          setActive(w.id);
-                          tabHover.current = undefined;
-                        }, 350);
-                    }
-                  }}
-                  onDragLeave={() => {
-                    clearTimeout(tabHover.current);
-                    tabHover.current = undefined;
-                  }}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    clearTimeout(tabHover.current);
-                    tabHover.current = undefined;
-                    try {
-                      const source = JSON.parse(
-                        e.dataTransfer.getData(dragMime),
-                      ) as { workspace: string; node: string };
-                      if (source.workspace === w.id) return;
-                      void update((d) => {
-                        const from = d.workspaces.findIndex(
-                            (x) => x.id === source.workspace,
-                          ),
-                          to = d.workspaces.findIndex((x) => x.id === w.id);
-                        if (from < 0 || to < 0) return d;
-                        const next = [...d.workspaces];
-                        next.splice(to, 0, next.splice(from, 1)[0]);
-                        return { ...d, workspaces: next };
-                      });
-                    } catch {}
-                  }}
-                >
-                  <button
-                    onClick={() => {
-                      setActive(w.id);
-                      setActivePane(panes(w.root)[0].id);
-                    }}
-                    onDoubleClick={() =>
-                      void ask(
-                        "작업 탭 이름",
-                        "이름을 입력해 주세요.",
-                        w.name,
-                      ).then((name) => {
-                        if (name?.trim())
-                          void update((d) => ({
-                            ...d,
-                            workspaces: d.workspaces.map((x) =>
-                              x.id === w.id ? { ...x, name: name.trim() } : x,
-                            ),
-                          }));
-                      })
-                    }
-                  >
-                    <TerminalIcon size={14} />
-                    <span>{w.name}</span>
-                    {activities.some(
-                      (a) =>
-                        !a.read && panes(w.root).some((p) => p.id === a.paneId),
-                    ) && (
-                      <i className="unread-dot" aria-label="읽지 않은 알림" />
-                    )}
-                    {panes(w.root).length > 1 && (
-                      <small>{panes(w.root).length}</small>
-                    )}
-                  </button>
-                  <IconButton
-                    label={`${w.name} 탭 닫기`}
-                    onClick={() => void closeTab(w.id)}
-                  >
-                    <X size={13} />
-                  </IconButton>
-                </div>
+                  onClose={() => void closeTab(w.id)}
+                />
               ))}
             <IconButton
               label="새 로컬 터미널"
@@ -1069,6 +1019,12 @@ export function App() {
               터미널을 시작하세요.
             </p>
           </div>
+          <div className="view" hidden={active !== "sharing"}>
+            <SharingView
+              onPending={setSharePending}
+              openInbox={shareInboxRevision}
+            />
+          </div>
           <div className="view" hidden={active !== "activity"}>
             <ActivityView />
           </div>
@@ -1088,7 +1044,12 @@ export function App() {
             .filter((w) => boot.workspaceOwners[w.id] === boot.windowId)
             .map((w) => (
               <div className="view" hidden={active !== w.id} key={w.id}>
-                <WorkspaceView workspace={w} />
+                <WorkspaceView
+                  workspace={w}
+                  onEdit={() =>
+                    setEditingWorkspace((current) => current ?? w.id)
+                  }
+                />
               </div>
             ))}
         </main>
@@ -1150,6 +1111,13 @@ export function App() {
               <X size={14} />
             </IconButton>
           </div>
+        )}
+        {editingWorkspace && (
+          <WorkspaceEditor
+            key={editingWorkspace}
+            id={editingWorkspace}
+            onClose={() => setEditingWorkspace(null)}
+          />
         )}
         {templateEditor && (
           <TemplateEditor

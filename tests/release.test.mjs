@@ -329,7 +329,7 @@ test("GUI policy records platform exclusions and optional skips explicitly", () 
     platform: "darwin",
     mode: "hidden",
   });
-  assert.equal(coverage.passed, 72);
+  assert.equal(coverage.passed, 81);
   assert.equal(coverage.skipped, 9);
   assert.equal(
     coverage.tests.filter(
@@ -347,12 +347,12 @@ test("GUI policy records platform exclusions and optional skips explicitly", () 
     platform: "win32",
     mode: "hidden",
   });
-  assert.equal(windows.skipped, 4);
+  assert.equal(windows.skipped, 5);
   assert.equal(
     windows.tests.filter(
       (test) => test.skipReason === "not applicable on win32",
     ).length,
-    1,
+    2,
   );
   assert.ok(
     windows.tests
@@ -1203,10 +1203,7 @@ test("Electron teardown checks actual process exit after the platform's graceful
     process: () => child,
     evaluate: async () => {
       cleanupFinished = true;
-      if (process.platform === "win32") {
-        child.exitCode = 0;
-        child.emit("exit", 0, null);
-      }
+      child.stderr.write("\nPASSPORT_E2E_NATIVE_QUIT_COMPLETE\n");
     },
     close: async () => {
       assert.equal(cleanupFinished, true);
@@ -1297,7 +1294,7 @@ test("Electron teardown disconnects the debugger after native quit before waitin
       }, 5);
     },
     close: async () => {
-      if (process.platform === "win32") assert.equal(cleaned, true);
+      assert.equal(cleaned, true);
       assert.equal(child.exitCode, null);
       child.exitCode = 0;
       child.emit("exit", 0, null);

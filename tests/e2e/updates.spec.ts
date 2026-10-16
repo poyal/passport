@@ -21,7 +21,10 @@ test.beforeEach(async () => {
   page = suite.page;
   errors.length = 0;
   currentVersion = await application.evaluate(({ app }) => app.getVersion());
-  const [major, minor, patch] = currentVersion.split(".").map(Number);
+  const [major, minor, patch] = currentVersion
+    .replace(/-dev$/, "")
+    .split(".")
+    .map(Number);
   nextVersion = `${major}.${minor}.${patch + 1}`;
 
   await page.getByRole("button", { name: "호스트", exact: true }).click();
@@ -178,7 +181,7 @@ test("About checks updates, directs downloads to the correct installer, and show
 });
 
 test("an up-to-date result keeps its explanation separated from the status panel", async () => {
-  await mockRelease(currentVersion);
+  await mockRelease(currentVersion.replace(/-dev$/, ""));
   await page
     .getByRole("button", { name: "업데이트 확인", exact: true })
     .click();

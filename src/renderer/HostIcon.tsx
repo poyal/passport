@@ -1,6 +1,6 @@
 import { Server } from "lucide-react";
 import type { Host } from "../shared/model";
-import { hostOS } from "../shared/host-os";
+import { hostOS, type HostIconKind } from "../shared/host-os";
 export { hostIconNames } from "../shared/host-os";
 import alpine from "./assets/os/alpinelinux.svg";
 import centos from "./assets/os/centos.svg";
@@ -25,10 +25,21 @@ const logos = {
 };
 export function HostIcon({ host }: { host: Host }) {
   const { kind, label } = hostOS(host);
+  return <OSIcon kind={kind} label={label} />;
+}
+export function OSIcon({
+  kind,
+  label,
+  compact = false,
+}: {
+  kind: HostIconKind;
+  label?: string;
+  compact?: boolean;
+}) {
   return (
     <div
-      className={`host-icon ${kind}`}
-      data-tooltip={label}
+      className={`host-icon ${kind} ${compact ? "compact" : ""}`}
+      data-tooltip={compact ? undefined : label}
       role="img"
       aria-label={label}
     >

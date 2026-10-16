@@ -67,6 +67,7 @@ export const profileSelectionSchema = z.object({
 export type ProfileSelection = z.infer<typeof profileSelectionSchema>;
 export const terminalSettingsSchema = z.object({
   shell: shellIdSchema.default("default"),
+  cwd: clean.default(""),
   profileIds: z.array(z.string().max(128)).max(32).default([]),
   profiles: z.array(startupProfileSchema).max(100).default([]),
   autoLogLocal: z.boolean().default(false),
@@ -76,8 +77,9 @@ export type TerminalSettings = z.infer<typeof terminalSettingsSchema>;
 export const notificationSettingsSchema = z.object({
   claude: z.boolean().default(false),
   codex: z.boolean().default(false),
-  desktop: z.enum(["background", "unfocused", "off"]).default("background"),
+  desktop: z.enum(["background", "unfocused", "off"]).default("unfocused"),
   preview: z.boolean().default(false),
+  includeResponse: z.boolean().default(false),
   sound: z.boolean().default(false),
 });
 export type NotificationSettings = z.infer<typeof notificationSettingsSchema>;
@@ -130,6 +132,7 @@ export function defaultTerminalSettings(
 ): TerminalSettings {
   return {
     shell: platform === "win32" && !legacy ? "passport-bash" : "default",
+    cwd: "",
     profileIds: platform === "win32" && !legacy ? ["unix-shortcuts"] : [],
     profiles: [],
     autoLogLocal: false,
@@ -138,15 +141,9 @@ export function defaultTerminalSettings(
 }
 export function selectedProfiles(
   settings: TerminalSettings,
-  project?: ProfileSelection,
   pane?: ProfileSelection,
 ): StartupProfile[] {
-  const choice =
-    pane && pane.mode !== "inherit"
-      ? pane
-      : project && project.mode !== "inherit"
-        ? project
-        : undefined;
+  const choice = pane && pane.mode !== "inherit" ? pane : undefined;
   const ids =
     choice?.mode === "none"
       ? []

@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import { randomUUID } from "node:crypto";
-import type { LocalShell, Workspace } from "../shared/model";
+import type { LocalShell } from "../shared/model";
 import {
   selectedProfiles,
   type AppliedEnvironment,
@@ -31,10 +31,9 @@ export type LaunchSpec = {
 export function previewEnvironment(
   config: LocalShell,
   settings: TerminalSettings,
-  workspace?: Workspace,
 ): AppliedEnvironment {
   const shell = resolvedShell(config.shell);
-  const cwd = config.cwd || workspace?.project?.cwd || os.homedir();
+  const cwd = config.cwd || settings.cwd || os.homedir();
   if (shell.id === "cmd" && cwd.startsWith("\\\\"))
     throw new Error(
       "cmd는 UNC 시작 폴더를 지원하지 않습니다. PowerShell 또는 Passport Bash를 선택하세요.",
@@ -45,11 +44,7 @@ export function previewEnvironment(
     );
   if (!fs.statSync(cwd).isDirectory())
     throw new Error("시작 폴더를 찾을 수 없습니다.");
-  const profiles = selectedProfiles(
-    settings,
-    workspace?.project?.profiles,
-    config.profiles,
-  );
+  const profiles = selectedProfiles(settings, config.profiles);
   const results: string[] = [];
   const seen = new Set<string>();
   for (const profile of profiles) {
@@ -171,16 +166,11 @@ export function prepareLaunch(
   config: LocalShell,
   settings: TerminalSettings,
   notifications: NotificationSettings,
-  workspace: Workspace | undefined,
   root: string,
   credentials: Record<string, string>,
-  snapshot = previewEnvironment(config, settings, workspace),
+  snapshot = previewEnvironment(config, settings),
 ): LaunchSpec {
-  const profiles = selectedProfiles(
-    settings,
-    workspace?.project?.profiles,
-    config.profiles,
-  );
+  const profiles = selectedProfiles(settings, config.profiles);
   const env: NodeJS.ProcessEnv = {
     ...localTerminalEnv(),
     ...credentials,
@@ -238,6 +228,9 @@ export function prepareLaunch(
     [
       "Stop",
       "PermissionRequest",
+      "PreToolUse",
+      "Elicitation",
+      "ElicitationResult",
       "Notification",
       "UserPromptSubmit",
       "PostToolUse",

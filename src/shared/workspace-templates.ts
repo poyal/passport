@@ -32,7 +32,7 @@ export function cloneWorkspaces(
         };
   const copies = workspaces.map((w) => ({
     ...w,
-    ...(w.project ? { project: structuredClone(w.project) } : {}),
+    ...(w.icon ? { icon: structuredClone(w.icon) } : {}),
     id: fresh(w.id),
     root: clone(w.root),
   }));

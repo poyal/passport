@@ -40,6 +40,7 @@ export function Hosts() {
     [tag, setTag] = useState(""),
     [sort, setSort] = useState("name"),
     [checked, setChecked] = useState<string[]>([]),
+    [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set()),
     [bulk, setBulk] = useState(false),
     [choosingAuth, setChoosingAuth] = useState(false),
     [password, setPassword] = useState(""),
@@ -94,6 +95,19 @@ export function Hosts() {
           ? a.address.localeCompare(b.address)
           : a.name.localeCompare(b.name, "ko"),
     );
+  const sections = [...new Set(list.map((h) => h.groupId ?? "ungrouped"))]
+    .sort((a, b) =>
+      a === "ungrouped"
+        ? 1
+        : b === "ungrouped"
+          ? -1
+          : groupPath(a).localeCompare(groupPath(b), "ko"),
+    )
+    .map((id) => ({
+      id,
+      name: id === "ungrouped" ? "미지정" : groupPath(id),
+      hosts: list.filter((h) => (h.groupId ?? "ungrouped") === id),
+    }));
   const create = () => {
     setPassword("");
     setSelected(null);
@@ -336,70 +350,106 @@ export function Hosts() {
           </button>
         </div>
         <div className="host-list">
-          {list.map((h) => (
-            <div
-              role="button"
-              tabIndex={0}
-              key={h.id}
-              className={`host-row ${selected === h.id ? "selected" : ""}`}
-              onClick={() => setSelected(h.id)}
-              onDoubleClick={() =>
-                h.protocol === "ssh"
-                  ? void app.openHost(h)
-                  : app.openFiles(h, 1)
-              }
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  setSelected(h.id);
-                  if (e.ctrlKey || e.metaKey) void app.openHost(h);
-                }
-              }}
-            >
-              <input
-                type="checkbox"
-                aria-label={`${h.name} 일괄 선택`}
-                checked={checked.includes(h.id)}
-                onClick={(e) => e.stopPropagation()}
-                onChange={(e) =>
-                  setChecked(
-                    e.target.checked
-                      ? [...checked, h.id]
-                      : checked.filter((id) => id !== h.id),
-                  )
-                }
-              />
-              <HostIcon host={h} />
-              <div className="host-copy">
-                <strong>{h.name}</strong>
-                <span>
-                  {h.protocol.toUpperCase()} ·{" "}
-                  {connectionHost(doc, h, app.boot.profiles).username}@
-                  {h.address}:{resolveHostSettings(doc, h).port}
-                  {h.groupId ? ` · ${groupPath(h.groupId)}` : ""}
-                </span>
-              </div>
-              <div className="tags">
-                {h.tags.slice(0, 3).map((t) => (
-                  <span key={t}>{t}</span>
-                ))}
-              </div>
-              <IconButton
-                label={h.favorite ? "즐겨찾기 해제" : "즐겨찾기"}
-                className={h.favorite ? "favorite" : ""}
-                onClick={() =>
-                  void update((d) => ({
-                    ...d,
-                    hosts: d.hosts.map((x) =>
-                      x.id === h.id ? { ...x, favorite: !x.favorite } : x,
-                    ),
-                  }))
-                }
-              >
-                <Star size={16} fill={h.favorite ? "currentColor" : "none"} />
-              </IconButton>
-              <ChevronRight size={16} className="muted" />
-            </div>
-          ))}
+          {sections.map((section) => {
+            const expanded =
+              !!search || !!tag || !collapsedGroups.has(section.id);
+            return (
+              <section className="host-group" key={section.id}>
+                <button
+                  className="host-group-heading"
+                  aria-expanded={expanded}
+                  aria-disabled={!!search || !!tag}
+                  onClick={() => {
+                    if (search || tag) return;
+                    setCollapsedGroups((old) => {
+                      const next = new Set(old);
+                      if (next.has(section.id)) next.delete(section.id);
+                      else next.add(section.id);
+                      return next;
+                    });
+                  }}
+                >
+                  <ChevronRight
+                    size={15}
+                    className={expanded ? "expanded" : ""}
+                  />
+                  <span>{section.name}</span>
+                  <small>{section.hosts.length}</small>
+                </button>
+                <div hidden={!expanded}>
+                  {section.hosts.map((h) => (
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      key={h.id}
+                      className={`host-row ${selected === h.id ? "selected" : ""}`}
+                      onClick={() => setSelected(h.id)}
+                      onDoubleClick={() =>
+                        h.protocol === "ssh"
+                          ? void app.openHost(h)
+                          : app.openFiles(h, 1)
+                      }
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          setSelected(h.id);
+                          if (e.ctrlKey || e.metaKey) void app.openHost(h);
+                        }
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        aria-label={`${h.name} 일괄 선택`}
+                        checked={checked.includes(h.id)}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={(e) =>
+                          setChecked(
+                            e.target.checked
+                              ? [...checked, h.id]
+                              : checked.filter((id) => id !== h.id),
+                          )
+                        }
+                      />
+                      <HostIcon host={h} />
+                      <div className="host-copy">
+                        <strong>{h.name}</strong>
+                        <span>
+                          {h.protocol.toUpperCase()} ·{" "}
+                          {connectionHost(doc, h, app.boot.profiles).username}@
+                          {h.address}:{resolveHostSettings(doc, h).port}
+                          {h.groupId ? ` · ${groupPath(h.groupId)}` : ""}
+                        </span>
+                      </div>
+                      <div className="tags">
+                        {h.tags.slice(0, 3).map((t) => (
+                          <span key={t}>{t}</span>
+                        ))}
+                      </div>
+                      <IconButton
+                        label={h.favorite ? "즐겨찾기 해제" : "즐겨찾기"}
+                        className={h.favorite ? "favorite" : ""}
+                        onClick={() =>
+                          void update((d) => ({
+                            ...d,
+                            hosts: d.hosts.map((x) =>
+                              x.id === h.id
+                                ? { ...x, favorite: !x.favorite }
+                                : x,
+                            ),
+                          }))
+                        }
+                      >
+                        <Star
+                          size={16}
+                          fill={h.favorite ? "currentColor" : "none"}
+                        />
+                      </IconButton>
+                      <ChevronRight size={16} className="muted" />
+                    </div>
+                  ))}
+                </div>
+              </section>
+            );
+          })}
           {!list.length && (
             <Empty
               icon={<Server size={30} />}

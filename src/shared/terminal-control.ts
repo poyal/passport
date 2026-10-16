@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { shareControlSchema } from "./share";
 
 export const controlModeSchema = z.enum(["off", "read", "write"]);
 export type ControlMode = z.infer<typeof controlModeSchema>;
@@ -18,6 +19,7 @@ const target = {
   tab: z.string().min(1).max(100).optional(),
 };
 export const controlCommandSchema = z.discriminatedUnion("command", [
+  ...shareControlSchema.options,
   z.object({ command: z.literal("list") }).strict(),
   z.object({ command: z.literal("identify") }).strict(),
   z

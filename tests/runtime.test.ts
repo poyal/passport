@@ -57,7 +57,6 @@ it.skipIf(process.platform !== "win32")(
         config,
         defaultTerminalSettings("win32"),
         notificationSettingsSchema.parse({}),
-        undefined,
         dir,
         {},
       );

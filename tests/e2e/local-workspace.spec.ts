@@ -457,6 +457,7 @@ console.log('CLI_FIXTURE_FINISHED');
           codex: true,
           desktop: "background",
           preview: false,
+          includeResponse: false,
           sound: false,
         };
         b.document.settings.terminal.shell =

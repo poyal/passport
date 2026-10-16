@@ -187,21 +187,15 @@ export function mergePortable(
     ...incoming.document.workspaces,
     ...incoming.document.workspaceTemplates.flatMap((t) => t.workspaces),
   ]) {
-    if (
-      !workspace.project?.profiles ||
-      workspace.project.profiles.mode === "inherit"
-    )
-      workspace.project = {
-        cwd: workspace.project?.cwd || "",
-        profiles: {
-          mode: "custom",
-          ids: [...incoming.document.settings.terminal.profileIds],
-        },
-      };
-    remapSelection(workspace.project.profiles);
     const walk = (node: typeof workspace.root) => {
       if (node.kind === "pane") {
         if (node.local) {
+          if (!node.local.profiles || node.local.profiles.mode === "inherit")
+            node.local.profiles = {
+              mode: "custom",
+              ids: [...incoming.document.settings.terminal.profileIds],
+            };
+          node.local.cwd ||= incoming.document.settings.terminal.cwd;
           remapSelection(node.local.profiles);
           node.local.needsReview = true;
         }

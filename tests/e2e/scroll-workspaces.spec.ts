@@ -338,11 +338,16 @@ test("plus opens a local tab immediately using defaults and focuses input", asyn
   const boot = await page.evaluate(() =>
     window.passport.call("bootstrap", undefined),
   );
-  expect(panes(boot.document.workspaces.at(-1)!.root)[0].local).toMatchObject({
-    cwd: boot.home,
+  const createdPane = panes(boot.document.workspaces.at(-1)!.root)[0];
+  expect(createdPane.local).toMatchObject({
+    cwd: "",
     shell: boot.document.settings.terminal.shell,
     profiles: { mode: "inherit", ids: [] },
   });
+  expect(
+    boot.sessionStates.find((state) => state.id === createdPane.id)?.environment
+      ?.cwd,
+  ).toBe(boot.document.settings.terminal.cwd || boot.home);
   await page.screenshot({ path: info.outputPath("local-tab.png") });
   await page
     .getByRole("button", { name: "로컬 터미널 탭 닫기", exact: true })

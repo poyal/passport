@@ -56,9 +56,46 @@ fn transmit(payload: Value) {
     let _ = rx.recv_timeout(DEADLINE);
 }
 fn event(source: &str, kind: &str, payload: &Value) -> Value {
-    // Never forward transcripts, tool arguments, paths, or environment variables.
-    json!({"source":source,"event":kind,"session":payload.get("session_id").or(payload.get("thread-id")).and_then(Value::as_str).unwrap_or(""),"turn":payload.get("turn-id").and_then(Value::as_str).unwrap_or(""),"request":payload.get("tool_use_id").and_then(Value::as_str).unwrap_or("")})
+    // Forward only identifiers and a bounded completion excerpt. The main
+    // process enforces the current opt-in before displaying or persisting it.
+    let mut message = json!({"source":source,"event":kind,"session":payload.get("session_id").or(payload.get("thread-id")).and_then(Value::as_str).unwrap_or(""),"turn":payload.get("turn-id").and_then(Value::as_str).unwrap_or(""),"request":payload.get("tool_use_id").or(payload.get("elicitation_id")).and_then(Value::as_str).unwrap_or("")});
+    if matches!(kind, "completed" | "stop-candidate") {
+        if let Some(text) = payload.get("last_assistant_message").or(payload.get("last-assistant-message")).and_then(Value::as_str) {
+            message["summary"] = text.chars().take(200).collect::<String>().into();
+        }
+    }
+    message
 }
+fn hook_kind(payload: &Value, codex: bool) -> Option<&str> {
+    let kind = payload[if codex { "type" } else { "hook_event_name" }].as_str()?;
+    // Subagent completions aren't the user's turn. Background input requests
+    // explicitly forwarded by Notification still need attention.
+    if payload.get("agent_id").is_some() && kind != "Notification" { return None; }
+    Some(match kind {
+        "agent-turn-complete" => "completed",
+        "Stop" => "stop-candidate",
+        "PermissionRequest" => "permission-candidate",
+        "PreToolUse" => match payload["tool_name"].as_str().unwrap_or("") {
+            "AskUserQuestion" | "ExitPlanMode" => "input-candidate",
+            _ => "tool-start",
+        },
+        "Elicitation" => "input-candidate",
+        "ElicitationResult" => "input-resolved",
+        "Notification" => match payload["notification_type"].as_str().unwrap_or("") {
+            "permission_prompt" => "permission",
+            "elicitation_dialog" | "elicitation_url_dialog" | "agent_needs_input" => "input-required",
+            "elicitation_response" | "elicitation_complete" => "input-resolved",
+            "quota_auto_resume_stale" | "quota_auto_resume_disabled" => "attention",
+            _ => return None,
+        },
+        "UserPromptSubmit" => "turn-start",
+        "PostToolUse" | "PostToolUseFailure" => "tool-done",
+        "StopFailure" => "turn-failed",
+        "SessionEnd" => "session-end",
+        _ => return None,
+    })
+}
+
 fn hook(mode: &str, args: &[String]) {
     let payload: Value = if mode == "codex-notify" {
         let raw = args.first().map(String::as_str).unwrap_or("");
@@ -81,29 +118,7 @@ fn hook(mode: &str, args: &[String]) {
     if !payload.is_object() {
         return;
     }
-    let kind = if mode == "codex-notify" {
-        payload["type"].as_str().unwrap_or("")
-    } else {
-        payload["hook_event_name"].as_str().unwrap_or("")
-    };
-    let normalized = match kind {
-        "agent-turn-complete" => "completed",
-        "Stop" => "stop-candidate",
-        "PermissionRequest" => "permission-candidate",
-        "Notification" => match payload["notification_type"].as_str().unwrap_or("") {
-            "permission_prompt" => "permission",
-            "elicitation_dialog" => "attention",
-            _ => return,
-        },
-        "UserPromptSubmit" => "turn-start",
-        "PostToolUse" | "PostToolUseFailure" => "tool-done",
-        "StopFailure" => "turn-failed",
-        "SessionEnd" => "session-end",
-        _ => return,
-    };
-    if payload.get("agent_id").is_some() {
-        return;
-    }
+    let Some(normalized) = hook_kind(&payload, mode == "codex-notify") else { return; };
     transmit(event(
         if mode == "codex-notify" {
             "codex"
@@ -308,8 +323,13 @@ fn run(agent: &str, args: &[String]) -> i32 {
                 "Passport: 기존 Codex notify/config 설정을 유지합니다. 완료 알림 연동이 생략될 수 있습니다."
             );
         }
+        if tui.iter().any(|enabled| !enabled) {
+            eprintln!(
+                "Passport: 기존 Codex TUI 알림 설정을 유지합니다. 승인·질문 알림이 일부 생략될 수 있습니다."
+            );
+        }
         for (enabled, setting) in tui.into_iter().zip([
-            "tui.notifications=[\"approval-requested\"]",
+            "tui.notifications=[\"approval-requested\",\"plan-mode-prompt\",\"async-question\"]",
             "tui.notification_method=\"osc9\"",
             "tui.notification_condition=\"always\"",
         ]) {
@@ -372,6 +392,7 @@ fn run(agent: &str, args: &[String]) -> i32 {
     };
     let mut end = event(agent, "run-end", &Value::Null);
     end["agentRun"] = run.into();
+    end["exitCode"] = code.into();
     transmit(end);
     code
 }
@@ -498,6 +519,19 @@ mod tests {
         assert!(has_tui_key(&explicit, "notifications"));
         assert!(has_tui_key(&explicit, "notification_method"));
         assert!(!has_tui_key(&explicit, "notification_condition"));
+    }
+    #[test]
+    fn actionable_hooks_and_bounded_excerpts() {
+        for kind in ["idle_prompt", "auth_success", "agent_completed", "quota_auto_resume_fired"] {
+            assert_eq!(hook_kind(&json!({"hook_event_name":"Notification","notification_type":kind}), false), None);
+        }
+        assert_eq!(hook_kind(&json!({"hook_event_name":"PreToolUse","tool_name":"AskUserQuestion"}), false), Some("input-candidate"));
+        assert_eq!(hook_kind(&json!({"hook_event_name":"Notification","notification_type":"agent_needs_input","agent_id":"background"}), false), Some("input-required"));
+        assert_eq!(hook_kind(&json!({"hook_event_name":"Stop","agent_id":"child"}), false), None);
+        let excerpt = event("codex", "completed", &json!({"last-assistant-message":"한".repeat(300),"input-messages":["private"]}));
+        assert_eq!(excerpt["summary"].as_str().unwrap().chars().count(), 200);
+        assert!(!excerpt.to_string().contains("private"));
+        assert!(event("claude", "permission", &json!({"last_assistant_message":"private"})).get("summary").is_none());
     }
     #[test]
     fn event_does_not_copy_secrets() {

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { workspaceIconSchema, workspaceColorSchema } from "./workspace-style";
 import { shortcutSettingsSchema, type ShortcutContext } from "./shortcuts";
 import {
   shellIdSchema,
@@ -223,20 +224,50 @@ export const layoutSchema: z.ZodType<Layout> = z.lazy(() =>
     }),
   ]),
 );
-export const workspaceSchema = z.object({
-  id: idSchema,
-  name: short.min(1),
-  root: layoutSchema,
-  project: z
-    .object({
-      cwd: z
-        .string()
-        .max(4096)
-        .refine((v) => !/[\0\r\n]/.test(v)),
-      profiles: profileSelectionSchema.optional(),
-    })
-    .optional(),
-});
+export const workspaceSchema = z
+  .object({
+    id: idSchema,
+    name: short.min(1),
+    icon: workspaceIconSchema.optional(),
+    color: workspaceColorSchema.optional(),
+    root: layoutSchema,
+    project: z
+      .object({
+        cwd: z
+          .string()
+          .max(4096)
+          .refine((v) => !/[\0\r\n]/.test(v)),
+        profiles: profileSelectionSchema.optional(),
+      })
+      .optional(),
+  })
+  .transform(({ project, ...workspace }) => {
+    // Preserve existing project overrides as explicit pane settings when reading
+    // older documents/templates. New tabs inherit only the app-wide defaults.
+    if (!project) return workspace;
+    const inherit = (node: Layout): Layout =>
+      node.kind === "split"
+        ? {
+            ...node,
+            children: [inherit(node.children[0]), inherit(node.children[1])],
+          }
+        : node.local
+          ? {
+              ...node,
+              local: {
+                ...node.local,
+                cwd: node.local.cwd || project.cwd,
+                profiles:
+                  !node.local.profiles || node.local.profiles.mode === "inherit"
+                    ? structuredClone(
+                        project.profiles || { mode: "inherit", ids: [] },
+                      )
+                    : node.local.profiles,
+              },
+            }
+          : node;
+    return { ...workspace, root: inherit(workspace.root) };
+  });
 export type Workspace = z.infer<typeof workspaceSchema>;
 export const workspaceTemplateSchema = z.object({
   id: idSchema,
@@ -351,11 +382,7 @@ export const documentSchema = z
         if (n.kind === "pane") {
           if (n.local)
             try {
-              selectedProfiles(
-                d.settings.terminal,
-                undefined,
-                n.local.profiles,
-              );
+              selectedProfiles(d.settings.terminal, n.local.profiles);
             } catch (e) {
               fail(String(e));
             }
@@ -366,11 +393,6 @@ export const documentSchema = z
         return n.children.reduce((a, c) => a + walk(c, depth + 1), 0);
       };
       for (const w of workspaces) {
-        try {
-          selectedProfiles(d.settings.terminal, w.project?.profiles);
-        } catch (e) {
-          fail(String(e));
-        }
         if (ids.has(w.id)) fail("작업 탭 ID가 중복됩니다.");
         ids.add(w.id);
         const count = walk(w.root);
@@ -451,7 +473,7 @@ export type Activity = {
   workspaceId: string;
   generation: string;
   source: "claude" | "codex" | "terminal";
-  kind: "completed" | "permission" | "attention";
+  kind: "completed" | "permission" | "input" | "failed" | "attention";
   title: string;
   body: string;
   created: number;
@@ -491,6 +513,8 @@ export type TransferJob = {
   cleanup?: string;
 };
 export type AppEvent =
+  | { kind: "share-changed" }
+  | { kind: "share-open" }
   | {
       kind: "control-inspect";
       request: import("./terminal-control").ControlInspectionRequest;
@@ -553,6 +577,45 @@ export type ImportPasswordRequest = {
 export type Result<T> = { ok: true; value: T } | { ok: false; error: string };
 
 export interface Calls {
+  "share.state": { input: undefined; output: import("./share").ShareSnapshot };
+  "share.unlock": { input: undefined; output: import("./share").ShareSnapshot };
+  "share.reset": { input: undefined; output: import("./share").ShareSnapshot };
+  "share.configure": {
+    input: import("./share").ShareSettings;
+    output: import("./share").ShareSnapshot;
+  };
+  "share.invite": {
+    input: undefined;
+    output: { key: string; expires: number };
+  };
+  "share.join": { input: { key: string; alias: string }; output: void };
+  "share.pair": {
+    input: { id: string; accept: boolean; alias?: string };
+    output: void;
+  };
+  "share.peer": {
+    input: {
+      id: string;
+      name?: string;
+      blocked?: boolean;
+      remove?: boolean;
+      endpoint?: import("./share").ShareEndpoint;
+    };
+    output: void;
+  };
+  "share.send": {
+    input: import("./share").ShareSend;
+    output: { id: string; state: string };
+  };
+  "share.approve": { input: { id: string; accept: boolean }; output: void };
+  "share.cancel": { input: { id: string }; output: void };
+  "share.message": {
+    input: { id: string };
+    output: import("./share").ShareMessage;
+  };
+  "share.deleteMessage": { input: { id: string }; output: void };
+  "share.folder": { input: undefined; output: string | null };
+  "share.file": { input: undefined; output: string | null };
   "control.reply": {
     input: import("./terminal-control").ControlInspection;
     output: void;
@@ -590,7 +653,12 @@ export interface Calls {
   "auth.delete": { input: { id: string }; output: AuthProfile[] };
   "key.pick": { input: undefined; output: string | null };
   "session.connect": {
-    input: { id: string; hostId: string; secret?: Secret };
+    input: {
+      id: string;
+      hostId: string;
+      secret?: Secret;
+      onlyIfDisconnected?: boolean;
+    };
     output: void;
   };
   "session.execute": {

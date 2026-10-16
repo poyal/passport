@@ -1,0 +1,111 @@
+{
+  "date": "2026-10-16",
+  "purpose": "Receiver-approved encrypted peer sharing",
+  "sourceCommit": "bccc5687f88f6133c028a782e21c7848294f0433",
+  "sourceFingerprintAtBuild": "b68bbf45b72b47afba7638de003e16360b3a4c5247e0bd1e6e931697fb01c998",
+  "dirty": true,
+  "platform": "mac-arm64",
+  "version": "1.2.3-dev",
+  "build": "release/builds/20261016T050659Z-bccc568-dirty-mac-arm64-dev",
+  "review": "release/checks/20261016-passport-share-security",
+  "preview": "release/builds/Passport.app",
+  "checks": {
+    "types": "passed",
+    "unit": {
+      "passed": 222,
+      "skipped": 6
+    },
+    "release": {
+      "passed": 73
+    },
+    "rustCLI": {
+      "passed": 3
+    },
+    "productionAudit": {
+      "vulnerabilities": 0
+    },
+    "allDependenciesAudit": {
+      "moderate": 8,
+      "high": 0,
+      "critical": 0,
+      "scope": "existing build-time sprintf-js dependency chain"
+    },
+    "sourceGui": {
+      "passed": 80,
+      "skipped": 9,
+      "launches": 32,
+      "exits": 32,
+      "auditedShutdowns": 32,
+      "shown": 0,
+      "focused": 0
+    },
+    "macAdhocSignature": "passed",
+    "macLocalNetworkPlist": "passed",
+    "packagedSmoke": {
+      "passed": true,
+      "localPTY": true,
+      "bundledHelper": true,
+      "exitCode": 0,
+      "shown": 0,
+      "focused": 0
+    },
+    "packagedGui": {
+      "passed": 80,
+      "skipped": 9,
+      "launches": 32,
+      "windows": 41,
+      "exits": 32,
+      "reusedTests": 32,
+      "auditedShutdowns": 32,
+      "shown": 0,
+      "focused": 0
+    }
+  },
+  "sourceGui": "release/checks/20261016T045810Z-bccc568-dirty-mac-arm64-e2e-hidden",
+  "sourceUpdateRegression": "release/checks/20261016T050552Z-bccc568-dirty-mac-arm64-e2e-hidden",
+  "packagedGui": "release/checks/20261016T050754Z-bccc568-dirty-mac-arm64-e2e-hidden",
+  "files": [
+    {
+      "path": "release/builds/20261016T050659Z-bccc568-dirty-mac-arm64-dev/mac-arm64/Passport-dev.app/Contents/MacOS/Passport-dev",
+      "bytes": 34816,
+      "sha256": "91d6a9f5e91f11c4d0d8023f58266cd6a8f6ff3dd69729eb2720fb741fcb2086"
+    },
+    {
+      "path": "release/builds/20261016T050659Z-bccc568-dirty-mac-arm64-dev/mac-arm64/Passport-dev.app/Contents/Resources/app.asar",
+      "bytes": 83141814,
+      "sha256": "97ed66e5e337d919ea611bff8ec6fa48b994cc46cdb61d84bdec72acaa456fd2"
+    },
+    {
+      "path": "release/builds/20261016T050659Z-bccc568-dirty-mac-arm64-dev/mac-arm64/Passport-dev.app/Contents/Resources/terminal/helper/darwin-arm64/passport",
+      "bytes": 581488,
+      "sha256": "c2fe8a6a2da56da0b0e24d8acbc38054eab206ade871ba6e98d0a3cec7a0dd07"
+    }
+  ],
+  "securityGate": "pending",
+  "pending": [
+    "Windows native Attachment Execution Services/DPAPI",
+    "signed macOS Keychain and local-network permissions",
+    "two physical devices, LAN/VPN discovery and firewall"
+  ],
+  "notes": [
+    "Full source GUI preceded the development-version update fix; that fix then passed 5 source GUI cases and the final package passed all 80 required macOS GUI cases.",
+    "Sharing E2E uses test-owned encryption instead of macOS Keychain; actual TLS and macOS quarantine are exercised.",
+    "No visible/desktop E2E, remote CI, installation replacement or publication was performed.",
+    "Existing build dependency chain has 8 moderate sprintf-js DoS findings; production dependency audit has zero findings.",
+    "Existing retained Rust toolchain emitted a non-fatal debug-stripping libLLVM warning; helper compilation, CLI tests and packaged smoke passed.",
+    "README and verification summaries were finalized after executable verification; no code changed during that documentation pass."
+  ],
+  "retention": {
+    "protected": [
+      "release/builds/20261016T050659Z-bccc568-dirty-mac-arm64-dev",
+      "release/builds/20261016T032207Z-bccc568-dirty-mac-arm64-dev",
+      "release/checks/20261002-2c60496-mac-arm64-release-toolchain"
+    ],
+    "reviewAfter": "2026-10-23",
+    "candidates": [
+      "release/builds/20261016T050056Z-bccc568-dirty-mac-arm64-dev",
+      "resolved partial and failed sharing E2E runs from 2026-10-16"
+    ],
+    "deleted": []
+  }
+}

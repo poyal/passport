@@ -14,10 +14,12 @@ import {
   type ControlInspectionRequest,
 } from "../shared/terminal-control";
 import type { ActivityEndpoint } from "./platform/contracts";
+import type { ShareControlCommand } from "../shared/share";
 
 type Credential = { token: string; sessionId: string; abort: AbortController };
 export class TerminalControl {
   private mode: ControlMode = "off";
+  private sharing = false;
   private credentials = new Map<string, Credential>();
   private sockets = new Set<net.Socket>();
   private queues = new Map<string, Promise<unknown>>();
@@ -33,6 +35,10 @@ export class TerminalControl {
         signal: AbortSignal,
       ): Promise<ControlInspection>;
       write(paneId: string, data: string): void;
+      share?: {
+        enabled(): boolean;
+        execute(input: ShareControlCommand): unknown;
+      };
     },
   ) {}
   async start() {
@@ -54,9 +60,11 @@ export class TerminalControl {
     });
   }
   configure(mode: ControlMode) {
-    if (this.mode === mode) return;
+    const sharing = this.options.share?.enabled() ?? false;
+    if (this.mode === mode && this.sharing === sharing) return;
     for (const id of this.credentials.keys()) this.unregister(id);
     this.mode = mode;
+    this.sharing = sharing;
   }
   register(paneId: string, sessionId: string): Record<string, string> {
     this.unregister(paneId);
@@ -64,7 +72,7 @@ export class TerminalControl {
       PASSPORT_PANE_ID: paneId,
       PASSPORT_SESSION_ID: sessionId,
     };
-    if (this.mode === "off") return context;
+    if (this.mode === "off" && !this.sharing) return context;
     const credential = {
       token: randomBytes(32).toString("hex"),
       sessionId,
@@ -163,7 +171,7 @@ export class TerminalControl {
   ): Promise<unknown> {
     const credential = this.credentials.get(input.source.paneId);
     if (
-      this.mode === "off" ||
+      (this.mode === "off" && !this.sharing) ||
       !credential ||
       credential.sessionId !== input.source.sessionId ||
       input.token.length !== credential.token.length ||
@@ -203,6 +211,19 @@ export class TerminalControl {
     };
     const source = authorize(),
       request = input.request;
+    if (
+      request.command === "share.peers" ||
+      request.command === "share.send" ||
+      request.command === "share.status" ||
+      request.command === "share.cancel"
+    ) {
+      if (!this.sharing || !this.options.share?.enabled())
+        throw new ControlError("UNAUTHORIZED", "공유 기능이 꺼져 있습니다.");
+      authorize();
+      return this.options.share.execute(request);
+    }
+    if (this.mode === "off")
+      throw new ControlError("UNAUTHORIZED", "터미널 제어 권한이 없습니다.");
     if (request.command === "list") return this.options.panels();
     if (request.command === "identify") return source;
     if (!!request.pane === !!request.tab)

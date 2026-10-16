@@ -35,13 +35,11 @@ export function ProfileSelector({
   onChange,
   shell,
   inherit = true,
-  inherited,
 }: {
   value?: ProfileSelection;
   onChange: (value: ProfileSelection) => void;
   shell: ShellId;
   inherit?: boolean;
-  inherited?: ProfileSelection;
 }) {
   const app = useApp();
   const selection = value || { mode: "inherit", ids: [] };
@@ -58,11 +56,7 @@ export function ProfileSelector({
       ? selection.ids
       : selection.mode === "none"
         ? []
-        : inherited?.mode === "custom"
-          ? inherited.ids
-          : inherited?.mode === "none"
-            ? []
-            : app.document.settings.terminal.profileIds;
+        : app.document.settings.terminal.profileIds;
   const move = (index: number, offset: number) => {
     const ids = [...selected];
     [ids[index], ids[index + offset]] = [ids[index + offset], ids[index]];
@@ -83,14 +77,14 @@ export function ProfileSelector({
             })
           }
         >
-          {inherit && <option value="inherit">상위 설정 상속</option>}
+          {inherit && <option value="inherit">앱 기본값 상속</option>}
           <option value="none">사용 안 함</option>
           <option value="custom">직접 선택 (여러 개)</option>
         </select>
       </label>
       {selection.mode === "inherit" && (
         <p className="hint">
-          작업별 설정이 있으면 우선 적용하고, 없으면 앱 기본값을 사용합니다.
+          설정 → 로컬 터미널에서 지정한 전역 시작 프로파일을 사용합니다.
         </p>
       )}
       {selected.includes("ai-notifications") && (
@@ -234,14 +228,13 @@ export function TerminalChooser({
   title?: string;
 }) {
   const app = useApp();
-  const workspace = app.document.workspaces.find((w) => w.id === workspaceId);
   const [kind, setKind] = useState(initialLocal ? "local" : initial);
   const [local, setLocal] = useState<LocalShell>(
     initialLocal
       ? { ...initialLocal, agent: undefined, needsReview: false }
       : {
           shell: app.document.settings.terminal.shell,
-          cwd: workspace?.project?.cwd || "",
+          cwd: "",
           profiles: { mode: "inherit", ids: [] },
         },
   );
@@ -379,7 +372,9 @@ export function TerminalChooser({
             <div className="row">
               <input
                 value={local.cwd}
-                placeholder={workspace?.project?.cwd || app.boot.home}
+                placeholder={
+                  app.document.settings.terminal.cwd || app.boot.home
+                }
                 onChange={(e) => setLocal({ ...local, cwd: e.target.value })}
               />
               <IconButton
@@ -399,7 +394,6 @@ export function TerminalChooser({
           </label>
           <ProfileSelector
             value={local.profiles}
-            inherited={workspace?.project?.profiles}
             onChange={(profiles) => setLocal({ ...local, profiles })}
             shell={local.shell}
           />
@@ -462,7 +456,7 @@ export function TerminalSettings() {
       .call("terminal.preview", {
         local: {
           shell: settings.shell,
-          cwd: app.boot.home,
+          cwd: "",
           profiles: { mode: "inherit", ids: [] },
         },
       })
@@ -483,6 +477,8 @@ export function TerminalSettings() {
     };
   }, [settings, app.boot.home]);
   const [profileIds, setProfileIds] = useState(settings.profileIds);
+  const [cwd, setCwd] = useState(settings.cwd);
+  useEffect(() => setCwd(settings.cwd), [settings.cwd]);
   useEffect(() => setProfileIds(settings.profileIds), [settings.profileIds]);
   const [profileMode, setProfileMode] = useState<"none" | "custom">(
     settings.profileIds.length ? "custom" : "none",
@@ -531,6 +527,42 @@ export function TerminalSettings() {
           {app.boot.platform === "win32"
             ? "Bash 문법과 sh·Unix 도구는 Passport Bash에서 제공합니다. cmd와 PowerShell은 각 셸의 문법을 유지합니다."
             : "macOS 기본 셸의 사용자 시작 파일을 이어 읽습니다. 추가 프로파일은 앱이 관리하는 세션에만 적용합니다."}
+        </p>
+        <label>
+          기본 프로젝트 폴더
+          <div className="row">
+            <input
+              aria-label="기본 프로젝트 폴더"
+              value={cwd}
+              placeholder={app.boot.home}
+              maxLength={4096}
+              onChange={(e) => setCwd(e.target.value)}
+              onBlur={() => {
+                if (cwd !== settings.cwd) void save({ cwd });
+              }}
+            />
+            <IconButton
+              label="기본 프로젝트 폴더 선택"
+              onClick={() =>
+                void api
+                  .call("terminal.folder", undefined)
+                  .then((folder) => {
+                    if (folder) {
+                      setCwd(folder);
+                      return save({ cwd: folder });
+                    }
+                  })
+                  .catch(app.notify)
+              }
+            >
+              <FolderOpen size={16} />
+            </IconButton>
+          </div>
+        </label>
+        <p className="hint">
+          모든 탭에서 새로 여는 로컬 터미널의 기본 폴더입니다. 비워 두면 홈
+          폴더를 사용합니다. 패널에 직접 지정한 폴더가 있으면 그 값을
+          사용합니다.
         </p>
       </section>
       <section className="settings-card">

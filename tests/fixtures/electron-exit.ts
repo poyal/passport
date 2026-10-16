@@ -108,45 +108,40 @@ export async function closeCleanly(
         let windowAudit:
           { mode: string; shown: number; focused: number } | undefined;
         if (child.exitCode === null && child.signalCode === null) {
-          windowAudit = await application.evaluate(
-            ({ app, dialog }, quitFirst) => {
-              if (process.env.PASSPORT_SHUTDOWN_DIAGNOSTICS) {
-                for (const event of [
-                  "before-quit",
-                  "will-quit",
-                  "window-all-closed",
-                  "quit",
-                ] as const)
-                  app.on(event as "quit", () =>
-                    console.error(
-                      "TEST_QUIT",
-                      event,
-                      process.getActiveResourcesInfo(),
-                    ),
-                  );
-              }
-              dialog.showMessageBox = async () => ({
-                response: 1,
-                checkboxChecked: false,
-              });
-              // Keep the debugger through native cleanup, then let Playwright
-              // disconnect it before requiring process exit. Node may wait for
-              // that disconnect after Electron has emitted its final quit.
-              if (quitFirst) {
-                app.once("quit", () => {
-                  process.stderr.write("\nPASSPORT_E2E_NATIVE_QUIT_COMPLETE\n");
-                });
-                setTimeout(() => app.quit(), 0);
-              }
-              return (globalThis as any).__passportE2EWindowAudit;
-            },
-            process.platform === "win32",
-          );
+          windowAudit = await application.evaluate(({ app, dialog }) => {
+            if (process.env.PASSPORT_SHUTDOWN_DIAGNOSTICS) {
+              for (const event of [
+                "before-quit",
+                "will-quit",
+                "window-all-closed",
+                "quit",
+              ] as const)
+                app.on(event as "quit", () =>
+                  console.error(
+                    "TEST_QUIT",
+                    event,
+                    process.getActiveResourcesInfo(),
+                  ),
+                );
+            }
+            dialog.showMessageBox = async () => ({
+              response: 1,
+              checkboxChecked: false,
+            });
+            // Keep the debugger through native cleanup, then let Playwright
+            // disconnect it before requiring process exit. Node may wait for
+            // that disconnect after Electron has emitted its final quit.
+            app.once("quit", () => {
+              process.stderr.write("\nPASSPORT_E2E_NATIVE_QUIT_COMPLETE\n");
+            });
+            setTimeout(() => app.quit(), 0);
+            return (globalThis as any).__passportE2EWindowAudit;
+          });
         }
-        if (process.platform === "win32")
-          await Promise.race([exited, nativeQuit]);
+        await Promise.race([exited, nativeQuit]);
         if (deadlineExpired) return;
-        // On macOS let Playwright own graceful quit and debugger disconnection.
+        // Playwright otherwise disconnects immediately after app.quit() even
+        // when will-quit cleanup is still asynchronous (also on macOS).
         // Independently require the real process to exit with code 0 below.
         await application.close();
         const [code, signal] = await exited;

@@ -7,6 +7,8 @@ import { darwinDesktop } from "./darwin/desktop";
 import { windowsDesktop } from "./win32/desktop";
 import { createDarwinActivityEndpoint } from "./darwin/activity-endpoint";
 import { createWindowsActivityEndpoint } from "./win32/activity-endpoint";
+import { createDarwinDownload } from "./darwin/download";
+import { createWindowsDownload } from "./win32/download";
 
 // Factories only capture dependencies. Reading shells, opening OS services and
 // creating sockets must wait for an explicit call by the owning service.
@@ -18,6 +20,7 @@ const services: Record<string, PlatformServices> = {
     desktop: darwinDesktop,
     createActivityEndpoint: createDarwinActivityEndpoint,
     createControlEndpoint: createDarwinActivityEndpoint,
+    protectDownload: createDarwinDownload(),
   },
   win32: {
     id: "win32",
@@ -26,6 +29,7 @@ const services: Record<string, PlatformServices> = {
     desktop: windowsDesktop,
     createActivityEndpoint: createWindowsActivityEndpoint,
     createControlEndpoint: createWindowsActivityEndpoint,
+    protectDownload: createWindowsDownload(),
   },
 };
 export function selectPlatform(id: string): PlatformServices {

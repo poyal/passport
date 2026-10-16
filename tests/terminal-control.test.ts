@@ -102,6 +102,50 @@ it("defaults old documents to off and clears inherited CLI credentials case inse
   for (const id of ["darwin", "win32"])
     expect(typeof selectPlatform(id).createControlEndpoint).toBe("function");
 });
+it("grants sharing independently of terminal control and revokes the session capability when disabled", async () => {
+  const source = panel("share caller");
+  let enabled = true;
+  const execute = vi.fn(() => [{ name: "승민" }]);
+  const service = new TerminalControl({
+    endpoint: platform.createControlEndpoint(),
+    panels: () => [source],
+    inspect: vi.fn(),
+    write: vi.fn(),
+    share: { enabled: () => enabled, execute },
+  });
+  services.push(service);
+  await service.start();
+  service.configure("off");
+  const env = service.register(source.paneId, source.sessionId!);
+  const request = (command: ControlCommand): ControlRequest => ({
+    version: 1,
+    token: env.PASSPORT_CONTROL_TOKEN,
+    source: { paneId: source.paneId, sessionId: source.sessionId! },
+    request: command,
+  });
+  await expect(
+    service.execute(request({ command: "share.peers" })),
+  ).resolves.toEqual([{ name: "승민" }]);
+  await expect(service.execute(request({ command: "list" }))).rejects.toThrow(
+    /터미널 제어/,
+  );
+  await expect(
+    service.execute(
+      request({ command: "read", pane: source.paneId, lines: 10 }),
+    ),
+  ).rejects.toThrow(/터미널 제어/);
+  enabled = false;
+  service.configure("off");
+  await expect(
+    service.execute(request({ command: "share.peers" })),
+  ).rejects.toThrow(/권한/);
+  enabled = true;
+  service.configure("off");
+  await expect(
+    service.execute(request({ command: "share.peers" })),
+  ).rejects.toThrow(/권한/);
+  expect(execute).toHaveBeenCalledTimes(1);
+});
 it("preserves Korean, templates, tabs and trailing newlines without adding Enter", () => {
   expect(controlPaste("한글 {{literal}}\r\n둘\t끝\n", true, false)).toBe(
     "\x1b[200~한글 {{literal}}\r둘\t끝\r\x1b[201~",

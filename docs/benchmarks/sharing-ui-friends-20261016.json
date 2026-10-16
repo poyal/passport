@@ -1,0 +1,125 @@
+{
+  "createdAt": "2026-10-16T07:04:15.444Z",
+  "purpose": "Sharing UI, friend CLI and guide follow-up",
+  "source": "local",
+  "sourceCommit": "bccc5687f88f6133c028a782e21c7848294f0433",
+  "dirty": true,
+  "platform": "mac-arm64",
+  "status": "verified-local-preview",
+  "publishable": false,
+  "finishedAt": "2026-10-16T07:11:08.768Z",
+  "build": "release/builds/20261016T070824Z-bccc568-dirty-mac-arm64-dev",
+  "files": [
+    {
+      "path": "release/builds/20261016T070824Z-bccc568-dirty-mac-arm64-dev/mac-arm64/Passport-dev.app/Contents/MacOS/Passport-dev",
+      "bytes": 34816,
+      "sha256": "c52855ab76aa790d92ef9faebfbff815f42badc4d5d349797aa3f73187710dd3"
+    },
+    {
+      "path": "release/builds/20261016T070824Z-bccc568-dirty-mac-arm64-dev/mac-arm64/Passport-dev.app/Contents/Resources/app.asar",
+      "bytes": 83147238,
+      "sha256": "d37c9167dadebcc0266851254f4c477856a93221bb1c0766f0a2ff62fdc95bb1"
+    },
+    {
+      "path": "release/builds/20261016T070824Z-bccc568-dirty-mac-arm64-dev/mac-arm64/Passport-dev.app/Contents/Resources/terminal/helper/darwin-arm64/passport",
+      "bytes": 581488,
+      "sha256": "a2e5f3d557f8f3171874c8c51149cf4052f3e76c0a3e26d178ecba5caa4d6cdc"
+    }
+  ],
+  "verification": {
+    "typecheck": "passed",
+    "unit": {
+      "passed": 27,
+      "scope": "tests/share.test.ts tests/terminal-control.test.ts"
+    },
+    "rustCli": {
+      "passed": 3
+    },
+    "releaseRegression": {
+      "passed": 73
+    },
+    "e2e": {
+      "source": {
+        "path": "release/checks/20261016T070706Z-bccc568-dirty-mac-arm64-e2e-hidden",
+        "scope": "sharing.spec.ts and usability.spec.ts; targeted, not full GUI suite",
+        "tests": {
+          "startTime": "2026-10-16T07:07:06.942Z",
+          "duration": 46370.547,
+          "expected": 9,
+          "skipped": 0,
+          "unexpected": 0,
+          "flaky": 0
+        },
+        "lifecycle": {
+          "launches": 6,
+          "windows": 6,
+          "exits": 6,
+          "reusedTests": 0,
+          "auditedShutdowns": 6,
+          "shown": 0,
+          "focused": 0
+        }
+      },
+      "packaged": {
+        "path": "release/checks/20261016T070911Z-bccc568-dirty-mac-arm64-e2e-hidden",
+        "scope": "sharing.spec.ts and usability.spec.ts; targeted, not full GUI suite",
+        "tests": {
+          "startTime": "2026-10-16T07:09:11.835Z",
+          "duration": 50867.089,
+          "expected": 9,
+          "skipped": 0,
+          "unexpected": 0,
+          "flaky": 0
+        },
+        "lifecycle": {
+          "launches": 6,
+          "windows": 6,
+          "exits": 6,
+          "reusedTests": 0,
+          "auditedShutdowns": 6,
+          "shown": 0,
+          "focused": 0
+        }
+      }
+    },
+    "packagedSmoke": {
+      "packagedSmoke": "passed",
+      "localPTY": "passed",
+      "bundledHelper": "passed",
+      "shutdown": "passed",
+      "exitCode": 0,
+      "appVersion": "1.2.3-dev",
+      "arch": "arm64",
+      "platform": "darwin",
+      "hosts": 0,
+      "fonts": 247,
+      "version": 2,
+      "nodeAvailable": false
+    },
+    "codesign": "passed",
+    "securityGate": "pending-native-and-two-device-checks",
+    "windowsNative": "not-run",
+    "smokeLifecycle": {
+      "launches": 1,
+      "windows": 1,
+      "exits": 1,
+      "reusedTests": 0,
+      "auditedShutdowns": 1,
+      "shown": 0,
+      "focused": 0
+    }
+  },
+  "previousPreview": "20261016T050659Z-bccc568-dirty-mac-arm64-dev/mac-arm64/Passport-dev.app",
+  "preview": "release/builds/Passport.app",
+  "retention": {
+    "protected": [
+      "20261016T070824Z-bccc568-dirty-mac-arm64-dev/mac-arm64/Passport-dev.app",
+      "20261016T050659Z-bccc568-dirty-mac-arm64-dev/mac-arm64/Passport-dev.app"
+    ],
+    "failedRuns": "Retain resolved failures until 2026-10-23; no artifacts deleted.",
+    "olderBuilds": "Older successful builds are candidates only after excluding running apps and preservation markers.",
+    "olderBuildCandidates": [
+      "release/builds/20261016T032207Z-bccc568-dirty-mac-arm64-dev"
+    ]
+  }
+}

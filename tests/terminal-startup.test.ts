@@ -143,16 +143,15 @@ it("backs up v3 before migrating and keeps the original database on validation f
   expect(store.db.pragma("user_version", { simple: true })).toBe(5);
   store.close();
 });
-it("resolves pane/project/global profile precedence and remaps imported profile collisions", () => {
+it("resolves pane/global profile precedence and remaps imported profile collisions", () => {
   const settings = defaultTerminalSettings("darwin");
   settings.profileIds = ["unix-shortcuts"];
   expect(selectedProfiles(settings, { mode: "none", ids: [] })).toEqual([]);
   expect(
-    selectedProfiles(
-      settings,
-      { mode: "none", ids: [] },
-      { mode: "custom", ids: ["ai-notifications", "unix-shortcuts"] },
-    ).map((p) => p.id),
+    selectedProfiles(settings, {
+      mode: "custom",
+      ids: ["ai-notifications", "unix-shortcuts"],
+    }).map((p) => p.id),
   ).toEqual(["ai-notifications", "unix-shortcuts"]);
   expect(() =>
     selectedProfiles(settings, { mode: "custom", ids: ["missing"] }),
@@ -188,11 +187,100 @@ it("resolves pane/project/global profile precedence and remaps imported profile 
     "skip",
   ).document;
   expect(result.settings.terminal.profiles).toHaveLength(2);
-  expect(result.workspaces[0].project?.profiles?.ids[0]).not.toBe("same");
+  expect(
+    result.workspaces[0].root.kind === "pane" &&
+      result.workspaces[0].root.local?.profiles?.ids[0],
+  ).not.toBe("same");
   expect(
     result.workspaces[0].root.kind === "pane" &&
       result.workspaces[0].root.local?.needsReview,
   ).toBe(true);
+});
+it("migrates legacy project defaults into existing panes and templates without overriding explicit values", () => {
+  const doc = emptyDocument();
+  const first = {
+    kind: "pane" as const,
+    id: randomUUID(),
+    hostId: randomUUID(),
+    local: {
+      shell: "default",
+      cwd: "",
+      profiles: { mode: "inherit", ids: [] },
+    },
+  };
+  const second = {
+    ...first,
+    id: randomUUID(),
+    local: {
+      shell: "default",
+      cwd: "/explicit",
+      profiles: { mode: "none", ids: [] },
+    },
+  };
+  const workspace = {
+    id: randomUUID(),
+    name: "legacy",
+    project: {
+      cwd: "/legacy",
+      profiles: { mode: "custom", ids: ["unix-shortcuts"] },
+    },
+    root: {
+      kind: "split",
+      id: randomUUID(),
+      direction: "horizontal",
+      ratio: 0.5,
+      children: [first, second],
+    },
+  };
+  const restored = migrateDocument({
+    ...doc,
+    workspaces: [workspace],
+    workspaceTemplates: [
+      {
+        id: randomUUID(),
+        name: "legacy template",
+        workspaces: [workspace],
+        activeWorkspaceId: workspace.id,
+        activePaneId: first.id,
+      },
+    ],
+  });
+  for (const w of [
+    restored.workspaces[0],
+    restored.workspaceTemplates[0].workspaces[0],
+  ]) {
+    expect(w).not.toHaveProperty("project");
+    if (w.root.kind !== "split") throw new Error("Expected split");
+    expect(w.root.children[0]).toMatchObject({
+      local: {
+        cwd: "/legacy",
+        profiles: { mode: "custom", ids: ["unix-shortcuts"] },
+      },
+    });
+    expect(w.root.children[1]).toMatchObject({
+      local: { cwd: "/explicit", profiles: { mode: "none", ids: [] } },
+    });
+  }
+  expect(restored.settings.terminal.cwd).toBe("");
+  expect(workspace.root.children[0].local.cwd).toBe("");
+  expect(migrateDocument(restored)).toEqual(restored);
+});
+it("uses the global working directory for inherited panes while respecting explicit folders", () => {
+  const settings = defaultTerminalSettings(process.platform);
+  settings.cwd = directory();
+  const explicit = directory();
+  expect(previewEnvironment({ shell: "default", cwd: "" }, settings).cwd).toBe(
+    settings.cwd,
+  );
+  expect(
+    previewEnvironment({ shell: "default", cwd: explicit }, settings).cwd,
+  ).toBe(explicit);
+  expect(() =>
+    documentSchema.parse({
+      ...emptyDocument(),
+      settings: { terminal: { ...settings, cwd: "bad\npath" } },
+    }),
+  ).toThrow();
 });
 it("limits OSC parsing and handles split BEL/ST sequences without inferring approval", () => {
   const found: string[] = [],
@@ -237,10 +325,10 @@ it("authenticates generations, separates read/resolve, and bounds duplicate noti
     service.receive({ ...event, token: "f".repeat(64), event: "permission" });
     expect(notified).toHaveLength(0);
     service.receive({ ...event, event: "permission-candidate" });
-    expect(notified[0].kind).toBe("attention");
+    expect(notified).toHaveLength(0);
     service.receive({ ...event, event: "permission" });
     service.receive({ ...event, event: "permission" });
-    expect(notified).toHaveLength(2);
+    expect(notified).toHaveLength(1);
     const pending = service.list()[0];
     service.read(pending.id);
     expect(service.list()[0]).toMatchObject({ read: true, resolved: false });
@@ -255,11 +343,11 @@ it("authenticates generations, separates read/resolve, and bounds duplicate noti
     service.receive({ ...event, event: "completed" });
     service.restrictAgents({ claude: true, codex: true });
     service.receive({ ...event, event: "permission", request: "revoked" });
-    expect(notified).toHaveLength(3);
+    expect(notified).toHaveLength(2);
     service.unregister("pane");
     service.register("pane", randomUUID(), { claude: true, codex: true });
     service.receive({ ...event, event: "completed" });
-    expect(notified).toHaveLength(3);
+    expect(notified).toHaveLength(2);
     expect(() => service.active(pending.id)).toThrow("종료된");
     expect(
       JSON.stringify(store.db.prepare("SELECT value FROM activity").all()),
@@ -328,7 +416,6 @@ it.skipIf(process.platform === "win32")(
         config,
         settings,
         notificationSettingsSchema.parse({ claude: true }),
-        undefined,
         path.join(dir, "sessions"),
         auth,
         snapshot,
@@ -338,7 +425,9 @@ it.skipIf(process.platform === "win32")(
       local.open("pane", config, launch);
       await expect.poll(() => ready, { timeout: 10000 }).toBe(true);
       await expect.poll(() => output).toContain("FAKE_AI_STARTED");
-      await expect.poll(() => service.list().length).toBe(1);
+      await expect
+        .poll(() => service.list().map((item) => item.kind))
+        .toEqual(["failed", "permission"]);
       local.input("pane", "ll; printf 'SHELL_%s\\n' RETURNED\r");
       await expect.poll(() => output).toContain("KEEP_ALIAS");
       await expect.poll(() => output).toContain("SHELL_RETURNED");
