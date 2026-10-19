@@ -5,6 +5,10 @@ import path from "node:path";
 import { reusableApp } from "../fixtures/reusable-app";
 import { sshFixture } from "../fixtures/ssh-server";
 import {
+  writeMacPasteboard,
+  releaseMacPasteboard,
+} from "../fixtures/mac-pasteboard";
+import {
   hostSchema,
   groupSchema,
   type Pane,
@@ -677,8 +681,27 @@ test("macOS local OpenSSH accepts multiline paste with and without bracketed pas
   const root = path.join(directory, "ssh-root");
   await fs.mkdir(root);
   const server = await sshFixture(root, undefined, { bracketedPaste: false });
+  const nativeBoard = `io.passport.test.${path.basename(directory)}.openssh`;
   let pane = "";
   try {
+    await writeMacPasteboard(nativeBoard, []);
+    // Mocking Electron text alone leaves the AppKit file fallback reading the
+    // user's clipboard. Exercise that fallback against an empty named board.
+    await application.evaluate(({}, name) => {
+      const cp = process.getBuiltinModule("node:child_process") as any;
+      const original = cp.execFile;
+      cp.execFile = (file: string, args: string[], ...rest: unknown[]) => {
+        if (
+          file === "/usr/bin/osascript" &&
+          args.includes("JavaScript") &&
+          args.some((arg) =>
+            arg.includes("NSPasteboardURLReadingFileURLsOnlyKey"),
+          )
+        )
+          args = [...args, name];
+        return original(file, args, ...rest);
+      };
+    }, nativeBoard);
     await page
       .getByRole("button", { name: "새 로컬 터미널", exact: true })
       .click();
@@ -735,11 +758,15 @@ test("macOS local OpenSSH accepts multiline paste with and without bracketed pas
       .toBe("\x1b[200~printf FIRST\rprintf SECOND\x1b[201~");
     await expect(page.locator(".toast.error")).toHaveCount(0);
   } finally {
-    if (pane)
-      await page.evaluate(
-        async (id) => window.passport.call("session.close", { id }),
-        pane,
-      );
-    await server.close();
+    try {
+      if (pane)
+        await page.evaluate(
+          async (id) => window.passport.call("session.close", { id }),
+          pane,
+        );
+      await server.close();
+    } finally {
+      await releaseMacPasteboard(nativeBoard);
+    }
   }
 });
