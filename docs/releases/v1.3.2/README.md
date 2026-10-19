@@ -499,7 +499,8 @@ Windows의 기본 **Ctrl+C**는 선택한 텍스트를 복사하며, 선택이 �
 ## 문서와 문의
 
 - [버전별 변경 사항](https://github.com/poyal/passport/releases)
-- [개발·검증·문서 관리 규칙](AGENTS.md)
+- [공통 개발·검증·문서 관리 규칙](../../development.md)
+- [1.3.2 검증 결과와 남은 제한](AGENTS.md)
 - [오픈소스 고지](../../../THIRD_PARTY_NOTICES.md)
 
 제작자 **Poyal** · [poyal.work@gmail.com](mailto:poyal.work@gmail.com) · [GitHub](https://github.com/poyal/passport) · [문의·오류 신고](https://github.com/poyal/passport/issues)

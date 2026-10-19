@@ -1,6 +1,6 @@
-# Passport 개발 가이드
+# Passport 공통 개발 규칙
 
-현재 소스의 환경 준비, 구현 경계와 검사 방법을 설명합니다. 작업 전 [AI 작업 규칙](releases/v1.3.2/AGENTS.md)을 읽고, 설치 파일 검증·게시는 [릴리즈 가이드](release.md)를 따릅니다. 사용자 조작 설명은 [루트 README](../README.md)에 둡니다.
+모든 버전에 공통으로 적용하는 환경 준비·구현 계약·검사·문서 관리 규칙입니다. 현재 소스에 맞춰 이 문서를 갱신하며 릴리즈 버전 폴더에 복제하지 않습니다. AI 작업의 기본 지침은 [루트 AGENTS](../AGENTS.md), 설치 파일 검증·게시 절차는 [릴리즈 가이드](release.md)를 따릅니다. 사용자 조작 설명은 [루트 README](../README.md), 버전별 검증 결과·남은 제한은 [문서 안내](README.md)의 해당 버전 AI 기록에서 확인합니다.
 
 ## 환경 준비
 
@@ -25,7 +25,7 @@ npm run dev
 
 `npm ci`의 postinstall은 ssh2 패치, Electron ABI용 `better-sqlite3`·`node-pty`, Windows ConPTY 패치를 준비합니다. 설치 실패를 `--ignore-scripts`나 `npmRebuild: false`로 우회하지 않습니다. Rust helper 빌드는 Cargo.lock을 적용하고 앱 버전과 의존 라이선스를 함께 생성합니다. `npm run build`에도 helper 빌드가 포함됩니다.
 
-개발 앱은 `Passport-dev`, `<버전>-dev`, `io.passport.desktop.dev`로 정식 앱 데이터와 분리됩니다. renderer는 개발 중 갱신되지만 main·preload 변경 후에는 앱을 다시 시작합니다. 시험은 `PASSPORT_DATA_DIR` 등 격리 경로를 사용하며 실행 중인 사용자의 DB·셸 설정을 수정하지 않습니다.
+개발 앱은 `Passport-dev`, `<버전>-dev`, `io.passport.desktop.dev`로 정식 앱 데이터와 분리됩니다. renderer는 개발 중 갱신되지만 main·preload 변경 후에는 앱을 다시 시작합니다. 시험은 `PASSPORT_DATA_DIR` 등 격리 경로를 사용하며 실행 중인 사용자의 DB·셸 설정·일반 클립보드를 수정하지 않습니다.
 
 ## 폴더와 빌드 결과
 
@@ -150,13 +150,15 @@ OS 기능은 `src/main/platform/contracts.ts`의 타입 계약과 `darwin/`·`wi
 | `ActivityEndpoint` | 생성 → 서버 listen → listening(권한 설정), 연결·서버 종료 → dispose. Mac 소켓과 Windows pipe 차이만 분리; DB 정책은 공통 계층에 둠 |
 | `protectDownload` | Mac quarantine, Windows IAttachmentExecute의 Save와 ZoneId 3 적용 후 파일 해시 재검사. 보호 실패 시 파일 공개 중단; 자동 실행 금지 |
 
-PTY 출력은 256 KiB 미처리에서 읽기를 멈추고 xterm 쓰기 완료 ACK 뒤 재개합니다. 세대가 다른 콜백은 새 연결을 바꾸지 못하게 합니다. 종료 전 읽기를 재개하고 `pendingExits`로 네이티브 종료 콜백 반환까지 기다린 뒤 DB·Electron을 닫습니다. Windows 자식은 job object로 관리하며 POSIX 시그널을 쓰지 않습니다. ConPTY 소스 해시·강제 재빌드를 유지합니다. Windows Passport Bash의 resize 보정은 해당 세대·조건에만 적용하고 다른 셸·TUI에 퍼뜨리지 않습니다.
+PTY 출력은 256 KiB 미처리에서 읽기를 멈추고 xterm 쓰기 완료 ACK 뒤 재개합니다. 세대가 다른 콜백은 새 연결을 바꾸지 못하게 하며 탭·창 이동 중 버퍼·출력 순서·소유권을 보존합니다. 종료 전 읽기를 재개하고 `pendingExits`로 네이티브 종료 콜백 반환까지 기다린 뒤 DB·Electron을 닫습니다. Windows 자식은 job object로 관리하며 POSIX 시그널을 쓰지 않습니다. ConPTY 소스 해시·강제 재빌드를 유지합니다. Windows Passport Bash의 resize 보정은 해당 세대·조건에만 적용하고 다른 셸·TUI에 퍼뜨리지 않습니다.
 
 클립보드 네이티브 읽기는 3초 timeout·4 MiB maxBuffer·Windows 숨김 실행을 유지합니다. 파일 수·경로 길이 한도와 절대 경로·NUL/CR/LF 검사를 통과해야 하며 경로를 셸 문자열에 삽입해 실행하지 않습니다. Mac 시험은 고유 named pasteboard를 사용합니다. 파일 드롭은 실제 경로 검증과 동일한 인용·패널별 큐를 사용하며 Enter·복사본·SSH 업로드를 추가하지 않습니다.
 
-Unicode 11 addon은 첫 출력·스냅샷 전에 적용하며 임의 폭 표로 우회하지 않습니다. IME·일반 Enter·Shift+Enter를 구분하고 키보드 문맥은 창이 소유하며 탐색 때 초기화합니다. 시작 준비는 실제 다음 프롬프트를 확인하고 PTY 연결이나 직전 명령 결과만으로 판정하지 않습니다.
+Unicode 11 addon은 첫 출력·스냅샷 전에 적용하며 로컬·SSH·일반/대체 화면·창 이동에 같은 규칙을 사용합니다. 임의 폭 표나 사용자 셸 설정 변경으로 우회하지 않습니다. IME·일반 Enter·Shift+Enter를 구분하고 키보드 문맥은 창이 소유하며 탐색 때 초기화합니다. 시작 프로파일은 사용자 셸 파일·CLI 설정·신뢰 정책을 덮어쓰지 않습니다. 시작 준비는 실제 다음 프롬프트를 확인하고 PTY 연결이나 직전 명령 결과만으로 판정하지 않습니다.
 
-SQLite 스키마는 5, 문서·portable 형식은 2입니다. 이행 전 백업·구버전 쓰기 차단·revision 기반 다중 창 저장을 유지합니다. 템플릿은 탭 배치·설정만 저장합니다. 쪽지는 TLS 1.3·기기 지문 고정·상호 인증·등록 및 수신 승인과 파일 검사를 유지합니다. CLI 토큰은 새 로컬 PTY에만 상속하며 로그·문서로 추출하지 않습니다. `DELIVERY_UNKNOWN`을 자동 재전송하지 않습니다. SSH·SFTP·터널은 인증·지문 검증을 공유하고 파일 전송은 임시 파일·크기 확인·최종 이름 전환·실패 복구를 유지합니다.
+SQLite 스키마는 5, 문서·portable 형식은 2입니다. 이행 전 백업·구버전 쓰기 차단·revision 기반 다중 창 저장을 유지합니다. 템플릿은 탭 배치·설정만 저장합니다. 쪽지는 TLS 1.3·기기 지문 고정·상호 인증·등록 및 수신 승인과 파일 검사를 유지합니다. CLI는 등록 승인·수신 승인·받은 본문 읽기를 제공하지 않습니다. CLI 토큰은 새 로컬 PTY에만 상속하며 로그·문서로 추출하지 않습니다. 요청 성공과 상대 프로그램의 작업 완료를 구분하고 `DELIVERY_UNKNOWN`을 자동 재전송하지 않습니다. SSH·SFTP·터널은 인증·지문 검증을 공유하고 파일 전송은 임시 파일·크기 확인·최종 이름 전환·실패 복구를 유지합니다.
+
+외부 링크는 main이 소유권·HTTP/HTTPS URL을 검사하고 실제 주소 확인 후 `openExternal` 직전에 다시 검사합니다. 외부 탐색·임의 창·권한 요청을 차단합니다. 쪽지 파일은 확장자·크기·해시·경로·OS 다운로드 보호가 모두 통과해야 공개하며 자동 열기·실행·AI 전달을 추가하지 않습니다.
 
 ## 사용자 매뉴얼과 문서 관리
 
@@ -168,10 +170,10 @@ SQLite 스키마는 5, 문서·portable 형식은 2입니다. 이행 전 백업�
 
 문서는 다음 기준으로 관리합니다.
 
-- 루트 README는 현재 사용자 매뉴얼, `docs/development.md`와 `docs/release.md`는 현재 작업 절차입니다. `docs/README.md`는 문서 입구, 루트 `AGENTS.md`는 필수 규칙과 연결입니다.
-- 버전별 `docs/releases/v<버전>/`에는 `README.md`·`AGENTS.md` 두 개를 유지합니다. README는 해당 버전의 사용자 매뉴얼, AGENTS는 작업 계약·검증 소스·최종 결과·남은 제한입니다. 이전 버전 쌍도 보관합니다.
+- 루트 README는 현재 사용자 매뉴얼, `docs/development.md`는 공통 개발 규칙, `docs/release.md`는 공통 릴리즈 절차입니다. `docs/README.md`는 문서 입구, 루트 `AGENTS.md`는 필수 규칙과 연결입니다. 공통 문서는 특정 버전의 AI 문서를 필수 규칙의 출처로 삼지 않습니다.
+- 버전별 `docs/releases/v<버전>/`에는 `README.md`·`AGENTS.md` 두 개를 유지합니다. README는 해당 버전의 사용자 매뉴얼, AGENTS는 해당 버전의 검증 소스·환경·최종 결과·남은 제한·후속 확인 사항입니다. 공통 개발·E2E·문서·릴리즈 규칙을 복제하지 않습니다. 이전 버전 쌍도 보관합니다.
 - 새 버전의 사용자 문서는 루트 매뉴얼을 기준으로 만들되 이미지·문서 상대 경로를 맞춥니다. AI 문서의 과거 검사 수·해시를 새 후보의 성공으로 복사하지 않습니다. 현재 문서 연결도 새 버전으로 갱신합니다.
-- 작업 중 메모·계획·로그는 최종 결과를 반영한 뒤 삭제합니다. 완료 표시·archive 폴더로 보관하지 않습니다. 다음 작업에 필요한 절차·구현 계약·미검증 제한은 해당 가이드와 버전 AI 문서에 남깁니다.
+- 작업 중 메모·계획·로그는 최종 결과를 반영한 뒤 삭제합니다. 완료 표시·archive 폴더로 보관하지 않습니다. 다음 작업에 필요한 공통 절차·구현 계약은 해당 가이드에, 버전별 최종 결과·미검증 제한은 해당 버전 AI 문서에 남깁니다.
 - 패치 노트는 GitHub Release 본문에만 작성합니다. 로컬 릴리즈 MD·중복 검증 보고서·날짜별 일지를 만들지 않습니다. 공개 소스와 이후 문서 마무리 커밋은 구분합니다.
 - `docs/assets/`는 사용하는 이미지만 유지합니다. 이전 버전에서 참조하는 이미지는 보존하고 바뀐 화면은 별도 이름을 사용합니다. `notes-compose.png`·`notes-pending.png`는 앱도 import합니다. 원본 소스·fixture·법적 고지는 문서 정리 대상이 아닙니다.
 
