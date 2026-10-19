@@ -17,6 +17,8 @@ HISTFILE=/dev/null
 PROMPT='SIK XX > '
 RPROMPT=''
 bindkey -e
+# A clean zsh does not bind xterm's forward Delete sequence by default.
+bindkey '^[[3~' delete-char
 _passport_capture() {
   printf '%s\\0%s\\0' "$BUFFER" "$COLUMNS" >| "$ZDOTDIR/capture.tmp"
   /bin/mv -f "$ZDOTDIR/capture.tmp" "$ZDOTDIR/capture"

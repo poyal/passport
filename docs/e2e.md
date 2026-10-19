@@ -43,7 +43,7 @@ PASSPORT_E2E_EXECUTABLE="$PWD/release/builds/Passport.app/Contents/MacOS/Passpor
 
 ## 재사용 fixture의 계약
 
-`terminal-unicode.spec.ts`는 격리된 `ZDOTDIR`와 앱 하나를 재사용한다. macOS의 실제 zsh 입력 버퍼를 시험용 ZLE 위젯으로 읽어 이모지 프롬프트의 줄바꿈·편집·resize와 Unicode 붙여넣기를 화면과 대조한다. 입력을 실행하지 않으며 일반 클립보드는 변경하지 않는다. 공통 SSH 사례는 loopback fixture의 일반/대체 화면에서 이모지 뒤의 절대 커서 위치를 확인하고 세션과 서버를 닫는다. 모의 clipboard handler는 기존 복구 계약으로 초기화하고 시험용 셸 파일은 앱 종료 후 제거한다. 이 검사는 물리 IME나 Linux 셸의 실기 검증을 대신하지 않는다.
+`terminal-unicode.spec.ts`는 격리된 `ZDOTDIR`와 앱 하나를 재사용한다. macOS의 실제 zsh 입력 버퍼를 시험용 ZLE 위젯으로 읽어 이모지 프롬프트의 줄바꿈·편집·resize와 Unicode 붙여넣기를 화면과 대조한다. 깨끗한 zsh에는 xterm의 Delete 키 바인딩이 없으므로 시험용 `.zshrc`에서 명시하며 사용자 키 설정에 의존하지 않는다. 입력을 실행하지 않으며 일반 클립보드는 변경하지 않는다. 공통 SSH 사례는 loopback fixture의 일반/대체 화면에서 이모지 뒤의 절대 커서 위치를 확인하고 세션과 서버를 닫는다. 모의 clipboard handler는 기존 복구 계약으로 초기화하고 시험용 셸 파일은 앱 종료 후 제거한다. 이 검사는 물리 IME나 Linux 셸의 실기 검증을 대신하지 않는다.
 
 구현은 [reusable-app.ts](../tests/fixtures/reusable-app.ts), 초기화 회귀는 [reuse.spec.ts](../tests/e2e/reuse.spec.ts)다.
 
