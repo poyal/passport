@@ -1,5 +1,11 @@
 # 로컬 검증 후 배포하는 프로젝트 운영 안내
 
+## 1.3.2 Mac 로컬 배포 완료 — 2026-10-19
+
+깨끗한 `079466bcd8228a26ecb8d5e2a3f52575152d3bf5` 소스를 이 Mac에서 정식 검증하고 [1.3.2 DMG](https://github.com/poyal/passport/releases/tag/v1.3.2)를 재빌드 없이 공개했습니다. 사용자가 실제 데스크톱 검사를 허용했고, 소스·최종 DMG의 숨김 GUI 각각 84개와 데스크톱 각각 4개가 통과했습니다. 인증 없는 공개 다운로드의 크기·SHA-256·체크섬이 일치하며 직전 1.3.1의 Mac·Windows·체크섬 자산을 보존했습니다.
+
+`v1.3.2`는 검증 소스에 고정하고 결과 문서는 별도 커밋으로 남깁니다. Windows 최신 공개판은 1.3.1이며 [Windows 후속 인계](windows-paste-release.md#132-windows-후속-배포-인계--2026-10-19)에 따라 같은 태그에서 검증합니다. 원격 Actions와 사용자 설치본 교체는 수행하지 않았습니다. [게시·검증 요약](benchmarks/github-release-v1.3.2-mac.json).
+
 ## 1.3.1 양쪽 로컬 배포 완료 — 2026-10-17
 
 동일 `63f4897` 소스의 Windows·Mac 설치본을 각 OS에서 정식 검증하고 실제 LAN·암호화 저장·다운로드 보호를 확인한 뒤 재빌드 없이 [공개 게시](https://github.com/poyal/passport/releases/tag/v1.3.1)했습니다. 공개 다운로드와 합본 체크섬이 일치하며 기존 자산·태그는 보존했습니다. [검증 결과](verification.md) · [게시 요약](benchmarks/github-release-v1.3.1.json). 아래 인계·미검증 설명은 각 과거 버전 당시의 기록입니다.

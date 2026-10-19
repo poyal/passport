@@ -1,5 +1,27 @@
 # Windows 붙여넣기 검증 및 릴리즈 인계
 
+## 1.3.2 Windows 후속 배포 인계 — 2026-10-19
+
+Mac ARM64 [1.3.2](https://github.com/poyal/passport/releases/tag/v1.3.2)는 정식 로컬 검증 후 공개했습니다. **Windows 1.3.2는 미검증·미게시**이며 최신 공개 Windows 설치본은 1.3.1입니다. 새 로컬 아이콘이 들어간 백업은 1.3.2 이상에서만 가져옵니다.
+
+Windows 빌드 소스는 **`v1.3.2` / `079466bcd8228a26ecb8d5e2a3f52575152d3bf5`**입니다. 결과를 정리한 후속 문서 커밋과 구분하고 태그를 옮기지 않습니다. Windows 11 x64에서 아래 준비 절의 도구를 갖추고 깨끗한 체크아웃에서 실행합니다. 기존 미커밋 작업은 별도 체크아웃으로 보존합니다. 실제 창·포커스 검사는 해당 PC 사용자가 허용한 시점에 실행합니다.
+
+```powershell
+git fetch origin --tags
+git switch --detach v1.3.2
+git rev-parse HEAD
+npm.cmd run release:verify -- --desktop
+```
+
+정식 검증이 통과하면 같은 체크아웃에서 출력된 기록으로 게시 계획을 확인합니다. Windows EXE 추가와 체크섬 갱신만 있고 기존 Mac DMG가 보존되는지 확인한 뒤 실행합니다.
+
+```powershell
+npm.cmd run release:publish -- --manifest release/checks/<실행-ID>/verification.json
+npm.cmd run release:publish -- --manifest release/checks/<실행-ID>/verification.json --execute
+```
+
+Mac DMG의 SHA-256은 `b8beb3e6aab221310e5ca83e9c46a691a4070390e114519c53f9ba003c008a9d`입니다. 게시 후 공개 EXE 다운로드·합본 체크섬과 Mac 자산 ID·크기·해시·갱신 시각 보존을 확인합니다. README의 Windows 다운로드, 릴리즈 목록·공개 릴리즈 본문의 Mac 전용 상태와 검증 문서를 갱신합니다. Mac의 단위 검사나 주입 검사를 Windows 실기 통과로 기록하지 않습니다. [Mac 게시 기록](benchmarks/github-release-v1.3.2-mac.json).
+
 ## 1.3.1 후속 작업 완료 — 2026-10-17
 
 Windows와 Mac을 같은 `63f4897` 소스로 검증해 [1.3.1](https://github.com/poyal/passport/releases/tag/v1.3.1)에 함께 게시했습니다. 아래 1.3.0 별도 Windows 인계는 1.3.1 합본 배포로 대체됐으며 새 배포에 적용하지 않습니다. 기존 Mac 1.3.0 태그·파일은 보존했습니다. [검증 기록](verification.md).
