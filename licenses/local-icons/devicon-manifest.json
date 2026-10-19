@@ -1,0 +1,166 @@
+{
+  "repository": "https://github.com/devicons/devicon",
+  "commit": "6a37858047b0e8d9c9c0e68f4a071fc410652e89",
+  "assets": [
+    {
+      "file": "github.svg",
+      "source": "icons/github/github-original.svg",
+      "sha256": "45262793de6292206a895ed63593cdb1eaed82074173f7f4b5bdb3e427ca805a"
+    },
+    {
+      "file": "gitlab.svg",
+      "source": "icons/gitlab/gitlab-original.svg",
+      "sha256": "d057a46d414f4edcb7edf96976ef7b91c2b347a990e99685e48d38de737967b0"
+    },
+    {
+      "file": "vscode.svg",
+      "source": "icons/vscode/vscode-original.svg",
+      "sha256": "503d580c442a7071aae180d9b4766e312e4600bf0e9d842b30f56d0e614eceb8"
+    },
+    {
+      "file": "intellij.svg",
+      "source": "icons/intellij/intellij-original.svg",
+      "sha256": "7ce573a86bc3e352295b8df8a09e1136700297e0add359f9d4d7e3aec77bc65f"
+    },
+    {
+      "file": "neovim.svg",
+      "source": "icons/neovim/neovim-original.svg",
+      "sha256": "64ce80cdfde0a0e0b65d4ad61655ca106bd00419e45f14f49cf8bfbc4f18fd70"
+    },
+    {
+      "file": "docker.svg",
+      "source": "icons/docker/docker-original.svg",
+      "sha256": "3fd830ea69431ed7a0b8d068cd5b34ad3f00a1a78195d50f13ff56713f2462e1"
+    },
+    {
+      "file": "kubernetes.svg",
+      "source": "icons/kubernetes/kubernetes-original.svg",
+      "sha256": "fb31e4163238978201cfde0601728ee5168b74e476c32c37739bed626fa281ae"
+    },
+    {
+      "file": "postman.svg",
+      "source": "icons/postman/postman-original.svg",
+      "sha256": "0b366c7a023328b0d95e8c90d9050519b8c31d206f8b34db17742488f72efccb"
+    },
+    {
+      "file": "jenkins.svg",
+      "source": "icons/jenkins/jenkins-original.svg",
+      "sha256": "917c7525a9d6c544f4b5d1d4318778e2dee5ef2d47be075ee494613cb10d2a4e"
+    },
+    {
+      "file": "terraform.svg",
+      "source": "icons/terraform/terraform-original.svg",
+      "sha256": "0be6427291ae47f057b75f9010dffd6f58a40f0c83c43606ff68851cef1621dc"
+    },
+    {
+      "file": "vercel.svg",
+      "source": "icons/vercel/vercel-original.svg",
+      "sha256": "ab2bb3dfbed3aa637dc1847e42d1a576e50b0d7717092d781ab43e91073ace23"
+    },
+    {
+      "file": "figma.svg",
+      "source": "icons/figma/figma-original.svg",
+      "sha256": "d37c2bf1a1d4f10aeffb224e44da672cb8b9510f6e5a2e24b61758262995805e"
+    },
+    {
+      "file": "python.svg",
+      "source": "icons/python/python-original.svg",
+      "sha256": "71493b4a732f0532b3a03a7a95da3ee11a65766367c8303b901ffbe7bf91a3a2"
+    },
+    {
+      "file": "javascript.svg",
+      "source": "icons/javascript/javascript-original.svg",
+      "sha256": "0656ff65fc8eeacda5c78d7f9ffe91ec1eb919db64f56e0b7dcd460af4bbd36c"
+    },
+    {
+      "file": "typescript.svg",
+      "source": "icons/typescript/typescript-original.svg",
+      "sha256": "c9191199f4049920c2fc19035b8a6664f37f4689fcd9e8434e786097e78863f0"
+    },
+    {
+      "file": "nodejs.svg",
+      "source": "icons/nodejs/nodejs-original.svg",
+      "sha256": "3218687c5ea24a4d4c0a33dc5c287da38c33a72dcfe9382469d7ce4e0bf661fb"
+    },
+    {
+      "file": "react.svg",
+      "source": "icons/react/react-original.svg",
+      "sha256": "5825b649c8c04dec13ecf01d0182401bd0ec71789d2fa06224866d882cd1515f"
+    },
+    {
+      "file": "vuejs.svg",
+      "source": "icons/vuejs/vuejs-original.svg",
+      "sha256": "4cc1153600c0845c645ac6c718c11d516d6899079a0dc406e3d62f68b1d02c49"
+    },
+    {
+      "file": "nextjs.svg",
+      "source": "icons/nextjs/nextjs-original.svg",
+      "sha256": "d9435c4ede7133b376c0173a80226bb3856729366707cd96e9a66e39448d0288"
+    },
+    {
+      "file": "go.svg",
+      "source": "icons/go/go-original.svg",
+      "sha256": "2d4558b96d3ec71d0d922a62668cb2ea5a5d83ed7d4caf6b0479b3266f795a2f"
+    },
+    {
+      "file": "rust.svg",
+      "source": "icons/rust/rust-original.svg",
+      "sha256": "16c6c6a98e990944fc5e1cc64cc8fc7b8be3a662ec4ee7951b7995d2e52f5e12"
+    },
+    {
+      "file": "java.svg",
+      "source": "icons/java/java-original.svg",
+      "sha256": "7582e518a9c02425f97155e5a3bd39d1a3a7d421b78caf9c8df7443dad3edc5d"
+    },
+    {
+      "file": "kotlin.svg",
+      "source": "icons/kotlin/kotlin-original.svg",
+      "sha256": "5053c2e1288582d1ac2cfc1e807eabb7f6059b1aa2f7d04e5cf00063682a2cbe"
+    },
+    {
+      "file": "swift.svg",
+      "source": "icons/swift/swift-original.svg",
+      "sha256": "46b6e4abd3ab12c589b8e276295f9439e2869bc4788d918efbc6e76147e8a06e"
+    },
+    {
+      "file": "postgresql.svg",
+      "source": "icons/postgresql/postgresql-original.svg",
+      "sha256": "f220a436258ed014c512ba4f9c0de6b9e5c2c4b55331a0a29f8c7a1a12c36443"
+    },
+    {
+      "file": "mysql.svg",
+      "source": "icons/mysql/mysql-original.svg",
+      "sha256": "f73fa5d6b9da33fbf540ff96f5360c24b6d29d883ecfe6fcaecf89a8d3456067"
+    },
+    {
+      "file": "sqlite.svg",
+      "source": "icons/sqlite/sqlite-original.svg",
+      "sha256": "2b91c30887d3602479ba845cc012ef6ae577fba71eb96705a05b12e35d2c5e7e"
+    },
+    {
+      "file": "redis.svg",
+      "source": "icons/redis/redis-original.svg",
+      "sha256": "4707378b190878f36f7e6e1c01fa3ee7e7884c76101809d191dddd943a2e6bdb"
+    },
+    {
+      "file": "mongodb.svg",
+      "source": "icons/mongodb/mongodb-original.svg",
+      "sha256": "d9f2bf7041264f4747e9969fb82ede0199c0ac97dfa8632aa0687d702ec05f7b"
+    },
+    {
+      "file": "supabase.svg",
+      "source": "icons/supabase/supabase-original.svg",
+      "sha256": "bb8d502577de5e864437542bc2655b5d4d4782589386fc4583d912f46ac73181"
+    },
+    {
+      "file": "firebase.svg",
+      "source": "icons/firebase/firebase-original.svg",
+      "sha256": "6069e979418301117abe2223b62ffb9cedd8c5118fbd805da77170629eaef49c"
+    },
+    {
+      "file": "nginx.svg",
+      "source": "icons/nginx/nginx-original.svg",
+      "sha256": "a28c7002fda6748bb018fa5f89ba3d38c622db720d65aa88668208a3cc839900"
+    }
+  ]
+}

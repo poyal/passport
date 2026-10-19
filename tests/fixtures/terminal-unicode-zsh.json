@@ -1,0 +1,139 @@
+{
+  "provenance": "Actual macOS 27.0.1 zsh 5.9 PTY output, issue 7, 2026-10-19. Startup echo and capture-widget output removed. No user commands executed.",
+  "cols": 40,
+  "rows": 10,
+  "cases": [
+    {
+      "prompt": "AA",
+      "steps": [
+        {
+          "action": "prompt",
+          "output": "\u001b[2J\u001b[H\u001b[JSIK AA > \u001b[K\u001b[?2004h"
+        },
+        {
+          "action": "type long command",
+          "input": "abcdefghijklmnopqrstuvwxyz0123456789abcdefghij",
+          "output": "a\babcdefghijklmnopqrstuvwxyz01234 \r\u001b[K5\r56789abcdefghij"
+        },
+        {
+          "action": "home",
+          "input": "\u0001",
+          "output": "\u001b[A\b\b\b\b\b\b"
+        },
+        {
+          "action": "delete a",
+          "input": "\u0004",
+          "output": "\u001b[P\u001b[30C56\u001b[P\u001b[13C \u001b[A\b\b\b\b\b\b"
+        },
+        {
+          "action": "insert X",
+          "input": "X",
+          "output": "Xbcdefghijklmnopqrstuvwxyz0123456789abcdefghij\u001b[A\b\b\b\b\b"
+        },
+        {
+          "action": "end",
+          "input": "\u0005",
+          "output": "\u001b[1B\u001b[5C"
+        },
+        {
+          "action": "backspace j",
+          "input": "",
+          "output": "\b \b"
+        }
+      ],
+      "expected": "SIK AA > Xbcdefghijklmnopqrstuvwxyz0123456789abcdefghi",
+      "cursor": {
+        "x": 14,
+        "y": 1
+      }
+    },
+    {
+      "prompt": "💻",
+      "steps": [
+        {
+          "action": "prompt",
+          "output": "\u001b[2J\u001b[H\u001b[JSIK 💻 > \u001b[K\u001b[?2004h"
+        },
+        {
+          "action": "type long command",
+          "input": "abcdefghijklmnopqrstuvwxyz0123456789abcdefghij",
+          "output": "a\babcdefghijklmnopqrstuvwxyz01234 \r\u001b[K5\r56789abcdefghij"
+        },
+        {
+          "action": "home",
+          "input": "\u0001",
+          "output": "\u001b[A\b\b\b\b\b\b"
+        },
+        {
+          "action": "delete a",
+          "input": "\u0004",
+          "output": "\u001b[P\u001b[30C56\u001b[P\u001b[13C \u001b[A\b\b\b\b\b\b"
+        },
+        {
+          "action": "insert X",
+          "input": "X",
+          "output": "Xbcdefghijklmnopqrstuvwxyz0123456789abcdefghij\u001b[A\b\b\b\b\b"
+        },
+        {
+          "action": "end",
+          "input": "\u0005",
+          "output": "\u001b[1B\u001b[5C"
+        },
+        {
+          "action": "backspace j",
+          "input": "",
+          "output": "\b \b"
+        }
+      ],
+      "expected": "SIK 💻 > Xbcdefghijklmnopqrstuvwxyz0123456789abcdefghi",
+      "cursor": {
+        "x": 14,
+        "y": 1
+      }
+    },
+    {
+      "prompt": "🔧",
+      "steps": [
+        {
+          "action": "prompt",
+          "output": "\u001b[2J\u001b[H\u001b[JSIK 🔧 > \u001b[K\u001b[?2004h"
+        },
+        {
+          "action": "type long command",
+          "input": "abcdefghijklmnopqrstuvwxyz0123456789abcdefghij",
+          "output": "a\babcdefghijklmnopqrstuvwxyz01234 \r\u001b[K5\r56789abcdefghij"
+        },
+        {
+          "action": "home",
+          "input": "\u0001",
+          "output": "\u001b[A\b\b\b\b\b\b"
+        },
+        {
+          "action": "delete a",
+          "input": "\u0004",
+          "output": "\u001b[P\u001b[30C56\u001b[P\u001b[13C \u001b[A\b\b\b\b\b\b"
+        },
+        {
+          "action": "insert X",
+          "input": "X",
+          "output": "Xbcdefghijklmnopqrstuvwxyz0123456789abcdefghij\u001b[A\b\b\b\b\b"
+        },
+        {
+          "action": "end",
+          "input": "\u0005",
+          "output": "\u001b[1B\u001b[5C"
+        },
+        {
+          "action": "backspace j",
+          "input": "",
+          "output": "\b \b"
+        }
+      ],
+      "expected": "SIK 🔧 > Xbcdefghijklmnopqrstuvwxyz0123456789abcdefghi",
+      "cursor": {
+        "x": 14,
+        "y": 1
+      }
+    }
+  ]
+}

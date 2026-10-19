@@ -53,3 +53,21 @@ Windows 창은 처음 표시하기 전에 `setAppDetails`로 기존 앱 ID, ICO 
 0.3.1은 앱 아이콘과 별도로 서버 OS용 SVG 로고를 사용한다. Alpine은 파랑, CentOS는 노랑, Red Hat은 빨강, Rocky는 초록, Ubuntu는 주황으로 구분한다. Debian·Fedora·Linux·macOS·Windows도 제공한다. 호스트 목록·파일 패널·연결 선택 창에서 같은 컴포넌트를 사용하며 감지 실패는 공통 서버 아이콘으로 표시한다.
 
 [SVG 자산](../src/renderer/assets/os/) · [출처와 고지](../licenses/os-icons/SOURCE.md) · [오픈소스 고지](../THIRD_PARTY_NOTICES.md#운영체제-아이콘).
+
+## 로컬 작업 아이콘
+
+**작업 탭 편집 → 아이콘 → 로컬**은 아이콘 56개를 제공한다. 검색창에서 영문 이름·한글 별칭을 입력하거나 분류를 골라 찾는다. `GPT`, `파이썬`, `도커`, `Node JS`처럼 검색할 수 있다. 검색·분류 변경은 현재 선택값을 바꾸지 않는다.
+
+| 분류 | 아이콘 |
+| --- | --- |
+| AI 도구 (16) | ChatGPT / GPT, Codex, Claude, Gemini, GitHub Copilot, Cursor, Ollama, OpenCode, Cline, DeepSeek, Grok, Perplexity, Qwen, Hugging Face, LM Studio, Windsurf |
+| 개발 도구 (12) | GitHub, GitLab, VS Code, IntelliJ IDEA, Neovim, Docker, Kubernetes, Postman, Jenkins, Terraform, Vercel, Figma |
+| 언어·프레임워크 (12) | Python, JavaScript, TypeScript, Node.js, React, Vue.js, Next.js, Go, Rust, Java, Kotlin, Swift |
+| 데이터·인프라 (8) | PostgreSQL, MySQL, SQLite, Redis, MongoDB, Supabase, Firebase, Nginx |
+| 기본 작업 (8) | 터미널, 프로젝트, 코드, Git, 컨테이너, 데이터베이스, 브라우저, 패키지 |
+
+자동 아이콘을 쓰는 로컬 탭은 편집 창을 열면 로컬 분류를 먼저 보여 준다. 선택은 미리보기에 즉시 표시하며 **적용** 뒤 탭에 반영하고 재시작·템플릿·백업에 보존한다.
+
+AI SVG는 Lobe Icons, 개발 도구·언어·데이터 SVG는 Devicon의 고정 커밋에서 원본 그대로 포함하고 두 테마에서 흰색 타일에 표시한다. 일반 작업 심벌은 기존 Lucide 컴포넌트를 사용한다. 외부 이미지 요청이나 AI 도구 실행은 발생하지 않는다.
+
+[SVG 자산](../src/renderer/assets/local/) · [출처와 해시](../licenses/local-icons/SOURCE.md) · [오픈소스 고지](../THIRD_PARTY_NOTICES.md#로컬-작업-아이콘).

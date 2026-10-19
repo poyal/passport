@@ -1,0 +1,101 @@
+{
+  "checkedAt": "2026-10-19T01:38:21.402757+00:00",
+  "purpose": "Expand local icon picker from 16 to 56 with search and categories",
+  "source": "local",
+  "sourceCommit": "0d1951a66c0fa7b998a372f792860ef466130123",
+  "dirty": true,
+  "buildSourceFingerprint": "6bf31cf50f13b7d7d2c6cc8f89feea78cc4724a9221677b2529c2c1b563fcfce",
+  "platform": "mac-arm64",
+  "status": "verified-targeted-preview",
+  "counts": {
+    "total": 56,
+    "ai": 16,
+    "tools": 12,
+    "languages": 12,
+    "data": 8,
+    "work": 8,
+    "vendoredSVGs": 48
+  },
+  "search": {
+    "caseInsensitive": true,
+    "ignoresSpacesAndPunctuation": true,
+    "koreanAliases": true,
+    "categoryFilter": true,
+    "preservesDraftSelection": true,
+    "enterDoesNotSubmit": true
+  },
+  "verification": {
+    "types": "passed",
+    "unit": {
+      "passed": 7,
+      "file": "tests/workspace-templates.test.ts",
+      "localKindsRoundTripped": 55
+    },
+    "sourceGui": "release/checks/20261019T013537Z-0d1951a-dirty-mac-arm64-e2e-hidden",
+    "packagedGui": "release/checks/20261019T013714Z-0d1951a-dirty-mac-arm64-e2e-hidden",
+    "guiCasesPerRun": 2,
+    "smoke": {
+      "packagedSmoke": "passed",
+      "localPTY": "passed",
+      "bundledHelper": "passed",
+      "shutdown": "passed",
+      "exitCode": 0,
+      "appVersion": "1.3.1-dev",
+      "arch": "arm64",
+      "platform": "darwin",
+      "hosts": 0,
+      "fonts": 247,
+      "version": 2,
+      "nodeAvailable": false
+    },
+    "assets": {
+      "signature": "passed (ad-hoc)",
+      "bundledAttributionFiles": 5,
+      "verifiedSVGs": 48
+    },
+    "scope": "Targeted Mac arm64 preview; Windows native and full release verification pending"
+  },
+  "files": [
+    {
+      "path": "release/builds/20261019T013612Z-0d1951a-dirty-mac-arm64-dev/mac-arm64/Passport-dev.app/Contents/MacOS/Passport-dev",
+      "bytes": 34816,
+      "sha256": "ca1c7df92709d40554340a98760143c30a6f40c016d3b69fffcc62814bd66bfe"
+    },
+    {
+      "path": "release/builds/20261019T013612Z-0d1951a-dirty-mac-arm64-dev/mac-arm64/Passport-dev.app/Contents/Resources/app.asar",
+      "bytes": 95371769,
+      "sha256": "b524f67d7d6ec2f708e4ca8484e7208b113575755aaaf699240b69df5c83b09f"
+    },
+    {
+      "path": "release/builds/20261019T013612Z-0d1951a-dirty-mac-arm64-dev/mac-arm64/Passport-dev.app/Contents/Resources/terminal/helper/darwin-arm64/passport",
+      "bytes": 451024,
+      "sha256": "9b5553a1523777e52d67f08f8efb6a85f92f7ad4010f90915b4153db96d18a93"
+    }
+  ],
+  "screenshots": "release/checks/20261019T013714Z-0d1951a-dirty-mac-arm64-e2e-hidden/results/workspace-management-local-f088c-llation-and-compact-layouts/",
+  "appLink": {
+    "path": "release/builds/Passport.app",
+    "target": "20261019T013612Z-0d1951a-dirty-mac-arm64-dev/mac-arm64/Passport-dev.app",
+    "previousTarget": "20261019T012350Z-0d1951a-dirty-mac-arm64-dev/mac-arm64/Passport-dev.app"
+  },
+  "retention": {
+    "newBuildKiB": 430068,
+    "keep": [
+      "release/builds/20261019T013612Z-0d1951a-dirty-mac-arm64-dev",
+      "release/builds/20261019T012350Z-0d1951a-dirty-mac-arm64-dev",
+      "release/checks/20261019T013537Z-0d1951a-dirty-mac-arm64-e2e-hidden",
+      "release/checks/20261019T013714Z-0d1951a-dirty-mac-arm64-e2e-hidden"
+    ],
+    "reviewCandidates": [
+      "release/builds/20261019T013435Z-0d1951a-dirty-mac-arm64-dev"
+    ],
+    "candidateReason": "Superseded before final validation by Enter protection; never linked as the preview app. Older builds with unresolved issue #7 evidence remain protected. No deletion requested or performed.",
+    "deleted": []
+  },
+  "installedAppChanged": false,
+  "limits": [
+    "Windows native verification pending",
+    "No visible or desktop E2E",
+    "No full release verification or publication"
+  ]
+}

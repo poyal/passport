@@ -34,6 +34,10 @@ Alpine Linux, CentOS, Red Hat, Rocky Linux, Ubuntu, Debian, Fedora, Linux, Apple
 
 원본 출처, 개별 라이선스 정보와 고지는 `licenses/os-icons/` 및 설치본의 `dist/licenses/os-icons/`에 포함합니다.
 
+## 로컬 작업 아이콘
+
+AI 도구 SVG 16개는 [Lobe Icons](https://github.com/lobehub/lobe-icons/tree/8a1b2821bb768c484fe8da20c5e1838b6bf551a9)의 원본을 포함합니다. Copyright (c) 2023 LobeHub, MIT License. 개발 도구·언어·데이터 SVG 32개는 [Devicon](https://github.com/devicons/devicon/tree/6a37858047b0e8d9c9c0e68f4a071fc410652e89)의 원본을 포함합니다. Copyright (c) 2015 konpa, MIT License. 출처·파일 해시·두 라이선스는 `licenses/local-icons/`와 설치본의 `dist/licenses/local-icons/`에 포함합니다. 브랜드 이름과 상표의 권리는 각 소유자에게 있으며, 아이콘 표시는 해당 도구와의 제휴나 자동 연동을 뜻하지 않습니다. 일반 작업 아이콘은 기존 `lucide-react`를 사용합니다.
+
 ## Windows 셸 런타임과 네이티브 helper
 
 Windows Passport Bash는 [Git for Windows Portable 2.56.0.windows.2](https://github.com/git-for-windows/git/releases/tag/v2.56.0.windows.2)을 포함한다. 정확한 대상 파일과 SHA-256은 `resources/terminal/runtime-manifest.json`에 있다. Git·Bash·MSYS2·GNU 도구·OpenSSH 등 각 구성요소의 원본 라이선스와 배포물 고지는 런타임 디렉터리에 유지한다. 업스트림 소스·패키지 정보는 [Git for Windows 소스](https://github.com/git-for-windows/git/tree/v2.56.0.windows.2), [Git for Windows 패키지 저장소](https://github.com/git-for-windows/MSYS2-packages), [패키징 스크립트](https://github.com/git-for-windows/build-extra)를 따른다. 공개 Windows 배포 시 해당 바이너리에 대응하는 구성요소별 소스 제공 의무를 별도로 확인한다.

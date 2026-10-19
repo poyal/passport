@@ -1,6 +1,7 @@
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import { SerializeAddon } from "@xterm/addon-serialize";
+import { configureTerminalUnicode } from "./terminal-unicode";
 import { highlightTerminal } from "./highlights";
 import {
   shortcutMatch,
@@ -95,6 +96,7 @@ export function ensureTerminal(id: string) {
       },
     },
   });
+  configureTerminalUnicode(term);
   const fit = new FitAddon(),
     search = new SearchAddon();
   term.loadAddon(fit);

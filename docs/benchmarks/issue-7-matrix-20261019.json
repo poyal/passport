@@ -1,0 +1,637 @@
+{
+  "issue": "https://github.com/poyal/passport/issues/7",
+  "checkedAt": "2026-10-19T00:54:37.472610+00:00",
+  "status": "expanded characterization complete; issue unresolved",
+  "diagnosticSourceCommit": "0d1951a66c0fa7b998a372f792860ef466130123",
+  "dirty": true,
+  "app": {
+    "version": "1.3.1",
+    "path": "/Applications/Passport.app/Contents/MacOS/Passport",
+    "asarSha256": "c7f40ce3ca0aff815499c2f43753e74199e07845d4b0c1f5099ba48f2b890e9f",
+    "sourceProvenance": "Installed application identified by package version and app.asar hash; binary commit not inferred from version alone"
+  },
+  "environment": {
+    "os": "macOS 27.0.1 (26A434)",
+    "arch": "arm64",
+    "zsh": "5.9 (arm64-apple-darwin26.0)",
+    "theme": "agnoster",
+    "ohMyZshCommit": "964ddf789b022b6958b27d02d7fa54f552de21e9",
+    "plugins": [
+      "git",
+      "zsh-syntax-highlighting 0.8.0",
+      "zsh-autosuggestions 0.7.1"
+    ],
+    "loadOrder": [
+      "oh-my-zsh",
+      "zsh-syntax-highlighting",
+      "zsh-autosuggestions",
+      "custom prompt_context"
+    ],
+    "locale": "en_US.UTF-8",
+    "font": "JetBrains Mono 14",
+    "mode": "hidden",
+    "fontSettings": [
+      "JetBrains Mono 14",
+      "Menlo 14",
+      "Cascadia Mono 14",
+      "JetBrains Mono 18"
+    ],
+    "windowContentWidths": [
+      1000,
+      1440
+    ],
+    "boundaryTerminalColumns": [
+      95,
+      140
+    ]
+  },
+  "scope": {
+    "uniqueScenarios": 86,
+    "matrixCases": 78,
+    "focusedCases": 8,
+    "shellBufferScenarios": 84,
+    "shellBufferMismatchCases": 0,
+    "vimSaveScenarios": 2,
+    "vimSavedFileMismatchCases": 0,
+    "fullMatrixRawDisplayDiscrepancyCases": 31,
+    "focusedDisplayFindingCases": 4,
+    "countNote": "Observed behavior, not independent bugs or a clean regression pass. Generic DOM equality differs from buffer for shell-rendered ZWJ notation; multiline and Vim use separate checks."
+  },
+  "groups": [
+    {
+      "group": "fonts",
+      "cases": 4,
+      "rawDisplayDiscrepancyCases": 2,
+      "inputBufferMismatchCases": 0,
+      "discrepancyCaseIds": [
+        "font-Cascadia-Mono-emoji",
+        "font-Menlo-emoji"
+      ]
+    },
+    {
+      "group": "paste",
+      "cases": 4,
+      "rawDisplayDiscrepancyCases": 1,
+      "inputBufferMismatchCases": 0,
+      "discrepancyCaseIds": [
+        "paste-long-emoji"
+      ]
+    },
+    {
+      "group": "plugins",
+      "cases": 12,
+      "rawDisplayDiscrepancyCases": 6,
+      "inputBufferMismatchCases": 0,
+      "discrepancyCaseIds": [
+        "plugins-agnoster-emoji",
+        "plugins-autosuggest-emoji",
+        "plugins-highlight-emoji",
+        "plugins-original-emoji",
+        "plugins-plain-emoji",
+        "plugins-reversed-emoji"
+      ]
+    },
+    {
+      "group": "prompt-characters",
+      "cases": 26,
+      "rawDisplayDiscrepancyCases": 7,
+      "inputBufferMismatchCases": 0,
+      "discrepancyCaseIds": [
+        "chars-flag-long",
+        "chars-jamo-long",
+        "chars-laptop-long",
+        "chars-rocket-long",
+        "chars-skin-long",
+        "chars-wrench-long",
+        "chars-zwj-long"
+      ]
+    },
+    {
+      "group": "unicode-input",
+      "cases": 10,
+      "rawDisplayDiscrepancyCases": 6,
+      "inputBufferMismatchCases": 0,
+      "discrepancyCaseIds": [
+        "input-emoji-paste",
+        "input-emoji-text",
+        "input-jamo-paste",
+        "input-jamo-text",
+        "input-zwj-paste",
+        "input-zwj-text"
+      ]
+    },
+    {
+      "group": "view-changes",
+      "cases": 10,
+      "rawDisplayDiscrepancyCases": 5,
+      "inputBufferMismatchCases": 0,
+      "discrepancyCaseIds": [
+        "view-font-size-emoji",
+        "view-resize-narrow-emoji",
+        "view-resize-wide-emoji",
+        "view-split-emoji",
+        "view-tab-switch-emoji"
+      ]
+    },
+    {
+      "group": "wrap-boundary",
+      "cases": 12,
+      "rawDisplayDiscrepancyCases": 4,
+      "inputBufferMismatchCases": 0,
+      "discrepancyCaseIds": [
+        "boundary-1000-0-emoji",
+        "boundary-1000-1-emoji",
+        "boundary-1440-0-emoji",
+        "boundary-1440-1-emoji"
+      ]
+    }
+  ],
+  "focusedResults": [
+    {
+      "id": "ssh-original-ascii",
+      "group": "ssh",
+      "inputCorruption": false,
+      "evidence": "release/checks/20261019T004026Z-0d1951a-dirty-mac-arm64-issue7-matrix/case-results/ssh-original-ascii.json",
+      "displayFinding": false,
+      "transport": "Passport SSH client -> loopback ssh2 server -> real macOS zsh PTY; not a Linux or Windows host",
+      "screenshots": [
+        "release/checks/20261019T004754Z-0d1951a-dirty-mac-arm64-e2e-hidden/results/focused-ssh-original-ascii/typed.png",
+        "release/checks/20261019T004754Z-0d1951a-dirty-mac-arm64-e2e-hidden/results/focused-ssh-original-ascii/edited.png"
+      ]
+    },
+    {
+      "id": "ssh-original-emoji",
+      "group": "ssh",
+      "inputCorruption": false,
+      "evidence": "release/checks/20261019T004026Z-0d1951a-dirty-mac-arm64-issue7-matrix/case-results/ssh-original-emoji.json",
+      "displayFinding": true,
+      "transport": "Passport SSH client -> loopback ssh2 server -> real macOS zsh PTY; not a Linux or Windows host",
+      "screenshots": [
+        "release/checks/20261019T004754Z-0d1951a-dirty-mac-arm64-e2e-hidden/results/focused-ssh-original-emoji/typed.png",
+        "release/checks/20261019T004754Z-0d1951a-dirty-mac-arm64-e2e-hidden/results/focused-ssh-original-emoji/edited.png"
+      ]
+    },
+    {
+      "id": "ssh-plain-ascii",
+      "group": "ssh",
+      "inputCorruption": false,
+      "evidence": "release/checks/20261019T004026Z-0d1951a-dirty-mac-arm64-issue7-matrix/case-results/ssh-plain-ascii.json",
+      "displayFinding": false,
+      "transport": "Passport SSH client -> loopback ssh2 server -> real macOS zsh PTY; not a Linux or Windows host",
+      "screenshots": [
+        "release/checks/20261019T004754Z-0d1951a-dirty-mac-arm64-e2e-hidden/results/focused-ssh-plain-ascii/typed.png",
+        "release/checks/20261019T004754Z-0d1951a-dirty-mac-arm64-e2e-hidden/results/focused-ssh-plain-ascii/edited.png"
+      ]
+    },
+    {
+      "id": "ssh-plain-emoji",
+      "group": "ssh",
+      "inputCorruption": false,
+      "evidence": "release/checks/20261019T004026Z-0d1951a-dirty-mac-arm64-issue7-matrix/case-results/ssh-plain-emoji.json",
+      "displayFinding": true,
+      "transport": "Passport SSH client -> loopback ssh2 server -> real macOS zsh PTY; not a Linux or Windows host",
+      "screenshots": [
+        "release/checks/20261019T004754Z-0d1951a-dirty-mac-arm64-e2e-hidden/results/focused-ssh-plain-emoji/typed.png",
+        "release/checks/20261019T004754Z-0d1951a-dirty-mac-arm64-e2e-hidden/results/focused-ssh-plain-emoji/edited.png"
+      ]
+    },
+    {
+      "id": "vim-ascii",
+      "group": "vim",
+      "inputCorruption": false,
+      "evidence": "release/checks/20261019T004026Z-0d1951a-dirty-mac-arm64-issue7-matrix/case-results/vim-ascii.json",
+      "displayFinding": false,
+      "savedFileMatches": true,
+      "editedScreenMatches": true,
+      "initialScreenMatches": null,
+      "initialScreen": null,
+      "editedScreen": "head-Z-tail",
+      "screenshots": [
+        "release/checks/20261019T004754Z-0d1951a-dirty-mac-arm64-e2e-hidden/results/focused-vim-ascii/vim-edited.png"
+      ]
+    },
+    {
+      "id": "vim-emoji",
+      "group": "vim",
+      "inputCorruption": false,
+      "evidence": "release/checks/20261019T004026Z-0d1951a-dirty-mac-arm64-issue7-matrix/case-results/vim-emoji.json",
+      "displayFinding": true,
+      "savedFileMatches": true,
+      "editedScreenMatches": true,
+      "initialScreenMatches": false,
+      "initialScreen": "head-💻 -tail",
+      "editedScreen": "head-Z-tail",
+      "screenshots": [
+        "release/checks/20261019T005008Z-0d1951a-dirty-mac-arm64-e2e-hidden/results/focused-vim-emoji/vim-initial.png",
+        "release/checks/20261019T005008Z-0d1951a-dirty-mac-arm64-e2e-hidden/results/focused-vim-emoji/vim-edited.png"
+      ]
+    },
+    {
+      "id": "multiline-ascii",
+      "group": "multiline-paste",
+      "inputCorruption": false,
+      "evidence": "release/checks/20261019T004026Z-0d1951a-dirty-mac-arm64-issue7-matrix/case-results/multiline-ascii.json",
+      "displayFinding": false,
+      "stages": [
+        {
+          "stage": "multiline",
+          "expected": "line-one-한글\nline-two-💻\nline-three-end",
+          "display": "line-one-한글\nline-two-💻\nline-three-end",
+          "displayMatches": true,
+          "inputMatches": true,
+          "screenshot": "release/checks/20261019T005008Z-0d1951a-dirty-mac-arm64-e2e-hidden/results/focused-multiline-ascii/multiline.png"
+        },
+        {
+          "stage": "edited",
+          "expected": "line-one-한글\nline-two-💻\nline-three-en",
+          "display": "line-one-한글\nline-two-💻\nline-three-en",
+          "displayMatches": true,
+          "inputMatches": true,
+          "screenshot": "release/checks/20261019T005008Z-0d1951a-dirty-mac-arm64-e2e-hidden/results/focused-multiline-ascii/edited.png"
+        }
+      ],
+      "comparisonNote": "Preserve explicit newlines; the generic flattened DOM comparison is not used to classify multiline cases."
+    },
+    {
+      "id": "multiline-emoji",
+      "group": "multiline-paste",
+      "inputCorruption": false,
+      "evidence": "release/checks/20261019T004026Z-0d1951a-dirty-mac-arm64-issue7-matrix/case-results/multiline-emoji.json",
+      "displayFinding": true,
+      "stages": [
+        {
+          "stage": "multiline",
+          "expected": "line-one-한글\nline-two-💻\nline-three-end",
+          "display": "lline-one-한글\nline-two-💻\nline-three-end",
+          "displayMatches": false,
+          "inputMatches": true,
+          "screenshot": "release/checks/20261019T005008Z-0d1951a-dirty-mac-arm64-e2e-hidden/results/focused-multiline-emoji/multiline.png"
+        },
+        {
+          "stage": "edited",
+          "expected": "line-one-한글\nline-two-💻\nline-three-en",
+          "display": "lline-one-한글\nline-two-💻\nline-three-en",
+          "displayMatches": false,
+          "inputMatches": true,
+          "screenshot": "release/checks/20261019T005008Z-0d1951a-dirty-mac-arm64-e2e-hidden/results/focused-multiline-emoji/edited.png"
+        }
+      ],
+      "comparisonNote": "Preserve explicit newlines; the generic flattened DOM comparison is not used to classify multiline cases."
+    }
+  ],
+  "findings": [
+    "All 13 prompt tokens were normal with short input. Long input produced discrepancies for laptop, wrench, rocket, flag, ZWJ emoji, skin-tone emoji, and decomposed Hangul jamo.",
+    "ASCII, composed Hangul, Chinese, accented e, combining-accent e, and the tested heart variation sequence were normal in the tested prompt cases.",
+    "Emoji prompt corruption persists with plugin order reversed, either plugin alone, agnoster alone, and plain zsh. All corresponding ASCII controls were normal.",
+    "At both 95 and 140 columns, the simple emoji prompt reproduced at the wrap boundary and one character beyond; one character before remained normal.",
+    "With an ASCII prompt, long decomposed Hangul, laptop emoji and ZWJ command text showed discrepancies via completed-text input and app paste. Composed Hangul and combining-accent input were normal.",
+    "Resizing narrower/wider, increasing font size and splitting the pane temporarily restored the emoji command display; subsequent editing reproduced corruption. Tab switching preserved corruption.",
+    "Menlo and bundled Cascadia Mono settings both reproduced emoji prompt corruption. Font selection is not an established remedy.",
+    "Ctrl+L restored all tested prompt-character cases, but did not restore every wrap-boundary and Unicode-input case. It is not a general fix.",
+    "The real Passport SSH client to a loopback server backed by a macOS zsh PTY reproduced both plain and original-plugin emoji cases; ASCII controls were normal.",
+    "Multiline paste with the emoji prompt displayed lline-one while the actual buffer began line-one; the ASCII prompt control was normal.",
+    "Vim displayed head-💻 -tail for head-💻-tail. Replacing the emoji with ASCII produced the expected screen and saved head-Z-tail. No saved-file corruption in these fixtures.",
+    "All 84 shell-buffer scenarios retained expected input and both Vim fixtures saved expected contents; untested conditions are not covered."
+  ],
+  "outputAttribution": {
+    "cases": [
+      "chars-flag-long",
+      "chars-jamo-long",
+      "input-jamo-paste",
+      "input-zwj-paste"
+    ],
+    "zwj": "Literal <200d> notation is already present in zsh PTY output. That representation itself is not a Passport bug. Stale text and displaced prompt are separate findings.",
+    "jamo": "PTY output includes all decomposed Hangul codepoints. GUI text drops some jamo and displaces the prompt. Pure xterm buffer replay retains more codepoints than the GUI; exact renderer/width cause remains unresolved.",
+    "replay": {
+      "xtermVersion": "6.0.0",
+      "unicodeVersion": "6",
+      "stages": 12,
+      "chunkModes": [
+        "coalesced",
+        "original-events"
+      ],
+      "comparisons": 24,
+      "screenMatches": 18,
+      "mismatches": "All 6 comparisons for the 3 jamo-input stages; both chunk modes. Trailing spaces normalized."
+    },
+    "widthComparison": "macOS libc wcswidth is not zsh prompt-width or graphical grapheme-shaping ground truth. Laptop/wrench/rocket differ (xterm 1, libc 2); flag and decomposed Hangul total widths match libc yet still reproduce.",
+    "rejectedProbe": "Attempted zsh prompt-width conditional probe failed calibration and timed out for some inputs. Its numbers are not used.",
+    "fixStatus": "No product fix. Official Unicode11 addon and grapheme providers were not installed or validated; simple width overrides from prior investigation are diagnostic only."
+  },
+  "runs": [
+    {
+      "path": "release/checks/20261019T004215Z-0d1951a-dirty-mac-arm64-e2e-hidden",
+      "role": "smoke subset",
+      "status": "passed",
+      "stats": {
+        "startTime": "2026-10-19T00:42:15.846Z",
+        "duration": 10279.782000000001,
+        "expected": 5,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "lifecycle": {
+        "launches": 1,
+        "windows": 1,
+        "exits": 1,
+        "reusedTests": 4,
+        "auditedShutdowns": 1,
+        "shown": 0,
+        "focused": 0
+      },
+      "rawLifecycleEventCounts": {
+        "launch": 1,
+        "window": 1,
+        "reuse": 4,
+        "exit": 1,
+        "shutdown-audit": 1
+      }
+    },
+    {
+      "path": "release/checks/20261019T004238Z-0d1951a-dirty-mac-arm64-e2e-hidden",
+      "role": "full 78-case matrix",
+      "status": "passed",
+      "stats": {
+        "startTime": "2026-10-19T00:42:38.703Z",
+        "duration": 129684.773,
+        "expected": 78,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "lifecycle": {
+        "launches": 1,
+        "windows": 1,
+        "exits": 1,
+        "reusedTests": 77,
+        "auditedShutdowns": 1,
+        "shown": 0,
+        "focused": 0
+      },
+      "rawLifecycleEventCounts": {
+        "launch": 1,
+        "window": 1,
+        "reuse": 77,
+        "exit": 1,
+        "shutdown-audit": 1
+      }
+    },
+    {
+      "path": "release/checks/20261019T004754Z-0d1951a-dirty-mac-arm64-e2e-hidden",
+      "role": "focused initial: SSH 4 and Vim ASCII completed; Vim emoji readiness failed; multiline 2 not run",
+      "status": "failed",
+      "stats": {
+        "startTime": "2026-10-19T00:47:55.240Z",
+        "duration": 13484.279,
+        "expected": 5,
+        "skipped": 2,
+        "unexpected": 1,
+        "flaky": 0
+      },
+      "lifecycle": {
+        "launches": 1,
+        "windows": 1,
+        "exits": 1,
+        "reusedTests": 5,
+        "auditedShutdowns": 1,
+        "shown": 0,
+        "focused": 0
+      },
+      "rawLifecycleEventCounts": {
+        "launch": 1,
+        "window": 1,
+        "reuse": 5,
+        "exit": 1,
+        "shutdown-audit": 1
+      }
+    },
+    {
+      "path": "release/checks/20261019T005008Z-0d1951a-dirty-mac-arm64-e2e-hidden",
+      "role": "focused remaining 3: Vim emoji and multiline 2",
+      "status": "passed",
+      "stats": {
+        "startTime": "2026-10-19T00:50:08.987Z",
+        "duration": 4511.621,
+        "expected": 3,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "lifecycle": {
+        "launches": 1,
+        "windows": 1,
+        "exits": 1,
+        "reusedTests": 2,
+        "auditedShutdowns": 1,
+        "shown": 0,
+        "focused": 0
+      },
+      "rawLifecycleEventCounts": {
+        "launch": 1,
+        "window": 1,
+        "reuse": 2,
+        "exit": 1,
+        "shutdown-audit": 1
+      }
+    },
+    {
+      "path": "release/checks/20261019T005115Z-0d1951a-dirty-mac-arm64-e2e-hidden",
+      "role": "PTY output attribution: repeat 4 existing cases",
+      "status": "passed",
+      "stats": {
+        "startTime": "2026-10-19T00:51:15.711Z",
+        "duration": 8032.651999999999,
+        "expected": 4,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "lifecycle": {
+        "launches": 1,
+        "windows": 1,
+        "exits": 1,
+        "reusedTests": 3,
+        "auditedShutdowns": 1,
+        "shown": 0,
+        "focused": 0
+      },
+      "rawLifecycleEventCounts": {
+        "launch": 1,
+        "window": 1,
+        "reuse": 3,
+        "exit": 1,
+        "shutdown-audit": 1
+      }
+    }
+  ],
+  "lifecycleTotal": {
+    "launches": 5,
+    "windows": 5,
+    "exits": 5,
+    "reusedTests": 91,
+    "auditedShutdowns": 5,
+    "shown": 0,
+    "focused": 0
+  },
+  "testHarnessNotes": [
+    "Hidden installed app with isolated app data, ZDOTDIR, history, completion dump, plugin cache, project directory and ephemeral SSH server.",
+    "reusableApp resets app state and clipboard.terminal mocks between cases. SSH server, clients and native PTYs explicitly close. Output listeners are removed.",
+    "Only clipboard reading is mocked; paste uses the actual terminal path. General system clipboard is unchanged.",
+    "Vim emoji exact-text readiness exposed the unexpected display space. Readiness was separated from display correctness, initial screenshot retained, and only failed/unrun scenarios rerun. Original failed run retained.",
+    "Diagnostic tests collect discrepancies. E2E runner passed means evidence collection completed, not that issue 7 is fixed."
+  ],
+  "limitations": [
+    "Unknown reporter Oh My Zsh revision; pinned current upstream revision",
+    "pyenv, nvm and Homebrew shellenv are not loaded",
+    "Named directory shortens isolated working path; user home and shell files unchanged",
+    "No physical desktop focus/IME test",
+    "No Windows test",
+    "No product fix implemented",
+    "Completed-text injection does not exercise physical macOS IME composition.",
+    "SSH fixture is loopback macOS zsh, not Linux, network fault testing, or a Windows host.",
+    "Not exhaustive Unicode or TUI coverage; no tmux, nano, PowerShell or Bash in this expansion.",
+    "No product build, dependency installation, application replacement or publication in this expansion."
+  ],
+  "evidenceDirectory": "release/checks/20261019T004026Z-0d1951a-dirty-mac-arm64-issue7-matrix",
+  "sourceBuild": "Not used: npm run build failed because local node_modules lacks @tiptap packages",
+  "retention": {
+    "reason": "Unresolved issue 7 reproduction evidence",
+    "paths": [
+      "release/checks/20261019T004026Z-0d1951a-dirty-mac-arm64-issue7-matrix",
+      "release/checks/20261019T004215Z-0d1951a-dirty-mac-arm64-e2e-hidden",
+      "release/checks/20261019T004238Z-0d1951a-dirty-mac-arm64-e2e-hidden",
+      "release/checks/20261019T004754Z-0d1951a-dirty-mac-arm64-e2e-hidden",
+      "release/checks/20261019T005008Z-0d1951a-dirty-mac-arm64-e2e-hidden",
+      "release/checks/20261019T005115Z-0d1951a-dirty-mac-arm64-e2e-hidden"
+    ],
+    "cleanupCandidates": [],
+    "deleted": []
+  },
+  "evidenceSha256": [
+    {
+      "path": "release/checks/20261019T004026Z-0d1951a-dirty-mac-arm64-issue7-matrix/matrix-full-run.spec.txt",
+      "sha256": "62515d322a083e80230b8fa0acdb6302a3e47dc59f84b12a976212e5add87069"
+    },
+    {
+      "path": "release/checks/20261019T004026Z-0d1951a-dirty-mac-arm64-issue7-matrix/matrix.spec.ts",
+      "sha256": "1d8f660b4a4f0b7af75ab306272ffb9a5c0bb4e26795e0e2400a1cb6a3e292fd"
+    },
+    {
+      "path": "release/checks/20261019T004026Z-0d1951a-dirty-mac-arm64-issue7-matrix/focused.spec.ts",
+      "sha256": "a6eab5758aee0ab863709a2142fc283114141eff210b1ea6f92072fc99622ca8"
+    },
+    {
+      "path": "release/checks/20261019T004026Z-0d1951a-dirty-mac-arm64-issue7-matrix/playwright.config.ts",
+      "sha256": "527fb19fee534cf6fa2e91e9b113465c3e97204109355ed4e80fb3b30522b997"
+    },
+    {
+      "path": "release/checks/20261019T004026Z-0d1951a-dirty-mac-arm64-issue7-matrix/focused.config.ts",
+      "sha256": "fbb2961addbcba82daf49d77153df835365487e8b8a3df215fbd068845a02697"
+    },
+    {
+      "path": "release/checks/20261019T004026Z-0d1951a-dirty-mac-arm64-issue7-matrix/matrix-results.json",
+      "sha256": "5055af522b551d0ee4fb86d765b3af3e44e791c0ff147063c1925e7c97ff1a7c"
+    },
+    {
+      "path": "release/checks/20261019T004026Z-0d1951a-dirty-mac-arm64-issue7-matrix/focused-summary.json",
+      "sha256": "74e9e642bd042e1c14ea3a744bdbe1d72f95dc16eccb985cd4c9370e6bd062e4"
+    },
+    {
+      "path": "release/checks/20261019T004026Z-0d1951a-dirty-mac-arm64-issue7-matrix/widths.json",
+      "sha256": "d22e351bfeac9a52d12143a8f6747c5907a84e6c3c365cce318f61783c3f7ae2"
+    },
+    {
+      "path": "release/checks/20261019T004026Z-0d1951a-dirty-mac-arm64-issue7-matrix/output-replay.json",
+      "sha256": "ed2e7b3c796090389e7b0cdfd3053b5de0cfa7c27c7c5f559a8672d409cd8f75"
+    },
+    {
+      "path": "release/checks/20261019T004026Z-0d1951a-dirty-mac-arm64-issue7-matrix/replay-output.cjs",
+      "sha256": "2f75d9f39819a82eae09494bea81b764359231e7ce1576099ed19c3e5813c239"
+    },
+    {
+      "path": "release/checks/20261019T004026Z-0d1951a-dirty-mac-arm64-issue7-matrix/rejected-width-probe.json",
+      "sha256": "48ac118477640560f37d8d08a1c6d419ed4017521daa295df528d8f26c876f0a"
+    },
+    {
+      "path": "release/checks/20261019T004026Z-0d1951a-dirty-mac-arm64-issue7-matrix/summarize.py",
+      "sha256": "d8e4a22d7fe46b1cc816f21b52e2b6c85ad27f3d91837863fdab8eedf906d882"
+    },
+    {
+      "path": "release/checks/20261019T004026Z-0d1951a-dirty-mac-arm64-issue7-matrix/trace-results/chars-jamo-long.json",
+      "sha256": "87d8de7adb7e73ddd90dad74c86987523de9c2bda752b749ab8d6dccf9b0bba6"
+    },
+    {
+      "path": "release/checks/20261019T004026Z-0d1951a-dirty-mac-arm64-issue7-matrix/trace-results/chars-flag-long.json",
+      "sha256": "6f5ca59ab0487976d8b2bcb7ac0e5b32883f8b63909663cfc2e7763818f7c7e5"
+    },
+    {
+      "path": "release/checks/20261019T004026Z-0d1951a-dirty-mac-arm64-issue7-matrix/trace-results/input-jamo-paste.json",
+      "sha256": "b884b0bfecc93f1d034a4d3d99aaca6699e5751c8722e32d3c51edecbffc5293"
+    },
+    {
+      "path": "release/checks/20261019T004026Z-0d1951a-dirty-mac-arm64-issue7-matrix/trace-results/input-zwj-paste.json",
+      "sha256": "07d1aa0bdf60d99421b6e0e85bf918640ba1d45fae09e63690b7d8aa8e494855"
+    },
+    {
+      "path": "release/checks/20261019T004215Z-0d1951a-dirty-mac-arm64-e2e-hidden/artifact.json",
+      "sha256": "e10495fbaf6e9a68646680fd47baa7355abca7a5eb2a02b035c103d4193122c9"
+    },
+    {
+      "path": "release/checks/20261019T004215Z-0d1951a-dirty-mac-arm64-e2e-hidden/report.json",
+      "sha256": "40098dcabe2167d87d3fd38258a0fd9f8506fbdd0885714313e45a469a64df82"
+    },
+    {
+      "path": "release/checks/20261019T004215Z-0d1951a-dirty-mac-arm64-e2e-hidden/lifecycle.jsonl",
+      "sha256": "1b3cbecdb4eef5097f7eb726728cba7ed0d8b51ae567075a1b835fad8b457791"
+    },
+    {
+      "path": "release/checks/20261019T004238Z-0d1951a-dirty-mac-arm64-e2e-hidden/artifact.json",
+      "sha256": "c49ca00182594d906550a8c6506c1c9791f2e4f8140e88017973f0e72f2bbd56"
+    },
+    {
+      "path": "release/checks/20261019T004238Z-0d1951a-dirty-mac-arm64-e2e-hidden/report.json",
+      "sha256": "b82c6231a6f0f8555d88b8755c7c97d0f6b4efad76f423136e22841564d5feba"
+    },
+    {
+      "path": "release/checks/20261019T004238Z-0d1951a-dirty-mac-arm64-e2e-hidden/lifecycle.jsonl",
+      "sha256": "a6b2c92c1690fbb2386dcaae056b63219c2289157ca0e945a93009f8c93a521e"
+    },
+    {
+      "path": "release/checks/20261019T004754Z-0d1951a-dirty-mac-arm64-e2e-hidden/artifact.json",
+      "sha256": "eaa872f0e445c1ff566bd689de3e6faff2d3201911f7bb01bc1e8c463189e94e"
+    },
+    {
+      "path": "release/checks/20261019T004754Z-0d1951a-dirty-mac-arm64-e2e-hidden/report.json",
+      "sha256": "d381a1d5d4c57abb17e9a7245275dc22626a30e0ec3cecc26f24a7e7183c58de"
+    },
+    {
+      "path": "release/checks/20261019T004754Z-0d1951a-dirty-mac-arm64-e2e-hidden/lifecycle.jsonl",
+      "sha256": "4e592549e4a5ce994bf3582c1cba6494a1bff1d27caeec41a03325464921a695"
+    },
+    {
+      "path": "release/checks/20261019T005008Z-0d1951a-dirty-mac-arm64-e2e-hidden/artifact.json",
+      "sha256": "f9134d0583cb305f392a3ab837acf25315152f3f5a655b305dbdbcf86feb00f3"
+    },
+    {
+      "path": "release/checks/20261019T005008Z-0d1951a-dirty-mac-arm64-e2e-hidden/report.json",
+      "sha256": "5ecd19e01a9e839c09691b2ec68889f8aa43d694609c3cddb6999e348901abc9"
+    },
+    {
+      "path": "release/checks/20261019T005008Z-0d1951a-dirty-mac-arm64-e2e-hidden/lifecycle.jsonl",
+      "sha256": "d4b6ce0b4b01043502dbc4510e3740b5ee227597f6168098addd1c45c16eacaa"
+    },
+    {
+      "path": "release/checks/20261019T005115Z-0d1951a-dirty-mac-arm64-e2e-hidden/artifact.json",
+      "sha256": "a91d9b6fdcaf5570722e68d24f3dc31395ecdc3b1c169defbff84822f300a5ea"
+    },
+    {
+      "path": "release/checks/20261019T005115Z-0d1951a-dirty-mac-arm64-e2e-hidden/report.json",
+      "sha256": "2c225db81d386ad9ad35dcd94c73d9e36d386c59811adc71a8d4e8c76a376fe0"
+    },
+    {
+      "path": "release/checks/20261019T005115Z-0d1951a-dirty-mac-arm64-e2e-hidden/lifecycle.jsonl",
+      "sha256": "ab467581153fabee177cada032e39a2890c52c825d1d1bb6ef3d70a6951dc0cd"
+    }
+  ]
+}

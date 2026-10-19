@@ -39,9 +39,11 @@ PASSPORT_E2E_EXECUTABLE="$PWD/release/builds/Passport.app/Contents/MacOS/Passpor
 
 `layout-drag.spec.ts`의 자기 자신 드롭 회귀는 로컬 탭·패널 헤더에서 시작한다. 드래그 중 데이터 보호 상태처럼 payload를 비우고 MIME 목록만 유지해 호버·드롭 허용 여부를 검사하며, 강제 drop에서도 배치와 문서 revision이 그대로인지 확인한다. 합성 DataTransfer의 dropEffect 값으로 네이티브 커서를 검증했다고 표시하지 않는다. 다른 로컬 탭의 정상 분할과 취소 후 안내 제거도 함께 확인한다.
 
-`workspace-management.spec.ts`는 파일당 앱 하나를 재사용한다. 상단 탭 설정·우클릭 편집과 더블클릭 비활성화, OS 타일/이모지 48개·색상·상단 색상·접힌 목록의 추가 패널 표시, 전역 기본 폴더의 새 세션 적용과 기존 세션 보존, 호스트 그룹 접힘·검색 복원, 정상 연결 보존과 인증 취소·실패 후 나머지 복구를 검사한다. Mac 붙여넣기 사례는 로컬 PTY에서 실제 OpenSSH를 loopback SSH fixture에 연결하고 bracketed paste 켜짐·꺼짐의 수신 바이트를 비교한다. 클립보드 읽기만 모의하고 일반 클립보드는 쓰지 않으며 fixture와 세션을 사례 종료 시 닫는다. 사용자 서버 접속이나 Windows OpenSSH 실기 검사로 표시하지 않는다.
+`workspace-management.spec.ts`는 파일당 앱 하나를 재사용한다. 상단 탭 설정·우클릭 편집과 더블클릭 비활성화, OS 타일/로컬 아이콘 56개/이모지 48개·색상·상단 색상·접힌 목록의 추가 패널 표시, 로컬 아이콘의 전체 자산 로딩·분류/영문·한글 검색·검색 결과 없음·키보드 선택·저장·다시 열기·취소·자동 복원과 두 테마·최소 창 크기, 전역 기본 폴더의 새 세션 적용과 기존 세션 보존, 호스트 그룹 접힘·검색 복원, 정상 연결 보존과 인증 취소·실패 후 나머지 복구를 검사한다. Mac 붙여넣기 사례는 로컬 PTY에서 실제 OpenSSH를 loopback SSH fixture에 연결하고 bracketed paste 켜짐·꺼짐의 수신 바이트를 비교한다. 클립보드 읽기만 모의하고 일반 클립보드는 쓰지 않으며 fixture와 세션을 사례 종료 시 닫는다. 사용자 서버 접속이나 Windows OpenSSH 실기 검사로 표시하지 않는다.
 
 ## 재사용 fixture의 계약
+
+`terminal-unicode.spec.ts`는 격리된 `ZDOTDIR`와 앱 하나를 재사용한다. macOS의 실제 zsh 입력 버퍼를 시험용 ZLE 위젯으로 읽어 이모지 프롬프트의 줄바꿈·편집·resize와 Unicode 붙여넣기를 화면과 대조한다. 입력을 실행하지 않으며 일반 클립보드는 변경하지 않는다. 공통 SSH 사례는 loopback fixture의 일반/대체 화면에서 이모지 뒤의 절대 커서 위치를 확인하고 세션과 서버를 닫는다. 모의 clipboard handler는 기존 복구 계약으로 초기화하고 시험용 셸 파일은 앱 종료 후 제거한다. 이 검사는 물리 IME나 Linux 셸의 실기 검증을 대신하지 않는다.
 
 구현은 [reusable-app.ts](../tests/fixtures/reusable-app.ts), 초기화 회귀는 [reuse.spec.ts](../tests/e2e/reuse.spec.ts)다.
 

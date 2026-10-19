@@ -15,6 +15,9 @@ await mkdir("dist/licenses", { recursive: true });
 await cp("licenses/fonts", "dist/licenses/fonts", { recursive: true });
 await cp("licenses/themes", "dist/licenses/themes", { recursive: true });
 await cp("licenses/os-icons", "dist/licenses/os-icons", { recursive: true });
+await cp("licenses/local-icons", "dist/licenses/local-icons", {
+  recursive: true,
+});
 async function locate(name, from) {
   let current = from;
   while (true) {

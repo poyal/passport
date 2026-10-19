@@ -12,6 +12,10 @@ import {
 } from "../../src/shared/model";
 import { LOCAL_HOST_ID } from "../../src/shared/advanced";
 import { defaultTerminalSettings } from "../../src/shared/terminal-config";
+import {
+  localIconKinds,
+  localIconNames,
+} from "../../src/shared/workspace-style";
 
 const suite = reusableApp({ name: "workspace-management" });
 const local = (): Pane => ({
@@ -24,6 +28,200 @@ const document = () =>
   suite.page.evaluate(
     async () => (await window.passport.call("bootstrap", undefined)).document,
   );
+
+test("local tool icons persist with category selection cancellation and compact layouts", async () => {
+  const { page, application } = suite;
+  const workspace: Workspace = {
+    id: id(),
+    name: "로컬 AI 작업",
+    root: local(),
+  };
+  await page.evaluate(async (workspace) => {
+    const boot = await window.passport.call("bootstrap", undefined);
+    boot.document.workspaces = [workspace];
+    await window.passport.call("save", boot.document);
+  }, workspace);
+  const tab = page.locator(".workspace-tab");
+  const editor = page.getByRole("dialog", { name: "작업 탭 편집" });
+  const open = async () => {
+    await tab.locator(".workspace-select").click();
+    await page
+      .locator(".view:not([hidden])")
+      .getByRole("button", { name: "탭 설정", exact: true })
+      .click();
+  };
+  await open();
+  await expect(
+    editor.getByRole("button", { name: "로컬", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    editor.locator(".workspace-local-picker .workspace-icon-choice"),
+  ).toHaveCount(56);
+  for (const kind of localIconKinds) {
+    const name = localIconNames[kind];
+    const choice = editor.getByRole("button", {
+      name: `${name} 아이콘`,
+      exact: true,
+    });
+    await choice.click();
+    await expect(choice).toHaveAttribute("aria-pressed", "true");
+    await expect(
+      editor.getByLabel("탭 미리보기").getByRole("img", { name, exact: true }),
+    ).toBeVisible();
+  }
+  await expect(editor.locator(".workspace-local-picker img")).toHaveCount(48);
+  await expect
+    .poll(() =>
+      editor
+        .locator(".workspace-local-picker img")
+        .evaluateAll((images) =>
+          images.every(
+            (image) =>
+              (image as HTMLImageElement).complete &&
+              (image as HTMLImageElement).naturalWidth > 0,
+          ),
+        ),
+    )
+    .toBe(true);
+  const search = editor.getByRole("searchbox", { name: "로컬 아이콘 검색" });
+  const category = editor.getByRole("combobox", { name: "로컬 아이콘 분류" });
+  await search.fill(" gPt ");
+  await search.press("Enter");
+  await expect(editor).toBeVisible();
+  expect((await document()).workspaces[0].icon).toBeUndefined();
+  await expect(
+    editor.locator(".workspace-local-picker .workspace-icon-choice"),
+  ).toHaveCount(1);
+  await expect(
+    editor.getByRole("button", { name: "ChatGPT / GPT 아이콘", exact: true }),
+  ).toBeVisible();
+  await search.fill("도커");
+  await category.selectOption("ai");
+  await expect(editor.getByRole("status")).toHaveText(
+    "일치하는 아이콘이 없습니다.",
+  );
+  await expect(
+    editor
+      .getByLabel("탭 미리보기")
+      .getByRole("img", { name: "패키지", exact: true }),
+  ).toBeVisible();
+  await category.selectOption("tools");
+  await expect(
+    editor.getByRole("button", { name: "Docker 아이콘", exact: true }),
+  ).toBeVisible();
+  await search.fill("없는아이콘");
+  await expect(editor.getByRole("status")).toBeVisible();
+  await category.selectOption("languages");
+  await search.fill("파이썬");
+  await expect(
+    editor.getByRole("button", { name: "Python 아이콘", exact: true }),
+  ).toBeVisible();
+  await search.fill("Node JS");
+  await expect(
+    editor.getByRole("button", { name: "Node.js 아이콘", exact: true }),
+  ).toBeVisible();
+  await search.fill("");
+  await category.selectOption("all");
+  await expect(
+    editor.locator(".workspace-local-picker .workspace-icon-choice"),
+  ).toHaveCount(56);
+  for (const [name, value] of [
+    ["ChatGPT / GPT", "chatgpt"],
+    ["Docker", "docker"],
+    ["Python", "python"],
+    ["PostgreSQL", "postgresql"],
+    ["Codex", "codex"],
+    ["Claude", "claude"],
+    ["Gemini", "gemini"],
+  ]) {
+    const choice = editor.getByRole("button", {
+      name: `${name} 아이콘`,
+      exact: true,
+    });
+    await choice.focus();
+    await page.keyboard.press("Space");
+    await editor.getByRole("button", { name: "적용", exact: true }).click();
+    expect((await document()).workspaces[0].icon).toEqual({
+      kind: "local",
+      local: value,
+    });
+    await page.reload();
+    await expect(tab.getByRole("img", { name, exact: true })).toBeVisible();
+    await open();
+    await expect(
+      editor.getByRole("button", { name: "로컬", exact: true }),
+    ).toHaveAttribute("aria-pressed", "true");
+    await expect(choice).toHaveAttribute("aria-pressed", "true");
+  }
+  for (const mode of ["light", "dark"] as const) {
+    await page.evaluate(async (mode) => {
+      const boot = await window.passport.call("bootstrap", undefined);
+      boot.document.settings.colorMode = mode;
+      await window.passport.call("save", boot.document);
+    }, mode);
+    for (const group of ["ai", "tools", "languages", "data", "work"]) {
+      await category.selectOption(group);
+      await editor.locator(".workspace-local-picker").scrollIntoViewIfNeeded();
+      await editor.screenshot({
+        path: test.info().outputPath(`local-icons-${group}-${mode}.png`),
+      });
+    }
+  }
+  await category.selectOption("all");
+  await application.evaluate(({ BrowserWindow }) =>
+    BrowserWindow.getAllWindows()[0].setContentSize(960, 640),
+  );
+  await editor
+    .getByRole("button", { name: "패키지 아이콘", exact: true })
+    .click();
+  const [dialogBox, applyBox] = await Promise.all([
+    editor.boundingBox(),
+    editor.getByRole("button", { name: "적용", exact: true }).boundingBox(),
+  ]);
+  expect(dialogBox!.y).toBeGreaterThanOrEqual(0);
+  expect(dialogBox!.y + dialogBox!.height).toBeLessThanOrEqual(
+    await page.evaluate(() => innerHeight),
+  );
+  expect(applyBox!.y + applyBox!.height).toBeLessThan(
+    dialogBox!.y + dialogBox!.height,
+  );
+  expect(await editor.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(
+    true,
+  );
+  await page.screenshot({
+    path: test.info().outputPath("local-icons-compact.png"),
+  });
+  await editor.getByRole("button", { name: "취소", exact: true }).click();
+  expect((await document()).workspaces[0].icon).toEqual({
+    kind: "local",
+    local: "gemini",
+  });
+  await open();
+  await editor.getByRole("button", { name: "운영체제", exact: true }).click();
+  await editor.getByRole("button", { name: "이모지", exact: true }).click();
+  await editor.getByRole("button", { name: "로컬", exact: true }).click();
+  await expect(
+    editor.getByRole("button", { name: "Gemini 아이콘", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await editor
+    .getByRole("button", { name: "터미널 아이콘", exact: true })
+    .click();
+  await editor.getByRole("button", { name: "적용", exact: true }).click();
+  expect((await document()).workspaces[0].icon).toEqual({ kind: "terminal" });
+  await open();
+  await expect(
+    editor.getByRole("button", { name: "로컬", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await editor
+    .getByRole("button", { name: "자동 · 첫 번째 패널", exact: true })
+    .click();
+  await editor.getByRole("button", { name: "적용", exact: true }).click();
+  expect((await document()).workspaces[0].icon).toBeUndefined();
+  await expect(tab.locator(".local-icon")).toHaveCount(0);
+  await application.evaluate(({ BrowserWindow }) =>
+    BrowserWindow.getAllWindows()[0].setContentSize(1100, 760),
+  );
+});
 
 test("workspace icon tiles emoji presets colors and extra panel counts survive editing and renderer reload", async () => {
   const { page, application } = suite;

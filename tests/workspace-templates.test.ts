@@ -6,6 +6,7 @@ import {
 } from "../src/shared/workspace-templates";
 import { panes } from "../src/shared/layout";
 import { migrateDocument } from "../src/shared/migration";
+import { localIconKinds } from "../src/shared/workspace-style";
 import {
   documentSchema,
   emptyDocument,
@@ -63,6 +64,56 @@ function fixture() {
   };
 }
 describe("saved workspaces", () => {
+  it("preserves local tool icons through migration, template copies and portable imports", async () => {
+    for (const local of localIconKinds) {
+      const { document } = fixture();
+      const source = document.workspaces[0];
+      source.icon = { kind: "local", local };
+      const copy = cloneWorkspaces(
+        [source],
+        source.id,
+        panes(source.root)[0].id,
+        id,
+      );
+      expect(copy.workspaces[0].icon).toEqual(source.icon);
+      expect(copy.workspaces[0].icon).not.toBe(source.icon);
+      document.workspaceTemplates[0] = {
+        ...document.workspaceTemplates[0],
+        ...copy,
+      };
+      expect(migrateDocument(document).workspaces[0].icon).toEqual(source.icon);
+      const restored = await decodePortable(
+        await encodePortable({
+          format: "passport",
+          version: 2,
+          document,
+          profiles: [],
+        }),
+      );
+      const merged = mergePortable(
+        emptyDocument(),
+        [],
+        restored,
+        "overwrite",
+      ).document;
+      expect(merged.workspaces[0].icon).toEqual(source.icon);
+      expect(merged.workspaceTemplates[0].workspaces[0].icon).toEqual(
+        source.icon,
+      );
+    }
+    const { document } = fixture();
+    expect(
+      documentSchema.safeParse({
+        ...document,
+        workspaces: [
+          {
+            ...document.workspaces[0],
+            icon: { kind: "local", local: "unknown" },
+          },
+        ],
+      }).success,
+    ).toBe(false);
+  });
   it("preserves tab identity through independent template copies and portable round trips", async () => {
     const { document } = fixture();
     document.workspaces[0].icon = { kind: "emoji", value: "👩🏽‍💻" };

@@ -13,12 +13,16 @@ import { panes } from "../shared/layout";
 import { hostOS, hostIconNames } from "../shared/host-os";
 import {
   osIconKinds,
+  localIconGroups,
+  localIconNames,
+  matchesLocalIcon,
   workspaceColors,
   workspaceIconSchema,
   workspaceColorSchema,
 } from "../shared/workspace-style";
 import { useApp } from "./context";
 import { OSIcon } from "./HostIcon";
+import { LocalIcon } from "./LocalIcon";
 import { IconButton, Modal } from "./components";
 import { dragMime, dragWorkspaceMime, startLayoutDrag } from "./Workspaces";
 
@@ -114,6 +118,7 @@ export function WorkspaceMark({
     return <Terminal size={20} aria-label="로컬 터미널" />;
   if (icon?.kind === "os")
     return <OSIcon compact kind={icon.os} label={hostIconNames[icon.os]} />;
+  if (icon?.kind === "local") return <LocalIcon kind={icon.local} />;
   const first = panes(workspace.root)[0];
   if (first.local) return <Terminal size={20} aria-label="로컬 터미널" />;
   const host = document.hosts.find((h) => h.id === first.hostId);
@@ -319,12 +324,28 @@ export function WorkspaceEditor({
     [color, setColor] = useState(workspace?.color || ""),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
-  const [iconPanel, setIconPanel] = useState<"os" | "emoji">(
-    workspace?.icon?.kind === "emoji" ? "emoji" : "os",
-  );
+  const [iconPanel, setIconPanel] = useState<"os" | "local" | "emoji">(() => {
+    if (workspace?.icon?.kind === "emoji") return "emoji";
+    if (
+      workspace?.icon?.kind === "local" ||
+      workspace?.icon?.kind === "terminal" ||
+      (!workspace?.icon && workspace && panes(workspace.root)[0]?.local)
+    )
+      return "local";
+    return "os";
+  });
   const [customEmoji, setCustomEmoji] = useState(
     workspace?.icon?.kind === "emoji" ? workspace.icon.value : "",
   );
+  const [iconSearch, setIconSearch] = useState("");
+  const [localGroup, setLocalGroup] = useState("all");
+  const localGroups = localIconGroups
+    .filter((group) => localGroup === "all" || group.id === localGroup)
+    .map((group) => ({
+      ...group,
+      kinds: group.kinds.filter((kind) => matchesLocalIcon(kind, iconSearch)),
+    }))
+    .filter((group) => group.kinds.length > 0);
   const validColor = workspaceColorSchema.safeParse(color);
   return (
     <Modal
@@ -439,6 +460,14 @@ export function WorkspaceEditor({
               </button>
               <button
                 type="button"
+                aria-pressed={iconPanel === "local"}
+                onClick={() => setIconPanel("local")}
+              >
+                <Terminal size={15} aria-hidden="true" />
+                로컬
+              </button>
+              <button
+                type="button"
                 aria-pressed={iconPanel === "emoji"}
                 onClick={() => setIconPanel("emoji")}
               >
@@ -488,6 +517,78 @@ export function WorkspaceEditor({
                       />
                     )}
                   </button>
+                ))}
+              </div>
+            ) : iconPanel === "local" ? (
+              <div className="workspace-local-picker">
+                <div className="workspace-local-filters">
+                  <input
+                    type="search"
+                    aria-label="로컬 아이콘 검색"
+                    placeholder="아이콘 검색 · GPT, Docker, Python"
+                    value={iconSearch}
+                    onChange={(e) => setIconSearch(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.nativeEvent.isComposing)
+                        e.preventDefault();
+                    }}
+                  />
+                  <select
+                    aria-label="로컬 아이콘 분류"
+                    value={localGroup}
+                    onChange={(e) => setLocalGroup(e.target.value)}
+                  >
+                    <option value="all">전체 분류</option>
+                    {localIconGroups.map((group) => (
+                      <option key={group.id} value={group.id}>
+                        {group.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {localGroups.length === 0 && (
+                  <p className="workspace-icon-heading" role="status">
+                    일치하는 아이콘이 없습니다.
+                  </p>
+                )}
+                {localGroups.map((group) => (
+                  <div key={group.name} role="group" aria-label={group.name}>
+                    <p className="workspace-icon-heading">{group.name}</p>
+                    <div className="workspace-icon-grid">
+                      {group.kinds.map((kind) => {
+                        const selected =
+                          kind === "terminal"
+                            ? icon?.kind === "terminal"
+                            : icon?.kind === "local" && icon.local === kind;
+                        return (
+                          <button
+                            type="button"
+                            className="workspace-icon-choice"
+                            key={kind}
+                            aria-label={`${localIconNames[kind]} 아이콘`}
+                            aria-pressed={selected}
+                            onClick={() =>
+                              setIcon(
+                                kind === "terminal"
+                                  ? { kind: "terminal" }
+                                  : { kind: "local", local: kind },
+                              )
+                            }
+                          >
+                            <LocalIcon kind={kind} />
+                            <span>{localIconNames[kind]}</span>
+                            {selected && (
+                              <Check
+                                className="workspace-choice-check"
+                                size={12}
+                                aria-hidden="true"
+                              />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 ))}
               </div>
             ) : (

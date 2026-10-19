@@ -442,6 +442,11 @@
       "title": "file drops and clipboard paste retain gesture order"
     },
     {
+      "id": "workspace-management.local-icons",
+      "file": "workspace-management.spec.ts",
+      "title": "local tool icons persist with category selection cancellation and compact layouts"
+    },
+    {
       "id": "workspace-management.identity",
       "file": "workspace-management.spec.ts",
       "title": "workspace icon tiles emoji presets colors and extra panel counts survive editing and renderer reload"
@@ -486,6 +491,17 @@
       "id": "sharing.2",
       "file": "sharing.spec.ts",
       "title": "lets the real CLI send to a registered alias without terminal access and cannot approve or read incoming messages"
+    },
+    {
+      "id": "terminal-unicode.zsh-edit",
+      "file": "terminal-unicode.spec.ts",
+      "title": "macOS zsh edits wrapped emoji prompts and pasted Unicode without stale text",
+      "platforms": ["darwin"]
+    },
+    {
+      "id": "terminal-unicode.ssh-screen",
+      "file": "terminal-unicode.spec.ts",
+      "title": "SSH normal and alternate screens keep emoji cells aligned with cursor addressing"
     }
   ]
 }
