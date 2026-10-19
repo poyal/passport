@@ -1203,7 +1203,7 @@ test("Electron teardown checks actual process exit after the platform's graceful
     process: () => child,
     evaluate: async () => {
       cleanupFinished = true;
-      child.stderr.write("\nPASSPORT_E2E_NATIVE_QUIT_COMPLETE\n");
+      child.stderr.write("\nPASSPORT_E2E_NATIVE_CLEANUP_COMPLETE\n");
     },
     close: async () => {
       assert.equal(cleanupFinished, true);
@@ -1234,13 +1234,16 @@ test("Electron teardown rejects a stalled quit instead of waiting indefinitely",
   child.emit("exit", 0, null);
 });
 
-test("Electron teardown waits for asynchronous native cleanup and actual process exit", async () => {
+test("Electron teardown holds final quit until Playwright can disconnect after asynchronous cleanup", async (t) => {
   const child = Object.assign(new EventEmitter(), {
     exitCode: null,
     signalCode: null,
     stderr: new PassThrough(),
   });
   let cleaned = false;
+  let finalQuit = false;
+  let closing = false;
+  t.mock.method(process.stderr, "write", (data) => child.stderr.write(data));
   const nativeApp = Object.assign(new EventEmitter(), {
     quit() {
       const event = {
@@ -1252,6 +1255,8 @@ test("Electron teardown waits for asynchronous native cleanup and actual process
       nativeApp.emit("will-quit", event);
       if (!event.defaultPrevented) {
         assert.equal(cleaned, true);
+        assert.equal(closing, true, "Final quit must wait for Playwright close");
+        finalQuit = true;
         child.exitCode = 0;
         child.emit("exit", 0, null);
       }
@@ -1267,17 +1272,22 @@ test("Electron teardown waits for asynchronous native cleanup and actual process
   });
   const application = {
     process: () => child,
-    evaluate: (fn, quitFirst) => fn({ app: nativeApp, dialog: {} }, quitFirst),
+    evaluate: (fn) => fn({ app: nativeApp, dialog: {} }),
     close: async () => {
+      assert.equal(cleaned, true);
+      assert.equal(finalQuit, false, "The debugger must still accept evaluations");
+      closing = true;
       if (child.exitCode === null) nativeApp.quit();
     },
   };
   await closeCleanly(application, 1000);
   assert.equal(cleaned, true);
+  assert.equal(finalQuit, true);
   assert.equal(child.exitCode, 0);
+  assert.equal(nativeApp.listenerCount("will-quit"), 1);
 });
 
-test("Electron teardown disconnects the debugger after native quit before waiting for process exit", async () => {
+test("Electron teardown accepts a split cleanup marker before requiring process exit", async () => {
   const child = Object.assign(new EventEmitter(), {
     exitCode: null,
     signalCode: null,
@@ -1289,7 +1299,7 @@ test("Electron teardown disconnects the debugger after native quit before waitin
     evaluate: async () => {
       setTimeout(() => {
         cleaned = true;
-        child.stderr.write("\nPASSPORT_E2E_NATIVE_QUIT_");
+        child.stderr.write("\nPASSPORT_E2E_NATIVE_CLEANUP_");
         child.stderr.write("COMPLETE\n");
       }, 5);
     },

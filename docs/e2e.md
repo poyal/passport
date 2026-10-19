@@ -110,6 +110,8 @@ fixture 호출은 테스트 등록 시 한 번만 한다. `suite.application`, `
 
 성공한 전체 숨김 실행에서는 `launches === exits === auditedShutdowns`와 `shown === focused === 0`을 함께 확인한다. 프로세스가 비정상 종료하여 audit가 빠진 실행을 0회 포커스 성공으로 해석하지 않는다. 검사 개수와 시작 횟수는 서로 다른 지표이며, 시작 횟수를 낮추기 위해 필수 사례를 삭제하거나 생략하지 않는다.
 
+`closeCleanly()`는 앱의 비동기 `will-quit` 정리가 끝난 뒤 최종 종료를 한 번 보류한다. 이때 Playwright가 `app.quit()`을 평가해 디버거 연결을 해제하도록 넘기고, 실제 프로세스의 종료 코드 0·시그널 없음까지 기다린다. `quit` 이후 디버거 평가를 요청하면 Node가 디버거 해제를 기다리는 동안 평가 자체가 멈출 수 있다. 10초 제한·실패 시 시험 소유 프로세스만 정리하는 규칙은 유지하며, 정리 완료 신호만으로 정상 종료를 판정하지 않는다.
+
 필수 목록은 [release-policy.json](../tests/e2e/release-policy.json)이다. 전체 소스·패키지 보고서를 `validateGuiReport()`로 대조해 파일·제목·플랫폼별 생략·재시도를 확인한다. 부분 실행과 `--grep`은 진단 결과로만 기록한다. 이번 최적화의 실제 전후 측정은 [검증 기록](verification.md)과 [측정 JSON](benchmarks/e2e-reuse-20261006.json)에 남긴다.
 
 ## 변경 검증과 유지보수

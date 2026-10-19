@@ -14,14 +14,14 @@ export async function closeCleanly(
       ? Promise.resolve([child.exitCode, child.signalCode])
       : once(child, "exit");
   let stderr = "";
-  let quitCompleted!: () => void;
-  const nativeQuit = new Promise<void>((resolve) => {
-    quitCompleted = resolve;
+  let cleanupCompleted!: () => void;
+  const nativeCleanup = new Promise<void>((resolve) => {
+    cleanupCompleted = resolve;
   });
   const onStderr = (data: Buffer) => {
     stderr = (stderr + data.toString()).slice(-4096);
-    if (stderr.includes("\nPASSPORT_E2E_NATIVE_QUIT_COMPLETE\n"))
-      quitCompleted();
+    if (stderr.includes("\nPASSPORT_E2E_NATIVE_CLEANUP_COMPLETE\n"))
+      cleanupCompleted();
   };
   child.stderr?.on("data", onStderr);
   let deadlineExpired = false;
@@ -128,21 +128,30 @@ export async function closeCleanly(
               response: 1,
               checkboxChecked: false,
             });
-            // Keep the debugger through native cleanup, then let Playwright
-            // disconnect it before requiring process exit. Node may wait for
-            // that disconnect after Electron has emitted its final quit.
-            app.once("quit", () => {
-              process.stderr.write("\nPASSPORT_E2E_NATIVE_QUIT_COMPLETE\n");
-            });
+            // Wait for the app's asynchronous will-quit cleanup, but hold the
+            // final quit until Playwright can evaluate app.quit() and disconnect.
+            // After quit, Node can stop serving debugger evaluations while
+            // waiting for that same debugger to disconnect.
+            let releaseQuit = false;
+            const holdFinalQuit = (event: Electron.Event) => {
+              if (event.defaultPrevented) return;
+              if (releaseQuit) {
+                app.removeListener("will-quit", holdFinalQuit);
+                return;
+              }
+              event.preventDefault();
+              releaseQuit = true;
+              process.stderr.write("\nPASSPORT_E2E_NATIVE_CLEANUP_COMPLETE\n");
+            };
+            app.on("will-quit", holdFinalQuit);
             setTimeout(() => app.quit(), 0);
             return (globalThis as any).__passportE2EWindowAudit;
           });
         }
-        await Promise.race([exited, nativeQuit]);
+        await Promise.race([exited, nativeCleanup]);
         if (deadlineExpired) return;
-        // Playwright otherwise disconnects immediately after app.quit() even
-        // when will-quit cleanup is still asynchronous (also on macOS).
-        // Independently require the real process to exit with code 0 below.
+        // Native cleanup has finished; let Playwright release the held quit
+        // while its debugger evaluation still works. Require actual exit below.
         await application.close();
         const [code, signal] = await exited;
         if (deadlineExpired) return;
