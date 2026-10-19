@@ -405,10 +405,6 @@ export async function publishVerified({
     publishDraft: !plan.release || plan.release.draft,
   };
   if (!execute) return summary;
-  const notes = await fs.readFile(
-    path.join(root, "docs/releases", `${plan.tag}.md`),
-    "utf8",
-  );
   // Recheck immediately before the first remote mutation; never rebuild here.
   for (const receipt of receipts) await validateReceipt(root, receipt);
   let release =
@@ -417,7 +413,7 @@ export async function publishVerified({
       tag_name: plan.tag,
       target_commitish: state.commit,
       name: `Passport ${receipts[0].version}`,
-      body: notes,
+      generate_release_notes: true,
       draft: true,
       prerelease: false,
     }));

@@ -12,6 +12,7 @@ coverage/
 build/icon.png
 build/icon.ico
 build/runtime-downloads/
+build/toolchains/
 native/helper/target/
 resources/terminal/helper/
 resources/terminal/runtime/

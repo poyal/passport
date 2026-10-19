@@ -16,7 +16,7 @@ const matrix = [
 const directory = await fs.mkdtemp(path.join(os.tmpdir(), "passport-docker-"));
 const containers = [];
 const resultsPath =
-  process.env.PASSPORT_DOCKER_RESULTS || "docs/benchmarks/docker-ssh.json";
+  process.env.PASSPORT_DOCKER_RESULTS || "release/checks/docker-ssh/results.json";
 function run(command, args, options = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, { stdio: "inherit", ...options });

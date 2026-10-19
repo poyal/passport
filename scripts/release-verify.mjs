@@ -61,7 +61,6 @@ async function verify() {
   const target = `${process.platform === "darwin" ? "mac" : process.platform === "win32" ? "win" : "unsupported"}-${process.arch}`;
   const pkg = JSON.parse(await fs.readFile("package.json", "utf8"));
   const name = installerName(pkg.version, target);
-  await fs.access(`docs/releases/v${pkg.version}.md`);
   const cargo = process.env.PASSPORT_CARGO || "cargo";
   let rustVersion;
   try {
@@ -70,7 +69,7 @@ async function verify() {
     }).trim();
   } catch {
     throw new Error(
-      "Rust cargo is required. Install the Rust toolchain or set PASSPORT_CARGO (and its CARGO_HOME/RUSTUP_HOME if isolated). See docs/local-release-guide.md.",
+      "Rust cargo is required. Install the Rust toolchain or set PASSPORT_CARGO (and its CARGO_HOME/RUSTUP_HOME if isolated). See AGENTS.md.",
     );
   }
   const npmCLI = process.env.npm_execpath;

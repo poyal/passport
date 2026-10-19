@@ -10,7 +10,7 @@ if (
     "Set CSC_NAME to the full Developer ID Application certificate name " +
       "shown by `security find-identity -v -p codesigning`. " +
       "A signed build cannot use an ad-hoc identity. " +
-      "See docs/distribution.md.",
+      "See AGENTS.md.",
   );
 }
 

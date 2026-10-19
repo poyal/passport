@@ -150,7 +150,6 @@ async function fixture(t, target = "mac-arm64") {
     path.join(os.tmpdir(), "passport-release-test-"),
   );
   t.after(() => fs.rm(root, { recursive: true, force: true }));
-  await fs.mkdir(path.join(root, "docs/releases"), { recursive: true });
   await fs.mkdir(path.join(root, "tests/e2e"), { recursive: true });
   await fs.writeFile(
     path.join(root, "tests/e2e/release-policy.json"),
@@ -161,10 +160,6 @@ async function fixture(t, target = "mac-arm64") {
     JSON.stringify({ version: "2.0.0" }),
   );
   await fs.writeFile(path.join(root, ".gitignore"), "release/\n");
-  await fs.writeFile(
-    path.join(root, "docs/releases/v2.0.0.md"),
-    "Release notes\n",
-  );
   const git = (...args) =>
     execFileSync("git", args, { cwd: root, stdio: "pipe" });
   git("init");
@@ -1017,6 +1012,8 @@ test("new releases stay draft until uploaded bytes and checksums are verified", 
     execute: true,
   });
   assert.equal(state.mutations[0][1].draft, true);
+  assert.equal(state.mutations[0][1].generate_release_notes, true);
+  assert.equal(state.mutations[0][1].body, undefined);
   assert.equal(state.mutations.at(-1)[0], "update");
   assert.equal(state.release.draft, false);
   assert.deepEqual(
@@ -1033,6 +1030,18 @@ test("new releases stay draft until uploaded bytes and checksums are verified", 
     [],
     "retry must not replace identical assets",
   );
+});
+
+test("publishing an existing GitHub draft preserves its release notes without a local document", async (t) => {
+  const { root, receipt } = await fixture(t);
+  const { client, state } = fakeGitHub(receipt.source.commit);
+  const notes = "User-written release notes on GitHub";
+  await client.create({ draft: true, prerelease: false, body: notes });
+  state.mutations.length = 0;
+  await publishVerified({ root, receipts: [receipt], client, execute: true });
+  assert.equal(state.release.body, notes);
+  assert.equal(state.release.draft, false);
+  assert.ok(state.mutations.every(([kind]) => kind !== "create"));
 });
 
 test("checksum upload failure is resumable without rebuilding or reuploading the installer", async (t) => {
@@ -1057,12 +1066,14 @@ test("checksum upload failure is resumable without rebuilding or reuploading the
 test("adding a platform preserves the existing installer and combined checksums", async (t) => {
   const { root, receipt } = await fixture(t, "win-x64");
   const { client, state, add, blobs } = fakeGitHub(receipt.source.commit);
-  await client.create({ draft: false, prerelease: false });
+  const notes = "Release notes maintained on GitHub";
+  await client.create({ draft: false, prerelease: false, body: notes });
   const macBytes = Buffer.from("existing Mac installer");
   const mac = add("Passport-2.0.0-mac-arm64.dmg", macBytes);
   add("SHA256SUMS.txt", Buffer.from(`${sha256(macBytes)}  ${mac.name}\n`));
   state.mutations.length = 0;
   await publishVerified({ root, receipts: [receipt], client, execute: true });
+  assert.equal(state.release.body, notes);
   assert.equal(
     state.assets.find((asset) => asset.name === mac.name).id,
     mac.id,

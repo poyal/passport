@@ -40,7 +40,7 @@ it.skipIf(!manifest)(
     const store = new Store(root, vault),
       results: unknown[] = [];
     const resultsPath =
-      process.env.PASSPORT_DOCKER_RESULTS || "docs/benchmarks/docker-ssh.json";
+      process.env.PASSPORT_DOCKER_RESULTS || "release/checks/docker-ssh/results.json";
     const progress: { server: string; stage: string; elapsedMs: number }[] = [];
     const writeResults = async () => {
       await fs.mkdir(path.dirname(resultsPath), { recursive: true });
