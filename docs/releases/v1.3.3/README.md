@@ -30,14 +30,14 @@
 
 | 컴퓨터                                       | 선택할 파일                | 다운로드 안내                                                                      |
 | -------------------------------------------- | -------------------------- | ---------------------------------------------------------------------------------- |
-| Mac · Apple Silicon(M 시리즈), macOS 14 이상 | `Passport-…-mac-arm64.dmg` | [최신 릴리즈](https://github.com/poyal/passport/releases/latest)                   |
-| Windows 11 · Intel / AMD(x64)                | `Passport-…-win-x64.exe`   | [Windows 1.3.1](https://github.com/poyal/passport/releases/tag/v1.3.1) |
+| Mac · Apple Silicon(M 시리즈), macOS 14 이상 | `Passport-…-mac-arm64.dmg` | [Mac 1.3.3](https://github.com/poyal/passport/releases/tag/v1.3.3)                   |
+| Windows 11 · Intel / AMD(x64)                | `Passport-…-win-x64.exe`   | [Windows 1.3.3](https://github.com/poyal/passport/releases/tag/v1.3.3) |
 
-Mac은 최신 릴리즈를, Windows는 검증된 1.3.1 설치 파일을 사용하세요. Windows 후속 버전은 해당 OS에서 검증한 뒤 추가합니다. Intel Mac은 지원하지 않습니다. [플랫폼별 배포 상태와 변경 사항](https://github.com/poyal/passport/releases).
+Mac과 Windows 모두 검증된 1.3.3 설치 파일을 사용하실 수 있습니다. Intel Mac은 지원하지 않습니다. [플랫폼별 배포 상태와 변경 사항](https://github.com/poyal/passport/releases).
 
 **메뉴가 보이지 않는 경우:** 최신 버전으로 업데이트하세요. 쪽지 편집기·첨부·승인 대기 필터는 양쪽 PC 모두 1.3.1 이상에서 사용합니다.
 
-쪽지 CLI의 수신 목록·승인·읽기, 오류 알림 닫기, macOS zsh 문자 폭 호환은 **Mac 1.3.3 후보에 포함되어 있으며 아직 배포되지 않았습니다.** Windows 1.3.1에는 이 기능이 포함되어 있지 않습니다.
+쪽지 CLI의 수신 목록·승인·읽기와 오류 알림 닫기는 **Mac·Windows 1.3.3**에서 사용합니다. macOS zsh 문자 폭 호환 모드는 Mac 1.3.3에 포함됩니다.
 
 ### Mac
 
