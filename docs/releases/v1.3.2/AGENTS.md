@@ -17,7 +17,8 @@
 - 게시 전 설치 파일은 검증한 바이트 그대로 유지해야 합니다. 공개 다운로드의 크기·SHA-256까지 확인한 뒤 로컬 복사본을 삭제합니다. 게시 전 파일을 삭제하거나 다시 빌드한 파일을 같은 검증 결과로 게시하지 않습니다. 다음 작업은 필요한 산출물을 새로 만듭니다.
 - 삭제 전 실행 중인 앱·빌드·검사·마운트된 설치 이미지를 확인합니다. 다른 작업이 사용하는 경로는 그 작업이 끝날 때까지 건드리지 않습니다. 사용자가 실행을 요청해 사용 중인 미리보기도 사용 종료 후 삭제합니다.
 - 설치 앱과 실제 사용자 데이터는 `release/` 정리와 별개입니다. 설치 교체가 끝나지 않았거나 복구 중이면 복구본을 먼저 지우지 않습니다. 앱 데이터 폴더의 자동 백업·마이그레이션 백업은 개발 작업 흔적이 아닙니다.
-- `build/installer.nsh`는 소스이고 `dist/`는 현재 컴파일 결과이므로 `release/`와 혼동하지 않습니다. 설치한 개발 도구는 ignored `build/toolchains/`에 둘 수 있습니다. 도구 실행 파일과 작업 로그·설치 압축 파일을 함께 보관하지 않습니다.
+- 정리 범위는 `release/`에 한정하지 않습니다. 사용을 마친 `dist/`, `build/icon.png`·`icon.ico`, `build/runtime-downloads/`, 작업 전용 `build/toolchains/`도 삭제합니다. 다른 폴더로 옮겨 보관하지 않습니다. 다음 개발·검증 시 도구를 준비하고 다시 빌드합니다.
+- `build/installer.nsh`는 Windows 설치 스크립트 소스이고 `design/icons/04-passport-terminal-v2.png`는 앱·빌드·매뉴얼이 직접 참조하는 아이콘 원본이므로 유지합니다. 폴더 이름만 보고 소스까지 일괄 삭제하지 않습니다. 시스템에 설치된 공용 개발 도구는 저장소 작업용 산출물과 구분합니다.
 - 임시 Mac 앱을 남겨 사용해야 하는 동안에는 앱 묶음에 `alfred:ignore` 태그를 적용합니다. 검증 앱을 안내하는 `release/builds/Passport.app`은 상대 링크만 사용하고 앱 복사본을 늘리지 않습니다. 링크도 작업 종료 때 삭제합니다.
 
 ## 사용자 매뉴얼 작성
@@ -58,7 +59,7 @@ npm run dev
 
 `npm run dev`와 `pack:dev`는 `Passport-dev`, `<버전>-dev`, `io.passport.desktop.dev`를 사용하고 정식 앱 데이터와 분리합니다. 메인·preload 변경 후에는 개발 앱을 다시 시작합니다. `npm ci`의 postinstall은 Electron ABI용 네이티브 모듈과 ssh2·node-pty 패치를 준비합니다. 일반 Node ABI 바이너리와 섞지 않습니다.
 
-이 작업 환경의 격리 Rust는 `build/toolchains/rust/` 아래 `cargo`, `rustup`에 있습니다. 사용할 때 `CARGO_HOME`, `RUSTUP_HOME`, `PASSPORT_CARGO`를 그 절대 경로와 `cargo/bin/cargo`로 지정합니다. GitHub CLI는 `build/toolchains/gh/gh`입니다. 다른 환경에서는 설치한 도구를 사용하고 이 ignored 폴더가 있다고 가정하지 않습니다.
+Rust·GitHub CLI는 환경에 설치된 도구를 사용합니다. 작업 중 격리된 도구가 필요하면 ignored `build/toolchains/`를 임시로 사용할 수 있으나 작업 종료 후 삭제합니다. 격리 Rust는 `CARGO_HOME`, `RUSTUP_HOME`, `PASSPORT_CARGO`를 실제 설치 위치에 맞게 지정하며, 이전 작업의 도구가 남아 있다고 가정하지 않습니다.
 
 검사는 변경 범위에 맞게 실행합니다. Docker SSH·장시간 부하·네이티브 데스크톱 검사를 일반 문서 수정에 덧붙이지 않습니다. Docker 검사 결과도 `release/checks/docker-ssh/results.json`에 임시 출력하고 작업 종료 후 삭제합니다.
 
@@ -139,6 +140,8 @@ GUI 파일·제목·플랫폼·모드를 바꾸면 `tests/e2e/release-policy.jso
 
 Mac 1.3.2 DMG SHA-256: `b8beb3e6aab221310e5ca83e9c46a691a4070390e114519c53f9ba003c008a9d`.
 
-[이슈 #7](https://github.com/poyal/passport/issues/7)의 복합 Unicode 86개 중 81개는 정상이지만, 긴 국기·분해 한글·ZWJ 프롬프트 3개와 분해 한글 입력·붙여넣기 2개는 미해결입니다. 일반 이모지 폭 수정으로 모든 복합 문자가 해결됐다고 쓰지 않습니다. 이전 Electron 종료 지연·사용자 셸 초기화 지연의 최초 원인은 미확정이며 후속 성공만으로 원인 해결을 단정하지 않습니다.
+[이슈 #7](https://github.com/poyal/passport/issues/7)의 `💻`·`🔧` 프롬프트 잔상·커서 위치 불일치는 Mac 1.3.2에서 수정·배포되어 해결 상태로 닫았습니다. 확대 검사 86개 중 81개는 정상이지만, 긴 국기·분해 한글·ZWJ 프롬프트 3개와 분해 한글 입력·붙여넣기 2개는 미해결이며 [후속 이슈 #8](https://github.com/poyal/passport/issues/8)에서 추적합니다. 일반 이모지 폭 수정으로 모든 복합 문자가 해결됐다고 쓰지 않습니다.
+
+이전 Electron 종료 지연·사용자 셸 초기화 지연의 최초 원인은 미확정이며 후속 성공만으로 원인 해결을 단정하지 않습니다.
 
 물리 IME·실제 AI 서비스·OS 알림·깨끗한 계정의 설치/업그레이드·macOS 14 실기·Developer ID/공증은 위 자동 검사 성공과 별개입니다. 남은 제한은 문서와 이슈로 관리하고 완료한 작업의 실패 앱·중간 로그를 보존하는 근거로 쓰지 않습니다.
