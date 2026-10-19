@@ -8,6 +8,7 @@ import type {
 } from "../shared/model";
 const names: Call[] = [
   "share.state",
+  "share.dismissError",
   "share.unlock",
   "share.reset",
   "share.configure",

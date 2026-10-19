@@ -3,6 +3,7 @@ import { workspaceIconSchema, workspaceColorSchema } from "./workspace-style";
 import { shortcutSettingsSchema, type ShortcutContext } from "./shortcuts";
 import {
   shellIdSchema,
+  unicodeWidthSchema,
   profileSelectionSchema,
   terminalSettingsSchema,
   notificationSettingsSchema,
@@ -98,6 +99,7 @@ export const localShellSchema = z.object({
   profiles: profileSelectionSchema.optional(),
   agent: z.enum(["claude", "codex"]).optional(),
   needsReview: z.boolean().optional(),
+  unicodeWidth: unicodeWidthSchema.optional(),
 });
 export type LocalShell = z.infer<typeof localShellSchema>;
 export type Appearance = z.infer<typeof appearanceSchema>;
@@ -547,6 +549,7 @@ export type TerminalSnapshot = {
   cols: number;
   rows: number;
   appearance?: Partial<Appearance>;
+  unicodeWidth?: import("./terminal-config").UnicodeWidth;
 };
 export type LogFile = {
   id: string;
@@ -578,6 +581,10 @@ export type Result<T> = { ok: true; value: T } | { ok: false; error: string };
 
 export interface Calls {
   "share.state": { input: undefined; output: import("./share").ShareSnapshot };
+  "share.dismissError": {
+    input: { errorId: string };
+    output: import("./share").ShareSnapshot;
+  };
   "share.unlock": { input: undefined; output: import("./share").ShareSnapshot };
   "share.reset": { input: undefined; output: import("./share").ShareSnapshot };
   "share.configure": {

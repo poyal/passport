@@ -3,6 +3,7 @@ import { Terminal } from "@xterm/xterm";
 import { SerializeAddon } from "@xterm/addon-serialize";
 import { configureTerminalUnicode } from "../src/renderer/terminal-unicode";
 import fixture from "./fixtures/terminal-unicode-zsh.json";
+import compatibility from "./fixtures/terminal-unicode-compat.json";
 
 const terminals: Terminal[] = [];
 afterEach(() => terminals.splice(0).forEach((term) => term.dispose()));
@@ -62,3 +63,32 @@ it("keeps emoji, CJK and combining accents aligned when output is chunked", asyn
   expect(term.buffer.active.getLine(0)!.getCell(1)!.getWidth()).toBe(2);
   expect(term.buffer.active.getLine(0)!.getCell(2)!.getWidth()).toBe(0);
 });
+
+for (const sample of compatibility.cases) {
+  it(`replays macOS zsh ${sample.name} with opt-in widths and preserves them through a snapshot`, async () => {
+    const original = new Terminal({
+      cols: compatibility.cols,
+      rows: compatibility.rows,
+      allowProposedApi: true,
+    });
+    const restored = new Terminal({
+      cols: compatibility.cols,
+      rows: compatibility.rows,
+      allowProposedApi: true,
+    });
+    terminals.push(original, restored);
+    configureTerminalUnicode(original, "macos-zsh");
+    configureTerminalUnicode(restored, "macos-zsh");
+    const serialize = new SerializeAddon();
+    original.loadAddon(serialize);
+    for (const step of sample.steps) await write(original, step.output);
+    expect(screen(original)).toBe(sample.expected);
+    await write(restored, serialize.serialize());
+    expect(screen(restored)).toBe(sample.expected);
+    expect(restored.buffer.active.cursorX).toBe(original.buffer.active.cursorX);
+    expect(restored.buffer.active.cursorY).toBe(original.buffer.active.cursorY);
+    const standard = createTerminal();
+    await write(standard, "🇰🇷한");
+    expect(standard.buffer.active.cursorX).toBe(4);
+  });
+}

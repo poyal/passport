@@ -129,7 +129,15 @@ export class ShareService {
     { name: string; endpoint: ShareEndpoint; seen: number; instance: string }
   >();
   private timer: ReturnType<typeof setInterval>;
-  private error?: string;
+  private errorValue?: string;
+  private errorId?: string;
+  private get error() {
+    return this.errorValue;
+  }
+  private set error(value: string | undefined) {
+    this.errorValue = value;
+    this.errorId = value ? randomUUID() : undefined;
+  }
   private unlocked = false;
   private configuration: Promise<void> = Promise.resolve();
   private closed = false;
@@ -157,7 +165,8 @@ export class ShareService {
       endpoint: this.endpoint,
       peers: this.peers.map(({ cert: _, ...peer }) => peer),
       requests:
-        this.pairing?.request?.state === "pending"
+        this.pairing?.request?.state === "pending" &&
+        this.pairing.invite.expires > Date.now()
           ? [
               {
                 id: this.pairing.request.id,
@@ -176,7 +185,15 @@ export class ShareService {
       ),
       interfaces: interfaces(),
       error: this.error,
+      errorId: this.errorId,
     };
+  }
+  dismissError(errorId: string) {
+    if (this.errorId === errorId) {
+      this.error = undefined;
+      this.changed();
+    }
+    return this.snapshot();
   }
   private changed() {
     if (!this.closed) this.options.changed();
@@ -685,7 +702,8 @@ export class ShareService {
       job.request = undefined;
     }
   }
-  async approve(id: string, accept: boolean) {
+  async approve(id: string, accept: boolean, authorize?: () => void) {
+    authorize?.();
     const job = this.jobs.get(id);
     if (
       !job ||
@@ -704,6 +722,7 @@ export class ShareService {
       job.directory = await secureDirectory(
         this.store.settings().receiveDirectory,
       );
+    authorize?.();
     this.peer(job.peer.id);
     this.expire(job);
     if (job.view.state !== "pending")
@@ -899,8 +918,9 @@ export class ShareService {
   }
   status(id: string) {
     const job = this.jobs.get(id);
-    if (!job || job.view.direction !== "outgoing")
+    if (!job || (job.receipt !== undefined && job.receipt <= Date.now()))
       throw new Error("전송 기록이 없거나 정리되었습니다.");
+    this.expire(job);
     return {
       id,
       state: job.view.state,
@@ -925,9 +945,38 @@ export class ShareService {
       ).catch(() => {});
     this.finish(job, "cancelled");
   }
-  control(input: ShareControlCommand) {
+  control(input: ShareControlCommand, authorize: () => void = () => {}) {
     this.requireEnabled();
+    authorize();
     switch (input.command) {
+      case "share.inbox":
+        for (const job of this.jobs.values()) this.expire(job);
+        return {
+          pending: [...this.jobs.values()]
+            .filter(
+              (job) =>
+                job.view.direction === "incoming" && !done.has(job.view.state),
+            )
+            .map(({ view, deadline }) => ({
+              id: view.id,
+              peerId: view.peerId,
+              peerName: view.peerName,
+              state: view.state,
+              kind: view.kind,
+              name: view.name,
+              bytes: view.bytes,
+              created: view.created,
+              expires: deadline,
+            })),
+          messages: this.store.messages(),
+        };
+      case "share.approve":
+        return this.approve(input.id, true, () => {
+          this.requireEnabled();
+          authorize();
+        }).then(() => this.status(input.id));
+      case "share.read":
+        return this.store.message(input.id);
       case "share.peers":
         return this.peers.map(({ id, name }) => ({
           id,

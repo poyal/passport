@@ -52,14 +52,18 @@ function sameSettings(a: ShareSettings, b: ShareSettings) {
 function useShare() {
   const [state, setState] = useState<ShareSnapshot>();
   const [error, setError] = useState("");
-  const refresh = useCallback(
-    () =>
-      api
-        .call("share.state", undefined)
-        .then(setState)
-        .catch((e) => setError(message(e))),
-    [],
-  );
+  const refreshRevision = useRef(0);
+  const refresh = useCallback(() => {
+    const revision = ++refreshRevision.current;
+    return api
+      .call("share.state", undefined)
+      .then((value) => {
+        if (revision === refreshRevision.current) setState(value);
+      })
+      .catch((e) => {
+        if (revision === refreshRevision.current) setError(message(e));
+      });
+  }, []);
   useEffect(() => {
     void refresh();
     return api.onEvent((event) => {
@@ -77,11 +81,38 @@ function useShare() {
       return false;
     }
   };
-  return { state, error, run, refresh, setState };
+  const dismissError = async () => {
+    setError("");
+    ++refreshRevision.current;
+    try {
+      if (state?.errorId)
+        await api.call("share.dismissError", { errorId: state.errorId });
+      await refresh();
+    } catch (e) {
+      setError(message(e));
+    }
+  };
+  return { state, error, run, refresh, setState, dismissError };
+}
+
+function ShareError({ text, onDismiss }: { text?: string; onDismiss(): void }) {
+  return text ? (
+    <div role="alert" className="share-error share-error-dismissible">
+      <span>{text}</span>
+      <button
+        type="button"
+        aria-label="알림 닫기"
+        title="알림 닫기"
+        onClick={onDismiss}
+      >
+        <X size={16} />
+      </button>
+    </div>
+  ) : null;
 }
 
 export function SharingSettings() {
-  const { state, error, run, setState } = useShare();
+  const { state, error, run, setState, dismissError } = useShare();
   const [draft, setDraft] = useState<ShareSettings>();
   const previousSettings = useRef<ShareSettings>(undefined);
   const [busy, setBusy] = useState(false),
@@ -135,11 +166,10 @@ export function SharingSettings() {
           <p>등록한 상대와 쪽지·파일을 암호화해 주고받습니다.</p>
         </div>
       </div>
-      {(error || state.error) && (
-        <p className="share-error" role="alert">
-          {error || state.error}
-        </p>
-      )}
+      <ShareError
+        text={error || state.error}
+        onDismiss={() => void dismissError()}
+      />
       <section className="settings-card">
         <h2>연결과 저장</h2>
         <fieldset className="share-settings-fields" disabled={busy}>
@@ -602,7 +632,7 @@ export function SharingView({
   onPending?(count: number): void;
   openInbox?: number;
 }) {
-  const { state, error, run, refresh } = useShare();
+  const { state, error, run, refresh, dismissError } = useShare();
   const [to, setTo] = useState(""),
     [text, setText] = useState(""),
     [file, setFile] = useState(""),
@@ -719,11 +749,10 @@ export function SharingView({
           <button onClick={() => app.openSettings("sharing")}>쪽지 설정</button>
         </div>
       </div>
-      {(error || state.error) && (
-        <p role="alert" className="share-error">
-          {error || state.error}
-        </p>
-      )}
+      <ShareError
+        text={error || state.error}
+        onDismiss={() => void dismissError()}
+      />
       {!state.endpoint && (
         <div className="share-disabled" role="status">
           <AlertCircle size={21} />

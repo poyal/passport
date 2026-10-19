@@ -3867,6 +3867,15 @@ select:disabled {
   flex: 1;
   min-width: 150px;
 }
+.share-error-dismissible {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.share-error-dismissible button {
+  flex-shrink: 0;
+}
 .share-error {
   color: var(--danger);
   padding: 12px;
@@ -4307,9 +4316,19 @@ select:disabled {
   border-color: var(--pending-ink);
   box-shadow: inset 3px 0 var(--pending-ink);
 }
-.share-message-list > button.pending:hover { border-color: var(--pending-ink); }
-.share-received-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
-.share-received-badge svg { color: var(--accent); }
+.share-message-list > button.pending:hover {
+  border-color: var(--pending-ink);
+}
+.share-received-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.share-received-badge svg {
+  color: var(--accent);
+}
 .share-attachment-detail > div:not(.share-attachment-actions) {
   flex: 1;
 }

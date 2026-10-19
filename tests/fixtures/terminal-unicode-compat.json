@@ -1,0 +1,88 @@
+{
+  "source": "/bin/zsh -df; isolated ZDOTDIR; en_US.UTF-8; Ctrl-A, Delete, X, Ctrl-E, Backspace; BUFFER verified through ZLE capture",
+  "shell": "zsh 5.9 (arm64-apple-darwin26.0)",
+  "cols": 40,
+  "rows": 20,
+  "cases": [
+    {
+      "name": "flag-long",
+      "prompt": "🇰🇷",
+      "steps": [
+        {
+          "output": "\u001b[H\u001b[2J\u001b[0m\u001b[27m\u001b[24m\u001b[JSIK 🇰🇷 > \u001b[K"
+        },
+        {
+          "output": "a\ba1234567890123456789012345678 \r\u001b[K9\r90123456789012345678901234567890Z"
+        },
+        {
+          "output": "\u001b[A\u001b[22D\u001b[P\u001b[28C90\u001b[P\u001b[31C \u001b[A\u001b[22DX\u001b[9P\u001b[19C0123456789\u001b[9P\u001b[21C1234567890Z\u001b[A\u001b[21D\u001b[1B\u001b[21C\b \b"
+        }
+      ],
+      "expected": "SIK 🇰🇷 > X123456789012345678901234567890123456789012345678901234567890"
+    },
+    {
+      "name": "jamo-long",
+      "prompt": "한",
+      "steps": [
+        {
+          "output": "\u001b[H\u001b[2J\u001b[0m\u001b[27m\u001b[24m\u001b[JSIK 한 > \u001b[K"
+        },
+        {
+          "output": "a\ba1234567890123456789012345678 \r\u001b[K9\r90123456789012345678901234567890Z"
+        },
+        {
+          "output": "\u001b[A\u001b[22D\u001b[P\u001b[28C90\u001b[P\u001b[31C \u001b[A\u001b[22DX\u001b[9P\u001b[19C0123456789\u001b[9P\u001b[21C1234567890Z\u001b[A\u001b[21D\u001b[1B\u001b[21C\b \b"
+        }
+      ],
+      "expected": "SIK 한 > X123456789012345678901234567890123456789012345678901234567890"
+    },
+    {
+      "name": "zwj-long",
+      "prompt": "👩‍💻",
+      "steps": [
+        {
+          "output": "\u001b[H\u001b[2J\u001b[0m\u001b[27m\u001b[24m\u001b[JSIK 👩‍💻 > \u001b[K"
+        },
+        {
+          "output": "a\ba123456789012345678901234567 \r\u001b[K8\r890123456789012345678901234567890Z"
+        },
+        {
+          "output": "\u001b[A\u001b[22D\u001b[P\u001b[27C89\u001b[P\u001b[32C \u001b[A\u001b[22DX\u001b[9P\u001b[18C9012345678\u001b[9P\u001b[22C1234567890Z\u001b[A\u001b[21D\u001b[1B\u001b[21C\b \b"
+        }
+      ],
+      "expected": "SIK 👩‍💻 > X123456789012345678901234567890123456789012345678901234567890"
+    },
+    {
+      "name": "jamo-text",
+      "prompt": "XX",
+      "steps": [
+        {
+          "output": "\u001b[H\u001b[2J\u001b[0m\u001b[27m\u001b[24m\u001b[JSIK XX > \u001b[K"
+        },
+        {
+          "output": "a\ba한한한한한한한ᄒ \r\u001b[Kᅡ\rᅡᆫ한한한한한한한한한ᄒ \r\u001b[Kᅡ\rᅡᆫ한한Z"
+        },
+        {
+          "output": "\u001b[A\u001b[A\b\b\u001b[P\u001b[30Cᅡᆫ\u001b[P\u001b[38Cᅡᆫ\u001b[P\u001b[9C \u001b[A\u001b[A\b\bXᄒ\u001b[3P\u001b[25Cᆫ하\u001b[3P\u001b[36Cᆫ한한한Z\u001b[A\u001b[A\b\u001b[2B\u001b[1C\b \b"
+        }
+      ],
+      "expected": "SIK XX > X한한한한한한한한한한한한한한한한한한한한"
+    },
+    {
+      "name": "jamo-paste",
+      "prompt": "XX",
+      "steps": [
+        {
+          "output": "\u001b[H\u001b[2J\u001b[0m\u001b[27m\u001b[24m\u001b[JSIK XX > \u001b[K"
+        },
+        {
+          "output": "\u001b[7ma한한한한한한한ᄒ\u001b[7mᅡ\u001b[7mᆫ한한한한한한한한한ᄒ\u001b[7mᅡ\u001b[7mᆫ한한Z\u001b[27m\u001b[K"
+        },
+        {
+          "output": "\u001b[A\u001b[A\b\b\u001b[27ma\u001b[27mᄒ\u001b[27m\u001b[27mᅡ\u001b[27mᆫ\u001b[27mᄒ\u001b[27m\u001b[27mᅡ\u001b[27mᆫ\u001b[27mᄒ\u001b[27m\u001b[27mᅡ\u001b[27mᆫ\u001b[27mᄒ\u001b[27m\u001b[27mᅡ\u001b[27mᆫ\u001b[27mᄒ\u001b[27m\u001b[27mᅡ\u001b[27mᆫ\u001b[27mᄒ\u001b[27m\u001b[27mᅡ\u001b[27mᆫ\u001b[27mᄒ\u001b[27m\u001b[27mᅡ\u001b[27mᆫ\u001b[27mᄒ\u001b[27mᅡ\u001b[27mᆫ\u001b[27mᄒ\u001b[27m\u001b[27mᅡ\u001b[27mᆫ\u001b[27mᄒ\u001b[27m\u001b[27mᅡ\u001b[27mᆫ\u001b[27mᄒ\u001b[27m\u001b[27mᅡ\u001b[27mᆫ\u001b[27mᄒ\u001b[27m\u001b[27mᅡ\u001b[27mᆫ\u001b[27mᄒ\u001b[27m\u001b[27mᅡ\u001b[27mᆫ\u001b[27mᄒ\u001b[27m\u001b[27mᅡ\u001b[27mᆫ\u001b[27mᄒ\u001b[27m\u001b[27mᅡ\u001b[27mᆫ\u001b[27mᄒ\u001b[27m\u001b[27mᅡ\u001b[27mᆫ\u001b[27mᄒ\u001b[27m\u001b[27mᅡ\u001b[27mᆫ\u001b[27mᄒ\u001b[27mᅡ\u001b[27mᆫ\u001b[27mᄒ\u001b[27m\u001b[27mᅡ\u001b[27mᆫ\u001b[27mᄒ\u001b[27m\u001b[27mᅡ\u001b[27mᆫ\u001b[27mZ\u001b[A\u001b[A\b\b\u001b[P\u001b[30Cᅡᆫ\u001b[P\u001b[38Cᅡᆫ\u001b[P\u001b[9C \u001b[A\u001b[A\b\bXᄒ\u001b[3P\u001b[25Cᆫ하\u001b[3P\u001b[36Cᆫ한한한Z\u001b[A\u001b[A\b\u001b[2B\u001b[1C\b \b"
+        }
+      ],
+      "expected": "SIK XX > X한한한한한한한한한한한한한한한한한한한한"
+    }
+  ]
+}

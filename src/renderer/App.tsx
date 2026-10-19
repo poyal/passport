@@ -51,6 +51,7 @@ import {
   setTerminalSettings,
   setTerminalFonts,
   setTerminalTransfer,
+  setTerminalUnicode,
 } from "./terminals";
 import {
   LOCAL_HOST_ID,
@@ -232,6 +233,11 @@ export function App() {
         );
         if (!known && !terminals.has(event.state.id)) return;
         const entry = ensureTerminal(event.state.id);
+        if (event.state.environment || event.state.status === "connected")
+          setTerminalUnicode(
+            event.state.id,
+            event.state.environment?.unicodeWidth ?? "unicode11",
+          );
         const generation =
           event.state.environment?.sessionInstanceId ??
           (event.state.status !== "connected"
@@ -240,8 +246,19 @@ export function App() {
         if (
           entry.connected !== (event.state.status === "connected") ||
           entry.sessionInstanceId !== generation
-        )
+        ) {
           entry.connectionRevision++;
+          // Reconnecting reuses xterm's size but creates a PTY at its default
+          // size. FitAddon need not emit another resize when the view is stable.
+          if (event.state.status === "connected")
+            void api
+              .call("session.resize", {
+                id: event.state.id,
+                cols: entry.term.cols,
+                rows: entry.term.rows,
+              })
+              .catch(notify);
+        }
         entry.connected = event.state.status === "connected";
         entry.sessionInstanceId = generation;
         if (event.state.status === "error")

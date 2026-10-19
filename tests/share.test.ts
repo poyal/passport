@@ -622,6 +622,13 @@ it("does not transfer Markdown before approval and stores accepted messages encr
   await vi.waitFor(() =>
     expect(b.service.snapshot().transfers).toHaveLength(1),
   );
+  expect(b.service.control({ command: "share.inbox" })).toMatchObject({
+    pending: [{ id: transfer.id, state: "pending" }],
+    messages: [],
+  });
+  expect(() =>
+    b.service.control({ command: "share.read", id: transfer.id }),
+  ).toThrow();
   expect(b.store.messages()).toEqual([]);
   await expect(
     shareRequest(
@@ -635,12 +642,28 @@ it("does not transfer Markdown before approval and stores accepted messages encr
     ),
   ).rejects.toThrow();
   expect(b.store.messages()).toEqual([]);
-  await b.service.approve(transfer.id, true);
+  await expect(
+    b.service.control({ command: "share.approve", id: transfer.id }),
+  ).resolves.toEqual({ id: transfer.id, state: "accepted" });
   await vi.waitFor(
     () => expect(a.service.status(transfer.id).state).toBe("delivered"),
     { timeout: 5000 },
   );
   expect(b.store.message(transfer.id).markdown).toBe(text);
+  expect(b.service.control({ command: "share.read", id: transfer.id })).toEqual(
+    b.store.message(transfer.id),
+  );
+  expect(b.service.status(transfer.id)).toEqual({
+    id: transfer.id,
+    state: "delivered",
+  });
+  expect(b.service.control({ command: "share.inbox" })).toMatchObject({
+    pending: [],
+    messages: [{ id: transfer.id }],
+  });
+  expect(
+    JSON.stringify(b.service.control({ command: "share.inbox" })),
+  ).not.toContain("markdown");
   const disk = Buffer.concat(
     await Promise.all(
       (await fs.readdir(b.root))
@@ -654,11 +677,68 @@ it("does not transfer Markdown before approval and stores accepted messages encr
   expect(
     shareControlSchema.safeParse({ command: "share.approve", id: transfer.id })
       .success,
-  ).toBe(false);
+  ).toBe(true);
   expect(
     shareControlSchema.safeParse({ command: "share.read", id: transfer.id })
       .success,
-  ).toBe(false);
+  ).toBe(true);
+});
+
+it("keeps incoming approval pending when authorization is revoked while preparing the download directory", async () => {
+  const { a, b } = await paired();
+  const file = path.join(a.root, "note.txt");
+  await fs.writeFile(file, "attachment");
+  const transfer = a.service.send({ to: "지수", text: "본문", file });
+  await vi.waitFor(() =>
+    expect(b.service.snapshot().transfers).toHaveLength(1),
+  );
+  let authorized = true;
+  const approval = b.service.control(
+    { command: "share.approve", id: transfer.id },
+    () => {
+      if (!authorized) throw new Error("session revoked");
+    },
+  );
+  authorized = false;
+  await expect(approval).rejects.toThrow("session revoked");
+  expect(b.service.status(transfer.id).state).toBe("pending");
+  expect(b.store.messages()).toEqual([]);
+  (b.service as any).jobs.get(transfer.id).deadline = Date.now() - 1;
+  expect(b.service.control({ command: "share.inbox" })).toMatchObject({
+    pending: [],
+    messages: [],
+  });
+  await expect(
+    b.service.control({ command: "share.approve", id: transfer.id }),
+  ).rejects.toThrow();
+});
+
+it("acknowledges only the displayed error occurrence and hides expired registration requests", async () => {
+  const { a, b } = await paired();
+  const service = a.service as any;
+  service.error = "등록 요청이 만료되었습니다.";
+  const first = a.service.snapshot().errorId!;
+  a.service.dismissError(first);
+  expect(a.service.snapshot().error).toBeUndefined();
+  service.error = "등록 요청이 만료되었습니다.";
+  const second = a.service.snapshot().errorId!;
+  expect(second).not.toBe(first);
+  a.service.dismissError(first);
+  expect(a.service.snapshot().errorId).toBe(second);
+  a.service.dismissError(second);
+  expect(a.service.snapshot().error).toBeUndefined();
+  service.error = "등록 요청이 만료되었습니다.";
+  expect(a.service.snapshot().errorId).not.toBe(second);
+  await b.service.invite();
+  const pairing = (b.service as any).pairing;
+  pairing.request = {
+    id: randomUUID(),
+    name: "expired",
+    cert: a.identity.cert,
+    state: "pending",
+  };
+  pairing.invite.expires = Date.now() - 1;
+  expect(b.service.snapshot().requests).toEqual([]);
 });
 
 it("saves a message and protected attachment together after one approval, rejects replay and preserves existing files", async () => {

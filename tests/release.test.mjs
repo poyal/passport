@@ -324,7 +324,7 @@ test("GUI policy records platform exclusions and optional skips explicitly", () 
     platform: "darwin",
     mode: "hidden",
   });
-  assert.equal(coverage.passed, 84);
+  assert.equal(coverage.passed, 86);
   assert.equal(coverage.skipped, 9);
   assert.equal(
     coverage.tests.filter(
@@ -342,12 +342,12 @@ test("GUI policy records platform exclusions and optional skips explicitly", () 
     platform: "win32",
     mode: "hidden",
   });
-  assert.equal(windows.skipped, 6);
+  assert.equal(windows.skipped, 7);
   assert.equal(
     windows.tests.filter(
       (test) => test.skipReason === "not applicable on win32",
     ).length,
-    3,
+    4,
   );
   assert.ok(
     windows.tests
@@ -1267,7 +1267,11 @@ test("Electron teardown holds final quit until Playwright can disconnect after a
       nativeApp.emit("will-quit", event);
       if (!event.defaultPrevented) {
         assert.equal(cleaned, true);
-        assert.equal(closing, true, "Final quit must wait for Playwright close");
+        assert.equal(
+          closing,
+          true,
+          "Final quit must wait for Playwright close",
+        );
         finalQuit = true;
         child.exitCode = 0;
         child.emit("exit", 0, null);
@@ -1287,7 +1291,11 @@ test("Electron teardown holds final quit until Playwright can disconnect after a
     evaluate: (fn) => fn({ app: nativeApp, dialog: {} }),
     close: async () => {
       assert.equal(cleaned, true);
-      assert.equal(finalQuit, false, "The debugger must still accept evaluations");
+      assert.equal(
+        finalQuit,
+        false,
+        "The debugger must still accept evaluations",
+      );
       heldListenerCount = nativeApp.listenerCount("will-quit");
       closing = true;
       if (child.exitCode === null) nativeApp.quit();

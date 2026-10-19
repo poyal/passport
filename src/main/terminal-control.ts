@@ -37,7 +37,7 @@ export class TerminalControl {
       write(paneId: string, data: string): void;
       share?: {
         enabled(): boolean;
-        execute(input: ShareControlCommand): unknown;
+        execute(input: ShareControlCommand, authorize: () => void): unknown;
       };
     },
   ) {}
@@ -213,6 +213,9 @@ export class TerminalControl {
       request = input.request;
     if (
       request.command === "share.peers" ||
+      request.command === "share.inbox" ||
+      request.command === "share.approve" ||
+      request.command === "share.read" ||
       request.command === "share.send" ||
       request.command === "share.status" ||
       request.command === "share.cancel"
@@ -220,7 +223,11 @@ export class TerminalControl {
       if (!this.sharing || !this.options.share?.enabled())
         throw new ControlError("UNAUTHORIZED", "쪽지 기능이 꺼져 있습니다.");
       authorize();
-      return this.options.share.execute(request);
+      return this.options.share.execute(request, () => {
+        authorize();
+        if (!this.sharing || !this.options.share?.enabled())
+          throw new ControlError("UNAUTHORIZED", "쪽지 기능이 꺼져 있습니다.");
+      });
     }
     if (this.mode === "off")
       throw new ControlError("UNAUTHORIZED", "터미널 제어 권한이 없습니다.");

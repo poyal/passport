@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { controlModeSchema } from "./terminal-control";
 
+export const unicodeWidthSchema = z.enum(["unicode11", "macos-zsh"]);
+export type UnicodeWidth = z.infer<typeof unicodeWidthSchema>;
+
 export const shellIdSchema = z.enum([
   "default",
   "zsh",
@@ -176,4 +179,5 @@ export type AppliedEnvironment = {
   results: string[];
   status: "starting" | "ready" | "failed";
   agent?: "claude" | "codex";
+  unicodeWidth?: UnicodeWidth;
 };

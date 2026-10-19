@@ -56,6 +56,20 @@ test("macOS zsh edits wrapped emoji prompts and pasted Unicode without stale tex
   const id = (
     await page.evaluate(() => window.passport.call("bootstrap", undefined))
   ).sessionStates[0].id;
+  await page.evaluate(async (id) => {
+    const boot = await window.passport.call("bootstrap", undefined);
+    const workspace = boot.document.workspaces.find(
+      (w) => w.root.kind === "pane" && w.root.id === id,
+    )!;
+    if (workspace.root.kind !== "pane" || !workspace.root.local)
+      throw new Error("Local pane missing");
+    workspace.root.local.unicodeWidth = "macos-zsh";
+    await window.passport.call("save", boot.document);
+    await window.passport.call("session.connect", {
+      id,
+      hostId: workspace.root.hostId,
+    });
+  }, id);
   const pane = page.locator(`[data-pane-id="${id}"]`);
   const rows = pane.locator(".xterm-rows");
   const input = pane.locator(".xterm-helper-textarea");
@@ -87,7 +101,7 @@ test("macOS zsh edits wrapped emoji prompts and pasted Unicode without stale tex
       })
       .toBe(expected);
   }
-  const paste = "a" + "💻é한".repeat(30) + "Z";
+  const paste = "a" + "💻é한한".repeat(30) + "Z";
   const narrowColumns = (await capture()).columns;
   await application.evaluate(({ ipcMain }, text) => {
     const original = (ipcMain as any)._invokeHandlers.get("passport:call");
@@ -102,6 +116,10 @@ test("macOS zsh edits wrapped emoji prompts and pasted Unicode without stale tex
     ["ascii", "XX"],
     ["laptop", "💻"],
     ["wrench", "🔧"],
+    ["flag-long", "🇰🇷"],
+    ["jamo-long", "한"],
+    ["zwj-long", "👩‍💻"],
+    ["jamo-input", "XX"],
   ]) {
     expect((await capture()).buffer).toBe("");
     await application.evaluate(({ BrowserWindow }) =>
@@ -123,8 +141,8 @@ test("macOS zsh edits wrapped emoji prompts and pasted Unicode without stale tex
     await input.press("Control+l");
     const text =
       "a" +
-      "abcdefghijklmnopqrstuvwxyz0123456789"
-        .repeat(5)
+      (name === "jamo-input" ? "한" : "abcdefghijklmnopqrstuvwxyz0123456789")
+        .repeat(name === "jamo-input" ? 100 : 5)
         .slice(0, initial.columns + 20) +
       "Z";
     await input.pressSequentially(text, { delay: 1 });
@@ -155,6 +173,46 @@ test("macOS zsh edits wrapped emoji prompts and pasted Unicode without stale tex
     await page.screenshot({ path: info.outputPath(`${name}-unicode.png`) });
     await input.press("Control+c");
   }
+  const movedText = "a" + "한🇰🇷".repeat(10) + "Z";
+  await input.press("Control+l");
+  await input.pressSequentially(movedText, { delay: 1 });
+  await aligned(movedText);
+  const newWindow = application.waitForEvent("window");
+  await page.evaluate(async (id) => {
+    const boot = await window.passport.call("bootstrap", undefined);
+    const workspace = boot.document.workspaces.find(
+      (w) => w.root.kind === "pane" && w.root.id === id,
+    )!;
+    await window.passport.call("window.move", { workspaceId: workspace.id });
+  }, id);
+  const moved = await newWindow;
+  const movedPane = moved.locator(`[data-pane-id="${id}"]`);
+  await expect(movedPane.locator(".xterm-rows")).toContainText("SIK XX > ");
+  const movedInput = movedPane.locator(".xterm-helper-textarea");
+  await movedInput.focus();
+  await movedInput.press("Backspace");
+  await fs.rm(path.join(startup, "capture"), { force: true });
+  await movedInput.press("Control+g");
+  await expect
+    .poll(
+      async () =>
+        (
+          await fs
+            .readFile(path.join(startup, "capture"), "utf8")
+            .catch(() => "")
+        ).split("\0")[0],
+    )
+    .toBe(movedText.slice(0, -1));
+  await expect
+    .poll(async () => {
+      const full = (
+        await movedPane.locator(".xterm-rows > div").allTextContents()
+      )
+        .map((line) => line.replace(/\u00a0/g, " ").trimEnd())
+        .join("");
+      return full.slice(full.lastIndexOf(" > ") + 3).trimEnd();
+    })
+    .toBe(movedText.slice(0, -1));
 });
 
 test("SSH normal and alternate screens keep emoji cells aligned with cursor addressing", async ({}, info) => {

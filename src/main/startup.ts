@@ -46,6 +46,18 @@ export function previewEnvironment(
     throw new Error("시작 폴더를 찾을 수 없습니다.");
   const profiles = selectedProfiles(settings, config.profiles);
   const results: string[] = [];
+  const unicodeWidth =
+    config.unicodeWidth === "macos-zsh" &&
+    platform.id === "darwin" &&
+    shell.id === "zsh"
+      ? "macos-zsh"
+      : "unicode11";
+  if (config.unicodeWidth === "macos-zsh")
+    results.push(
+      unicodeWidth === "macos-zsh"
+        ? "문자 폭: macOS zsh 호환"
+        : "macOS zsh 문자 폭 호환은 이 OS·셸에서 지원하지 않아 기본(Unicode 11)을 사용합니다.",
+    );
   const seen = new Set<string>();
   for (const profile of profiles) {
     if (
@@ -92,6 +104,7 @@ export function previewEnvironment(
     results,
     status: "starting",
     agent: config.agent,
+    unicodeWidth,
   };
 }
 function unixEntries(profiles: StartupProfile[], helper: string) {

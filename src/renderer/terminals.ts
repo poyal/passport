@@ -1,7 +1,8 @@
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import { SerializeAddon } from "@xterm/addon-serialize";
-import { configureTerminalUnicode } from "./terminal-unicode";
+import { configureTerminalUnicode, unicodeVersion } from "./terminal-unicode";
+import type { UnicodeWidth } from "../shared/terminal-config";
 import { highlightTerminal } from "./highlights";
 import {
   shortcutMatch,
@@ -26,6 +27,7 @@ type Entry = {
   connected: boolean;
   connectionRevision: number;
   sessionInstanceId?: string;
+  unicodeWidth: UnicodeWidth;
   pasteSessionInstanceId?: string;
   pasteQueue: PasteQueue;
   serialize: SerializeAddon;
@@ -112,6 +114,7 @@ export function ensureTerminal(id: string) {
     serialize,
     element,
     connected: false,
+    unicodeWidth: "unicode11",
     connectionRevision: 0,
     pasteQueue: new PasteQueue(),
     backspace: "DEL",
@@ -439,6 +442,7 @@ export async function serializeTerminals(
               cols: e.term.cols,
               rows: e.term.rows,
               appearance: e.appearance,
+              unicodeWidth: e.unicodeWidth,
             }),
           );
         }),
@@ -452,9 +456,19 @@ export function hydrateTerminals(snapshots: TerminalSnapshot[]) {
     e.sessionInstanceId = s.sessionInstanceId;
     e.term.resize(s.cols, s.rows);
     e.term.reset();
+    setTerminalUnicode(s.id, s.unicodeWidth ?? "unicode11");
     e.hydrating = true;
     e.term.write(s.data, () => {
       e.hydrating = false;
     });
   }
+}
+
+export function setTerminalUnicode(id: string, mode: UnicodeWidth) {
+  const entry = ensureTerminal(id);
+  if (entry.unicodeWidth === mode) return;
+  // A new width policy cannot safely reuse scrollback parsed with the old one.
+  entry.term.reset();
+  entry.term.unicode.activeVersion = unicodeVersion(mode);
+  entry.unicodeWidth = mode;
 }

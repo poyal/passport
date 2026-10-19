@@ -668,7 +668,65 @@ test("pairs two devices, sends messages with optional attachments after one appr
   await expect.poll(async () => (await snapshot(a.page)).peers.length).toBe(0);
 });
 
-test("lets the real CLI send to a registered alias without terminal access and cannot approve or read incoming messages", async () => {
+test("dismisses expired registration errors across refresh and shows new occurrences", async () => {
+  const a = await launch("expiry-a"),
+    b = await launch("expiry-b");
+  const expire = async () => {
+    const invitation = await b.page.evaluate(() =>
+      window.passport.call("share.invite", undefined),
+    );
+    await a.page.evaluate(
+      (key) => window.passport.call("share.join", { key, alias: "친구" }),
+      invitation.key,
+    );
+    await expect
+      .poll(async () => (await snapshot(b.page)).requests.length)
+      .toBe(1);
+    await a.app.evaluate(() => {
+      const state = globalThis as any;
+      state.__expiryOriginalNow ??= Date.now;
+      Date.now = () => state.__expiryOriginalNow() + 6 * 60 * 1000;
+    });
+    await expect
+      .poll(async () => (await snapshot(a.page)).error)
+      .toBe("등록 요청이 만료되었습니다.");
+    await a.app.evaluate(() => {
+      Date.now = (globalThis as any).__expiryOriginalNow;
+    });
+  };
+  try {
+    await expire();
+    await expect(a.page.getByRole("alert")).toContainText(
+      "등록 요청이 만료되었습니다.",
+    );
+    await a.page
+      .getByRole("button", { name: "알림 닫기", exact: true })
+      .click();
+    await expect(a.page.getByRole("alert")).toHaveCount(0);
+    expect((await snapshot(a.page)).error).toBeUndefined();
+    await a.page.locator('.app-tab[aria-label="쪽지"]').click();
+    await expect(a.page.getByRole("alert")).toHaveCount(0);
+    await a.page.reload();
+    await a.page.locator('.app-tab[aria-label="쪽지"]').click();
+    await expect(a.page.getByRole("alert")).toHaveCount(0);
+    await expire();
+    await expect(a.page.getByRole("alert")).toContainText(
+      "등록 요청이 만료되었습니다.",
+    );
+    await a.page
+      .getByRole("button", { name: "알림 닫기", exact: true })
+      .click();
+    await expect(a.page.getByRole("alert")).toHaveCount(0);
+  } finally {
+    await a.app.evaluate(() => {
+      const state = globalThis as any;
+      if (state.__expiryOriginalNow) Date.now = state.__expiryOriginalNow;
+      delete state.__expiryOriginalNow;
+    });
+  }
+});
+
+test("lets both peers send, approve and read notes with the real CLI without terminal access", async () => {
   const { a, b } = await pair();
   await a.page.evaluate(async () => {
     const boot = await window.passport.call("bootstrap", undefined);
@@ -731,6 +789,66 @@ test("lets the real CLI send to a registered alias without terminal access and c
   expect(receipt.value.state).toBe("delivered");
   await b.page.locator(".share-message-list button").click();
   await expect(b.page.locator(".share-markdown h1")).toHaveText("CLI 쪽지");
+  // b received the friend request; its CLI must work in both directions too.
+  await b.page.evaluate(async () => {
+    const boot = await window.passport.call("bootstrap", undefined);
+    boot.document.settings.terminal.cliAccess = "off";
+    boot.document.settings.terminal.shell =
+      boot.platform === "win32" ? "passport-bash" : "bash";
+    boot.document.settings.terminal.profileIds = [];
+    await window.passport.call("save", boot.document);
+  });
+  await b.page.getByRole("button", { name: "시작", exact: true }).click();
+  await b.page
+    .getByRole("button", { name: "새 로컬 터미널", exact: true })
+    .click();
+  await expect(b.page.locator(".xterm-rows")).toContainText(/\$\s*$/);
+  const receiverPane = (
+    await b.page.evaluate(() => window.passport.call("bootstrap", undefined))
+  ).sessionStates[0].id;
+  const receiverCli = await cliCoordinator(b.page, receiverPane, root);
+  expect((await receiverCli(["share", "friends"])).value[0].name).toBe("승민");
+  expect(
+    (await receiverCli(["share", "read", request.value.id])).value.markdown,
+  ).toBe("# CLI 쪽지\n\n한글 본문");
+  const reply = await receiverCli([
+    "share",
+    "send",
+    "--to",
+    "승민",
+    "--text",
+    "받은 사람의 CLI 답장",
+  ]);
+  expect(reply.ok).toBe(true);
+  await expect
+    .poll(async () =>
+      (await snapshot(a.page)).transfers.some((t) => t.id === reply.value.id),
+    )
+    .toBe(true);
+  expect((await cli(["share", "inbox"])).value.pending).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ id: reply.value.id, state: "pending" }),
+    ]),
+  );
+  expect((await cli(["share", "read", reply.value.id])).ok).toBe(false);
+  expect((await cli(["share", "approve", reply.value.id])).value.state).toBe(
+    "accepted",
+  );
+  await expect
+    .poll(async () =>
+      (await snapshot(a.page)).messages.some((m) => m.id === reply.value.id),
+    )
+    .toBe(true);
+  expect((await cli(["share", "status", reply.value.id])).value.state).toBe(
+    "delivered",
+  );
+  expect((await cli(["share", "read", reply.value.id])).value.markdown).toBe(
+    "받은 사람의 CLI 답장",
+  );
+  expect((await cli(["share", "inbox"])).value.messages).toEqual(
+    expect.arrayContaining([expect.objectContaining({ id: reply.value.id })]),
+  );
+  await b.page.locator('.app-tab[aria-label="쪽지"]').click();
   const pending = await cli([
     "share",
     "send",

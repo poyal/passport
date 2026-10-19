@@ -397,6 +397,36 @@ export function TerminalChooser({
             onChange={(profiles) => setLocal({ ...local, profiles })}
             shell={local.shell}
           />
+          <label>
+            문자 폭
+            <select
+              aria-label="문자 폭"
+              value={local.unicodeWidth ?? "unicode11"}
+              onChange={(e) =>
+                setLocal({
+                  ...local,
+                  unicodeWidth: e.target.value as LocalShell["unicodeWidth"],
+                })
+              }
+            >
+              <option value="unicode11">기본(Unicode 11)</option>
+              <option
+                value="macos-zsh"
+                disabled={
+                  app.boot.platform !== "darwin" ||
+                  actualShell(local.shell, preview?.executable) !== "zsh"
+                }
+              >
+                macOS zsh 호환
+              </option>
+            </select>
+          </label>
+          <p className="hint">
+            국기·분해형 한글·ZWJ 문자가 있는 긴 입력의 표시가 어긋나면 macOS zsh
+            호환을 선택하세요. 이 터미널에서 실행하는 다른 프로그램의 표시에도
+            영향을 줍니다. 문자 폭 변경은 새로 시작할 때 적용되며 화면과
+            스크롤백이 초기화됩니다.
+          </p>
           {preview && (
             <details>
               <summary>적용 순서와 충돌 미리보기</summary>

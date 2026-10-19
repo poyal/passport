@@ -132,6 +132,7 @@ export type ShareSnapshot = {
   nearby: { name: string; endpoint: ShareEndpoint }[];
   interfaces: { name: string; address: string }[];
   error?: string;
+  errorId?: string;
 };
 export const shareSendSchema = z
   .object({
@@ -152,6 +153,13 @@ export const shareSendSchema = z
 export type ShareSend = z.infer<typeof shareSendSchema>;
 export const shareControlSchema = z.discriminatedUnion("command", [
   z.object({ command: z.literal("share.peers") }).strict(),
+  z.object({ command: z.literal("share.inbox") }).strict(),
+  z
+    .object({ command: z.literal("share.approve"), id: z.string().uuid() })
+    .strict(),
+  z
+    .object({ command: z.literal("share.read"), id: z.string().uuid() })
+    .strict(),
   z
     .object({ command: z.literal("share.send"), input: shareSendSchema })
     .strict(),

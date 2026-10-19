@@ -91,7 +91,11 @@ export const controlInspectionSchema = z
 export type ControlInspection = z.infer<typeof controlInspectionSchema>;
 export type ControlResponse =
   | { version: 1; ok: true; value: unknown }
-  | { version: 1; ok: false; error: { code: string; message: string } };
+  | {
+      version: 1;
+      ok: false;
+      error: { code: string; message: string; osCode?: number };
+    };
 export class ControlError extends Error {
   constructor(
     readonly code: string,

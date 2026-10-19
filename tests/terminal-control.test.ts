@@ -146,6 +146,43 @@ it("grants sharing independently of terminal control and revokes the session cap
   ).rejects.toThrow(/권한/);
   expect(execute).toHaveBeenCalledTimes(1);
 });
+it("revokes a waiting share approval when the calling pane reconnects", async () => {
+  const source = panel("approval caller");
+  let release!: () => void,
+    approved = false;
+  const service = new TerminalControl({
+    endpoint: platform.createControlEndpoint(),
+    panels: () => [source],
+    inspect: vi.fn(),
+    write: vi.fn(),
+    share: {
+      enabled: () => true,
+      execute: async (_input, authorize) => {
+        await new Promise<void>((resolve) => {
+          release = resolve;
+        });
+        authorize();
+        approved = true;
+      },
+    },
+  });
+  services.push(service);
+  await service.start();
+  service.configure("off");
+  const env = service.register(source.paneId, source.sessionId!);
+  const pending = service.execute({
+    version: 1,
+    token: env.PASSPORT_CONTROL_TOKEN,
+    source: { paneId: source.paneId, sessionId: source.sessionId! },
+    request: { command: "share.approve", id: randomUUID() },
+  });
+  source.sessionId = randomUUID();
+  service.register(source.paneId, source.sessionId);
+  release();
+  await expect(pending).rejects.toThrow(/권한|만료/);
+  expect(approved).toBe(false);
+});
+
 it("preserves Korean, templates, tabs and trailing newlines without adding Enter", () => {
   expect(controlPaste("한글 {{literal}}\r\n둘\t끝\n", true, false)).toBe(
     "\x1b[200~한글 {{literal}}\r둘\t끝\r\x1b[201~",

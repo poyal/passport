@@ -80,7 +80,10 @@ import { sshFileDropMessage } from "../shared/paste";
 import { terminalLinkURL } from "./terminal-links";
 import { platform } from "./platform";
 import { prepareLaunch, previewEnvironment } from "./startup";
-import { selectedProfiles } from "../shared/terminal-config";
+import {
+  selectedProfiles,
+  unicodeWidthSchema,
+} from "../shared/terminal-config";
 import { SessionLogs } from "./logs";
 import { Tunnels } from "./tunnels";
 import {
@@ -457,6 +460,7 @@ const pathSchema = z
 const idObject = z.object({ id: idSchema });
 const schemas: Record<Call, z.ZodType> = {
   "share.state": z.undefined(),
+  "share.dismissError": z.object({ errorId: idSchema }).strict(),
   "share.unlock": z.undefined(),
   "share.reset": z.undefined(),
   "share.configure": shareSettingsSchema,
@@ -584,6 +588,7 @@ const schemas: Record<Call, z.ZodType> = {
           cols: z.number().int().min(2).max(1000),
           rows: z.number().int().min(1).max(500),
           appearance: appearanceOverridesSchema.optional(),
+          unicodeWidth: unicodeWidthSchema.optional(),
         }),
       )
       .max(16),
@@ -774,6 +779,8 @@ async function call<K extends Call>(
   switch (name) {
     case "share.state":
       return sharing.snapshot();
+    case "share.dismissError":
+      return sharing.dismissError(i.errorId);
     case "share.unlock":
       return sharing.unlock();
     case "share.reset":
@@ -1914,7 +1921,7 @@ void app
       write: (id, data) => locals.input(id, data),
       share: {
         enabled: () => sharing.enabled,
-        execute: (input) => sharing.control(input),
+        execute: (input, authorize) => sharing.control(input, authorize),
       },
     });
     await terminalControl.start();

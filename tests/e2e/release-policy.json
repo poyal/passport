@@ -490,7 +490,7 @@
     {
       "id": "sharing.2",
       "file": "sharing.spec.ts",
-      "title": "lets the real CLI send to a registered alias without terminal access and cannot approve or read incoming messages"
+      "title": "lets both peers send, approve and read notes with the real CLI without terminal access"
     },
     {
       "id": "terminal-unicode.zsh-edit",
@@ -502,6 +502,17 @@
       "id": "terminal-unicode.ssh-screen",
       "file": "terminal-unicode.spec.ts",
       "title": "SSH normal and alternate screens keep emoji cells aligned with cursor addressing"
+    },
+    {
+      "id": "sharing.dismiss-expired-error",
+      "file": "sharing.spec.ts",
+      "title": "dismisses expired registration errors across refresh and shows new occurrences"
+    },
+    {
+      "id": "terminal-reconnect.profiles",
+      "file": "terminal-reconnect.spec.ts",
+      "title": "reconnects the same local pane with fresh CLI credentials and current profiles without restarting the app",
+      "platforms": ["darwin"]
     }
   ]
 }

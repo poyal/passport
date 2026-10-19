@@ -126,6 +126,55 @@ it("migrates v1, rejects future formats, and preserves startup fields through en
     document,
   );
 });
+it("preserves the opt-in Unicode width in portable panes and resolves it only for local macOS zsh", async () => {
+  const doc = emptyDocument();
+  doc.workspaces = [
+    {
+      id: randomUUID(),
+      name: "Unicode",
+      root: {
+        kind: "pane",
+        id: randomUUID(),
+        hostId: randomUUID(),
+        local: { shell: "zsh", cwd: "", unicodeWidth: "macos-zsh" },
+      },
+    },
+  ];
+  const restored = await decodePortable(
+    await encodePortable({
+      format: "passport",
+      version: 2,
+      document: doc,
+      profiles: [],
+    }),
+  );
+  expect(restored.document.workspaces[0].root).toMatchObject({
+    local: { unicodeWidth: "macos-zsh" },
+  });
+  const settings = defaultTerminalSettings(process.platform);
+  const standard = previewEnvironment(
+    { shell: settings.shell, cwd: directory() },
+    settings,
+  );
+  expect(standard.unicodeWidth).toBe("unicode11");
+  const fallback = previewEnvironment(
+    {
+      shell: process.platform === "darwin" ? "bash" : settings.shell,
+      cwd: directory(),
+      unicodeWidth: "macos-zsh",
+    },
+    settings,
+  );
+  expect(fallback.unicodeWidth).toBe("unicode11");
+  expect(fallback.results.join(" ")).toContain("지원하지 않아");
+  if (process.platform === "darwin")
+    expect(
+      previewEnvironment(
+        { shell: "zsh", cwd: directory(), unicodeWidth: "macos-zsh" },
+        settings,
+      ).unicodeWidth,
+    ).toBe("macos-zsh");
+});
 it("backs up v3 before migrating and keeps the original database on validation failure", () => {
   const dir = directory();
   let store = new Store(dir, vault);
@@ -269,9 +318,9 @@ it("uses the global working directory for inherited panes while respecting expli
   const settings = defaultTerminalSettings(process.platform);
   settings.cwd = directory();
   const explicit = directory();
-  expect(previewEnvironment({ shell: settings.shell, cwd: "" }, settings).cwd).toBe(
-    settings.cwd,
-  );
+  expect(
+    previewEnvironment({ shell: settings.shell, cwd: "" }, settings).cwd,
+  ).toBe(settings.cwd);
   expect(
     previewEnvironment({ shell: settings.shell, cwd: explicit }, settings).cwd,
   ).toBe(explicit);
