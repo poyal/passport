@@ -1243,6 +1243,7 @@ test("Electron teardown holds final quit until Playwright can disconnect after a
   let cleaned = false;
   let finalQuit = false;
   let closing = false;
+  let heldListenerCount = 0;
   t.mock.method(process.stderr, "write", (data) => child.stderr.write(data));
   const nativeApp = Object.assign(new EventEmitter(), {
     quit() {
@@ -1276,6 +1277,7 @@ test("Electron teardown holds final quit until Playwright can disconnect after a
     close: async () => {
       assert.equal(cleaned, true);
       assert.equal(finalQuit, false, "The debugger must still accept evaluations");
+      heldListenerCount = nativeApp.listenerCount("will-quit");
       closing = true;
       if (child.exitCode === null) nativeApp.quit();
     },
@@ -1284,7 +1286,7 @@ test("Electron teardown holds final quit until Playwright can disconnect after a
   assert.equal(cleaned, true);
   assert.equal(finalQuit, true);
   assert.equal(child.exitCode, 0);
-  assert.equal(nativeApp.listenerCount("will-quit"), 1);
+  assert.equal(nativeApp.listenerCount("will-quit"), heldListenerCount - 1);
 });
 
 test("Electron teardown accepts a split cleanup marker before requiring process exit", async () => {
