@@ -60,7 +60,7 @@ import {
   variables,
   interpolate,
 } from "../shared/advanced";
-import icon from "../../design/icons/04-passport-terminal-v2.png";
+import icon from "../../assets/app-icon.png";
 type Request =
   | {
       type: "ask" | "confirm";

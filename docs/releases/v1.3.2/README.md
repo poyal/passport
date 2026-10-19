@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="../../../design/icons/04-passport-terminal-v2.png" width="112" alt="Passport 앱 아이콘" />
+  <img src="../../../assets/app-icon.png" width="112" alt="Passport 앱 아이콘" />
 </p>
 
 <h1 align="center">Passport 사용자 매뉴얼</h1>

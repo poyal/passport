@@ -32,11 +32,11 @@ Alpine Linux, CentOS, Red Hat, Rocky Linux, Ubuntu, Debian, Fedora, Linux, Apple
 - Rocky Linux 로고: Rocky Linux / Rocky Enterprise Software Foundation, [CC BY-SA 4.0](https://github.com/rocky-linux/branding).
 - Fedora 로고: Fedora Project / Red Hat, Inc., [Fedora 브랜드 안내](https://docs.fedoraproject.org/en-US/project/brand/).
 
-원본 출처, 개별 라이선스 정보와 고지는 `licenses/os-icons/` 및 설치본의 `dist/licenses/os-icons/`에 포함합니다.
+원본 출처, 개별 라이선스 정보와 고지는 `assets/licenses/os-icons/` 및 설치본의 `dist/licenses/os-icons/`에 포함합니다.
 
 ## 로컬 작업 아이콘
 
-AI 도구 SVG 16개는 [Lobe Icons](https://github.com/lobehub/lobe-icons/tree/8a1b2821bb768c484fe8da20c5e1838b6bf551a9)의 원본을 포함합니다. Copyright (c) 2023 LobeHub, MIT License. 개발 도구·언어·데이터 SVG 32개는 [Devicon](https://github.com/devicons/devicon/tree/6a37858047b0e8d9c9c0e68f4a071fc410652e89)의 원본을 포함합니다. Copyright (c) 2015 konpa, MIT License. 출처·파일 해시·두 라이선스는 `licenses/local-icons/`와 설치본의 `dist/licenses/local-icons/`에 포함합니다. 브랜드 이름과 상표의 권리는 각 소유자에게 있으며, 아이콘 표시는 해당 도구와의 제휴나 자동 연동을 뜻하지 않습니다. 일반 작업 아이콘은 기존 `lucide-react`를 사용합니다.
+AI 도구 SVG 16개는 [Lobe Icons](https://github.com/lobehub/lobe-icons/tree/8a1b2821bb768c484fe8da20c5e1838b6bf551a9)의 원본을 포함합니다. Copyright (c) 2023 LobeHub, MIT License. 개발 도구·언어·데이터 SVG 32개는 [Devicon](https://github.com/devicons/devicon/tree/6a37858047b0e8d9c9c0e68f4a071fc410652e89)의 원본을 포함합니다. Copyright (c) 2015 konpa, MIT License. 출처·파일 해시·두 라이선스는 `assets/licenses/local-icons/`와 설치본의 `dist/licenses/local-icons/`에 포함합니다. 브랜드 이름과 상표의 권리는 각 소유자에게 있으며, 아이콘 표시는 해당 도구와의 제휴나 자동 연동을 뜻하지 않습니다. 일반 작업 아이콘은 기존 `lucide-react`를 사용합니다.
 
 ## Windows 셸 런타임과 네이티브 helper
 
@@ -46,4 +46,4 @@ Passport 변경: `etc/profile.d/bash_profile.sh`의 사용자 `.bash_profile` �
 
 Rust helper는 잠금 파일 `native/helper/Cargo.lock`을 사용한다. 빌드 시 각 의존성의 이름·버전·라이선스 및 제공된 라이선스 원문을 `terminal/helper/<platform>-<arch>/licenses/`에 포함한다.
 
-터미널 내장 글꼴: Cascadia Mono / Cascadia Code (Microsoft), Fira Code (Nikita Prokopov), Source Code Pro (Adobe), IBM Plex Mono (IBM)는 각 @fontsource 패키지의 SIL Open Font License 1.1과 저작권 고지를 `dist/licenses/`에 포함합니다. D2Coding 1.3.3 (NAVER Corporation)은 공식 배포의 원본 TTF 일반/굵게 파일을 변경 없이 사용하며 `licenses/fonts/D2Coding-OFL.txt`를 함께 배포합니다. 폰트 출처와 해시는 `src/renderer/fonts/sources.json`에 기록합니다. OS에 설치된 Menlo·Monaco·Consolas 등의 파일은 앱에 복사하지 않습니다.
+터미널 내장 글꼴: Cascadia Mono / Cascadia Code (Microsoft), Fira Code (Nikita Prokopov), Source Code Pro (Adobe), IBM Plex Mono (IBM)는 각 @fontsource 패키지의 SIL Open Font License 1.1과 저작권 고지를 `dist/licenses/`에 포함합니다. D2Coding 1.3.3 (NAVER Corporation)은 공식 배포의 원본 TTF 일반/굵게 파일을 변경 없이 사용하며 `assets/licenses/fonts/D2Coding-OFL.txt`를 함께 배포합니다. 폰트 출처와 해시는 `src/renderer/fonts/sources.json`에 기록합니다. OS에 설치된 Menlo·Monaco·Consolas 등의 파일은 앱에 복사하지 않습니다.

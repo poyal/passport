@@ -18,7 +18,7 @@
 - 삭제 전 실행 중인 앱·빌드·검사·마운트된 설치 이미지를 확인합니다. 다른 작업이 사용하는 경로는 그 작업이 끝날 때까지 건드리지 않습니다. 사용자가 실행을 요청해 사용 중인 미리보기도 사용 종료 후 삭제합니다.
 - 설치 앱과 실제 사용자 데이터는 `release/` 정리와 별개입니다. 설치 교체가 끝나지 않았거나 복구 중이면 복구본을 먼저 지우지 않습니다. 앱 데이터 폴더의 자동 백업·마이그레이션 백업은 개발 작업 흔적이 아닙니다.
 - 정리 범위는 `release/`에 한정하지 않습니다. 사용을 마친 `dist/`, `build/icon.png`·`icon.ico`, `build/runtime-downloads/`, 작업 전용 `build/toolchains/`도 삭제합니다. 다른 폴더로 옮겨 보관하지 않습니다. 다음 개발·검증 시 도구를 준비하고 다시 빌드합니다.
-- `build/installer.nsh`는 Windows 설치 스크립트 소스이고 `design/icons/04-passport-terminal-v2.png`는 앱·빌드·매뉴얼이 직접 참조하는 아이콘 원본이므로 유지합니다. 폴더 이름만 보고 소스까지 일괄 삭제하지 않습니다. 시스템에 설치된 공용 개발 도구는 저장소 작업용 산출물과 구분합니다.
+- `build/installer.nsh`는 Windows 설치 스크립트 소스이고 `assets/app-icon.png`는 앱·빌드·매뉴얼이 직접 참조하는 아이콘 원본이므로 유지합니다. 폴더 이름만 보고 소스까지 일괄 삭제하지 않습니다. 시스템에 설치된 공용 개발 도구는 저장소 작업용 산출물과 구분합니다.
 - 임시 Mac 앱을 남겨 사용해야 하는 동안에는 앱 묶음에 `alfred:ignore` 태그를 적용합니다. 검증 앱을 안내하는 `release/builds/Passport.app`은 상대 링크만 사용하고 앱 복사본을 늘리지 않습니다. 링크도 작업 종료 때 삭제합니다.
 
 ## 사용자 매뉴얼 작성
@@ -90,7 +90,7 @@ Rust·GitHub CLI는 환경에 설치된 도구를 사용합니다. 작업 중 �
 - 쪽지는 TLS 1.3·기기 지문 고정·상호 인증, 등록 승인과 요청별 수신 승인을 유지합니다. 수신 파일의 확장자·크기·해시·경로와 OS quarantine/Internet Zone 보호가 실패하면 공개하지 않습니다. 자동 열기·실행·AI 전달을 추가하지 않습니다. CLI는 등록·수신 승인·받은 본문 읽기를 제공하지 않습니다.
 - 터미널·쪽지 CLI의 토큰은 새 로컬 PTY에 상속하며 로그·fixture·문서로 꺼내지 않습니다. 요청 성공과 상대 프로그램의 작업 완료를 구분하고 `DELIVERY_UNKNOWN`을 자동 재전송하지 않습니다.
 - SSH·SFTP·터널의 인증·호스트 지문 검증은 공유합니다. FTPS 인증서 검증을 끄지 않습니다. 파일 전송은 임시 파일·크기 검사·최종 이름 전환·실패 복구를 유지합니다.
-- 현재 아이콘 원본은 `design/icons/04-passport-terminal-v2.png`입니다. 앱 내부 쪽지 가이드가 `docs/assets/notes-compose.png`, `notes-pending.png`를 import하므로 문서 정리 때 삭제하지 않습니다. `THIRD_PARTY_NOTICES.md`, `licenses/`, 글꼴 출처는 배포에 필요한 고지입니다.
+- 공용 원본은 `assets/`에서 관리합니다. 앱 아이콘은 `assets/app-icon.png`, 라이선스·출처 원문은 `assets/licenses/`에 둡니다. 앱 내부 쪽지 가이드가 `docs/assets/notes-compose.png`, `notes-pending.png`를 import하므로 문서 정리 때 삭제하지 않습니다. `THIRD_PARTY_NOTICES.md`와 글꼴 출처도 배포에 필요한 고지입니다.
 
 ## E2E는 하나의 시험 집합
 
