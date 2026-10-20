@@ -379,6 +379,14 @@ test("manually launched CLI wrappers deliver completion and input alerts and res
   );
   const bin = path.join(directory, "bin");
   await fs.mkdir(bin);
+  const shellDirectory = path.join(directory, "shell");
+  if (process.platform === "darwin") {
+    await fs.mkdir(shellDirectory);
+    await fs.writeFile(
+      path.join(shellDirectory, ".zshrc"),
+      "HISTFILE=/dev/null\nPROMPT='PASSPORT_FIXTURE_READY > '\n",
+    );
+  }
   const fixture = path.join(directory, "cli.cjs");
   await fs.writeFile(
     fixture,
@@ -423,6 +431,7 @@ console.log('CLI_FIXTURE_FINISHED');
       PASSPORT_DATA_DIR: path.join(directory, "data"),
       PASSPORT_DISABLE_UPDATE_CHECK: "1",
       PASSPORT_E2E_NOTIFICATIONS: "1",
+      ...(process.platform === "darwin" ? { ZDOTDIR: shellDirectory } : {}),
     },
   });
   try {
@@ -494,6 +503,11 @@ console.log('CLI_FIXTURE_FINISHED');
     const pane = (
       await page.evaluate(() => window.passport.call("bootstrap", undefined))
     ).sessionStates[0].id;
+    if (process.platform === "darwin")
+      await expect(page.locator(".xterm-rows")).toContainText(
+        "PASSPORT_FIXTURE_READY > ",
+      );
+    else await waitForLocalPrompt(page);
     await application.evaluate(({ app, BrowserWindow }) => {
       app.focus({ steal: true });
       BrowserWindow.getAllWindows()[0].focus();
@@ -511,11 +525,22 @@ console.log('CLI_FIXTURE_FINISHED');
     await expect
       .poll(() => page.evaluate(() => document.hasFocus()))
       .toBe(true);
-    await waitForLocalPrompt(page);
-    await page.keyboard.type(
-      "claude; printf '\\nPASSPORT_%s\\n' CLAUDE_RETURNED",
+    // This case checks native foreground notification policy, not keyboard
+    // composition. Deliver its setup command atomically so the desktop IME
+    // or a held physical modifier cannot alter the shell's return marker.
+    await page.evaluate(
+      (id) =>
+        window.passport.call("session.input", {
+          id,
+          data: "claude; printf '\\nPASSPORT_%s\\n' CLAUDE_RETURNED\r",
+        }),
+      pane,
     );
-    await page.keyboard.press("Enter");
+    // A Stop hook can arrive before the CLI exits. Require the real shell's
+    // return marker before checking alerts and starting the background command.
+    await expect(page.locator(".xterm-rows")).toContainText(
+      "PASSPORT_CLAUDE_RETURNED",
+    );
     await expect
       .poll(() =>
         page.evaluate(() => window.passport.call("activity.list", undefined)),
@@ -529,11 +554,6 @@ console.log('CLI_FIXTURE_FINISHED');
     expect(
       await application.evaluate(() => (globalThis as any).notificationTitles),
     ).toEqual([]);
-    // A Stop hook can arrive before the CLI exits. Wait for the shell to regain
-    // stdin before typing the next command (the typed source splits the marker).
-    await expect(page.locator(".xterm-rows")).toContainText(
-      "PASSPORT_CLAUDE_RETURNED",
-    );
     await application.evaluate(({ BrowserWindow }) =>
       BrowserWindow.getAllWindows()[0].hide(),
     );
