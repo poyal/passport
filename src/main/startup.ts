@@ -14,6 +14,8 @@ import {
 import { resolvedShell, helperPath, resourceRoot } from "./shells";
 import { localTerminalEnv } from "./terminal-env";
 import { platform } from "./platform";
+import type { AgentResume } from "../shared/session-resume";
+import { agentResumeCommand } from "./agent-resume";
 export { bashPromptMarkers } from "./platform/shared/terminal";
 
 export const shQuote = (value: string) =>
@@ -27,6 +29,7 @@ export type LaunchSpec = {
   env: NodeJS.ProcessEnv;
   snapshot: AppliedEnvironment;
   cleanup: () => void;
+  clearResume?: () => void;
 };
 export function previewEnvironment(
   config: LocalShell,
@@ -182,6 +185,12 @@ export function prepareLaunch(
   root: string,
   credentials: Record<string, string>,
   snapshot = previewEnvironment(config, settings),
+  resume: {
+    enabled: boolean;
+    agent?: AgentResume;
+    skipAgent?: boolean;
+    restoreCwd?: boolean;
+  } = { enabled: false },
 ): LaunchSpec {
   const profiles = selectedProfiles(settings, config.profiles);
   const env: NodeJS.ProcessEnv = {
@@ -199,7 +208,7 @@ export function prepareLaunch(
   for (const key of Object.keys(env))
     if (key.toUpperCase() === "PATH") delete env[key];
   env.PATH = cliDirectory + path.delimiter + inheritedPath;
-  if (!profiles.length && !config.agent) {
+  if (!profiles.length && !config.agent && !resume.enabled) {
     // A plain shell needs no loader or execution-policy exception. In particular,
     // Bash keeps its native login/logout semantics when injection is disabled.
     snapshot.status = "ready";
@@ -233,12 +242,29 @@ export function prepareLaunch(
   const integration = profiles.some(
     (p) => p.integration === "ai-notifications",
   );
-  env.PASSPORT_CLAUDE = integration && notifications.claude ? "1" : "0";
+  env.PASSPORT_RESUME = resume.enabled ? "1" : "0";
+  env.PASSPORT_CLAUDE =
+    (integration && notifications.claude) || resume.enabled ? "1" : "0";
   env.PASSPORT_CODEX = integration && notifications.codex ? "1" : "0";
+  const resumeArgs =
+    resume.enabled && resume.agent
+      ? agentResumeCommand(resume.agent)
+      : undefined;
+  if (resumeArgs)
+    env.PASSPORT_AGENT_RESUME = write(
+      "agent-resume.json",
+      JSON.stringify({ ...resume.agent, args: resumeArgs }),
+    );
+  const launchAgent = resumeArgs
+    ? "resume"
+    : !resume.skipAgent && config.agent
+      ? `run ${config.agent}`
+      : "";
   // Hook command text stays stable across runs; credentials only travel via the
   // inherited environment. Claude user settings and trust decisions are untouched.
   const hooks = Object.fromEntries(
     [
+      "SessionStart",
       "Stop",
       "PermissionRequest",
       "PreToolUse",
@@ -257,8 +283,7 @@ export function prepareLaunch(
           hooks: [
             {
               type: "command",
-              command: helper,
-              args: ["claude-hook"],
+              command: `${platform.id === "win32" ? '"' + helper.replaceAll("\\", "/") + '"' : shQuote(helper)} claude-hook`,
               timeout: 1,
             },
           ],
@@ -276,6 +301,15 @@ export function prepareLaunch(
     const helperUnix = bashFile(helper);
     const q = shQuote;
     let body = unixEntries(profiles, helperUnix) + "\n";
+    if (resume.restoreCwd)
+      body += `cd -- ${q(bashFile(snapshot.cwd))} || ${q(helperUnix)} result '이전 작업 폴더를 열 수 없습니다.'\n`;
+    if (resume.enabled) {
+      body += `function __passport_cwd() { local passport_status=$?; ${q(helperUnix)} cwd; return $passport_status; }\n`;
+      body +=
+        shell === "zsh"
+          ? "autoload -Uz add-zsh-hook\nadd-zsh-hook precmd __passport_cwd\n"
+          : `if [[ $(declare -p PROMPT_COMMAND 2>/dev/null) == 'declare -a '* ]]; then PROMPT_COMMAND+=(__passport_cwd); else PROMPT_COMMAND="__passport_cwd\${PROMPT_COMMAND:+; $PROMPT_COMMAND}"; fi\n`;
+    }
     if (shell === "passport-bash") {
       // User startup may replace PROMPT_COMMAND/PS0. Preserve string and array
       // hooks, and avoid duplicating the inherited marker.
@@ -284,10 +318,10 @@ export function prepareLaunch(
       body += `if [[ "\${PROMPT_COMMAND[*]}" != *"133;A;passport=${snapshot.sessionInstanceId}"* ]]; then\nif [[ $(declare -p PROMPT_COMMAND 2>/dev/null) == 'declare -a '* ]]; then PROMPT_COMMAND+=(${shQuote(prompt)}); else PROMPT_COMMAND="\${PROMPT_COMMAND:+$PROMPT_COMMAND; }${prompt}"; fi\nfi\nif [[ "$PS0" != *$'${command}'* ]]; then PS0=$'${command}'"$PS0"; fi\n`;
     }
     for (const agent of ["claude", "codex"] as const)
-      if (integration && notifications[agent])
+      if ((integration && notifications[agent]) || resume.enabled)
         body += `unalias ${agent} 2>/dev/null\nfunction ${agent}() { ${q(helperUnix)} run ${agent} "$@"; }\n`;
     body += `${q(helperUnix)} ready\n`;
-    if (config.agent) body += `${q(helperUnix)} run ${config.agent}\n`;
+    if (launchAgent) body += `${q(helperUnix)} ${launchAgent}\n`;
     body = `if [ "$PASSPORT_INIT_FAILED" != 1 ]; then\n${body}else\n${q(helperUnix)} result '!error:사용자 시작 파일에서 오류가 발생했습니다. AI 자동 실행을 생략했습니다.'\nfi\n`;
     if (shell === "zsh") {
       // Keep the original ZDOTDIR while sourcing each user file. Capture changes
@@ -313,11 +347,15 @@ export function prepareLaunch(
     }
   } else if (shell === "pwsh" || shell === "windows-powershell") {
     let body = powershellEntries(profiles, helper) + "\r\n";
+    if (resume.restoreCwd)
+      body += `Set-Location -LiteralPath ${psQuote(snapshot.cwd)}\r\n`;
+    if (resume.enabled)
+      body += `$global:PassportPreviousPrompt = $function:prompt\r\nfunction global:prompt { $passportExit = $global:LASTEXITCODE; & ${psQuote(helper)} cwd; $global:LASTEXITCODE = $passportExit; & $global:PassportPreviousPrompt }\r\n`;
     for (const agent of ["claude", "codex"] as const)
-      if (integration && notifications[agent])
+      if ((integration && notifications[agent]) || resume.enabled)
         body += `function global:${agent} { & ${psQuote(helper)} run ${agent} @args }\r\n`;
     body += `& ${psQuote(helper)} ready\r\n`;
-    if (config.agent) body += `& ${psQuote(helper)} run ${config.agent}\r\n`;
+    if (launchAgent) body += `& ${psQuote(helper)} ${launchAgent}\r\n`;
     const file = write(
       "startup.ps1",
       "\ufeff" +
@@ -330,11 +368,14 @@ export function prepareLaunch(
       "@echo off\r\nchcp 65001 >nul\r\n" +
       cmdEntries(profiles, helper) +
       "\r\n";
+    if (resume.restoreCwd) body += `cd /d "${cmdValue(snapshot.cwd)}"\r\n`;
+    if (resume.enabled)
+      body += `if not defined PROMPT set "PROMPT=$P$G"\r\nset "PROMPT=$E]777;passport-cwd;${snapshot.sessionInstanceId};$P$E\\%PROMPT%"\r\n`;
     for (const agent of ["claude", "codex"] as const)
-      if (integration && notifications[agent])
+      if ((integration && notifications[agent]) || resume.enabled)
         body += `"${cmdValue(helper)}" macro ${agent} "${cmdValue(helper)}" 1 run ${agent}\r\n`;
     body += `"${cmdValue(helper)}" ready\r\n`;
-    if (config.agent) body += `"${cmdValue(helper)}" run ${config.agent}\r\n`;
+    if (launchAgent) body += `"${cmdValue(helper)}" ${launchAgent}\r\n`;
     const file = write("startup.cmd", body);
     env.PASSPORT_STARTUP = file;
     // cmd parses its own quotes. node-pty's argv escaping uses backslashes,
@@ -355,5 +396,9 @@ export function prepareLaunch(
     env,
     snapshot,
     cleanup,
+    clearResume: () => {
+      if (env.PASSPORT_AGENT_RESUME)
+        fs.rmSync(env.PASSPORT_AGENT_RESUME, { force: true });
+    },
   };
 }

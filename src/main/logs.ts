@@ -4,11 +4,28 @@ import { randomUUID } from "node:crypto";
 import { StringDecoder } from "node:string_decoder";
 import { LogTextDecoder } from "./log-text";
 import type { Store } from "./store";
-import type { LogFile } from "../shared/model";
+import {
+  logReasons,
+  type LogFile,
+  type LogGroup,
+  type LogCursor,
+  type LogPage,
+  type LogReason,
+} from "../shared/model";
 export class SessionLogs {
   active = new Map<string, string>();
+  private connections = new Map<
+    string,
+    {
+      groupId?: string;
+      reason: LogReason;
+      connected: boolean;
+      fingerprint?: string;
+    }
+  >();
   private lastPrune = 0;
   private chunkLimit = 16 * 1024 ** 2;
+  private retentionMs = 30 * 86400000;
   readonly folder: string;
   constructor(
     readonly store: Store,
@@ -21,26 +38,117 @@ export class SessionLogs {
     );
     this.prune();
   }
-  start(session: string, name: string) {
+  beginConnection(session: string, groupId?: string, fingerprint?: string) {
+    this.stop(session);
+    const existing =
+      groupId &&
+      this.store.db
+        .prepare("SELECT id FROM session_log_groups WHERE id=?")
+        .get(groupId);
+    this.connections.set(session, {
+      groupId: existing ? groupId : undefined,
+      reason: existing ? "resume" : "start",
+      connected: false,
+      fingerprint,
+    });
+  }
+  connected(session: string, fingerprint?: string) {
+    if (!this.connections.has(session)) this.beginConnection(session);
+    const connection = this.connections.get(session)!;
+    if (connection.fingerprint && connection.fingerprint !== fingerprint) {
+      connection.groupId = undefined;
+      connection.reason = "start";
+      connection.connected = false;
+    }
+    connection.fingerprint = fingerprint;
+    if (connection.connected) connection.reason = "reconnect";
+    connection.connected = true;
+  }
+  groupFor(session: string) {
+    return this.connections.get(session)?.groupId;
+  }
+  forgetConnection(session: string) {
+    this.stop(session);
+    this.connections.delete(session);
+  }
+  retainConnections(ids: Set<string>) {
+    for (const id of this.connections.keys())
+      if (!ids.has(id)) this.forgetConnection(id);
+  }
+  start(session: string, name: string, reason?: LogReason) {
     if (this.active.has(session)) return;
+    if (!this.connections.has(session)) this.beginConnection(session);
+    const connection = this.connections.get(session)!;
     const id = randomUUID();
     fs.writeFileSync(this.file(id), "", { mode: 0o600 });
-    this.store.db
-      .prepare("INSERT INTO session_logs(id,name,started) VALUES(?,?,?)")
-      .run(id, name, Date.now());
+    try {
+      this.store.db.transaction(() => {
+        const now = Date.now();
+        let group =
+          connection.groupId &&
+          (this.store.db
+            .prepare(
+              "SELECT id,next_ordinal FROM session_log_groups WHERE id=?",
+            )
+            .get(connection.groupId) as
+            { id: string; next_ordinal: number } | undefined);
+        if (!group) {
+          group = { id: randomUUID(), next_ordinal: 0 };
+          this.store.db
+            .prepare(
+              "INSERT INTO session_log_groups(id,name,started) VALUES(?,?,?)",
+            )
+            .run(group.id, name, now);
+        }
+        this.store.db
+          .prepare("INSERT INTO session_logs(id,name,started) VALUES(?,?,?)")
+          .run(id, name, now);
+        this.store.db
+          .prepare(
+            "INSERT INTO session_log_segments(id,group_id,ordinal,reason) VALUES(?,?,?,?)",
+          )
+          .run(id, group.id, group.next_ordinal, reason ?? connection.reason);
+        this.store.db
+          .prepare(
+            "UPDATE session_log_groups SET name=?,next_ordinal=next_ordinal+1 WHERE id=?",
+          )
+          .run(name, group.id);
+        connection.groupId = group.id;
+      })();
+    } catch (error) {
+      fs.rmSync(this.file(id), { force: true });
+      throw error;
+    }
+    connection.reason = "recording";
     this.active.set(session, id);
   }
   stop(session: string) {
+    const id = this.active.get(session);
+    if (id)
+      this.store.db
+        .prepare("UPDATE session_log_segments SET ended=? WHERE id=?")
+        .run(Date.now(), id);
     this.active.delete(session);
   }
   append(session: string, data: string) {
     let id = this.active.get(session);
     if (!id) return;
     try {
-      const row = this.get(id);
+      if (Date.now() - this.lastPrune > 1000) {
+        this.prune();
+        id = this.active.get(session);
+        if (!id) return;
+      }
+      let row = this.get(id);
+      if (Date.now() - row.started > this.retentionMs) {
+        this.prune();
+        id = this.active.get(session);
+        if (!id) return;
+        row = this.get(id);
+      }
       if (row.bytes && row.bytes + Buffer.byteLength(data) > this.chunkLimit) {
         this.stop(session);
-        this.start(session, row.name);
+        this.start(session, row.name, "rotation");
         id = this.active.get(session)!;
       }
       fs.appendFileSync(this.file(id), data);
@@ -62,20 +170,110 @@ export class SessionLogs {
     this.prune();
     return (
       this.store.db
-        .prepare("SELECT * FROM session_logs ORDER BY started DESC")
+        .prepare(
+          "SELECT l.*,s.group_id AS groupId,s.ordinal,s.reason,s.ended FROM session_logs l JOIN session_log_segments s USING(id) ORDER BY l.started DESC,l.rowid DESC",
+        )
         .all() as {
         id: string;
         name: string;
         started: number;
         bytes: number;
         bookmarks: string;
+        groupId: string;
+        ordinal: number;
+        reason: LogReason;
+        ended: number | null;
       }[]
     ).map((r) => ({
       ...r,
+      ended: r.ended ?? undefined,
       recording: [...this.active.values()].includes(r.id),
       sessionId: [...this.active].find(([, id]) => id === r.id)?.[0],
       bookmarks: JSON.parse(r.bookmarks),
     }));
+  }
+  groups(): LogGroup[] {
+    const segments = this.list();
+    const groups = new Map<string, LogGroup>();
+    for (const row of this.store.db
+      .prepare("SELECT id,name,started,expired,removed FROM session_log_groups")
+      .all() as {
+      id: string;
+      name: string;
+      started: number;
+      expired: number;
+      removed: number;
+    }[])
+      groups.set(row.id, {
+        ...row,
+        updated: row.started,
+        bytes: 0,
+        recording: false,
+        segments: [],
+      });
+    for (const segment of segments) {
+      const group = groups.get(segment.groupId)!;
+      group.segments.push(segment);
+      group.bytes += segment.bytes;
+      group.recording ||= segment.recording;
+      group.updated = Math.max(group.updated, segment.ended ?? segment.started);
+    }
+    return [...groups.values()]
+      .filter((g) => g.segments.length)
+      .map((g) => ({
+        ...g,
+        segments: g.segments.sort((a, b) => a.ordinal - b.ordinal),
+      }))
+      .sort((a, b) => b.updated - a.updated);
+  }
+  group(id: string) {
+    const group = this.groups().find((g) => g.id === id);
+    if (!group) throw new Error("로그 묶음을 찾을 수 없습니다.");
+    return group;
+  }
+  readGroup(
+    id: string,
+    cursor: LogCursor = { ordinal: 0, offset: 0 },
+    query = "",
+  ): LogPage {
+    const group = this.group(id);
+    const page: LogPage = { parts: [], next: cursor, done: true };
+    let displayed = 0,
+      scanned = 0,
+      count = 0;
+    for (const segment of group.segments.filter(
+      (s) => s.ordinal >= cursor.ordinal,
+    )) {
+      const offset =
+        segment.ordinal === cursor.ordinal
+          ? Math.min(cursor.offset, segment.bytes)
+          : 0;
+      const result = this.read(segment.id, offset, query, true);
+      scanned += result.next; // Plain decoding starts at the segment's beginning to retain control state.
+      if (result.text || (!query && !offset && !segment.bytes)) {
+        page.parts.push({
+          segmentId: segment.id,
+          ordinal: segment.ordinal,
+          offset: result.matches[0] ?? result.offset,
+          text: result.text,
+          started: segment.started,
+          reason: segment.reason,
+        });
+        displayed += Buffer.byteLength(result.text);
+      }
+      page.next = { ordinal: segment.ordinal, offset: result.next };
+      page.done =
+        result.next >= segment.bytes && segment === group.segments.at(-1);
+      if (
+        result.next < segment.bytes ||
+        (query && result.text) ||
+        displayed >= 262144 ||
+        scanned >= 16 * 1024 ** 2 ||
+        ++count >= 64
+      )
+        break;
+    }
+    return page;
   }
   get(id: string) {
     const row = this.store.db
@@ -191,16 +389,83 @@ export class SessionLogs {
     this.get(id);
     fs.copyFileSync(this.file(id), destination);
   }
-  delete(id: string) {
+  async exportGroup(id: string, destination: string) {
+    const group = this.group(id);
+    // Commit a complete export atomically, without truncating existing files on failure.
+    const target = path.resolve(destination);
+    if (fs.realpathSync(path.dirname(target)) === fs.realpathSync(this.folder))
+      throw new Error("로그 저장 폴더 밖으로 내보내세요.");
+    const temporary = path.join(
+      path.dirname(target),
+      `.passport-log-${randomUUID()}.tmp`,
+    );
+    const output = await fs.promises.open(temporary, "wx", 0o600);
+    try {
+      await output.writeFile(
+        `Passport · ${group.name}\n만료된 구간: ${group.expired} · 삭제된 구간: ${group.removed}\n`,
+      );
+      const buffer = Buffer.alloc(262144);
+      for (const segment of group.segments) {
+        await output.writeFile(
+          `\r\n--- ${new Date(segment.started).toISOString()} · ${logReasons[segment.reason]} ---\r\n`,
+        );
+        const input = await fs.promises.open(this.file(segment.id), "r");
+        try {
+          let offset = 0;
+          while (offset < segment.bytes) {
+            const { bytesRead } = await input.read(
+              buffer,
+              0,
+              Math.min(buffer.length, segment.bytes - offset),
+              offset,
+            );
+            if (!bytesRead)
+              throw new Error(
+                "로그 구간을 모두 읽지 못했습니다. 목록을 새로고침한 뒤 다시 내보내세요.",
+              );
+            await output.writeFile(buffer.subarray(0, bytesRead));
+            offset += bytesRead;
+          }
+        } finally {
+          await input.close();
+        }
+      }
+      await output.close();
+      await fs.promises.rename(temporary, target);
+    } finally {
+      await output.close().catch(() => {});
+      await fs.promises.rm(temporary, { force: true });
+    }
+  }
+  deleteGroup(id: string) {
+    const group = this.group(id);
+    for (const segment of group.segments) this.delete(segment.id);
+    for (const connection of this.connections.values())
+      if (connection.groupId === id) {
+        connection.groupId = undefined;
+        connection.reason = "recording";
+      }
+    this.store.db.prepare("DELETE FROM session_log_groups WHERE id=?").run(id);
+  }
+  delete(id: string, expired = false) {
     this.get(id);
+    const segment = this.store.db
+      .prepare("SELECT group_id FROM session_log_segments WHERE id=?")
+      .get(id) as { group_id: string };
     for (const [session, log] of this.active)
       if (log === id) this.active.delete(session);
     fs.rmSync(this.file(id), { force: true });
     this.store.db.prepare("DELETE FROM session_logs WHERE id=?").run(id);
+    this.store.db
+      .prepare(
+        `UPDATE session_log_groups SET ${expired ? "expired=expired+1" : "removed=removed+1"} WHERE id=?`,
+      )
+      .run(segment.group_id);
   }
   prune() {
     this.lastPrune = Date.now();
     const settings = this.store.read().settings;
+    this.retentionMs = settings.logRetentionDays * 86400000;
     this.chunkLimit = Math.min(
       16 * 1024 ** 2,
       (settings.logLimitMiB * 1024 ** 2) / 4,
@@ -219,10 +484,29 @@ export class SessionLogs {
         const recording = [...this.active]
           .filter(([, id]) => id === r.id)
           .map(([session]) => session);
-        this.delete(r.id);
-        for (const session of recording) this.start(session, r.name);
+        this.delete(r.id, true);
+        for (const session of recording)
+          this.start(session, r.name, "retention");
       } else total += r.bytes;
     }
+    const retained = new Set(
+      [...this.connections.values()].map((c) => c.groupId),
+    );
+    for (const row of this.store.db
+      .prepare(
+        "SELECT json_extract(value, '$.logGroup') AS id FROM session_resume WHERE json_valid(value)",
+      )
+      .all() as { id: string | null }[])
+      if (row.id) retained.add(row.id);
+    for (const row of this.store.db
+      .prepare(
+        "SELECT id FROM session_log_groups WHERE id NOT IN (SELECT group_id FROM session_log_segments)",
+      )
+      .all() as { id: string }[])
+      if (!retained.has(row.id))
+        this.store.db
+          .prepare("DELETE FROM session_log_groups WHERE id=?")
+          .run(row.id);
   }
   remember(text: string) {
     this.store.db

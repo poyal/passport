@@ -180,6 +180,16 @@ export function validateMarkdown(text: string) {
   return text;
 }
 
+// Use a fence longer than any backtick run in terminal output so embedded
+// Markdown cannot terminate the block. Keep the selected text intact.
+export function terminalMessageCodeBlock(text: string) {
+  let length = 3;
+  for (const match of text.matchAll(/`+/g))
+    length = Math.max(length, match[0].length + 1);
+  const fence = "`".repeat(length);
+  return `${fence}\n${text}${text.endsWith("\n") ? "" : "\n"}${fence}`;
+}
+
 export function shareFileName(value: string) {
   const device = value.normalize("NFKC").split(".")[0].trimEnd();
   if (

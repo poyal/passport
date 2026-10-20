@@ -694,6 +694,32 @@ export function TerminalSettings() {
       </section>
       <section className="settings-card">
         <ToggleField
+          label="이전 세션 복원"
+          checked={app.document.settings.sessionResume}
+          onChange={(sessionResume) =>
+            void app.update((d) => ({
+              ...d,
+              settings: { ...d.settings, sessionResume },
+            }))
+          }
+        />
+        <p className="hint">
+          로컬 터미널과 등록한 SSH 연결의 이전 출력·작업 폴더를 복원합니다.
+          로컬에서 실행 중이던 Codex·Claude Code는 대화와 실행 옵션을
+          이어갑니다. 앱을 다시 열면 선택한 탭부터 연결합니다.
+        </p>
+        <p className="hint">
+          기본은 꺼짐입니다. 이미 열린 터미널에 ‘복원 적용’이 표시되면 작업을
+          마친 뒤 눌러 다시 연결하고 AI를 실행하세요. 적용 전에는 화면만
+          저장됩니다. CLI 접근·AI 작업 알림을 켤 필요는 없습니다.
+        </p>
+        <p className="hint">
+          SSH 폴더 복원은 Bash·zsh 서버에서 지원합니다. 끄면 Passport의 복원
+          데이터를 삭제하며 AI 도구의 대화 기록은 유지합니다.
+        </p>
+      </section>
+      <section className="settings-card">
+        <ToggleField
           label="로컬 터미널 자동 로그 기록"
           checked={settings.autoLogLocal}
           onChange={(autoLogLocal) => void save({ autoLogLocal })}

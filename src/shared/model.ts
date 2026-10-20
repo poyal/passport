@@ -280,6 +280,7 @@ export const workspaceTemplateSchema = z.object({
 });
 export type WorkspaceTemplate = z.infer<typeof workspaceTemplateSchema>;
 export const settingsSchema = z.object({
+  sessionResume: z.boolean().default(false),
   terminal: terminalSettingsSchema.default(() =>
     terminalSettingsSchema.parse({}),
   ),
@@ -460,10 +461,14 @@ export type Bootstrap = {
   initialTerminal?: { workspaceId: string; paneId: string };
   workspaceOwners: Record<string, number>;
   sessionStates: SessionState[];
+  resumeSessions: import("./session-resume").ResumeSummary[];
   tunnelStates: TunnelState[];
   shells: ShellInfo[];
 };
 export type SessionState = {
+  generation?: string;
+  resumeMessage?: string;
+  resumeNeedsReconnect?: boolean;
   id: string;
   status: "connecting" | "connected" | "disconnected" | "error";
   message?: string;
@@ -515,6 +520,7 @@ export type TransferJob = {
   cleanup?: string;
 };
 export type AppEvent =
+  | import("./session-resume").ResumeEvent
   | { kind: "share-changed" }
   | { kind: "share-open" }
   | {
@@ -553,12 +559,49 @@ export type TerminalSnapshot = {
 };
 export type LogFile = {
   id: string;
+  groupId: string;
+  ordinal: number;
+  reason: LogReason;
+  ended?: number;
   name: string;
   started: number;
   bytes: number;
   recording: boolean;
   sessionId?: string;
   bookmarks: { offset: number; label: string }[];
+};
+export const logReasons = {
+  start: "기록 시작",
+  resume: "이전 터미널 복원 후 연결",
+  reconnect: "연결 종료 후 재연결",
+  recording: "기록 다시 시작 · 기록하지 않은 구간이 있을 수 있습니다",
+  rotation: "파일 용량에 따라 다음 구간으로 계속 기록",
+  retention: "이전 구간 만료 후 계속 기록",
+} as const;
+export type LogReason = keyof typeof logReasons;
+export type LogGroup = {
+  id: string;
+  name: string;
+  started: number;
+  updated: number;
+  bytes: number;
+  recording: boolean;
+  expired: number;
+  removed: number;
+  segments: LogFile[];
+};
+export type LogCursor = { ordinal: number; offset: number };
+export type LogPage = {
+  parts: {
+    segmentId: string;
+    ordinal: number;
+    offset: number;
+    text: string;
+    started: number;
+    reason: LogReason;
+  }[];
+  next: LogCursor;
+  done: boolean;
 };
 export type CommandSuggestion = {
   text: string;
@@ -659,6 +702,10 @@ export interface Calls {
   };
   "auth.delete": { input: { id: string }; output: AuthProfile[] };
   "key.pick": { input: undefined; output: string | null };
+  "resume.reply": {
+    input: { token: string; screen?: import("./session-resume").ResumeScreen };
+    output: void;
+  };
   "session.connect": {
     input: {
       id: string;
@@ -687,6 +734,13 @@ export interface Calls {
   };
   "tunnel.stop": { input: { id: string }; output: void };
   "logs.list": { input: undefined; output: LogFile[] };
+  "logs.groups": { input: undefined; output: LogGroup[] };
+  "logs.readGroup": {
+    input: { id: string; cursor?: LogCursor; query?: string };
+    output: LogPage;
+  };
+  "logs.exportGroup": { input: { id: string }; output: boolean };
+  "logs.deleteGroup": { input: { id: string }; output: void };
   "logs.record": { input: { id: string; enabled: boolean }; output: void };
   "logs.read": {
     input: { id: string; query?: string; offset?: number; plain?: boolean };

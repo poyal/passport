@@ -11,12 +11,13 @@ export const guiCheckModes = {
   "packaged-gui": "hidden",
   "packaged-desktop": "desktop",
 };
-const optionalFeatures = ["docker", "stress", "throughput"];
+const optionalFeatures = ["docker", "stress", "throughput", "native-ai"];
 export function requestedGuiFeatures(env = process.env) {
   return [
     ...(env.PASSPORT_DOCKER_MANIFEST ? ["docker"] : []),
     ...(env.PASSPORT_UI_STRESS === "1" ? ["stress"] : []),
     ...(env.PASSPORT_TEXT_BENCH === "1" ? ["throughput"] : []),
+    ...(env.PASSPORT_NATIVE_AI === "1" ? ["native-ai"] : []),
   ];
 }
 export function loadGuiPolicy(root = defaultRoot) {

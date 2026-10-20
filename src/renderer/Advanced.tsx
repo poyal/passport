@@ -36,6 +36,10 @@ import {
   type TunnelState,
   type Workspace,
   type LogFile,
+  type LogGroup,
+  type LogPage,
+  type LogCursor,
+  logReasons,
   type CustomTheme,
   type CommandSuggestion,
   type Endpoint,
@@ -1012,26 +1016,38 @@ export function TunnelSettings() {
 }
 export function LogSettings() {
   const app = useApp(),
-    [items, setItems] = useState<LogFile[]>([]),
+    [items, setItems] = useState<LogGroup[]>([]),
     [selected, setSelected] = useState(""),
+    [segment, setSegment] = useState(""),
     [query, setQuery] = useState(""),
     [tab, setTab] = useState<"browse" | "retention">("browse"),
-    [content, setContent] = useState({
-      text: "",
-      offset: 0,
-      next: 0,
-      matches: [] as number[],
+    [content, setContent] = useState<LogPage>({
+      parts: [],
+      next: { ordinal: 0, offset: 0 },
+      done: true,
     });
   const readRequest = useRef(0),
     readerRef = useRef<HTMLPreElement>(null);
   const refresh = () =>
     void api
-      .call("logs.list", undefined)
+      .call("logs.groups", undefined)
       .then((next) => {
         setItems(next);
         if (selected && !next.some((item) => item.id === selected)) {
           readRequest.current++;
           setSelected("");
+        }
+        if (
+          segment &&
+          !next.some((g) => g.segments.some((s) => s.id === segment))
+        ) {
+          readRequest.current++;
+          setSegment("");
+          setContent({
+            parts: [],
+            next: { ordinal: 0, offset: 0 },
+            done: true,
+          });
         }
       })
       .catch(app.notify);
@@ -1042,10 +1058,42 @@ export function LogSettings() {
     },
     [],
   );
-  const read = (id: string, offset = 0, search = query) => {
+  const read = (
+    id: string,
+    cursor?: LogCursor,
+    search = query,
+    segmentId = segment,
+  ) => {
     const request = ++readRequest.current;
-    void api
-      .call("logs.read", { id, offset, query: search, plain: true })
+    const file = items
+      .find((g) => g.id === id)
+      ?.segments.find((s) => s.id === segmentId);
+    const result = file
+      ? api
+          .call("logs.read", {
+            id: file.id,
+            offset: cursor?.offset ?? 0,
+            query: search,
+            plain: true,
+          })
+          .then((r) => ({
+            parts: r.text
+              ? [
+                  {
+                    segmentId: file.id,
+                    ordinal: file.ordinal,
+                    offset: r.matches[0] ?? r.offset,
+                    text: r.text,
+                    started: file.started,
+                    reason: file.reason,
+                  },
+                ]
+              : [],
+            next: { ordinal: file.ordinal, offset: r.next },
+            done: r.next >= file.bytes,
+          }))
+      : api.call("logs.readGroup", { id, cursor, query: search });
+    void result
       .then((result) => {
         if (request !== readRequest.current) return;
         setContent(result);
@@ -1062,7 +1110,7 @@ export function LogSettings() {
         <div>
           <h1>세션 로그</h1>
           <p>
-            접속한 터미널의 출력을 이 기기에 자동 저장하고 최대 30일 보관합니다.
+            이어서 작업한 터미널의 기록을 묶어 조회하고 최대 30일 보관합니다.
           </p>
         </div>
         <button onClick={refresh}>새로고침</button>
@@ -1141,17 +1189,24 @@ export function LogSettings() {
               {items.map((log) => (
                 <button
                   key={log.id}
+                  data-log-group-id={log.id}
                   className={log.id === selected ? "active" : ""}
                   aria-pressed={log.id === selected}
                   onClick={() => {
                     setSelected(log.id);
-                    setContent({ text: "", offset: 0, next: 0, matches: [] });
-                    read(log.id);
+                    setSegment("");
+                    setContent({
+                      parts: [],
+                      next: { ordinal: 0, offset: 0 },
+                      done: true,
+                    });
+                    read(log.id, undefined, query, "");
                   }}
                 >
                   <strong>{log.name}</strong>
                   <small>
-                    {new Date(log.started).toLocaleString("ko-KR")} ·{" "}
+                    {new Date(log.updated).toLocaleString("ko-KR")} ·{" "}
+                    {log.segments.length}개 구간 ·{" "}
                     {Math.round(log.bytes / 1024)} KiB{" "}
                     {log.recording ? "· 기록 중" : ""}
                   </small>
@@ -1161,6 +1216,39 @@ export function LogSettings() {
             <section className="settings-card log-reader">
               {current ? (
                 <>
+                  <label className="log-scope">
+                    조회·내보내기 범위
+                    <select
+                      aria-label="조회 구간"
+                      value={segment}
+                      onChange={(e) => {
+                        setSegment(e.target.value);
+                        read(selected, undefined, query, e.target.value);
+                      }}
+                    >
+                      <option value="">
+                        전체 묶음 · {current.segments.length}개 구간
+                      </option>
+                      {current.segments.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.ordinal + 1}.{" "}
+                          {new Date(s.started).toLocaleString("ko-KR")} ·{" "}
+                          {logReasons[s.reason]}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  {!!(current.expired || current.removed) && (
+                    <p className="hint" role="status">
+                      {current.expired
+                        ? `보관기간·용량 제한으로 ${current.expired}개 구간이 만료되었습니다. `
+                        : ""}
+                      {current.removed
+                        ? `${current.removed}개 구간이 삭제되었습니다.`
+                        : ""}{" "}
+                      남아 있는 기록만 표시합니다.
+                    </p>
+                  )}
                   <div className="row">
                     <input
                       aria-label="로그 검색"
@@ -1177,8 +1265,27 @@ export function LogSettings() {
                     </button>
                   </div>
                   <pre ref={readerRef} tabIndex={0} aria-label="세션 로그 내용">
-                    {content.text || "표시할 내용이 없습니다."}
+                    {content.parts.length
+                      ? content.parts.map((part) => (
+                          <span className="log-part" key={part.segmentId}>
+                            <span className="log-boundary">
+                              {new Date(part.started).toLocaleString("ko-KR")} ·{" "}
+                              {logReasons[part.reason]}
+                              {part.offset ? " · 구간 중간부터" : ""}
+                              {"\n"}
+                            </span>
+                            {part.text || "(출력 없음)\n"}
+                          </span>
+                        ))
+                      : query
+                        ? "일치하는 내용이 없습니다."
+                        : "표시할 내용이 없습니다."}
                   </pre>
+                  {!content.done && (
+                    <p className="hint">
+                      뒤에 기록이 더 있습니다. 다음을 눌러 계속 조회·검색하세요.
+                    </p>
+                  )}
                   <p className="hint">
                     조회할 때 터미널 제어 코드를 숨깁니다. 화면을 다시 그리는
                     프로그램의 출력은 반복될 수 있으며, 내보내기는 원본 기록을
@@ -1186,6 +1293,7 @@ export function LogSettings() {
                   </p>
                   <div className="row">
                     <button
+                      disabled={!content.parts.length}
                       onClick={() =>
                         void app
                           .ask("북마크 이름", "현재 로그 위치를 저장합니다.")
@@ -1194,8 +1302,8 @@ export function LogSettings() {
                               label &&
                               api
                                 .call("logs.bookmark", {
-                                  id: selected,
-                                  offset: content.offset,
+                                  id: content.parts[0].segmentId,
+                                  offset: content.parts[0].offset,
                                   label,
                                 })
                                 .then(refresh),
@@ -1208,7 +1316,9 @@ export function LogSettings() {
                     <button
                       onClick={() =>
                         void api
-                          .call("logs.export", { id: selected })
+                          .call(segment ? "logs.export" : "logs.exportGroup", {
+                            id: segment || selected,
+                          })
                           .catch(app.notify)
                       }
                     >
@@ -1220,14 +1330,21 @@ export function LogSettings() {
                         void app
                           .confirm(
                             "로그 삭제",
-                            `${current.name} 기록을 삭제할까요?`,
+                            segment
+                              ? `${current.name}의 선택한 구간을 삭제할까요?`
+                              : `${current.name} 묶음의 모든 기록을 삭제할까요?`,
                           )
                           .then((ok) => {
                             if (ok)
                               return api
-                                .call("logs.delete", { id: selected })
+                                .call(
+                                  segment ? "logs.delete" : "logs.deleteGroup",
+                                  { id: segment || selected },
+                                )
                                 .then(() => {
+                                  readRequest.current++;
                                   setSelected("");
+                                  setSegment("");
                                   refresh();
                                 });
                           })
@@ -1238,17 +1355,25 @@ export function LogSettings() {
                     </button>
                   </div>
                   <div className="log-bookmarks">
-                    {current.bookmarks.map((b, i) => (
-                      <button
-                        key={i}
-                        onClick={() => {
-                          setQuery("");
-                          read(selected, b.offset, "");
-                        }}
-                      >
-                        {b.label}
-                      </button>
-                    ))}
+                    {current.segments
+                      .filter((s) => !segment || s.id === segment)
+                      .flatMap((s) =>
+                        s.bookmarks.map((b, i) => (
+                          <button
+                            key={`${s.id}-${i}`}
+                            onClick={() => {
+                              setQuery("");
+                              read(
+                                selected,
+                                { ordinal: s.ordinal, offset: b.offset },
+                                "",
+                              );
+                            }}
+                          >
+                            {s.ordinal + 1}. {b.label}
+                          </button>
+                        )),
+                      )}
                   </div>
                 </>
               ) : (

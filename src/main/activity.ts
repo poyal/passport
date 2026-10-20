@@ -18,6 +18,8 @@ const wire = z.object({
   event: z.enum([
     "ready",
     "profile-result",
+    "cwd",
+    "session-start",
     "run-start",
     "run-end",
     "session-end",
@@ -37,11 +39,16 @@ const wire = z.object({
   run: z.string().max(160).default(""),
   agentRun: z.string().max(160).optional(),
   session: z.string().max(160).optional(),
+  sessionSource: z.enum(["startup", "resume", "clear", "compact"]).optional(),
+  transcript: z.string().max(4096).optional(),
   turn: z.string().max(160).optional(),
   request: z.string().max(160).optional(),
   detail: z.string().max(4096).optional(),
   summary: z.string().max(800).optional(),
   exitCode: z.number().int().optional(),
+  cwd: z.string().max(4096).optional(),
+  home: z.string().max(4096).optional(),
+  args: z.array(z.string().max(8192)).max(128).optional(),
 });
 type Wire = z.infer<typeof wire>;
 type Live = {
@@ -145,6 +152,10 @@ export class ActivityService {
   constructor(
     private db: Database.Database,
     private callbacks: {
+      resume?: (
+        paneId: string,
+        event: import("./session-resume").ResumeAgentEvent,
+      ) => void;
       workspace: (paneId: string) => string | undefined;
       changed: (items: Activity[]) => void;
       notify: (item: Activity) => void;
@@ -274,6 +285,7 @@ export class ActivityService {
       !timingSafeEqual(Buffer.from(entry.token), Buffer.from(event.token))
     )
       return;
+    this.callbacks.resume?.(entry.paneId, event);
     if (event.event === "ready" || event.event === "profile-result") {
       this.callbacks.ready(
         entry.paneId,

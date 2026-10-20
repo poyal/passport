@@ -5,10 +5,14 @@ import fs from "node:fs/promises";
 import type { Stats } from "node:fs";
 import path from "node:path";
 import type { AddressInfo } from "node:net";
+import { spawn, type ChildProcess } from "node:child_process";
+import * as pty from "node-pty";
 export async function sshFixture(
   root: string,
   algorithms?: Algorithms,
-  options = { bracketedPaste: true },
+  options: { bracketedPaste: boolean; resumeShell?: "bash" | "zsh" } = {
+    bracketedPaste: true,
+  },
 ) {
   root = await fs.realpath(root);
   const { privateKey } = generateKeyPairSync("rsa", {
@@ -33,6 +37,9 @@ export async function sshFixture(
   const clients = new Set<import("ssh2").Connection>(),
     input: string[] = [],
     shells: ServerChannel[] = [];
+  const children = new Set<ChildProcess>();
+  const childExits = new Set<Promise<void>>();
+  const terminals = new Set<pty.IPty>();
   const config = { hostKeys: [privateKey], algorithms };
   const server = new Server(config, (client) => {
     clients.add(client);
@@ -59,12 +66,80 @@ export async function sshFixture(
     client.on("ready", () =>
       client.on("session", (accept) => {
         const session = accept();
-        session.on("exec", (accept) => {
+        let dimensions: { cols: number; rows: number } | undefined;
+        session.on("exec", (accept, _reject, info) => {
           const stream = accept();
+          if (options.resumeShell) {
+            if (dimensions) {
+              const terminal = pty.spawn("/bin/sh", ["-c", info.command], {
+                ...dimensions,
+                name: "xterm-256color",
+                cwd: root,
+                env: {
+                  PATH: "/usr/bin:/bin",
+                  HOME: root,
+                  SHELL: "/bin/" + options.resumeShell,
+                  TMPDIR: root,
+                },
+              });
+              terminals.add(terminal);
+              const listener = terminal.onData((data) => stream.write(data));
+              const exited = new Promise<void>((resolve) =>
+                terminal.onExit(({ exitCode }) => {
+                  listener.dispose();
+                  terminals.delete(terminal);
+                  stream.exit(exitCode);
+                  stream.end();
+                  setImmediate(resolve);
+                }),
+              );
+              childExits.add(exited);
+              void exited.then(() => childExits.delete(exited));
+              stream.on("data", (data: Buffer) => {
+                input.push(data.toString());
+                terminal.write(data.toString());
+              });
+              stream.once("close", () => {
+                if (terminals.has(terminal)) terminal.kill();
+              });
+              return;
+            }
+            const child = spawn("/bin/sh", ["-c", info.command], {
+              cwd: root,
+              env: {
+                PATH: "/usr/bin:/bin",
+                HOME: root,
+                SHELL: "/bin/" + options.resumeShell,
+                TMPDIR: root,
+              },
+            });
+            children.add(child);
+            const exited = new Promise<void>((resolve) =>
+              child.once("close", (code) => {
+                children.delete(child);
+                stream.exit(code ?? 1);
+                stream.end();
+                resolve();
+              }),
+            );
+            childExits.add(exited);
+            void exited.then(() => childExits.delete(exited));
+            child.stdout.pipe(stream, { end: false });
+            child.stderr.pipe(stream.stderr, { end: false });
+            stream.on("data", (data: Buffer) => {
+              input.push(data.toString());
+              child.stdin.write(data);
+            });
+            stream.once("close", () => child.stdin.end());
+            return;
+          }
           stream.end('Linux\nPRETTY_NAME="Alpine Linux 3.22"\n');
           stream.exit(0);
         });
-        session.on("pty", (accept) => accept?.());
+        session.on("pty", (accept, _reject, info) => {
+          dimensions = { cols: info.cols, rows: info.rows };
+          accept?.();
+        });
         session.on("window-change", (accept) => accept?.());
         session.on("shell", (accept) => {
           const stream = accept();
@@ -266,6 +341,9 @@ export async function sshFixture(
     encryptedKey,
     close: async () => {
       for (const client of clients) client.end();
+      for (const child of children) child.stdin?.end();
+      for (const terminal of terminals) terminal.kill();
+      await Promise.all(childExits);
       await new Promise<void>((resolve) => server.close(() => resolve()));
     },
   };

@@ -1,3 +1,4 @@
+import { prepareRemoteResume, ResumeOutput } from "./ssh-resume";
 import { detectRemoteOS } from "./remote-os";
 import { Client, type ClientChannel, type Algorithms } from "ssh2";
 import { createHash } from "node:crypto";
@@ -117,6 +118,9 @@ type Session = {
   status: string;
   cols: number;
   rows: number;
+  filter?: ResumeOutput;
+  cleanup?: () => Promise<void>;
+  readyTimer?: ReturnType<typeof setTimeout>;
 };
 export class Sessions {
   readonly sessions = new Map<string, Session>();
@@ -125,6 +129,14 @@ export class Sessions {
     readonly confirm: TrustPrompt,
     readonly emit: (event: AppEvent) => void,
     readonly onDetectedOS?: (host: Host, os: string) => void,
+    readonly resume?: {
+      enabled: () => boolean;
+      begin: (id: string) => void;
+      cwd: (id: string, cwd: string) => void;
+      previousCwd: (id: string, host: Host) => string | undefined;
+      hydrate?: (id: string, host: Host) => Promise<void>;
+      notice: (id: string, message: string) => void;
+    },
   ) {}
   async open(id: string, host: Host, secret: Secret, startup?: string) {
     if (host.protocol !== "ssh")
@@ -158,6 +170,8 @@ export class Sessions {
     this.emit({ kind: "session", state: { id: s.id, status, message } });
   }
   private async connect(s: Session, startup?: string) {
+    if (s.intentional) return;
+    this.resume?.begin(s.id);
     this.status(
       s,
       "connecting",
@@ -176,13 +190,71 @@ export class Sessions {
         client.end();
         return;
       }
-      const stream = await new Promise<ClientChannel>((resolve, reject) =>
-        client.shell(
-          { term: "xterm-256color", cols: s.cols, rows: s.rows },
-          { env: s.host.environment },
-          (err, channel) => (err ? reject(err) : resolve(channel)),
-        ),
-      );
+      if (this.resume?.enabled() && s.attempts === 0)
+        await this.resume.hydrate?.(s.id, s.host);
+      let prepared: Awaited<ReturnType<typeof prepareRemoteResume>> | undefined;
+      if (this.resume?.enabled()) {
+        try {
+          prepared = await prepareRemoteResume(
+            client,
+            this.resume.previousCwd(s.id, s.host),
+          );
+        } catch (error) {
+          this.resume.notice(
+            s.id,
+            error instanceof Error
+              ? error.message
+              : "SSH 작업 폴더 복원을 준비하지 못했습니다.",
+          );
+        }
+      }
+      if (s.intentional) {
+        await prepared?.cleanup();
+        client.end();
+        return;
+      }
+      s.cleanup = prepared?.cleanup;
+      let ready = false;
+      const stream = await new Promise<ClientChannel>((resolve, reject) => {
+        const callback = (err: Error | undefined, channel: ClientChannel) =>
+          err ? reject(err) : resolve(channel);
+        if (prepared)
+          client.exec(
+            prepared.command,
+            {
+              pty: { term: "xterm-256color", cols: s.cols, rows: s.rows },
+              env: s.host.environment,
+            },
+            callback,
+          );
+        else
+          client.shell(
+            { term: "xterm-256color", cols: s.cols, rows: s.rows },
+            { env: s.host.environment },
+            callback,
+          );
+      });
+      s.filter = prepared
+        ? new ResumeOutput(prepared.nonce, (kind, value) => {
+            if (s.intentional || s.client !== client) return;
+            if (kind === "cwd") this.resume?.cwd(s.id, value);
+            if (kind === "warning") this.resume?.notice(s.id, value);
+            if (kind === "ready" && !ready) {
+              ready = true;
+              clearTimeout(s.readyTimer);
+              if (startup) stream.write(startup + "\r");
+              void prepared?.cleanup();
+            }
+          })
+        : undefined;
+      if (prepared)
+        s.readyTimer = setTimeout(() => {
+          if (!ready && !s.intentional)
+            this.resume?.notice(
+              s.id,
+              "SSH 셸 준비 신호가 없어 시작 스니펫을 실행하지 않았습니다. 서버 시작 설정을 확인하세요.",
+            );
+        }, 5000);
       if (s.intentional) {
         stream.close();
         return;
@@ -197,7 +269,8 @@ export class Sessions {
           })
           .catch(() => {});
       stream.on("data", (data: Buffer) => {
-        s.queue += s.decoder.write(data);
+        const decoded = s.decoder.write(data);
+        s.queue += s.filter ? s.filter.push(decoded) : decoded;
         if (s.inFlight + Buffer.byteLength(s.queue) >= 256 * 1024) {
           stream.pause();
           stream.stderr.pause();
@@ -205,7 +278,8 @@ export class Sessions {
         this.schedule(s);
       });
       stream.stderr.on("data", (data: Buffer) => {
-        s.queue += s.decoder.write(data);
+        const decoded = s.decoder.write(data);
+        s.queue += s.filter ? s.filter.push(decoded) : decoded;
         if (s.inFlight + Buffer.byteLength(s.queue) >= 256 * 1024) {
           stream.pause();
           stream.stderr.pause();
@@ -213,7 +287,10 @@ export class Sessions {
         this.schedule(s);
       });
       stream.once("close", () => {
-        s.queue += s.decoder.end();
+        const tail = s.decoder.end();
+        s.queue += s.filter ? s.filter.push(tail) + s.filter.end() : tail;
+        clearTimeout(s.readyTimer);
+        void s.cleanup?.();
         clearTimeout(s.flush);
         s.flush = undefined;
         if (s.queue && !s.intentional) {
@@ -225,7 +302,7 @@ export class Sessions {
         }
         client.end();
       });
-      if (startup) stream.write(startup + "\r");
+      if (startup && !prepared) stream.write(startup + "\r");
       client.once("close", () => this.disconnected(s));
       client.on("error", (error) => {
         if (!s.intentional)
@@ -295,6 +372,8 @@ export class Sessions {
     const s = this.sessions.get(id);
     if (!s) return;
     s.intentional = true;
+    clearTimeout(s.readyTimer);
+    void s.cleanup?.();
     clearTimeout(s.retry);
     clearTimeout(s.flush);
     s.controller.abort();

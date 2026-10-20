@@ -324,8 +324,8 @@ test("GUI policy records platform exclusions and optional skips explicitly", () 
     platform: "darwin",
     mode: "hidden",
   });
-  assert.equal(coverage.passed, 86);
-  assert.equal(coverage.skipped, 9);
+  assert.equal(coverage.passed, 94);
+  assert.equal(coverage.skipped, 10);
   assert.equal(
     coverage.tests.filter(
       (test) => test.skipReason === "not applicable on darwin",
@@ -336,13 +336,13 @@ test("GUI policy records platform exclusions and optional skips explicitly", () 
     coverage.tests.filter((test) =>
       test.skipReason?.startsWith("optional feature"),
     ).length,
-    3,
+    4,
   );
   const windows = validateGuiReport(guiReport("win32"), {
     platform: "win32",
     mode: "hidden",
   });
-  assert.equal(windows.skipped, 7);
+  assert.equal(windows.skipped, 8);
   assert.equal(
     windows.tests.filter(
       (test) => test.skipReason === "not applicable on win32",
@@ -363,8 +363,9 @@ test("GUI optional feature selection uses the actual E2E environment flags", () 
       PASSPORT_DOCKER_MANIFEST: "fixture.json",
       PASSPORT_UI_STRESS: "1",
       PASSPORT_TEXT_BENCH: "1",
+      PASSPORT_NATIVE_AI: "1",
     }),
-    ["docker", "stress", "throughput"],
+    ["docker", "stress", "throughput", "native-ai"],
   );
   assert.deepEqual(
     requestedGuiFeatures({
@@ -466,7 +467,7 @@ test("a missing Windows shell cannot be excused as an optional skip", () => {
   );
 });
 
-for (const feature of ["docker", "stress", "throughput"]) {
+for (const feature of ["docker", "stress", "throughput", "native-ai"]) {
   test(`explicitly requested ${feature} must execute successfully`, () => {
     assert.throws(
       () =>
@@ -481,7 +482,7 @@ for (const feature of ["docker", "stress", "throughput"]) {
       guiReport("darwin", "hidden", [feature]),
       { platform: "darwin", mode: "hidden", optional: [feature] },
     );
-    assert.equal(coverage.skipped, 8);
+    assert.equal(coverage.skipped, 9);
   });
 }
 

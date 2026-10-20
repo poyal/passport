@@ -1,4 +1,5 @@
 import { SharingView } from "./Sharing";
+import { TerminalMenu, type ShareComposeRequest } from "./TerminalMenu";
 import { shortcutPlatform, type ShortcutContext } from "../shared/shortcuts";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -40,6 +41,8 @@ import { WorkspaceView } from "./Workspaces";
 import { Settings, SecretEditor, blankSecret } from "./Settings";
 import { IconButton, Modal, Tooltips } from "./components";
 import {
+  checkpointTerminal,
+  restoreTerminal,
   configureTerminals,
   ensureTerminal,
   terminals,
@@ -52,6 +55,7 @@ import {
   setTerminalFonts,
   setTerminalTransfer,
   setTerminalUnicode,
+  type TerminalMenuRequest,
 } from "./terminals";
 import {
   LOCAL_HOST_ID,
@@ -101,6 +105,9 @@ export function App() {
     [activities, setActivities] = useState<Activity[]>([]),
     [sharePending, setSharePending] = useState(0),
     [shareInboxRevision, setShareInboxRevision] = useState(0),
+    [shareCompose, setShareCompose] = useState<ShareComposeRequest>(),
+    [quickSending, setQuickSending] = useState(false),
+    [terminalMenu, setTerminalMenu] = useState<TerminalMenuRequest>(),
     [activation, setActivation] = useState<{
       workspaceId: string;
       paneId: string;
@@ -121,6 +128,7 @@ export function App() {
     toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined),
     statusRef = useRef(states),
     creatingWindow = useRef(false),
+    quickSendBusy = useRef(false),
     startedInitialTerminal = useRef<string | undefined>(undefined);
   bootRef.current = boot;
   statusRef.current = states;
@@ -141,6 +149,8 @@ export function App() {
     return () => window.removeEventListener("unhandledrejection", rejection);
   }, [notify]);
   const selectionRestored = useRef(false);
+  const resumeCandidates = useRef(new Set<string>());
+  const connectingPanes = useRef(new Set<string>());
   useEffect(() => {
     // Unhandled file drops must never navigate Electron to a local file.
     // Terminal targets handle and stop their own events before this fallback.
@@ -167,6 +177,9 @@ export function App() {
     setStates(Object.fromEntries(data.sessionStates.map((s) => [s.id, s])));
     if (!selectionRestored.current) {
       selectionRestored.current = true;
+      resumeCandidates.current = new Set(
+        data.resumeSessions.filter((s) => s.automatic).map((s) => s.id),
+      );
       try {
         const selected = JSON.parse(
           localStorage.getItem("passport-selection") || "null",
@@ -212,7 +225,31 @@ export function App() {
   );
   useEffect(() => {
     void refresh().catch((e) => setFatal(message(e)));
+    const cancelledResume = new Set<string>();
     const off = api.onEvent((event) => {
+      if (event.kind === "resume-cancel") {
+        cancelledResume.add(event.token);
+        setTimeout(() => cancelledResume.delete(event.token), 10000);
+        return;
+      }
+      if (
+        event.kind === "resume-checkpoint" ||
+        event.kind === "resume-hydrate"
+      ) {
+        const work =
+          event.kind === "resume-checkpoint"
+            ? checkpointTerminal(event.id)
+            : restoreTerminal(event.screen, () =>
+                cancelledResume.has(event.token),
+              ).then(() => undefined);
+        void work
+          .then((screen) => {
+            if (!cancelledResume.has(event.token))
+              return api.call("resume.reply", { token: event.token, screen });
+          })
+          .catch(notify);
+        return;
+      }
       if (event.kind === "control-inspect") {
         void inspectControlTerminal(event.request)
           .then((reply) => api.call("control.reply", reply))
@@ -239,6 +276,7 @@ export function App() {
             event.state.environment?.unicodeWidth ?? "unicode11",
           );
         const generation =
+          event.state.generation ??
           event.state.environment?.sessionInstanceId ??
           (event.state.status !== "connected"
             ? entry.sessionInstanceId
@@ -457,6 +495,9 @@ export function App() {
     hostId: string,
     onlyIfDisconnected = false,
   ) => {
+    if (connectingPanes.current.has(id)) return;
+    connectingPanes.current.add(id);
+    resumeCandidates.current.delete(id);
     try {
       const doc = bootRef.current?.document;
       if (
@@ -487,8 +528,30 @@ export function App() {
       });
     } catch (e) {
       notify(e);
+    } finally {
+      connectingPanes.current.delete(id);
     }
   };
+  useEffect(() => {
+    if (!boot?.document.settings.sessionResume) {
+      resumeCandidates.current.clear();
+      return;
+    }
+    const workspace = boot.document.workspaces.find(
+      (w) => w.id === active && boot.workspaceOwners[w.id] === boot.windowId,
+    );
+    if (!workspace) return;
+    const pending = panes(workspace.root).filter((p) =>
+      resumeCandidates.current.delete(p.id),
+    );
+    const worker = async () => {
+      for (let pane = pending.shift(); pane; pane = pending.shift())
+        await connectPane(pane.id, pane.hostId, true);
+    };
+    void Promise.all(
+      Array.from({ length: Math.min(4, pending.length) }, worker),
+    );
+  }, [active, boot?.document.settings.sessionResume, boot?.windowId]);
   const openHost = async (host: Host) => {
     if (host.protocol !== "ssh") {
       setActive("files");
@@ -565,7 +628,10 @@ export function App() {
     })();
   };
   useEffect(() => {
-    configureTerminals(deliverPaste, notify);
+    configureTerminals(deliverPaste, notify, (request) => {
+      setActivePane(request.id);
+      setTerminalMenu(request);
+    });
   });
   useEffect(() => {
     let previous: ShortcutContext | undefined;
@@ -575,7 +641,7 @@ export function App() {
         ".shortcut-recorder",
       )
         ? "recording"
-        : document.querySelector('[role="dialog"]')
+        : document.querySelector('[role="dialog"], .terminal-menu-layer')
           ? "dialog"
           : target?.closest(".terminal-mount")
             ? "terminal"
@@ -1040,6 +1106,7 @@ export function App() {
             <SharingView
               onPending={setSharePending}
               openInbox={shareInboxRevision}
+              compose={shareCompose}
             />
           </div>
           <div className="view" hidden={active !== "activity"}>
@@ -1128,6 +1195,33 @@ export function App() {
               <X size={14} />
             </IconButton>
           </div>
+        )}
+        {terminalMenu && (
+          <TerminalMenu
+            request={terminalMenu}
+            onClose={() => setTerminalMenu(undefined)}
+            onCompose={(text) => {
+              setShareCompose({ id: uuid(), text });
+              setActive("sharing");
+            }}
+            sending={quickSending}
+            onSend={async (to, name, text) => {
+              if (quickSendBusy.current) return;
+              quickSendBusy.current = true;
+              setQuickSending(true);
+              try {
+                await api.call("share.send", { to, text });
+                notify(
+                  `${name}님에게 쪽지 전송을 요청했습니다. 상대가 승인하면 전달됩니다.`,
+                );
+              } catch (error) {
+                notify(error);
+              } finally {
+                quickSendBusy.current = false;
+                setQuickSending(false);
+              }
+            }}
+          />
         )}
         {editingWorkspace && (
           <WorkspaceEditor

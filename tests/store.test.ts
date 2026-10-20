@@ -101,9 +101,9 @@ it("upgrades v4 atomically, backs up and removes only multi-tab templates perman
     store = new Store(dir, vault);
     expect(store.read().workspaceTemplates).toEqual([template]);
     expect(store.read().workspaces).toEqual([workspace]);
-    expect(store.db.pragma("user_version", { simple: true })).toBe(5);
+    expect(store.db.pragma("user_version", { simple: true })).toBe(7);
     const backup = (await fs.readdir(dir)).find((name) =>
-      name.startsWith("before-v5-"),
+      name.startsWith("before-v7-"),
     )!;
     const original = new Database(path.join(dir, backup), { readonly: true });
     try {
@@ -251,7 +251,7 @@ it("upgrades v0.1 metadata without losing hosts and rejects a future database ve
     store.db.pragma("user_version = 1");
     store.close();
     store = new Store(dir, vault);
-    expect(store.db.pragma("user_version", { simple: true })).toBe(5);
+    expect(store.db.pragma("user_version", { simple: true })).toBe(7);
     expect(store.read().hosts[0].name).toBe("기존 서버");
     expect(store.read().hosts[0].icon).toBe("auto");
     expect(store.read().tunnels).toEqual([]);
@@ -259,7 +259,7 @@ it("upgrades v0.1 metadata without losing hosts and rejects a future database ve
     expect(store.read().settings.shortcuts.win32.newTab).toEqual(["Ctrl+N"]);
     store.close();
     const future = new Database(path.join(dir, "passport.sqlite"));
-    future.pragma("user_version=6");
+    future.pragma("user_version=8");
     future.close();
     expect(() => new Store(dir, vault)).toThrow("새로운 Passport");
   } finally {

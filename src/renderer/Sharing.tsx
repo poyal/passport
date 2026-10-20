@@ -28,6 +28,7 @@ import {
   BookOpen,
   Clock3,
   CheckCheck,
+  Code2,
 } from "lucide-react";
 import { api, message } from "./api";
 import { useApp } from "./context";
@@ -35,9 +36,12 @@ import { Modal } from "./components";
 import { MessageEditor } from "./MessageEditor";
 import { ShareRecipient } from "./ShareRecipient";
 import { SharingGuide } from "./SharingGuide";
+import type { ShareComposeRequest } from "./TerminalMenu";
 import {
   shareExtensions,
   shareLabel,
+  validateMarkdown,
+  terminalMessageCodeBlock,
   type ShareSettings,
   type ShareSnapshot,
   type ShareMessage,
@@ -628,9 +632,11 @@ export function SharedMarkdown({
 export function SharingView({
   onPending,
   openInbox = 0,
+  compose,
 }: {
   onPending?(count: number): void;
   openInbox?: number;
+  compose?: ShareComposeRequest;
 }) {
   const { state, error, run, refresh, dismissError } = useShare();
   const [to, setTo] = useState(""),
@@ -638,6 +644,10 @@ export function SharingView({
     [file, setFile] = useState(""),
     [selected, setSelected] = useState<ShareMessage>();
   const [sending, setSending] = useState(false);
+  const [replacement, setReplacement] = useState<ShareComposeRequest>();
+  const [fromTerminal, setFromTerminal] = useState(false);
+  const [recipientRevision, setRecipientRevision] = useState("");
+  const consumedCompose = useRef<string>(undefined);
   const [guideOpen, setGuideOpen] = useState(false);
   const [pendingId, setPendingId] = useState<string>();
   const [approvalBusy, setApprovalBusy] = useState(false);
@@ -650,6 +660,26 @@ export function SharingView({
   const [copyingInvitation, setCopyingInvitation] = useState(false);
   const [aliases, setAliases] = useState<Record<string, string>>({});
   const app = useApp();
+  const applyCompose = (request: ShareComposeRequest) => {
+    setRecipientRevision(request.id);
+    setTo("");
+    setText(request.text);
+    setFile("");
+    setFromTerminal(true);
+    setReplacement(undefined);
+    setTab("send");
+  };
+  useEffect(() => {
+    if (!compose || consumedCompose.current === compose.id) return;
+    consumedCompose.current = compose.id;
+    setTab("send");
+    if (sending) {
+      app.notify("쪽지 전송 준비가 끝난 뒤 다시 선택해 주세요.");
+      return;
+    }
+    if (text.length || file) setReplacement(compose);
+    else applyCompose(compose);
+  }, [compose]);
   useEffect(() => setTab("inbox"), [openInbox]);
   useEffect(() => {
     if (state)
@@ -717,6 +747,24 @@ export function SharingView({
     });
   return (
     <div className="sharing-view">
+      {replacement && (
+        <Modal title="작성 중인 쪽지" onClose={() => setReplacement(undefined)}>
+          <p>작성 중인 쪽지가 있습니다. 버리고 새로 작성하시겠습니까?</p>
+          <p className="hint">
+            버리기를 누르면 기존 받는 사람·본문·첨부 선택을 지우고, 선택한
+            터미널 내용으로 새 쪽지를 작성합니다.
+          </p>
+          <div className="row end">
+            <button onClick={() => setReplacement(undefined)}>취소</button>
+            <button
+              className="danger filled"
+              onClick={() => applyCompose(replacement)}
+            >
+              버리기
+            </button>
+          </div>
+        </Modal>
+      )}
       <div className="page-heading">
         <div>
           <h1>
@@ -957,12 +1005,33 @@ export function SharingView({
           <section className="settings-card share-compose">
             <h2>보내기</h2>
             <fieldset className="share-compose-fields" disabled={sending}>
-              <ShareRecipient peers={state.peers} value={to} onChange={setTo} />
+              <ShareRecipient
+                key={recipientRevision}
+                peers={state.peers}
+                value={to}
+                onChange={setTo}
+              />
               <MessageEditor
                 value={text}
                 onChange={setText}
                 disabled={sending}
               />
+              {fromTerminal && (
+                <button
+                  className="terminal-message-code"
+                  onClick={() => {
+                    try {
+                      setText(validateMarkdown(terminalMessageCodeBlock(text)));
+                      setFromTerminal(false);
+                    } catch (error) {
+                      app.notify(error);
+                    }
+                  }}
+                >
+                  <Code2 size={15} />
+                  코드 블록으로 감싸기
+                </button>
+              )}
               <div className="share-compose-footer">
                 <div className="share-attachment-picker">
                   <button
@@ -1008,6 +1077,7 @@ export function SharingView({
                         });
                         setText("");
                         setFile("");
+                        setFromTerminal(false);
                       });
                     } finally {
                       setSending(false);

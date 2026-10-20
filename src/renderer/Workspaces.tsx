@@ -758,6 +758,26 @@ function Leaf({
           </div>
         )}
       </div>
+      {app.sessionStates[pane.id]?.resumeMessage && (
+        <div className="connection-banner" role="status">
+          <span>{app.sessionStates[pane.id]?.resumeMessage}</span>
+          {app.sessionStates[pane.id]?.resumeNeedsReconnect && (
+            <button
+              onClick={async () => {
+                if (
+                  await app.confirm(
+                    "복원 적용을 위해 다시 연결",
+                    "이 터미널의 실행 중인 프로그램이 종료됩니다. 아직 추적되지 않은 AI 대화는 자동으로 이어지지 않습니다. 다시 연결한 뒤 AI를 실행해 주세요.",
+                  )
+                )
+                  await app.connectPane(pane.id, host.id);
+              }}
+            >
+              복원 적용
+            </button>
+          )}
+        </div>
+      )}
       {status !== "connected" && (
         <div className="connection-banner">
           <span className={`dot ${status}`} />

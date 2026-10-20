@@ -18,6 +18,7 @@ import { availableFont, terminalFontFamily } from "../shared/fonts";
 import { loadTerminalFont } from "./fonts";
 import { PasteQueue } from "../shared/paste";
 import { readControlText } from "../shared/terminal-control";
+import { resumeScreenLimit, type ResumeScreen } from "../shared/session-resume";
 type Entry = {
   term: Terminal;
   fit: FitAddon;
@@ -71,12 +72,26 @@ let pasteHandler: (
   sessionInstanceId?: string,
 ) => void = () => {};
 let errorHandler: (error: unknown) => void = () => {};
+export type TerminalMenuRequest = {
+  id: string;
+  x: number;
+  y: number;
+  selection: string;
+  canPaste: boolean;
+  valid(): boolean;
+  copy(): void;
+  paste(): void;
+  focus(): void;
+};
+let menuHandler: (request: TerminalMenuRequest) => void = () => {};
 export function configureTerminals(
   paste: typeof pasteHandler,
   error: typeof errorHandler,
+  menu: typeof menuHandler,
 ) {
   pasteHandler = paste;
   errorHandler = error;
+  menuHandler = menu;
 }
 export function ensureTerminal(id: string) {
   const existing = terminals.get(id);
@@ -194,6 +209,31 @@ export function ensureTerminal(id: string) {
       errorHandler,
     );
   };
+  const openMenu = (x: number, y: number) => {
+    const selection = term.getSelection();
+    const revision = entry.connectionRevision;
+    menuHandler({
+      id,
+      x,
+      y,
+      selection,
+      canPaste: entry.connected && !entry.hydrating && !entry.transferring,
+      valid: () =>
+        terminals.get(id) === entry &&
+        !entry.transferring &&
+        entry.connectionRevision === revision &&
+        element.isConnected &&
+        element.getClientRects().length > 0,
+      copy: () => {
+        if (selection)
+          void api
+            .call("clipboard.write", { text: selection })
+            .catch(errorHandler);
+      },
+      paste: readPaste,
+      focus: () => term.focus(),
+    });
+  };
   let suppressNativePaste = false;
   term.attachCustomKeyEventHandler((event) => {
     if (
@@ -204,6 +244,18 @@ export function ensureTerminal(id: string) {
       event.keyCode === 229
     )
       return true;
+    if (
+      event.key === "ContextMenu" ||
+      (event.key === "F10" && event.shiftKey)
+    ) {
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.type === "keydown" && !event.repeat) {
+        const rect = element.getBoundingClientRect();
+        openMenu(rect.left + 16, rect.top + 16);
+      }
+      return false;
+    }
     const mac = platform === "darwin";
     const keys = settings.shortcuts[platform];
     const action = (
@@ -260,13 +312,45 @@ export function ensureTerminal(id: string) {
     },
     true,
   );
-  element.addEventListener("contextmenu", (event) => {
-    event.preventDefault();
-    if (term.hasSelection())
-      void api
-        .call("clipboard.write", { text: term.getSelection() })
-        .catch(errorHandler);
-  });
+  // Preserve a selection while opening the menu, and keep its click out of
+  // applications using terminal mouse reporting. Shift explicitly opens our menu.
+  const appMenu = (event: MouseEvent) =>
+    term.hasSelection() ||
+    event.shiftKey ||
+    term.modes.mouseTrackingMode === "none";
+  element.addEventListener(
+    "mousedown",
+    (event) => {
+      if (event.button === 2 && appMenu(event)) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+    },
+    true,
+  );
+  element.addEventListener(
+    "mouseup",
+    (event) => {
+      if (event.button === 2 && appMenu(event)) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+    },
+    true,
+  );
+  element.addEventListener(
+    "contextmenu",
+    (event) => {
+      event.preventDefault();
+      if (!appMenu(event)) return;
+      event.stopImmediatePropagation();
+      // Keyboard requests were already handled above; Chromium may emit this too.
+      if (event.button !== 2 && event.clientX === 0 && event.clientY === 0)
+        return;
+      openMenu(event.clientX, event.clientY);
+    },
+    true,
+  );
   return entry;
 }
 
@@ -461,6 +545,63 @@ export function hydrateTerminals(snapshots: TerminalSnapshot[]) {
     e.term.write(s.data, () => {
       e.hydrating = false;
     });
+  }
+}
+
+export async function checkpointTerminal(
+  id: string,
+): Promise<ResumeScreen | undefined> {
+  const e = terminals.get(id);
+  if (!e || e.hydrating || e.transferring) return;
+  await new Promise<void>((resolve) => e.term.write("", resolve));
+  if (terminals.get(id) !== e || e.hydrating || e.transferring) return;
+  const serialize = (lines: number) =>
+    e.serialize.serialize({
+      scrollback: lines,
+      excludeAltBuffer: true,
+      excludeModes: true,
+    });
+  let lines = 10000,
+    data = serialize(lines);
+  while (
+    new TextEncoder().encode(data).length > resumeScreenLimit &&
+    lines > 0
+  ) {
+    lines = Math.floor(lines / 2);
+    data = serialize(lines);
+  }
+  if (new TextEncoder().encode(data).length > resumeScreenLimit) data = "";
+  return {
+    id,
+    data,
+    cols: e.term.cols,
+    rows: e.term.rows,
+    unicodeWidth: e.unicodeWidth,
+  };
+}
+
+export async function restoreTerminal(
+  screen: ResumeScreen,
+  cancelled: () => boolean,
+) {
+  const e = ensureTerminal(screen.id);
+  await new Promise<void>((resolve) => e.term.write("", resolve));
+  if (cancelled() || terminals.get(screen.id) !== e || e.transferring) return;
+  e.connected = false;
+  e.hydrating = true;
+  const { cols, rows } = e.term;
+  e.term.reset();
+  setTerminalUnicode(screen.id, screen.unicodeWidth ?? "unicode11");
+  e.term.resize(screen.cols, screen.rows);
+  await new Promise<void>((resolve) =>
+    e.term.write(
+      screen.data + "\x1b[0m\r\n── 이전 세션 출력 · 새 연결 ──\r\n",
+      resolve,
+    ),
+  );
+  if (terminals.get(screen.id) === e) {
+    e.term.resize(cols, rows);
+    e.hydrating = false;
   }
 }
 

@@ -36,20 +36,20 @@ export class Store {
     mkdirSync(directory, { recursive: true, mode: 0o700 });
     this.db = new Database(path.join(directory, "passport.sqlite"));
     const version = Number(this.db.pragma("user_version", { simple: true }));
-    if (version > 5) {
+    if (version > 7) {
       this.db.close();
       throw new Error("더 새로운 Passport 버전에서 만든 데이터베이스입니다.");
     }
     try {
       if (
-        version < 5 &&
+        version < 7 &&
         this.db
           .prepare(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='metadata'",
           )
           .get()
       ) {
-        const backup = path.join(directory, `before-v5-${Date.now()}.sqlite`);
+        const backup = path.join(directory, `before-v7-${Date.now()}.sqlite`);
         this.db.exec(`VACUUM INTO '${backup.replace(/'/g, "''")}'`);
         chmodSync(backup, 0o600);
       }
@@ -113,7 +113,18 @@ export class Store {
         this.db.exec(
           "CREATE TABLE IF NOT EXISTS activity (id TEXT PRIMARY KEY, created INTEGER NOT NULL, value TEXT NOT NULL)",
         );
-        this.db.pragma("user_version = 5");
+        this.db.exec(
+          "CREATE TABLE IF NOT EXISTS session_resume (id TEXT PRIMARY KEY, value TEXT NOT NULL, agent BLOB)",
+        );
+        this.db.exec(`
+          CREATE TABLE IF NOT EXISTS session_logs(id TEXT PRIMARY KEY, name TEXT NOT NULL, started INTEGER NOT NULL, bytes INTEGER NOT NULL DEFAULT 0, bookmarks TEXT NOT NULL DEFAULT '[]');
+          CREATE TABLE IF NOT EXISTS session_log_groups(id TEXT PRIMARY KEY, name TEXT NOT NULL, started INTEGER NOT NULL, expired INTEGER NOT NULL DEFAULT 0, removed INTEGER NOT NULL DEFAULT 0, next_ordinal INTEGER NOT NULL DEFAULT 0);
+          CREATE TABLE IF NOT EXISTS session_log_segments(id TEXT PRIMARY KEY REFERENCES session_logs(id) ON DELETE CASCADE, group_id TEXT NOT NULL REFERENCES session_log_groups(id), ordinal INTEGER NOT NULL, reason TEXT NOT NULL, ended INTEGER, UNIQUE(group_id, ordinal));
+          CREATE INDEX IF NOT EXISTS session_log_segments_group ON session_log_segments(group_id, ordinal);
+          INSERT OR IGNORE INTO session_log_groups(id,name,started,next_ordinal) SELECT id,name,started,1 FROM session_logs WHERE id NOT IN (SELECT id FROM session_log_segments);
+          INSERT OR IGNORE INTO session_log_segments(id,group_id,ordinal,reason) SELECT id,id,0,'start' FROM session_logs WHERE id NOT IN (SELECT id FROM session_log_segments);
+        `);
+        this.db.pragma("user_version = 7");
         if (!this.db.prepare("SELECT id FROM metadata").get()) {
           const document = emptyDocument();
           document.settings.terminal = defaultTerminalSettings(

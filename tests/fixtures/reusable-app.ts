@@ -85,6 +85,7 @@ export function reusableApp(options: {
       revision: fresh.document.revision,
     });
     expect(fresh.sessionStates).toEqual([]);
+    expect(fresh.resumeSessions).toEqual([]);
     expect(fresh.profiles).toEqual([]);
     expect(
       await page.evaluate(() =>

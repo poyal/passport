@@ -42,6 +42,13 @@ import {
   type Activity,
 } from "../shared/model";
 import { Store } from "./store";
+import { SessionResume } from "./session-resume";
+import { ResumeOutput } from "./ssh-resume";
+import {
+  resumeScreenSchema,
+  resumeReconnectMessage,
+} from "../shared/session-resume";
+import { agentResumeCommand, agentResumeProblem } from "./agent-resume";
 import { ShareStore } from "./share/store";
 import { ShareService } from "./share/service";
 import {
@@ -173,6 +180,16 @@ let fonts: string[] = [];
 let updates: UpdateChecker;
 let locals: LocalSessions, logs: SessionLogs, tunnels: Tunnels;
 let activity: ActivityService;
+let resume: SessionResume;
+const connectionTickets = new Map<string, string>();
+const resumeMessages = new Map<string, string>();
+const cwdParsers = new Map<string, ResumeOutput>();
+function resumeNotice(id: string, message: string) {
+  resumeMessages.set(id, message);
+  const state = states.get(id);
+  if (state)
+    emit({ kind: "session", state: { ...state, resumeMessage: message } });
+}
 let terminalControl: TerminalControl;
 let sharing: ShareService;
 const localEnvironments = new Map<string, AppliedEnvironment>();
@@ -256,6 +273,7 @@ function isPaneViewed(paneId: string) {
 }
 function publishDocument(document = store.read()) {
   documentCache = document;
+  resume?.configure(document);
   terminalControl?.configure(document.settings.terminal.cliAccess);
   const localIds = new Set(
     document.workspaces.flatMap((w) =>
@@ -277,7 +295,10 @@ function publishDocument(document = store.read()) {
         workspaceOwners: ownerRecord(),
       } satisfies AppEvent);
 }
-function closeSession(id: string) {
+function closeSession(id: string, automatic = false, preserveTicket = false) {
+  if (!preserveTicket) connectionTickets.delete(id);
+  resume?.stop(id, automatic);
+  cwdParsers.delete(id);
   terminalControl?.unregister(id);
   activity?.unregister(id);
   logs?.stop(id);
@@ -300,21 +321,35 @@ function sessionLogName(id: string) {
     ? `${host.name} · ${connectionHost(documentCache!, host, store.profiles()).username}@${host.address}`
     : workspace?.name || "로컬 터미널";
 }
+function startSessionLog(id: string) {
+  logs.start(id, sessionLogName(id));
+  const group = logs.groupFor(id);
+  if (group) resume.logGroup(id, group);
+}
 let quitting = false;
 let shutdown: Promise<void> | undefined;
 let shutdownComplete = false;
 const emit = (event: AppEvent, replay = false) => {
   if (shutdown) return;
   if (event.kind === "session") {
+    event.state.generation ??= resume?.generation(event.state.id);
+    event.state.resumeMessage ??= resumeMessages.get(event.state.id);
+    event.state.resumeNeedsReconnect =
+      event.state.status === "connected" &&
+      resume?.needsReconnect(event.state.id);
     const previous = states.get(event.state.id);
     states.set(event.state.id, event.state);
     if (
       event.state.status === "connected" &&
-      previous?.status !== "connected" &&
-      shouldAutoLog(event.state.id)
+      previous?.status !== "connected"
     ) {
+      const host = sessions.sessions.get(event.state.id)?.host;
+      logs.connected(
+        event.state.id,
+        host && store.fingerprint(host.address, host.port),
+      );
       try {
-        logs.start(event.state.id, sessionLogName(event.state.id));
+        if (shouldAutoLog(event.state.id)) startSessionLog(event.state.id);
       } catch (error) {
         emit({
           kind: "notice",
@@ -325,12 +360,27 @@ const emit = (event: AppEvent, replay = false) => {
       event.state.status === "disconnected" ||
       event.state.status === "error"
     ) {
+      void resume?.checkpoint(event.state.id);
+      resume?.stop(
+        event.state.id,
+        resume.get(event.state.id)?.automatic ?? true,
+      );
       logs?.stop(event.state.id);
       activity?.unregister(event.state.id);
       terminalControl?.unregister(event.state.id);
     }
   }
   if (event.kind === "output" && !replay) {
+    const parser = cwdParsers.get(event.id);
+    if (parser) {
+      const data = parser.push(event.data);
+      if (!data) {
+        locals.ack(event.id, event.bytes);
+        return;
+      }
+      event = { ...event, data };
+    }
+    resume?.dirty(event.id);
     logs?.append(event.id, event.data);
     activity?.observe(event.id, event.data);
   }
@@ -446,6 +496,7 @@ const bootstrap = (caller = window!): Bootstrap => {
     initialTerminal,
     workspaceOwners: ownerRecord(),
     sessionStates: [...states.values()],
+    resumeSessions: resume?.summaries() ?? [],
     tunnelStates: [...tunnels.states.values()],
     shells: availableShells(),
   };
@@ -532,6 +583,10 @@ const schemas: Record<Call, z.ZodType> = {
   }),
   "auth.delete": idObject,
   "key.pick": z.undefined(),
+  "resume.reply": z.object({
+    token: z.string().uuid(),
+    screen: resumeScreenSchema.optional(),
+  }),
   "session.connect": z.object({
     id: idSchema,
     hostId: idSchema,
@@ -556,6 +611,19 @@ const schemas: Record<Call, z.ZodType> = {
   "tunnel.start": z.object({ id: idSchema, secret: secretSchema.optional() }),
   "tunnel.stop": idObject,
   "logs.list": z.undefined(),
+  "logs.groups": z.undefined(),
+  "logs.readGroup": z.object({
+    id: idSchema,
+    cursor: z
+      .object({
+        ordinal: z.number().int().min(0),
+        offset: z.number().int().min(0),
+      })
+      .optional(),
+    query: z.string().max(512).optional(),
+  }),
+  "logs.exportGroup": idObject,
+  "logs.deleteGroup": idObject,
   "logs.record": z.object({ id: idSchema, enabled: z.boolean() }),
   "logs.read": z.object({
     id: idSchema,
@@ -900,6 +968,9 @@ async function call<K extends Call>(
       banner.show();
       return true;
     }
+    case "resume.reply":
+      resume.reply(caller.id, i.token, i.screen);
+      return;
     case "bootstrap":
       return bootstrap(caller);
     case "save": {
@@ -929,6 +1000,38 @@ async function call<K extends Call>(
         ),
       }));
       const saved = store.save(doc);
+      resume.configure(saved);
+      if (doc.settings.sessionResume && !previous.settings.sessionResume)
+        for (const [id, state] of states)
+          if (state.status === "connected") {
+            const launch = locals.sessions.get(id)?.launch;
+            // Existing shell hooks keep their original authenticated generation.
+            // Never inject shell commands into a running foreground application.
+            const tracking =
+              launch?.env.PASSPORT_RESUME === "1" ||
+              !!sessions.sessions.get(id)?.filter;
+            resume.begin(
+              id,
+              launch?.snapshot.sessionInstanceId ||
+                state.generation ||
+                randomUUID(),
+              tracking,
+            );
+            const group = logs.groupFor(id);
+            if (group) resume.logGroup(id, group);
+            if (!tracking) resumeNotice(id, resumeReconnectMessage);
+          }
+      if (!doc.settings.sessionResume) {
+        resumeMessages.clear();
+        for (const local of locals.sessions.values())
+          local.launch?.clearResume?.();
+        for (const state of states.values())
+          if (state.resumeMessage)
+            emit({
+              kind: "session",
+              state: { ...state, resumeMessage: undefined },
+            });
+      }
       terminalControl.configure(doc.settings.terminal.cliAccess);
       activity.restrictAgents(doc.settings.notifications);
       if (
@@ -940,7 +1043,7 @@ async function call<K extends Call>(
           if (!shouldAutoLog(id)) logs.stop(id);
           else if (state.status === "connected") {
             try {
-              logs.start(id, sessionLogName(id));
+              startSessionLog(id);
             } catch (error) {
               emit({
                 kind: "notice",
@@ -960,6 +1063,7 @@ async function call<K extends Call>(
       for (const a of removed) await files.close(a.endpoint.id);
       for (const id of locals.sessions.keys())
         if (!allowed.has(id)) closeSession(id);
+      logs.retainConnections(allowed);
       for (const [id, running] of tunnels.running)
         if (
           JSON.stringify(doc.tunnels.find((t) => t.id === id)) !==
@@ -991,7 +1095,7 @@ async function call<K extends Call>(
       return await fs.readFile(result.filePaths[0], "utf8");
     }
     case "session.connect": {
-      const current = store.read();
+      let current = store.read();
       if (
         !current.workspaces
           .flatMap((w) => panes(w.root))
@@ -999,8 +1103,8 @@ async function call<K extends Call>(
       )
         throw new Error("현재 작업 배치에 없는 터미널입니다.");
       assertOwned(i.id, caller);
-      // No await between the authoritative state check and opening a session:
-      // open() publishes connecting synchronously before its first await.
+      // Reserve the pane before waiting for a renderer checkpoint or SSH auth.
+      if (connectionTickets.has(i.id)) return;
       if (
         i.onlyIfDisconnected &&
         ["connected", "connecting"].includes(states.get(i.id)?.status || "")
@@ -1009,42 +1113,173 @@ async function call<K extends Call>(
       const pane = current.workspaces
         .flatMap((w) => panes(w.root))
         .find((p) => p.id === i.id)!;
-      if (pane.local) {
-        closeSession(i.id);
-        let launch: ReturnType<typeof prepareLaunch> | undefined;
-        try {
-          const snapshot = previewEnvironment(
-            pane.local,
-            current.settings.terminal,
-          );
-          localEnvironments.set(i.id, snapshot);
-          const integration = selectedProfiles(
-            current.settings.terminal,
-            pane.local.profiles,
-          ).some((p) => p.integration === "ai-notifications");
-          const credentials = activity.register(
-            i.id,
-            snapshot.sessionInstanceId,
-            {
-              claude: integration && current.settings.notifications.claude,
-              codex: integration && current.settings.notifications.codex,
-            },
-          );
-          launch = prepareLaunch(
-            pane.local,
-            current.settings.terminal,
-            current.settings.notifications,
-            path.join(app.getPath("userData"), "shell-sessions"),
-            {
-              ...credentials,
-              ...terminalControl.register(i.id, snapshot.sessionInstanceId),
-            },
-            snapshot,
-          );
-          locals.open(i.id, pane.local, launch);
-        } catch (error) {
-          launch?.cleanup();
-          activity.unregister(i.id);
+      const ticket = randomUUID();
+      connectionTickets.set(i.id, ticket);
+      const check = () => {
+        if (
+          connectionTickets.get(i.id) !== ticket ||
+          ownerOf(i.id) !== caller.id ||
+          !store
+            .read()
+            .workspaces.flatMap((w) => panes(w.root))
+            .some(
+              (p) =>
+                p.id === i.id && JSON.stringify(p) === JSON.stringify(pane),
+            )
+        )
+          throw new Error("터미널 연결 요청이 취소되거나 변경되었습니다.");
+      };
+      try {
+        await resume.checkpoint(i.id);
+        check();
+        closeSession(i.id, true, true);
+        resumeMessages.delete(i.id);
+        current = store.read();
+        const generation = randomUUID();
+        resume.begin(i.id, generation);
+        logs.beginConnection(
+          i.id,
+          resume.get(i.id)?.logGroup,
+          resume.get(i.id)?.fingerprint,
+        );
+        emit({
+          kind: "session",
+          state: { id: i.id, status: "connecting", generation },
+        });
+        if (pane.local) await resume.hydrate(i.id);
+        check();
+        const savedResume = resume.get(i.id);
+        if (savedResume?.reason) resumeNotice(i.id, savedResume.reason);
+        if (pane.local) {
+          let launch: ReturnType<typeof prepareLaunch> | undefined;
+          try {
+            let local = pane.local;
+            if (savedResume?.cwd) {
+              try {
+                if (!(await fs.stat(savedResume.cwd)).isDirectory())
+                  throw new Error();
+                local = { ...local, cwd: savedResume.cwd };
+              } catch {
+                resumeNotice(
+                  i.id,
+                  "이전 작업 폴더를 열 수 없어 기본 폴더로 연결했습니다.",
+                );
+                try {
+                  if (
+                    !(
+                      await fs.stat(
+                        local.cwd ||
+                          current.settings.terminal.cwd ||
+                          os.homedir(),
+                      )
+                    ).isDirectory()
+                  )
+                    throw new Error();
+                } catch {
+                  local = { ...local, cwd: os.homedir() };
+                }
+              }
+            }
+            check();
+            const snapshot = previewEnvironment(
+              local,
+              current.settings.terminal,
+            );
+            snapshot.sessionInstanceId = generation;
+            let agent = savedResume?.agent;
+            if (agent) {
+              const problem = await agentResumeProblem(agent);
+              check();
+              if (problem) agent = { ...agent, reason: problem };
+            }
+            if (agent?.running && !agentResumeCommand(agent))
+              resumeNotice(
+                i.id,
+                agent.reason ||
+                  (agent.agent === "codex"
+                    ? "Codex 대화 ID를 받지 못해 셸만 복원했습니다. Codex의 훅 검토 화면 또는 /hooks에서 Passport 훅을 신뢰한 뒤 대화를 시작하세요."
+                    : "Claude 대화 ID를 받지 못해 셸만 복원했습니다. Claude의 훅 설정과 실행 옵션을 확인하세요."),
+              );
+            localEnvironments.set(i.id, snapshot);
+            const integration = selectedProfiles(
+              current.settings.terminal,
+              pane.local.profiles,
+            ).some((p) => p.integration === "ai-notifications");
+            const credentials = activity.register(
+              i.id,
+              snapshot.sessionInstanceId,
+              {
+                claude: integration && current.settings.notifications.claude,
+                codex: integration && current.settings.notifications.codex,
+              },
+            );
+            launch = prepareLaunch(
+              local,
+              current.settings.terminal,
+              current.settings.notifications,
+              path.join(app.getPath("userData"), "shell-sessions"),
+              {
+                ...credentials,
+                ...terminalControl.register(i.id, snapshot.sessionInstanceId),
+              },
+              snapshot,
+              {
+                enabled: resume.enabled,
+                agent,
+                skipAgent: !!savedResume?.reason || !!agent,
+                restoreCwd: !!savedResume?.cwd && local.cwd === savedResume.cwd,
+              },
+            );
+            if (resume.enabled && snapshot.shell === "cmd")
+              cwdParsers.set(
+                i.id,
+                new ResumeOutput(generation, (kind, value) => {
+                  if (kind === "cwd") resume.cwd(i.id, value);
+                }),
+              );
+            locals.open(i.id, pane.local, launch);
+          } catch (error) {
+            launch?.cleanup();
+            activity.unregister(i.id);
+            emit({
+              kind: "session",
+              state: {
+                id: i.id,
+                status: "error",
+                message: error instanceof Error ? error.message : String(error),
+              },
+            });
+            throw error;
+          }
+          return;
+        }
+        const { host, secret } = secretFor(i.hostId, i.secret);
+        const startup = host.startupSnippetId
+          ? current.snippets.find((s) => s.id === host.startupSnippetId)
+              ?.content
+          : undefined;
+        if (startup && /\{\{/.test(startup))
+          throw new Error("시작 스니펫은 입력 변수가 없는 명령을 선택하세요.");
+        activity.register(i.id, generation);
+        await sessions.open(
+          i.id,
+          host,
+          secret,
+          startup ? executableCommand(startup) : undefined,
+        );
+        const latest = store.read();
+        if (sessions.sessions.get(i.id)?.status === "connected")
+          store.save({
+            ...latest,
+            hosts: latest.hosts.map((h) =>
+              h.id === host.id ? { ...h, lastConnected: Date.now() } : h,
+            ),
+          });
+        publishDocument();
+        return;
+      } catch (error) {
+        if (connectionTickets.get(i.id) === ticket) {
+          closeSession(i.id, true, true);
           emit({
             kind: "session",
             state: {
@@ -1053,38 +1288,21 @@ async function call<K extends Call>(
               message: error instanceof Error ? error.message : String(error),
             },
           });
-          throw error;
         }
-        return;
+        throw error;
+      } finally {
+        if (connectionTickets.get(i.id) === ticket)
+          connectionTickets.delete(i.id);
       }
-      const { host, secret } = secretFor(i.hostId, i.secret);
-      const startup = host.startupSnippetId
-        ? current.snippets.find((s) => s.id === host.startupSnippetId)?.content
-        : undefined;
-      if (startup && /\{\{/.test(startup))
-        throw new Error("시작 스니펫은 입력 변수가 없는 명령을 선택하세요.");
-      closeSession(i.id);
-      activity.register(i.id, randomUUID());
-      await sessions.open(
-        i.id,
-        host,
-        secret,
-        startup ? executableCommand(startup) : undefined,
-      );
-      const latest = store.read();
-      if (sessions.sessions.get(i.id)?.status === "connected")
-        store.save({
-          ...latest,
-          hosts: latest.hosts.map((h) =>
-            h.id === host.id ? { ...h, lastConnected: Date.now() } : h,
-          ),
-        });
-      publishDocument();
+    }
+    case "session.close": {
+      const ticket = randomUUID();
+      connectionTickets.set(i.id, ticket);
+      resume.stop(i.id, false);
+      await resume.checkpoint(i.id);
+      if (connectionTickets.get(i.id) === ticket) closeSession(i.id);
       return;
     }
-    case "session.close":
-      closeSession(i.id);
-      return;
     case "session.input":
       if (
         i.sessionInstanceId &&
@@ -1384,6 +1602,7 @@ async function call<K extends Call>(
       }
       validateShortcuts(merged.document.settings.shortcuts);
       store.apply(merged.document, merged.profiles, merged.secrets);
+
       for (const w of merged.document.workspaces)
         if (!owners.has(w.id)) owners.set(w.id, caller.id);
       nativeTheme.themeSource = merged.document.settings.colorMode;
@@ -1487,12 +1706,18 @@ async function call<K extends Call>(
       return;
     case "logs.list":
       return logs.list();
+    case "logs.groups":
+      return logs.groups();
+    case "logs.readGroup":
+      return logs.readGroup(i.id, i.cursor, i.query);
+    case "logs.deleteGroup":
+      logs.deleteGroup(i.id);
+      return;
     case "logs.record": {
       if (i.enabled) {
         if (states.get(i.id)?.status !== "connected")
           throw new Error("연결된 세션에서 기록을 시작하세요.");
-        const p = workspaceFor(i.id)!.root;
-        logs.start(i.id, workspaceFor(i.id)!.name);
+        startSessionLog(i.id);
       } else logs.stop(i.id);
       return;
     }
@@ -1504,14 +1729,17 @@ async function call<K extends Call>(
     case "logs.delete":
       logs.delete(i.id);
       return;
-    case "logs.export": {
-      const row = logs.get(i.id);
+    case "logs.export":
+    case "logs.exportGroup": {
+      const group = name === "logs.exportGroup";
+      const row = group ? logs.group(i.id) : logs.get(i.id);
       const result = await dialog.showSaveDialog(caller, {
         title: "세션 로그 내보내기",
         defaultPath: `passport-${row.id}.log`,
       });
       if (result.canceled || !result.filePath) return false;
-      logs.export(i.id, result.filePath);
+      if (group) await logs.exportGroup(i.id, result.filePath);
+      else logs.export(i.id, result.filePath);
       return true;
     }
     case "theme.import": {
@@ -1728,7 +1956,8 @@ async function createWindow(withLocalTerminal = false) {
     // settings have become unreadable. Ownership uses the last accepted layout.
     for (const w of documentCache?.workspaces ?? [])
       if (owners.get(w.id) === win.id)
-        for (const p of panes(w.root)) closeSession(p.id);
+        for (const p of panes(w.root))
+          closeSession(p.id, resume.get(p.id)?.automatic ?? true);
     for (const [id, owner] of endpointOwners)
       if (owner === win.id) {
         for (const job of transfers.jobs.values())
@@ -1747,8 +1976,22 @@ async function createWindow(withLocalTerminal = false) {
     }
   });
   let closing = false;
+  let checkpointed = false;
+  const checkpointWindow = async () => {
+    const ids = [...states.keys()].filter((id) => ownerOf(id) === win.id);
+    for (const id of ids) resume.stop(id, resume.get(id)?.automatic ?? true);
+    await Promise.all(ids.map((id) => resume.checkpoint(id)));
+    checkpointed = true;
+    if (!win.isDestroyed()) win.close();
+  };
   win.on("close", (event) => {
-    if (closing) return;
+    if (closing) {
+      if (resume.enabled && !checkpointed) {
+        event.preventDefault();
+        void checkpointWindow();
+      }
+      return;
+    }
     if (
       [...states.values()].some(
         (s) =>
@@ -1774,7 +2017,11 @@ async function createWindow(withLocalTerminal = false) {
         .then((r) => {
           if (r.response === 1) {
             closing = true;
-            if (quitting) app.quit();
+            if (resume.enabled)
+              void checkpointWindow().then(() => {
+                if (quitting) app.quit();
+              });
+            else if (quitting) app.quit();
             else win?.close();
           } else {
             quitting = false;
@@ -1895,8 +2142,35 @@ void app
     logs = new SessionLogs(store, (message) =>
       emit({ kind: "notice", message }),
     );
+    const loaderRoot = path.join(app.getPath("userData"), "shell-sessions");
+    for (const entry of await fs
+      .readdir(loaderRoot, { withFileTypes: true })
+      .catch(() => []))
+      if (
+        entry.isDirectory() &&
+        /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/.test(entry.name)
+      )
+        await fs
+          .rm(path.join(loaderRoot, entry.name), {
+            recursive: true,
+            force: true,
+          })
+          .catch(() => {});
     locals = new LocalSessions(emit);
+    resume = new SessionResume(store, {
+      owner: ownerOf,
+      send: (owner, event) => {
+        const w = windows.get(owner);
+        if (w && !w.isDestroyed()) w.webContents.send("passport:event", event);
+      },
+      notice: resumeNotice,
+    });
     activity = new ActivityService(store.db, {
+      resume: (id, event) => {
+        resume.agentEvent(id, event);
+        if (event.event === "run-start")
+          locals.sessions.get(id)?.launch?.clearResume?.();
+      },
       workspace: (paneId) => workspaceFor(paneId)?.id,
       changed: (items) => {
         banners.sync(items);
@@ -1944,7 +2218,18 @@ void app
       });
       publishDocument();
     };
-    sessions = new Sessions(store, confirm, emit, detectedOS);
+    sessions = new Sessions(store, confirm, emit, detectedOS, {
+      enabled: () => resume.enabled,
+      begin: (id) => resume.begin(id, randomUUID()),
+      previousCwd: (id, host) =>
+        resume.sshCwd(id, store.fingerprint(host.address, host.port)),
+      hydrate: async (id, host) => {
+        resume.sshCwd(id, store.fingerprint(host.address, host.port));
+        await resume.hydrate(id);
+      },
+      cwd: (id, cwd) => resume.cwd(id, cwd),
+      notice: resumeNotice,
+    });
     files = new Files(store, confirm, detectedOS);
     transfers = new Transfers(files, emit);
     nativeTheme.themeSource = store.read().settings.colorMode;
@@ -2122,6 +2407,7 @@ app.on("will-quit", (event) => {
     await activity?.close();
     await terminalControl?.close();
     await sharing?.close();
+    resume?.close();
     store?.close();
     shutdownComplete = true;
     app.quit();

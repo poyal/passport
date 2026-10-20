@@ -59,6 +59,17 @@ fn event(source: &str, kind: &str, payload: &Value) -> Value {
     // Forward only identifiers and a bounded completion excerpt. The main
     // process enforces the current opt-in before displaying or persisting it.
     let mut message = json!({"source":source,"event":kind,"session":payload.get("session_id").or(payload.get("thread-id")).and_then(Value::as_str).unwrap_or(""),"turn":payload.get("turn-id").and_then(Value::as_str).unwrap_or(""),"request":payload.get("tool_use_id").or(payload.get("elicitation_id")).and_then(Value::as_str).unwrap_or("")});
+    if let Some(cwd) = payload.get("cwd").and_then(Value::as_str) {
+        if cwd.len() <= 4096 { message["cwd"] = cwd.into(); }
+    }
+    if let Some(source) = payload.get("source").and_then(Value::as_str) {
+        if matches!(source, "startup" | "resume" | "clear" | "compact") {
+            message["sessionSource"] = source.into();
+        }
+    }
+    if let Some(transcript) = payload.get("transcript_path").and_then(Value::as_str) {
+        if transcript.len() <= 4096 { message["transcript"] = transcript.into(); }
+    }
     if matches!(kind, "completed" | "stop-candidate") {
         if let Some(text) = payload.get("last_assistant_message").or(payload.get("last-assistant-message")).and_then(Value::as_str) {
             message["summary"] = text.chars().take(200).collect::<String>().into();
@@ -72,6 +83,7 @@ fn hook_kind(payload: &Value, codex: bool) -> Option<&str> {
     // explicitly forwarded by Notification still need attention.
     if payload.get("agent_id").is_some() && kind != "Notification" { return None; }
     Some(match kind {
+        "SessionStart" => "session-start",
         "agent-turn-complete" => "completed",
         "Stop" => "stop-candidate",
         "PermissionRequest" => "permission-candidate",
@@ -120,7 +132,7 @@ fn hook(mode: &str, args: &[String]) {
     }
     let Some(normalized) = hook_kind(&payload, mode == "codex-notify") else { return; };
     transmit(event(
-        if mode == "codex-notify" {
+        if mode == "codex-notify" || mode == "codex-hook" {
             "codex"
         } else {
             "claude"
@@ -176,22 +188,22 @@ const TUI_NOTIFICATION_KEYS: [&str; 3] = [
     "notification_method",
     "notification_condition",
 ];
-fn version(executable: &PathBuf) -> String {
+fn probe(executable: &PathBuf, argument: &str, limit: u64) -> Option<String> {
     let Ok(mut child) = Command::new(executable)
-        .arg("--version")
+        .arg(argument)
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
         .spawn()
     else {
-        return "버전 확인 불가".into();
+        return None;
     };
     let output = child.stdout.take();
     let (tx, rx) = mpsc::channel();
     thread::spawn(move || {
         let mut bytes = Vec::new();
         if let Some(output) = output {
-            let _ = output.take(1024).read_to_end(&mut bytes);
+            let _ = output.take(limit).read_to_end(&mut bytes);
         }
         let _ = tx.send(bytes);
     });
@@ -201,25 +213,42 @@ fn version(executable: &PathBuf) -> String {
             Ok(Some(status)) => {
                 if status.success() {
                     if let Ok(bytes) = rx.recv_timeout(Duration::from_millis(50)) {
-                        return String::from_utf8_lossy(&bytes)
-                            .chars()
-                            .filter(|c| !c.is_control())
-                            .take(128)
-                            .collect();
+                        return Some(String::from_utf8_lossy(&bytes).into_owned());
                     }
                 }
-                return "버전 확인 불가".into();
+                return None;
             }
-            Err(_) => return "버전 확인 불가".into(),
+            Err(_) => return None,
             _ => {}
         }
         if start.elapsed() > Duration::from_secs(1) {
             let _ = child.kill();
             let _ = child.wait();
-            return "버전 확인 시간 초과".into();
+            return None;
         }
         thread::sleep(Duration::from_millis(10));
     }
+}
+fn codex_interactive(args: &[String]) -> bool {
+    if args.iter().any(|a| matches!(a.as_str(), "--remote" | "--help" | "-h" | "--version" | "-V")
+        || a.starts_with("--remote=")) { return false; }
+    let mut values = false;
+    for arg in args {
+        if values { values = false; continue; }
+        if matches!(arg.as_str(), "-c" | "--config" | "-p" | "--profile" | "-m" | "--model"
+            | "-a" | "--ask-for-approval" | "-s" | "--sandbox" | "-C" | "--cd"
+            | "--enable" | "--disable" | "--local-provider" | "--add-dir" | "-i" | "--image") {
+            values = true;
+        } else if arg == "--" { return true; }
+        else if !arg.starts_with('-') {
+            return !matches!(arg.as_str(), "exec" | "e" | "review" | "login" | "logout" | "mcp"
+                | "plugin" | "app-server" | "remote-control" | "app" | "completion" | "update"
+                | "doctor" | "sandbox" | "debug" | "apply" | "a" | "cloud" | "exec-server"
+                | "features" | "help" | "agents" | "queue" | "archive" | "delete"
+                | "migrate-rollouts" | "unarchive" | "fork");
+        }
+    }
+    true
 }
 fn codex_overrides(args: &[String]) -> (bool, [bool; 3]) {
     let mut notify = false;
@@ -289,13 +318,21 @@ fn run(agent: &str, args: &[String]) -> i32 {
     let info = format!(
         "{agent}: {} · {}",
         executable.display(),
-        version(&executable)
+        probe(&executable, "--version", 1024).unwrap_or_else(|| "버전 확인 불가".into())
+            .chars().filter(|c| !c.is_control()).take(128).collect::<String>()
     );
     transmit(
         json!({"source":"terminal","event":"profile-result","detail":info.chars().take(4096).collect::<String>()}),
     );
     let mut cli_args = Vec::new();
     let helper = env::current_exe().unwrap_or_default();
+    if agent == "codex" && env::var("PASSPORT_RESUME").as_deref() == Ok("1")
+        && codex_interactive(args) && !args.iter().any(|a| a == "--no-daemon")
+        && probe(&executable, "--help", 16384).is_some_and(|text| text.contains("--no-daemon")) {
+        // A shared server outlives the PTY and retains another client's hook
+        // environment. Keep the authenticated run binding owned by this CLI.
+        cli_args.push("--no-daemon".into());
+    }
     if agent == "claude" && env::var("PASSPORT_CLAUDE").as_deref() == Ok("1") {
         if args
             .iter()
@@ -338,6 +375,21 @@ fn run(agent: &str, args: &[String]) -> i32 {
             }
         }
     }
+    if agent == "codex" && env::var("PASSPORT_RESUME").as_deref() == Ok("1") {
+        // A separate inline source merges with file hooks. Keep the command
+        // stable so normal /hooks trust survives a new terminal generation.
+        let conflict = args.iter().any(|a| a.contains("hooks.") || a.starts_with("hooks="));
+        if !conflict {
+            let command = if cfg!(windows) {
+                format!("\"{}\" codex-hook", helper.to_string_lossy())
+            } else {
+                format!("'{}' codex-hook", helper.to_string_lossy().replace('\'', "'\"'\"'"))
+            };
+            for name in ["SessionStart", "UserPromptSubmit"] {
+                cli_args.extend(["-c".into(), format!("hooks.{name}=[{{hooks=[{{type=\"command\",command={}}}]}}]", json!(command))]);
+            }
+        }
+    }
     cli_args.extend_from_slice(args);
     // Never invoke arbitrary shell text. Windows npm launchers use cmd's native
     // argument escaping provided by std::process for .cmd/.bat executables.
@@ -359,6 +411,12 @@ fn run(agent: &str, args: &[String]) -> i32 {
     // Child hooks receive the run ID. The parent includes it explicitly below.
     let mut start = event(agent, "run-start", &Value::Null);
     start["agentRun"] = run.clone().into();
+    if env::var("PASSPORT_RESUME").as_deref() == Ok("1") {
+        start["cwd"] = env::current_dir().unwrap_or_default().to_string_lossy().into_owned().into();
+        let home = env::var(if agent == "codex" { "CODEX_HOME" } else { "CLAUDE_CONFIG_DIR" }).unwrap_or_default();
+        start["home"] = home.into();
+        if args.len() <= 128 && serde_json::to_vec(args).is_ok_and(|v| v.len() <= 8192) { start["args"] = json!(args); }
+    }
     transmit(start);
     #[cfg(unix)]
     unsafe {
@@ -476,6 +534,29 @@ fn main() {
         }
         return;
     }
+    if mode == "cwd" {
+        transmit(json!({"source":"terminal","event":"cwd","cwd":env::current_dir().unwrap_or_default().to_string_lossy()}));
+        return;
+    }
+    if mode == "resume" {
+        let result = (|| -> Option<i32> {
+            let file = env::var("PASSPORT_AGENT_RESUME").ok()?;
+            let bytes = fs::read(file).ok()?;
+            if bytes.len() > 16384 { return None; }
+            let value: Value = serde_json::from_slice(&bytes).ok()?;
+            let agent = value["agent"].as_str()?;
+            if agent != "codex" && agent != "claude" { return None; }
+            let current_home = env::var(if agent == "codex" { "CODEX_HOME" } else { "CLAUDE_CONFIG_DIR" }).unwrap_or_default();
+            if value["home"].as_str().unwrap_or("") != current_home { return None; }
+            env::set_current_dir(value["cwd"].as_str()?).ok()?;
+            let arguments: Vec<String> = value["args"].as_array()?.iter().map(|v| v.as_str().map(String::from)).collect::<Option<_>>()?;
+            Some(run(agent, &arguments))
+        })();
+        match result {
+            Some(code) => std::process::exit(code),
+            None => { eprintln!("Passport: AI 작업 폴더·대화 저장 위치·실행 옵션을 확인하지 못해 자동 재개를 생략했습니다."); std::process::exit(1); }
+        }
+    }
     if mode == "run" {
         std::process::exit(run(
             args.get(1).map(String::as_str).unwrap_or(""),
@@ -506,6 +587,33 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn standalone_codex_only_for_local_interactive_clients() {
+        let interactive = |args: &[&str]| codex_interactive(&args.iter().map(|s| s.to_string()).collect::<Vec<_>>());
+        assert!(interactive(&[]));
+        assert!(interactive(&["-a", "never", "-s", "danger-full-access", "resume", "session-id"]));
+        assert!(interactive(&["--model", "exec", "a normal prompt"]));
+        assert!(!interactive(&["exec", "hello"]));
+        assert!(!interactive(&["-c", "model='fixture'", "agents"]));
+        assert!(!interactive(&["--remote=localhost:9000"]));
+        assert!(!interactive(&["--remote", "localhost:9000", "resume"]));
+        assert!(!interactive(&["--help"]));
+    }
+    #[test]
+    fn resume_hooks_forward_only_bounded_native_metadata() {
+        let value = event("claude", "session-start", &json!({
+            "session_id":"test-id", "source":"startup",
+            "transcript_path":"/tmp/conversation.jsonl", "prompt":"private"
+        }));
+        assert_eq!(value["sessionSource"], "startup");
+        assert_eq!(value["transcript"], "/tmp/conversation.jsonl");
+        assert!(value.get("prompt").is_none());
+        let oversized = event("codex", "session-start", &json!({
+            "source":"other", "transcript_path":"x".repeat(4097)
+        }));
+        assert!(oversized.get("sessionSource").is_none());
+        assert!(oversized.get("transcript").is_none());
+    }
     #[test]
     fn unrelated_tui_preferences_do_not_disable_notifications() {
         let config: toml::Value =

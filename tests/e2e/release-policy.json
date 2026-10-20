@@ -483,6 +483,26 @@
       "title": "validates notes settings, guide copying, message drafts and inbox, sending and friends controls"
     },
     {
+      "id": "terminal-menu.actions",
+      "file": "terminal-menu.spec.ts",
+      "title": "terminal menus preserve selected text, target paste and expose sharing availability with keyboard navigation"
+    },
+    {
+      "id": "terminal-menu.quick-send",
+      "file": "terminal-menu.spec.ts",
+      "title": "terminal quick send sends once without opening or replacing drafts and reports request failures"
+    },
+    {
+      "id": "terminal-menu.compose",
+      "file": "terminal-menu.spec.ts",
+      "title": "terminal sharing prefills a draft without sending and requires discard or cancel for existing text and attachments"
+    },
+    {
+      "id": "terminal-menu.ssh",
+      "file": "terminal-menu.spec.ts",
+      "title": "SSH terminal menus preserve mouse reporting and fit at the window edge"
+    },
+    {
       "id": "sharing.1",
       "file": "sharing.spec.ts",
       "title": "pairs two devices, sends messages with optional attachments after one approval and renders inert content"
@@ -513,6 +533,32 @@
       "file": "terminal-reconnect.spec.ts",
       "title": "reconnects the same local pane with fresh CLI credentials and current profiles without restarting the app",
       "platforms": ["darwin"]
+    },
+    {
+      "id": "session-resume.lazy-history",
+      "file": "session-resume.spec.ts",
+      "title": "restores history and cwd only when a saved tab is selected and preserves explicit disconnects"
+    },
+    {
+      "id": "session-resume.agent-options",
+      "file": "session-resume.spec.ts",
+      "title": "resumes each local AI with its exact conversation and explicit options without repeating initial input"
+    },
+    {
+      "id": "session-resume.restart-after-enable",
+      "file": "session-resume.spec.ts",
+      "title": "applies resume to existing terminals and restores Codex and Claude after a full app restart with CLI access off"
+    },
+    {
+      "id": "session-resume.native-agents",
+      "file": "native-agent-resume.spec.ts",
+      "title": "real Codex and Claude resume saved conversations and reopen empty sessions after app restart",
+      "optional": "native-ai"
+    },
+    {
+      "id": "logs.grouped-reconnect",
+      "file": "log-groups.spec.ts",
+      "title": "SSH reconnects keep a log group with visible expired segments and recording gaps"
     }
   ]
 }

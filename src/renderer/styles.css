@@ -1639,6 +1639,31 @@ summary {
   background: var(--line);
   margin: 5px 7px;
 }
+.terminal-menu {
+  width: 232px;
+}
+.terminal-friends-menu {
+  width: 240px;
+  max-height: min(320px, calc(100vh - 16px));
+}
+.terminal-menu .submenu-arrow {
+  margin-left: auto;
+}
+.terminal-peer-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.terminal-friends-menu small {
+  margin-left: auto;
+  color: var(--muted);
+}
+.terminal-message-code {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
 .inline-error {
   color: var(--danger);
   font-size: 11px;
@@ -2841,6 +2866,28 @@ select:disabled {
 .log-reader > .row,
 .log-reader > .hint {
   flex-shrink: 0;
+}
+.log-scope {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+  min-width: 0;
+  margin-bottom: 12px;
+}
+.log-scope select {
+  width: 100%;
+  min-width: 0;
+}
+.log-part {
+  display: block;
+}
+.log-boundary {
+  display: block;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
 }
 .log-reader pre {
   flex: 1;

@@ -386,15 +386,15 @@ test("manually launched CLI wrappers deliver completion and input alerts and res
 const fs = require('node:fs'), {spawnSync} = require('node:child_process');
 const agent = process.argv[2], args = process.argv.slice(3);
 if(args.includes('--version')) { console.log('fixture 1.0'); process.exit(0); }
-const send = (command, argv, input) => {
-  const result = spawnSync(command, argv, {input: JSON.stringify(input), encoding:'utf8'});
+const send = (command, argv, input, shell = false) => {
+  const result = spawnSync(command, argv, {input: JSON.stringify(input), encoding:'utf8', shell});
   if(result.error || result.status) throw new Error('hook failed');
 };
 if(agent === 'claude') {
   const settings = JSON.parse(fs.readFileSync(args[args.indexOf('--settings')+1], 'utf8'));
   for(const [name,payload] of [['Notification',{notification_type:'permission_prompt',tool_use_id:'permission'}],['Stop',{}]]) {
     const hook = settings.hooks[name][0].hooks[0];
-    send(hook.command, hook.args, {hook_event_name:name,session_id:'fixture',...payload});
+    send(hook.command, [], {hook_event_name:name,session_id:'fixture',...payload}, true);
   }
 } else {
   const config = args.find(a => a.startsWith('notify='));
