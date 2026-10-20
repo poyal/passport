@@ -40,6 +40,7 @@ type Entry = {
   composing: boolean;
   pasting?: boolean;
   hydrating?: boolean;
+  checkpointReady?: boolean;
   transferring?: boolean;
 };
 export const terminals = new Map<string, Entry>();
@@ -544,6 +545,7 @@ export function hydrateTerminals(snapshots: TerminalSnapshot[]) {
     e.hydrating = true;
     e.term.write(s.data, () => {
       e.hydrating = false;
+      e.checkpointReady = true;
     });
   }
 }
@@ -552,7 +554,9 @@ export async function checkpointTerminal(
   id: string,
 ): Promise<ResumeScreen | undefined> {
   const e = terminals.get(id);
-  if (!e || e.hydrating || e.transferring) return;
+  // A renderer reload creates an empty terminal before reconnecting. It must
+  // not replace the saved screen until output or a restored snapshot arrives.
+  if (!e || !e.checkpointReady || e.hydrating || e.transferring) return;
   await new Promise<void>((resolve) => e.term.write("", resolve));
   if (terminals.get(id) !== e || e.hydrating || e.transferring) return;
   const serialize = (lines: number) =>
@@ -602,6 +606,7 @@ export async function restoreTerminal(
   if (terminals.get(screen.id) === e) {
     e.term.resize(cols, rows);
     e.hydrating = false;
+    e.checkpointReady = true;
   }
 }
 

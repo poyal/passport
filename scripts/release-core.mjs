@@ -235,7 +235,10 @@ export async function validateReceipt(root, receipt, state) {
     const allowed = new Set([
       "README.md",
       "src/renderer/styles.css",
+      "src/renderer/App.tsx",
+      "src/renderer/terminals.ts",
       "tests/e2e/scroll-workspaces.spec.ts",
+      "tests/e2e/session-resume.spec.ts",
       "scripts/release-core.mjs",
       "scripts/release-publish.mjs",
       "tests/release.test.mjs",
@@ -253,7 +256,7 @@ export async function validateReceipt(root, receipt, state) {
       changed.every(
         (file) => allowed.has(file) || /^docs\/.*\.(md|png)$/.test(file),
       ),
-      "Windows 1.3.5 source includes changes outside the approved layout, tests, publication and documentation scope",
+      "Windows 1.3.5 source includes changes outside the approved layout, terminal history, tests, publication and documentation scope",
     );
   }
   if (usesInitialWindowsSource(receipt)) {

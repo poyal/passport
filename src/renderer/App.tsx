@@ -317,13 +317,12 @@ export function App() {
           return;
         }
         const entry = ensureTerminal(event.id);
-        entry.term.write(
-          event.data,
-          () =>
-            void api
-              .call("session.ack", { id: event.id, bytes: event.bytes })
-              .catch(() => {}),
-        );
+        entry.term.write(event.data, () => {
+          entry.checkpointReady = true;
+          void api
+            .call("session.ack", { id: event.id, bytes: event.bytes })
+            .catch(() => {});
+        });
       } else if (event.kind === "transfer") {
         if (event.job.state === "error")
           notify(new Error(event.job.error || "파일 전송에 실패했습니다."));
