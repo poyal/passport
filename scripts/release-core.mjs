@@ -47,6 +47,28 @@ export function usesInitialWindowsSource(receipt) {
     receipt.source.commit !== initialWindowsRelease.releaseCommit
   );
 }
+// On 2026-10-20 the user explicitly requested the Windows fixes as 1.3.5.
+// This applies only to its previously unpublished Windows installer.
+export const windows135Release = Object.freeze({
+  version: "1.3.5",
+  target: "win-x64",
+  releaseCommit: "6c23037ba5eed37327c8cf892939dd7f6131bf46",
+  sourceTag: "v1.3.5-win-x64",
+  macAsset: {
+    id: 658821321,
+    name: "Passport-1.3.5-mac-arm64.dmg",
+    size: 173620064,
+    digest:
+      "sha256:09e8e9c7c0206f585c7ffd31cc8fdfa79803bef3be10ffb06109b121741c4c58",
+  },
+});
+export function usesWindows135Source(receipt) {
+  return (
+    receipt.version === windows135Release.version &&
+    receipt.target === windows135Release.target &&
+    receipt.source.commit !== windows135Release.releaseCommit
+  );
+}
 export const schemaVersion = 3;
 export const targets = {
   "mac-arm64": { platform: "darwin", arch: "arm64", extension: "dmg" },
@@ -199,6 +221,41 @@ export async function validateReceipt(root, receipt, state) {
   assert.equal(receipt.source.dirty, false, "Dirty builds cannot be published");
   assert.equal(state.dirty, false, "Commit local changes before publishing");
   assertSameSource(receipt.source, state);
+  if (usesWindows135Source(receipt)) {
+    execFileSync(
+      "git",
+      [
+        "merge-base",
+        "--is-ancestor",
+        windows135Release.releaseCommit,
+        state.commit,
+      ],
+      { cwd: root, stdio: "pipe" },
+    );
+    const allowed = new Set([
+      "README.md",
+      "src/renderer/styles.css",
+      "tests/e2e/scroll-workspaces.spec.ts",
+      "scripts/release-core.mjs",
+      "scripts/release-publish.mjs",
+      "tests/release.test.mjs",
+    ]);
+    const changed = git(
+      root,
+      "diff",
+      "--name-only",
+      windows135Release.releaseCommit,
+      state.commit,
+    )
+      .split(/\r?\n/)
+      .filter(Boolean);
+    assert.ok(
+      changed.every(
+        (file) => allowed.has(file) || /^docs\/.*\.(md|png)$/.test(file),
+      ),
+      "Windows 1.3.5 source includes changes outside the approved layout, tests, publication and documentation scope",
+    );
+  }
   if (usesInitialWindowsSource(receipt)) {
     execFileSync(
       "git",

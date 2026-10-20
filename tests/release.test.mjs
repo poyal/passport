@@ -16,6 +16,7 @@ import {
   parseArguments,
   withReleaseLock,
   initialWindowsRelease,
+  windows135Release,
   windowsIconReplacement,
   targets,
 } from "../scripts/release-core.mjs";
@@ -830,6 +831,106 @@ test("the initial Windows source exception cannot publish another platform or ve
       publicationPlan(client, [{ ...receipt, ...replacement }]),
       /Remote tag differs/,
     );
+});
+
+async function windows135Fixture(t) {
+  const { receipt, client, state } = await initialWindowsFixture(t);
+  receipt.version = "1.3.5";
+  receipt.artifact.name = installerName(receipt.version, receipt.target);
+  client.getTag = async (tag) => ({
+    object: {
+      type: "commit",
+      sha:
+        tag === windows135Release.sourceTag
+          ? receipt.source.commit
+          : windows135Release.releaseCommit,
+    },
+  });
+  state.assets = [
+    {
+      ...windows135Release.macAsset,
+      state: "uploaded",
+      updated_at: "2026-10-20T00:00:00Z",
+    },
+  ];
+  return { receipt, client, state };
+}
+
+test("approved Windows 1.3.5 addition pins the Mac tag and installer and uses its own source tag", async (t) => {
+  const { receipt, client, state } = await windows135Fixture(t);
+  const plan = await publicationPlan(client, [receipt]);
+  assert.equal(plan.tag, "v1.3.5");
+  assert.equal(plan.sourceTag, "v1.3.5-win-x64");
+  assert.equal(plan.releaseCommit, windows135Release.releaseCommit);
+  assert.deepEqual(plan.uploads, [receipt.artifact.name]);
+  assert.ok(
+    plan.sums.toString().includes(windows135Release.macAsset.digest.slice(7)),
+  );
+  assert.deepEqual(state.mutations, []);
+});
+
+test("Windows 1.3.5 rejects changed tags, missing or changed Mac assets and unpublished releases", async (t) => {
+  const { receipt, client, state } = await windows135Fixture(t);
+  const getTag = client.getTag;
+  for (const tag of ["v1.3.5", "v1.3.5-win-x64"]) {
+    client.getTag = async (name) =>
+      name === tag
+        ? { object: { type: "commit", sha: "0".repeat(40) } }
+        : getTag(name);
+    await assert.rejects(
+      publicationPlan(client, [receipt]),
+      /tag changed|Remote tag differs/,
+    );
+  }
+  client.getTag = getTag;
+  for (const key of ["id", "name", "size", "digest"]) {
+    const original = state.assets[0][key];
+    state.assets[0][key] = key === "size" || key === "id" ? 1 : "changed";
+    await assert.rejects(
+      publicationPlan(client, [receipt]),
+      /Mac 1.3.5 installer changed/,
+    );
+    state.assets[0][key] = original;
+  }
+  state.release.draft = true;
+  await assert.rejects(
+    publicationPlan(client, [receipt]),
+    /existing public Mac release/,
+  );
+  state.release.draft = false;
+  state.assets = [];
+  await assert.rejects(
+    publicationPlan(client, [receipt]),
+    /Mac 1.3.5 installer changed/,
+  );
+});
+
+test("the Windows 1.3.5 exception cannot publish another version, a Mac build, or replace an installer", async (t) => {
+  const { receipt, client, state } = await windows135Fixture(t);
+  for (const replacement of [
+    { target: "mac-arm64" },
+    { version: "1.3.4" },
+    { version: "1.3.6" },
+  ])
+    await assert.rejects(
+      publicationPlan(client, [{ ...receipt, ...replacement }]),
+      /Remote tag differs/,
+    );
+  await assert.rejects(
+    publicationPlan(client, [receipt], { replaceWindowsIcon: true }),
+    /only authorized/,
+  );
+  state.assets.push({
+    id: 20,
+    name: receipt.artifact.name,
+    size: 1,
+    digest: "sha256:" + "0".repeat(64),
+    state: "uploaded",
+  });
+  await assert.rejects(
+    publicationPlan(client, [receipt]),
+    /differ|replace|overwrite|changed/i,
+  );
 });
 
 async function windowsIconFixture(t) {

@@ -2914,6 +2914,8 @@ select:disabled {
   flex-direction: column;
   min-height: 0;
   height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .log-reader > .row,
 .log-reader > .hint {
@@ -2942,7 +2944,8 @@ select:disabled {
   font-size: 12px;
 }
 .log-reader pre {
-  flex: 1;
+  flex: 1 0 72px;
+  min-height: 72px;
   margin: 14px 0;
 }
 .log-bookmarks {
@@ -2958,12 +2961,32 @@ select:disabled {
   display: none;
 }
 @container settings (max-width: 620px) {
+  .log-settings > .page-heading {
+    margin-bottom: 12px;
+  }
+  .log-settings .settings-tab-list {
+    margin-bottom: 12px;
+  }
   .settings-content .log-layout:not(.is-empty) {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(80px, 27%) minmax(0, 1fr);
+    grid-template-rows: minmax(80px, 24%) minmax(0, 1fr);
   }
   .log-reader {
-    padding: 14px;
+    padding: 10px;
+  }
+  .log-scope {
+    flex-direction: row;
+    align-items: center;
+    white-space: nowrap;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .log-scope select {
+    flex: 1;
+    width: 0;
+  }
+  .log-reader pre {
+    margin: 8px 0;
   }
   .log-reader > .hint {
     font-size: 10px;
