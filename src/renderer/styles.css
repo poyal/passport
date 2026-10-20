@@ -2015,8 +2015,8 @@ kbd {
   flex: 1;
   min-width: 0;
   justify-content: flex-start;
-  gap: 20px;
-  padding: 8px 12px;
+  gap: 16px;
+  padding: 12px;
   text-align: left;
   white-space: normal;
   border-radius: 7px;
@@ -2029,7 +2029,7 @@ kbd {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 7px;
   overflow-wrap: anywhere;
 }
 .workspace-template-title {
@@ -2042,12 +2042,12 @@ kbd {
   min-width: 0;
   overflow-wrap: anywhere;
   line-height: 1.4;
-  font-size: 14px;
 }
 .template-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 5px;
+  padding-left: 41px;
 }
 .template-tag {
   display: inline-flex;
@@ -2086,43 +2086,10 @@ kbd {
   gap: 4px;
 }
 .template-preview {
-  display: flex;
-  flex-direction: column;
-  width: 104px;
-  height: 88px;
-  flex-shrink: 0;
-  overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--bg);
-}
-.template-preview-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 32px;
-  padding: 3px 7px;
-  border-bottom: 1px solid var(--line);
-  background: var(--surface);
-}
-.template-preview-header .workspace-mark {
-  width: 24px;
-  height: 24px;
-  flex-basis: 24px;
-}
-.template-preview-header .workspace-extra {
-  position: static;
-  padding: 1px 5px;
-  background: var(--panel);
-  color: var(--muted);
-  font-size: 10px;
-  line-height: 16px;
-}
-.template-preview-layout {
   display: block;
-  flex: 1;
-  min-height: 0;
-  padding: 6px;
+  width: 112px;
+  aspect-ratio: 16 / 9;
+  flex-shrink: 0;
 }
 .template-preview-split {
   display: grid;
@@ -2136,9 +2103,8 @@ kbd {
   display: block;
   width: 100%;
   height: 100%;
-  background: color-mix(in srgb, var(--tab-color) 45%, var(--panel));
-  box-shadow: inset 0 0 0 1px
-    color-mix(in srgb, var(--tab-color) 55%, transparent);
+  background: var(--tab-color, var(--accent));
+  opacity: 0.7;
   border-radius: 2px;
   min-width: 0;
   min-height: 0;
