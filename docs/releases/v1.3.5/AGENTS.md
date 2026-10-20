@@ -14,17 +14,22 @@ SQLite 스키마 7, 문서·portable 형식 2를 유지합니다. 1.3.4의 데�
 
 ## 검증과 공개 상태
 
-2026-10-20에 [v1.3.5](https://github.com/poyal/passport/releases/tag/v1.3.5)를 **Mac ARM64만 공개**했습니다. 설치 파일의 소스와 태그는 `6c23037ba5eed37327c8cf892939dd7f6131bf46`입니다. 게시 결과는 `published-and-download-verified`이며, 공개 후 인증 없는 별도 다운로드로 DMG·`SHA256SUMS.txt`의 크기와 SHA-256을 다시 확인했습니다. 이 기록·최신 다운로드 안내·촬영본을 반영하는 후속 문서 커밋은 배포 바이너리의 소스와 구분합니다.
+2026-10-20에 [v1.3.5](https://github.com/poyal/passport/releases/tag/v1.3.5)의 Mac ARM64 DMG에 이어 Windows x64 EXE를 공개했습니다. 두 OS 모두 게시 결과는 `published-and-download-verified`이며, 인증 없는 공개 다운로드로 설치 파일과 `SHA256SUMS.txt`의 크기·SHA-256을 확인했습니다. 후속 문서 커밋은 배포 바이너리 소스와 구분합니다.
 
-Windows 1.3.5는 이번 작업에서 검증·빌드·게시하지 않았습니다. Windows 공개 설치본은 [v1.3.3](https://github.com/poyal/passport/releases/tag/v1.3.3)을 유지하며 기존 EXE의 자산 ID·크기·SHA-256이 바뀌지 않았음을 확인했습니다. 사용자 설치 앱과 실제 앱 데이터는 교체하지 않았습니다.
+| 대상 | 설치 파일의 소스 | 소스 태그 |
+| --- | --- | --- |
+| Mac ARM64 | `6c23037ba5eed37327c8cf892939dd7f6131bf46` | `v1.3.5` |
+| Windows x64 | `c1aaac29dc09794e8643634a4b5359f0a83bed9b` | [`v1.3.5-win-x64`](https://github.com/poyal/passport/tree/v1.3.5-win-x64) |
 
-### Windows 1.3.5 추가 게시 준비
+기존 Mac 태그·DMG 및 Windows 1.3.3 EXE의 자산 ID·크기·해시를 보존했습니다. 사용자 설치 앱과 실제 데이터는 교체하지 않았습니다. GitHub Release의 자동 Source code ZIP은 기존 Mac 태그를 가리키므로 Windows 소스는 별도 태그를 사용합니다.
+
+### Windows 1.3.5 추가 수정
 
 2026-10-20 후속 Windows 검증에서 원래 `v1.3.5` 소스는 단위·통합 270개와 배포 정책 74개를 통과했지만, 소스 GUI의 세션 로그 스크롤 검사에서 실패했습니다. Windows 11의 150% 배율·1024×680 창에서 로그 내용의 높이가 0이 되는 것을 격리 데이터로 재현했습니다. 실패 manifest는 게시에 사용하지 않습니다.
 
-사용자는 결함 수정에 새 버전이 필요하다는 기존 규칙을 안내받은 뒤 수정본도 **1.3.5로 게시**하도록 명시했습니다. Windows 수정본은 기존 Mac `v1.3.5` 태그·DMG를 유지하고 `v1.3.5-win-x64` 소스 태그를 따로 사용합니다. 좁은 로그 화면의 조회 범위·여백 배치와 최소 읽기 높이를 보장하고, 연결 종료 후 화면 재로드로 만들어진 빈 터미널이 저장된 이력을 덮어쓰지 않도록 출력·스냅샷 복원 완료 여부를 검사합니다. AI 복원 시험의 모의 CLI는 현재 프로세스가 입력 받을 준비를 마친 뒤에만 종료 입력을 받도록 수정했습니다. 기존 이력·대화·실행 옵션 검사는 유지합니다. 전체 정식 검증·설치 파일·공개 결과는 아직 확정 전입니다.
+사용자는 결함 수정에 새 버전이 필요하다는 기존 규칙을 안내받은 뒤 수정본도 **1.3.5로 게시**하도록 명시했습니다. 좁은 로그 화면의 조회 범위·여백 배치와 최소 읽기 높이를 보장하고, 연결 종료 후 화면 재로드로 만들어진 빈 터미널이 저장된 이력을 덮어쓰지 않도록 출력·스냅샷 복원 완료 여부를 검사했습니다. AI 복원 시험의 모의 CLI는 현재 프로세스가 입력 받을 준비를 마친 뒤에만 종료 입력을 받도록 수정했습니다. 기존 이력·대화·실행 옵션 검사는 유지했으며, 소스와 최종 EXE 내부 앱에서 모두 통과했습니다.
 
-## 정식 검증 환경과 결과
+## Mac 정식 검증 환경과 결과
 
 사용자가 실제 데스크톱 검사를 허용하고 후보 앱의 키체인 접근을 승인한 뒤, 깨끗한 위 커밋에서 `PASSPORT_NATIVE_AI=1 DEBUG=pw:browser npm run release:verify -- --desktop`을 완료했습니다. 최종 manifest는 `preview: false`, `status: verified`이며 해당 최종 실행의 실패·재시도·flaky는 모두 0입니다.
 
@@ -67,12 +72,32 @@ Node·npm·Python·OpenSSL·Command Line Tools·AI CLI는 설치된 도구를 �
 | 파일 | 크기(바이트) | SHA-256 |
 | --- | ---: | --- |
 | `Passport-1.3.5-mac-arm64.dmg` | 173,620,064 | `09e8e9c7c0206f585c7ffd31cc8fdfa79803bef3be10ffb06109b121741c4c58` |
-| `SHA256SUMS.txt` | 95 | `ab594ac62ba46eae1547855a078f3ea69ae77f7f9f21bb7637934820ef3f487a` |
+| `Passport-1.3.5-win-x64.exe` | 207,293,446 | `48d2ab9817b1902e2a7103e60c46f1629d3c023018bbe0d0d7bac5a607b791fd` |
+| `SHA256SUMS.txt` | 188 | `78009d8b6401fcc32de75771b42be3c3bba057ac31cec8ec03676ec5c3fd0f47` |
 
-검증한 DMG 바이트를 그대로 게시했습니다. Mac 앱은 ad-hoc 서명이며 Developer ID·Apple 공증을 포함하지 않습니다. 체크섬 파일에는 위 Mac DMG만 포함합니다. GitHub의 자동 Source code 링크는 별도 설치 파일이 아닙니다.
+검증한 설치 파일 바이트를 그대로 게시했습니다. Mac 앱은 ad-hoc 서명이며 Developer ID·Apple 공증을 포함하지 않습니다. Windows EXE는 `NotSigned`입니다. `SHA256SUMS.txt`에는 두 설치 파일을 함께 포함합니다. GitHub의 자동 Source code 링크는 별도 설치 파일이 아닙니다.
+
+## Windows 정식 검증 환경과 결과
+
+Windows 11 x64(10.0.26300), Node 24.14.0, npm 11.21.1, Electron 44.8.0, Rust 1.99.1, Python 3.13.7, MSVC Build Tools 2022 14.44, PowerShell 7.6.6, Git for Windows OpenSSL 3.5.7에서 실행했습니다. Rust와 GitHub CLI 2.102.0은 공식 배포의 체크섬을 확인하여 작업 전용 경로에서 사용했습니다.
+
+사용자가 실제 데스크톱 검사를 허용한 뒤 깨끗한 Windows 소스 커밋에서 `npm run release:verify -- --desktop`을 완료했습니다. 최종 실행은 `20261020T121018Z-c1aaac2-win-x64-local-release`, `preview: false`, `status: verified`이며 실패·재시도·flaky는 0입니다.
+
+| Windows 검사 | 결과 |
+| --- | --- |
+| 잠금 의존성·FTP/FTPS·타입·빌드 | 통과 |
+| 단위·통합 | 270 통과·플랫폼 및 선택 검사 10 생략 |
+| 배포 정책 | 77 통과·Windows 심볼릭 링크 권한 사례 1 생략 |
+| 소스·최종 EXE 내부 앱 숨김 GUI | 각각 98 통과·정책상 8 생략 |
+| 소스·설치본 실제 데스크톱 | 각각 4 통과 |
+| NSIS·설치본 smoke | 설치 정책·페이로드 추출·실제 PTY·helper·정상 종료 통과 |
+
+숨김 GUI 생략은 Mac 전용 4개와 미선택 Docker·지속 부하·대용량 텍스트·실제 AI CLI 4개입니다. Windows의 실제 Codex·Claude CLI 선택 검사는 실행하지 않았으며 모의 CLI 복원과 구분합니다. 소스와 최종 설치본의 숨김 수명 감사는 각각 시작·정상 종료·감사 48회, 창 59개, 앱 재사용 41회, 표시·포커스 0회입니다. 실제 데스크톱 검사는 각각 앱 4개가 정상 종료했습니다. 종료 코드 0·시그널 없음·10초 제한을 유지했습니다.
+
+기존 Mac 자산의 ID `658821321`·크기·SHA-256과 원본 태그를 고정한 게시 계획을 확인한 뒤 Windows EXE만 추가했습니다. 같은 이름의 기존 설치 파일을 교체하지 않았습니다.
 
 ## 별도 확인 범위와 제한
 
 - 자동 AI 아이콘은 인증된 기존 실행 연동에 의존합니다. 임의 프로세스 검색·연동되지 않은 CLI 감지는 하지 않습니다. 직접 지정한 아이콘과 템플릿의 저장 아이콘을 우선합니다.
 - 실제 AI CLI 검사의 모델 응답은 루프백 fixture입니다. 유료 API·실제 로그인·외부 AI 서비스 검증과 구분합니다.
-- Windows 11 실기, macOS 14 실기, 물리 IME, OS 알림 표시, 다른 PC의 LAN, 깨끗한 계정의 설치·제거·업그레이드, Docker·장시간 부하는 별도 확인 대상입니다.
+- macOS 14 실기, 물리 IME, OS 알림 표시, 다른 PC의 LAN, 깨끗한 계정의 설치·제거·업그레이드, Docker·장시간 부하는 별도 확인 대상입니다.
