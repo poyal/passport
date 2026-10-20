@@ -2006,6 +2006,9 @@ kbd {
   gap: 8px;
   padding: 8px;
 }
+.workspace-template-row.colored {
+  box-shadow: inset 3px 0 0 var(--tab-color);
+}
 .workspace-template-open {
   border: 0;
   background: transparent;
@@ -2016,6 +2019,10 @@ kbd {
   padding: 12px;
   text-align: left;
   white-space: normal;
+  border-radius: 7px;
+}
+.workspace-template-open:hover {
+  background: var(--surface);
 }
 .workspace-template-name {
   flex: 1;
@@ -2025,7 +2032,52 @@ kbd {
   gap: 7px;
   overflow-wrap: anywhere;
 }
-.workspace-template-name small {
+.workspace-template-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+.workspace-template-title strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+}
+.template-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding-left: 41px;
+}
+.template-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 24px;
+  padding: 2px 8px;
+  border: 1px solid color-mix(in srgb, var(--muted) 18%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--muted) 7%, var(--panel));
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+.template-tag.ssh {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 9%, var(--panel));
+  border-color: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.template-tag b {
+  font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.template-tag svg,
+.template-play {
+  flex-shrink: 0;
+}
+.template-play {
   color: var(--muted);
 }
 .workspace-template-actions {
@@ -2051,7 +2103,7 @@ kbd {
   display: block;
   width: 100%;
   height: 100%;
-  background: var(--accent);
+  background: var(--tab-color, var(--accent));
   opacity: 0.7;
   border-radius: 2px;
   min-width: 0;

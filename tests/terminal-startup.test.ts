@@ -48,6 +48,90 @@ const vault = {
   decryptString: () => "",
 };
 
+it("tracks authenticated outer AI runs independently of notifications without persisting runtime identity", async () => {
+  const store = new Store(directory(), vault);
+  const changes: (string | undefined)[] = [];
+  const notify = vi.fn();
+  const service = new ActivityService(store.db, {
+    workspace: () => "workspace",
+    changed: () => {},
+    notify,
+    ready: () => {},
+    error: () => {},
+    agentChanged: (pane, generation) =>
+      changes.push(service.activeAgent(pane, generation)),
+  });
+  try {
+    const generation = randomUUID();
+    const credentials = service.register("pane", generation);
+    const base = {
+      generation,
+      token: credentials.PASSPORT_TOKEN,
+      source: "codex",
+      agentRun: "outer",
+    };
+    service.receive({ ...base, token: "0".repeat(64), event: "run-start" });
+    service.receive({ ...base, generation: randomUUID(), event: "run-start" });
+    expect(changes).toEqual([]);
+    service.receive({ ...base, event: "run-start" });
+    service.receive({ ...base, event: "run-start" });
+    service.receive({ ...base, event: "completed" });
+    service.receive({ ...base, event: "session-end" });
+    service.receive({
+      ...base,
+      event: "run-start",
+      source: "claude",
+      agentRun: "nested",
+    });
+    service.receive({
+      ...base,
+      event: "run-end",
+      source: "claude",
+      agentRun: "nested",
+    });
+    service.receive({ ...base, event: "run-end", source: "claude" });
+    expect(changes).toEqual(["codex"]);
+    expect(service.activeAgent("pane", randomUUID())).toBeUndefined();
+    service.receive({ ...base, event: "run-end" });
+    service.receive({
+      ...base,
+      event: "run-start",
+      source: "claude",
+      agentRun: "next",
+    });
+    service.receive({ ...base, event: "run-end" });
+    expect(changes).toEqual(["codex", undefined, "claude"]);
+    service.restrictAgents({ codex: false, claude: false });
+    expect(service.activeAgent("pane", generation)).toBe("claude");
+    const nextGeneration = randomUUID();
+    const next = service.register("pane", nextGeneration);
+    expect(changes.at(-1)).toBeUndefined();
+    service.receive({ ...base, event: "run-start" });
+    expect(service.activeAgent("pane", nextGeneration)).toBeUndefined();
+    service.receive({
+      ...base,
+      generation: nextGeneration,
+      token: next.PASSPORT_TOKEN,
+      event: "run-start",
+    });
+    service.unregister("pane");
+    expect(changes).toEqual([
+      "codex",
+      undefined,
+      "claude",
+      undefined,
+      "codex",
+      undefined,
+    ]);
+    expect(notify).not.toHaveBeenCalled();
+    expect(service.list()).toEqual([]);
+    expect(store.db.prepare("SELECT value FROM activity").all()).toEqual([]);
+  } finally {
+    await service.close();
+    store.close();
+  }
+});
+
 it("keeps at most 500 notifications for seven days and never re-emits historical records", async () => {
   const store = new Store(directory(), vault);
   let now = Date.now();

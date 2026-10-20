@@ -332,7 +332,13 @@ let shutdownComplete = false;
 const emit = (event: AppEvent, replay = false) => {
   if (shutdown) return;
   if (event.kind === "session") {
-    event.state.generation ??= resume?.generation(event.state.id);
+    event.state.generation ??=
+      event.state.environment?.sessionInstanceId ??
+      resume?.generation(event.state.id);
+    event.state.activeAgent =
+      event.state.status === "connected"
+        ? activity?.activeAgent(event.state.id, event.state.generation)
+        : undefined;
     event.state.resumeMessage ??= resumeMessages.get(event.state.id);
     event.state.resumeNeedsReconnect =
       event.state.status === "connected" &&
@@ -2166,6 +2172,11 @@ void app
       notice: resumeNotice,
     });
     activity = new ActivityService(store.db, {
+      agentChanged: (id, generation) => {
+        const state = states.get(id);
+        if (state?.status === "connected" && state.generation === generation)
+          emit({ kind: "session", state: { ...state } });
+      },
       resume: (id, event) => {
         resume.agentEvent(id, event);
         if (event.event === "run-start")

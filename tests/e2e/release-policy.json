@@ -3,6 +3,16 @@
   "description": "Explicit release test inventory. IDs remain stable when titles are deliberately updated. Entries without overrides are required on macOS and Windows in hidden mode.",
   "tests": [
     {
+      "id": "workspace-identity.ai-icons",
+      "file": "workspace-identity.spec.ts",
+      "title": "AI tab icons follow live runs while manual choices templates and window moves preserve identity"
+    },
+    {
+      "id": "workspace-identity.template-tags",
+      "file": "workspace-identity.spec.ts",
+      "title": "template cards combine saved marks layout previews and accurate wrapping composition tags"
+    },
+    {
       "id": "terminal-control.input-read",
       "file": "terminal-control.spec.ts",
       "title": "CLI identifies its pane and preserves literal input and alternate-screen reads across windows"

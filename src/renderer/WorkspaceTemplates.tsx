@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import {
   Layers,
   Save,
@@ -7,6 +7,9 @@ import {
   Pencil,
   RefreshCw,
   Trash2,
+  Server,
+  Terminal,
+  Network,
 } from "lucide-react";
 import type { Layout, WorkspaceTemplate } from "../shared/model";
 import { panes } from "../shared/layout";
@@ -14,6 +17,7 @@ import { cloneWorkspaces } from "../shared/workspace-templates";
 import { useApp } from "./context";
 import { uuid } from "./api";
 import { Empty, IconButton } from "./components";
+import { WorkspaceMark } from "./WorkspaceTabs";
 
 function LayoutPreview({ node }: { node: Layout }) {
   return node.kind === "pane" ? (
@@ -107,10 +111,19 @@ export function WorkspaceTemplates() {
           />
         )}
         {app.document.workspaceTemplates.map((template) => {
-          const terminals = template.workspaces.flatMap((w) => panes(w.root));
+          const workspace = template.workspaces[0];
+          const terminals = panes(workspace.root);
+          const remote = terminals.filter((p) => !p.local);
+          const hostCount = new Set(remote.map((p) => p.hostId)).size;
+          const localCount = terminals.length - remote.length;
           return (
             <section
-              className="workspace-template-row"
+              className={`workspace-template-row ${workspace.color ? "colored" : ""}`}
+              style={
+                {
+                  "--tab-color": workspace.color || "var(--accent)",
+                } as CSSProperties
+              }
               key={template.id}
               aria-label={template.name}
             >
@@ -121,19 +134,57 @@ export function WorkspaceTemplates() {
                 onClick={() => void open(template, true)}
               >
                 <span className="template-preview" aria-hidden="true">
-                  <LayoutPreview node={template.workspaces[0].root} />
+                  <LayoutPreview node={workspace.root} />
                 </span>
-                <span className="workspace-template-name">
-                  <strong>{template.name}</strong>
-                  <small>
-                    {template.workspaces.length}개 탭 ·{" "}
-                    {terminals.filter((p) => !p.local).length}개 SSH
-                    {terminals.some((p) => p.local)
-                      ? ` · ${terminals.filter((p) => p.local).length}개 로컬`
-                      : ""}
-                  </small>
-                </span>
-                <Play size={16} />
+                <div className="workspace-template-name">
+                  <div className="workspace-template-title">
+                    <span className="workspace-mark">
+                      <WorkspaceMark
+                        workspace={workspace}
+                        document={app.document}
+                      />
+                      {terminals.length > 1 && (
+                        <small
+                          className="workspace-extra"
+                          aria-label={`추가 패널 ${terminals.length - 1}개`}
+                        >
+                          +{terminals.length - 1}
+                        </small>
+                      )}
+                    </span>
+                    <strong>{template.name}</strong>
+                  </div>
+                  <span className="template-tags" aria-label="템플릿 구성">
+                    {remote.length > 0 && (
+                      <>
+                        <span
+                          className="template-tag ssh"
+                          aria-label={`SSH ${remote.length}개`}
+                        >
+                          <Network size={12} aria-hidden="true" />
+                          SSH <b>{remote.length}</b>
+                        </span>
+                        <span
+                          className="template-tag hosts"
+                          aria-label={`호스트 ${hostCount}개`}
+                        >
+                          <Server size={12} aria-hidden="true" />
+                          호스트 <b>{hostCount}</b>
+                        </span>
+                      </>
+                    )}
+                    {localCount > 0 && (
+                      <span
+                        className="template-tag local"
+                        aria-label={`로컬 ${localCount}개`}
+                      >
+                        <Terminal size={12} aria-hidden="true" />
+                        로컬 <b>{localCount}</b>
+                      </span>
+                    )}
+                  </span>
+                </div>
+                <Play className="template-play" size={16} aria-hidden="true" />
               </button>
               <div className="workspace-template-actions">
                 <IconButton

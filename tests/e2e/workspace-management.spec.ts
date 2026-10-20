@@ -470,12 +470,12 @@ test("host group sections restore collapse after search and remove empty unassig
   );
   await page.getByRole("button", { name: "호스트", exact: true }).click();
   const unassigned = page.locator(".host-group").filter({
-    has: page.getByRole("button", { name: "미지정 1", exact: true }),
+    has: page.getByRole("button", { name: "그룹미설정 1", exact: true }),
   });
   await expect(page.locator(".host-group-heading")).toHaveText([
     "운영1",
     "운영 / 웹1",
-    "미지정1",
+    "그룹미설정1",
   ]);
   await unassigned.locator(".host-group-heading").click();
   await expect(unassigned.locator(".host-row")).toBeHidden();
@@ -502,6 +502,43 @@ test("host group sections restore collapse after search and remove empty unassig
     "운영2",
     "운영 / 웹1",
   ]);
+  const sidebar = page.locator(".host-sidebar");
+  await sidebar
+    .getByRole("button", { name: "그룹미설정 0", exact: true })
+    .click();
+  await expect(page.locator(".host-row")).toHaveCount(0);
+  await expect(
+    page.getByText("그룹이 설정되지 않은 호스트가 없습니다", { exact: true }),
+  ).toBeVisible();
+  await page.evaluate(async (hostId) => {
+    const boot = await window.passport.call("bootstrap", undefined);
+    boot.document.hosts = boot.document.hosts.map((h) =>
+      h.id === hostId ? { ...h, groupId: null, tags: ["미배정"] } : h,
+    );
+    await window.passport.call("save", boot.document);
+  }, hosts[0].id);
+  await expect(
+    sidebar.getByRole("button", { name: "그룹미설정 1", exact: true }),
+  ).toHaveClass(/selected/);
+  // Its previous collapsed state is retained; searching reveals matching rows.
+  await page.getByLabel("호스트 검색").fill("서버 0");
+  await expect(page.locator(".host-row")).toHaveCount(1);
+  await expect(page.locator(".host-row")).toContainText("서버 0");
+  await page.getByLabel("태그 필터").selectOption("미배정");
+  await expect(page.locator(".host-row")).toHaveCount(1);
+  await page.getByLabel("호스트 검색").fill("서버 1");
+  await expect(page.locator(".host-row")).toHaveCount(0);
+  await page.getByLabel("호스트 검색").fill("");
+  await page.getByLabel("태그 필터").selectOption("");
+  await unassigned.locator(".host-group-heading").click();
+  await expect(unassigned.locator(".host-row")).toBeVisible();
+  await page.getByLabel("현재 목록 전체 선택", { exact: true }).uncheck();
+  await page.getByLabel("현재 목록 전체 선택", { exact: true }).check();
+  await expect(
+    page.getByRole("button", { name: "일괄 편집 · 1", exact: true }),
+  ).toBeEnabled();
+  await sidebar.getByRole("button", { name: "운영 2", exact: true }).click();
+  await expect(page.locator(".host-row")).toHaveCount(2);
 });
 
 test("workspace recovery leaves healthy local sessions intact and reopens only disconnected panes", async () => {

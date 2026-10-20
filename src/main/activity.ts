@@ -61,6 +61,7 @@ type Live = {
   since: number;
   parser: OscNotifications;
   enabled: { claude: boolean; codex: boolean };
+  activeRun?: { id: string; source: "claude" | "codex" };
   turns: Map<string, { epoch: number; completed: boolean }>;
   emitted: Set<string>;
   pending: Map<string, { timer: ReturnType<typeof setTimeout>; event: Wire }>;
@@ -156,6 +157,7 @@ export class ActivityService {
         paneId: string,
         event: import("./session-resume").ResumeAgentEvent,
       ) => void;
+      agentChanged?: (paneId: string, generation: string) => void;
       workspace: (paneId: string) => string | undefined;
       changed: (items: Activity[]) => void;
       notify: (item: Activity) => void;
@@ -231,11 +233,18 @@ export class ActivityService {
     const old = this.live.get(paneId);
     this.live.delete(paneId);
     if (old) {
+      if (old.activeRun) this.callbacks.agentChanged?.(paneId, old.generation);
       for (const pending of old.pending.values()) clearTimeout(pending.timer);
       for (const row of this.rows)
         if (row.generation === old.generation) row.resolved = true;
       this.persist();
     }
+  }
+  activeAgent(paneId: string, generation: string | undefined) {
+    const entry = this.live.get(paneId);
+    return entry?.generation === generation
+      ? entry?.activeRun?.source
+      : undefined;
   }
   restrictAgents(allowed: { claude: boolean; codex: boolean }) {
     let changed = false;
@@ -294,8 +303,23 @@ export class ActivityService {
       );
       return;
     }
-    if (event.source === "terminal" || !entry.enabled[event.source]) return;
+    if (event.source === "terminal") return;
     const run = event.agentRun || event.run;
+    // Runtime identity also serves resume-only sessions with notifications off.
+    // Keep the outer run bound until its own exit; turns and nested runs do not
+    // replace it, and only authenticated events from this generation reach here.
+    if (run && event.event === "run-start" && !entry.activeRun) {
+      entry.activeRun = { id: run, source: event.source };
+      this.callbacks.agentChanged?.(entry.paneId, entry.generation);
+    } else if (
+      event.event === "run-end" &&
+      entry.activeRun?.id === run &&
+      entry.activeRun?.source === event.source
+    ) {
+      entry.activeRun = undefined;
+      this.callbacks.agentChanged?.(entry.paneId, entry.generation);
+    }
+    if (!entry.enabled[event.source]) return;
     if (event.event === "run-start") {
       if (run && entry.runs.size < 64) {
         entry.runs.add(run);

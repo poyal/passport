@@ -467,6 +467,7 @@ export type Bootstrap = {
 };
 export type SessionState = {
   generation?: string;
+  activeAgent?: "codex" | "claude";
   resumeMessage?: string;
   resumeNeedsReconnect?: boolean;
   id: string;

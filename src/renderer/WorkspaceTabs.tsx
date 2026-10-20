@@ -8,7 +8,11 @@ import {
   Smile,
   Check,
 } from "lucide-react";
-import type { Workspace, PassportDocument } from "../shared/model";
+import type {
+  Workspace,
+  PassportDocument,
+  SessionState,
+} from "../shared/model";
 import { panes } from "../shared/layout";
 import { hostOS, hostIconNames } from "../shared/host-os";
 import {
@@ -103,9 +107,11 @@ function tabStyle(color?: string): CSSProperties {
 export function WorkspaceMark({
   workspace,
   document,
+  sessionState,
 }: {
   workspace: Workspace;
   document: PassportDocument;
+  sessionState?: SessionState;
 }) {
   const icon = workspace.icon;
   if (icon?.kind === "emoji")
@@ -120,6 +126,14 @@ export function WorkspaceMark({
     return <OSIcon compact kind={icon.os} label={hostIconNames[icon.os]} />;
   if (icon?.kind === "local") return <LocalIcon kind={icon.local} />;
   const first = panes(workspace.root)[0];
+  if (
+    workspace.root.kind === "pane" &&
+    first.local &&
+    sessionState?.id === first.id &&
+    sessionState.status === "connected" &&
+    sessionState.activeAgent
+  )
+    return <LocalIcon kind={sessionState.activeAgent} />;
   if (first.local) return <Terminal size={20} aria-label="로컬 터미널" />;
   const host = document.hosts.find((h) => h.id === first.hostId);
   const os = host ? hostOS(host) : { kind: "server" as const, label: "서버" };
@@ -249,7 +263,11 @@ export function WorkspaceTab({
         }}
       >
         <span className="workspace-mark">
-          <WorkspaceMark workspace={w} document={app.document} />
+          <WorkspaceMark
+            workspace={w}
+            document={app.document}
+            sessionState={app.sessionStates[all[0].id]}
+          />
           {all.length > 1 && (
             <small
               className="workspace-extra"
@@ -429,13 +447,17 @@ export function WorkspaceEditor({
                   <WorkspaceMark
                     workspace={{ ...workspace, icon: undefined }}
                     document={app.document}
+                    sessionState={
+                      app.sessionStates[panes(workspace.root)[0].id]
+                    }
                   />
                 ) : (
                   <Terminal size={20} />
                 )}
               </span>
               <span>
-                자동 <small>첫 번째 패널의 아이콘</small>
+                자동{" "}
+                <small>단일 로컬은 실행 중인 AI · 그 외 첫 번째 패널</small>
               </span>
               {!icon && (
                 <Check
@@ -685,6 +707,7 @@ export function WorkspaceEditor({
               <WorkspaceMark
                 workspace={{ ...workspace, icon }}
                 document={app.document}
+                sessionState={app.sessionStates[panes(workspace.root)[0].id]}
               />
               <span>{name || "작업 탭"}</span>
             </div>

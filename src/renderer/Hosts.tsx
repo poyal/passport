@@ -82,6 +82,7 @@ export function Hosts() {
         (filter === "all" ||
           (filter === "favorites" && h.favorite) ||
           (filter === "recent" && h.lastConnected > 0) ||
+          (filter === "ungrouped" && h.groupId === null) ||
           inGroup(h, filter)) &&
         (!tag || h.tags.includes(tag)) &&
         `${h.name} ${h.address} ${connectionHost(doc, h, app.boot.profiles).username} ${h.tags.join(" ")}`
@@ -105,7 +106,7 @@ export function Hosts() {
     )
     .map((id) => ({
       id,
-      name: id === "ungrouped" ? "미지정" : groupPath(id),
+      name: id === "ungrouped" ? "그룹미설정" : groupPath(id),
       hosts: list.filter((h) => (h.groupId ?? "ungrouped") === id),
     }));
   const create = () => {
@@ -282,6 +283,14 @@ export function Hosts() {
           </IconButton>
         </div>
         {renderGroups(null)}
+        <button
+          className={`nav-item ${filter === "ungrouped" ? "selected" : ""}`}
+          onClick={() => setFilter("ungrouped")}
+        >
+          <Folder size={16} />
+          <span>그룹미설정</span>
+          <small>{doc.hosts.filter((h) => h.groupId === null).length}</small>
+        </button>
         <div className="sidebar-foot">
           <span className="dot" />내 기기에 저장됨
         </div>
@@ -454,9 +463,11 @@ export function Hosts() {
             <Empty
               icon={<Server size={30} />}
               title={
-                doc.hosts.length
-                  ? "조건에 맞는 호스트가 없습니다"
-                  : "첫 연결을 준비하세요"
+                filter === "ungrouped" && !search && !tag
+                  ? "그룹이 설정되지 않은 호스트가 없습니다"
+                  : doc.hosts.length
+                    ? "조건에 맞는 호스트가 없습니다"
+                    : "첫 연결을 준비하세요"
               }
               description={
                 doc.hosts.length
