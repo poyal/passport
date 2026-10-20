@@ -142,16 +142,21 @@ test.beforeAll(async () => {
       (_, i) => `LOG LINE ${String(i).padStart(4, "0")} normal output 한글\r\n`,
     ).join("");
     for (let i = 0; i < 70; i++) {
-      const id = randomUUID();
+      const id = randomUUID(),
+        name = `Fixture server ${i} · tester@localhost`,
+        started = Date.now() - i * 1000;
       fs.writeFileSync(path.join(directory, "logs", `${id}.log`), text);
-      db.prepare(
-        "INSERT INTO session_logs(id,name,started,bytes) VALUES(?,?,?,?)",
-      ).run(
-        id,
-        `Fixture server ${i} · tester@localhost`,
-        Date.now() - i * 1000,
-        Buffer.byteLength(text),
-      );
+      db.transaction(() => {
+        db.prepare(
+          "INSERT INTO session_logs(id,name,started,bytes) VALUES(?,?,?,?)",
+        ).run(id, name, started, Buffer.byteLength(text));
+        db.prepare(
+          "INSERT INTO session_log_groups(id,name,started,next_ordinal) VALUES(?,?,?,1)",
+        ).run(id, name, started);
+        db.prepare(
+          "INSERT INTO session_log_segments(id,group_id,ordinal,reason) VALUES(?,?,0,'start')",
+        ).run(id, id);
+      })();
     }
     db.close();
   });

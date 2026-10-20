@@ -97,7 +97,9 @@ release/checks/<실행-ID>/                 로그·원본 GUI 보고서·수명
 
 GUI는 `tests/e2e/release-policy.json`의 안정적인 ID·파일·제목·모드·플랫폼·생략 조건을 실행 전 목록과 실행 후 개별 결과에 대조합니다. 필수 시험의 누락·생략·중단·예상 실패·재시도·flaky는 실패입니다. 집계 숫자나 manifest의 status만 고쳐 통과시킬 수 없습니다. 게시 도구도 원본 GUI 보고서 네 개를 다시 판정합니다.
 
-다른 플랫폼 전용 시험과 미선택 Docker·장시간 부하만 정책에 따라 생략합니다. `PASSPORT_DOCKER_MANIFEST`, `PASSPORT_UI_STRESS=1`, `PASSPORT_TEXT_BENCH=1`을 지정한 선택 검사는 통과가 필수입니다. Windows 내장 Bash·cmd·Windows PowerShell·PowerShell 7, DPAPI·드라이브 검사는 환경 미준비를 이유로 생략할 수 없습니다. 고정 검사 수를 복사하지 말고 실제 정책과 보고서를 확인합니다.
+다른 플랫폼 전용 시험과 미선택 Docker·장시간 부하·설치된 AI CLI 검사만 정책에 따라 생략합니다. `PASSPORT_DOCKER_MANIFEST`, `PASSPORT_UI_STRESS=1`, `PASSPORT_TEXT_BENCH=1`, `PASSPORT_NATIVE_AI=1`을 지정한 선택 검사는 통과가 필수입니다. Windows 내장 Bash·cmd·Windows PowerShell·PowerShell 7, DPAPI·드라이브 검사는 환경 미준비를 이유로 생략할 수 없습니다. 고정 검사 수를 복사하지 말고 실제 정책과 보고서를 확인합니다.
+
+세션 복원을 릴리즈할 때 설치된 Codex·Claude CLI를 함께 검사하려면 검증 명령에 `PASSPORT_NATIVE_AI=1`을 지정합니다. 소스와 최종 설치본에서 같은 CLI 버전으로 수행하며 실제 CLI 버전·훅 신뢰·정상 재시작·동일 대화 재개 범위를 기록합니다. 모델 응답은 루프백 fixture이므로 실제 유료 서비스 검증이라고 표시하지 않습니다. Electron의 HOME·USERPROFILE은 변경하지 않으며 상세 격리는 [개발 가이드](development.md#ftpftps와-선택-검사)를 따릅니다.
 
 E2E 수명은 실행별 launches·exits·auditedShutdowns가 같고 숨김 표시·네이티브 포커스가 0이어야 합니다. 앱 종료는 코드 0·시그널 없음·10초 제한을 유지하며 강제 종료를 정상 종료로 적지 않습니다. 자세한 작성·복구 계약은 [E2E 가이드](development.md#e2e-실행과-작성)를 따릅니다.
 
