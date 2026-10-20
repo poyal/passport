@@ -133,25 +133,29 @@ export function WorkspaceTemplates() {
                 aria-label={`${template.name} 열기`}
                 onClick={() => void open(template, true)}
               >
-                <span className="template-preview" aria-hidden="true">
-                  <LayoutPreview node={workspace.root} />
-                </span>
-                <div className="workspace-template-name">
-                  <div className="workspace-template-title">
+                <span className="template-preview">
+                  <span className="template-preview-header">
                     <span className="workspace-mark">
                       <WorkspaceMark
                         workspace={workspace}
                         document={app.document}
                       />
-                      {terminals.length > 1 && (
-                        <small
-                          className="workspace-extra"
-                          aria-label={`추가 패널 ${terminals.length - 1}개`}
-                        >
-                          +{terminals.length - 1}
-                        </small>
-                      )}
                     </span>
+                    {terminals.length > 1 && (
+                      <small
+                        className="workspace-extra"
+                        aria-label={`추가 패널 ${terminals.length - 1}개`}
+                      >
+                        +{terminals.length - 1}
+                      </small>
+                    )}
+                  </span>
+                  <span className="template-preview-layout" aria-hidden="true">
+                    <LayoutPreview node={workspace.root} />
+                  </span>
+                </span>
+                <div className="workspace-template-name">
+                  <div className="workspace-template-title">
                     <strong>{template.name}</strong>
                   </div>
                   <span className="template-tags" aria-label="템플릿 구성">
