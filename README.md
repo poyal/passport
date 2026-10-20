@@ -30,10 +30,10 @@
 
 | 컴퓨터                                       | 선택할 파일                | 다운로드 안내                                                                      |
 | -------------------------------------------- | -------------------------- | ---------------------------------------------------------------------------------- |
-| Mac · Apple Silicon(M 시리즈), macOS 14 이상 | `Passport-…-mac-arm64.dmg` | [최신 릴리즈](https://github.com/poyal/passport/releases/latest)                   |
+| Mac · Apple Silicon(M 시리즈), macOS 14 이상 | `Passport-…-mac-arm64.dmg` | [Mac 1.3.4](https://github.com/poyal/passport/releases/tag/v1.3.4)                   |
 | Windows 11 · Intel / AMD(x64)                | `Passport-…-win-x64.exe`   | [Windows 1.3.3](https://github.com/poyal/passport/releases/tag/v1.3.3) |
 
-이 매뉴얼은 **Mac 1.3.4** 기준입니다. Windows 공개 설치본은 **1.3.3**이며, 1.3.4의 이전 세션 복원·로그 묶음·터미널 쪽지 메뉴는 Windows 배포 전입니다. Intel Mac은 지원하지 않습니다. [플랫폼별 배포 상태와 변경 사항](https://github.com/poyal/passport/releases).
+현재 공개 설치본은 **Mac 1.3.4 · Windows 1.3.3**입니다. 이 매뉴얼은 Mac 1.3.4 기준이며, 이전 세션 복원·로그 묶음·터미널 쪽지 메뉴는 Windows 배포 전입니다. Intel Mac은 지원하지 않습니다. [플랫폼별 배포 상태와 변경 사항](https://github.com/poyal/passport/releases).
 
 **메뉴가 보이지 않는 경우:** 최신 버전으로 업데이트하세요. 쪽지 편집기·첨부·승인 대기 필터는 양쪽 PC 모두 1.3.1 이상에서 사용합니다.
 

@@ -10,9 +10,50 @@ SQLite 스키마는 7, 문서·portable 형식은 2입니다. 기존 DB는 `befo
 
 ## 검증과 공개 상태
 
-2026-10-20 기준 **macOS ARM64 정식 검증·게시 준비 중**입니다. 사용자가 Mac 실제 데스크톱 검사를 허용했습니다. 이 후보의 정식 검사 결과와 설치 파일 해시는 아직 확정하지 않았으며 이전 개발 앱·1.3.3의 결과를 대체 기록하지 않습니다.
+2026-10-20에 [v1.3.4](https://github.com/poyal/passport/releases/tag/v1.3.4)를 **Mac ARM64만 공개**했습니다. 설치 파일의 소스와 태그는 `3b54357fe6a34432ead722a40fb38bc2ca50e10f`입니다. 게시 결과는 `published-and-download-verified`이며 DMG와 `SHA256SUMS.txt`의 공개 다운로드·해시를 확인했습니다. 이 최종 기록을 반영하는 후속 문서 커밋은 배포 바이너리의 소스 커밋과 구분합니다. 사용자 설치본은 교체하지 않았습니다.
 
-Windows 1.3.4는 이번 작업 범위에서 검증·빌드·게시하지 않습니다. Windows 공개 설치본은 [v1.3.3](https://github.com/poyal/passport/releases/tag/v1.3.3)을 유지합니다.
+Windows 1.3.4는 이번 작업 범위에서 검증·빌드·게시하지 않았습니다. Windows 공개 설치본은 [v1.3.3](https://github.com/poyal/passport/releases/tag/v1.3.3)을 유지하며 기존 EXE의 크기·SHA-256이 바뀌지 않았음을 확인했습니다.
+
+## 정식 검증 환경과 결과
+
+사용자가 Mac 실제 데스크톱 검사를 허용한 뒤 깨끗한 위 커밋에서 `PASSPORT_NATIVE_AI=1 npm run release:verify -- --desktop`을 수행했습니다. 최종 manifest는 `preview: false`, `status: verified`이며 소스·설치본 GUI 실패·재시도·flaky는 없습니다.
+
+| 환경 | Mac |
+| --- | --- |
+| OS·아키텍처 | macOS 27.0.1(26A434), arm64 · Darwin 27.0.0 |
+| Node.js·npm | 25.6.0 · 11.8.0 |
+| Rust Cargo·Electron | 1.99.1 · 44.8.0 |
+| Python·OpenSSL | 3.12.11 · 3.6.2 |
+| Xcode Command Line Tools | 27.0.0.0.1788430756 |
+| 실제 AI CLI | Codex 0.163.0 · Claude Code 2.1.304 |
+
+Node·npm·Python·OpenSSL·Command Line Tools·AI CLI는 설치된 도구를 사용했습니다. Rust 1.99.1은 공식 rustup으로 작업 전용 경로에 설치했고, GitHub CLI 2.102.0은 공식 ARM64 배포 ZIP의 SHA-256을 확인해 게시에 사용했습니다. 시스템 PATH와 사용자 Rust 설정을 변경하지 않았습니다.
+
+| 검사 | Mac 결과 |
+| --- | --- |
+| 잠금 의존성·FTP/FTPS fixture·타입·빌드 | 통과 |
+| 단위·통합 | 272 통과·7 생략 |
+| 배포 정책 | 75 통과 |
+| 소스 숨김 GUI | 95 통과·9 생략 |
+| 최종 DMG 내부 앱 숨김 GUI | 95 통과·9 생략 |
+| 소스·설치본 실제 데스크톱 | 각각 4 통과 |
+| 설치 파일 검사 | DMG 무결성·읽기 전용 마운트·codesign 통과 |
+| 설치본 실행 | 실제 PTY·내장 helper·정상 종료 통과 |
+
+단위 검사의 생략은 Windows 전용 5개와 미선택 Docker·파일 부하 2개입니다. 숨김 GUI의 생략은 Windows 전용 6개와 미선택 Docker·지속 부하·대용량 텍스트 3개입니다. 실제 AI CLI 검사는 선택해 소스·설치본에서 모두 수행했으며 생략하지 않았습니다.
+
+소스와 최종 설치본의 숨김 수명 감사는 각각 시작·정상 종료·감사 46회, 창 56개, 앱 재사용 37회입니다. 두 실행 모두 표시·네이티브 포커스 0회이며 정상 종료 제한을 충족했습니다. 실제 데스크톱 검사는 각각 앱 4개가 정상 종료했습니다.
+
+실제 Codex·Claude CLI에서 앱 완전 종료·재시작 전후의 동일 대화 ID, 다음 메시지, 기본 Codex 실행과 명시한 승인·샌드박스 옵션, 빈 Claude 세션 재실행을 확인했습니다. Electron의 HOME·USERPROFILE을 유지한 정상 OS safeStorage를 사용했으며, CLI 설정·대화 저장 폴더와 모델 응답은 격리했습니다. 모델 응답만 루프백 fixture이므로 실제 유료 서비스·로그인 검증과 구분합니다.
+
+## 공개 설치 파일
+
+| 파일 | 크기(바이트) | SHA-256 |
+| --- | ---: | --- |
+| `Passport-1.3.4-mac-arm64.dmg` | 173,619,402 | `5cf5b866356be339fd2df9458268af7a61b27d73848046b05f8d3798b5d95967` |
+| `SHA256SUMS.txt` | 95 | `c72f89df22ab28fe3202792a03c4e3d3baa12429fd6f08a5a5df5e8017eaf364` |
+
+DMG는 정식 검증한 바이트 그대로 게시했습니다. Mac은 ad-hoc 서명이며 Developer ID·Apple 공증을 포함하지 않습니다. 체크섬 파일에는 위 Mac DMG만 포함합니다. GitHub의 자동 Source code 링크는 별도 설치 파일이 아닙니다.
 
 ## 확인 범위와 남은 제한
 
