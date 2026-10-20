@@ -8,9 +8,9 @@
 | 공통 개발 규칙·환경 준비·플랫폼 계약·검사·E2E 작성 | [공통 개발 규칙](development.md) |
 | 버전 준비·검증·태그·GitHub 게시·실패 후 재개·정리 | [릴리즈 가이드](release.md) |
 | AI 작업의 기본 지침 | [루트 AGENTS](../AGENTS.md) |
-| 다음 Mac 배포 후보의 사용법·검증 상태 | [1.3.5 사용자 문서](releases/v1.3.5/README.md) · [1.3.5 AI 기록](releases/v1.3.5/AGENTS.md) |
-| 현재 Mac 공개 버전의 검증 결과·남은 제한 | [1.3.4 AI 기록 — Mac ARM64 공개](releases/v1.3.4/AGENTS.md) |
-| 현재 Mac 공개 버전 사용자 매뉴얼 | [1.3.4 사용자 문서](releases/v1.3.4/README.md) |
+| 현재 Mac 공개 버전의 검증 결과·남은 제한 | [1.3.5 AI 기록 — Mac ARM64 공개](releases/v1.3.5/AGENTS.md) |
+| 현재 Mac 공개 버전 사용자 매뉴얼 | [1.3.5 사용자 문서](releases/v1.3.5/README.md) |
+| 이전 Mac 버전 | [1.3.4 AI 기록](releases/v1.3.4/AGENTS.md) · [1.3.4 사용자 문서](releases/v1.3.4/README.md) |
 | 현재 Windows 공개 버전·이전 Mac 버전 | [1.3.3 AI 기록](releases/v1.3.3/AGENTS.md) · [1.3.3 사용자 문서](releases/v1.3.3/README.md) |
 | 이전 버전 문서 | [1.3.2 AI 기록](releases/v1.3.2/AGENTS.md) · [1.3.2 사용자 문서](releases/v1.3.2/README.md) |
 
