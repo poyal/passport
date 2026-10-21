@@ -13,6 +13,7 @@ export const windowsBackfills = Object.freeze([
       "tests/e2e/sharing.spec.ts",
       "src/main/platform/win32/download.ts",
       "tests/share.test.ts",
+      "tests/terminal-startup.test.ts",
     ],
     macAsset: {
       id: 646613918,
@@ -27,7 +28,13 @@ export const windowsBackfills = Object.freeze([
     target: "win-x64",
     releaseCommit: "3b54357fe6a34432ead722a40fb38bc2ca50e10f",
     sourceTag: "v1.3.4-win-x64",
-    files: ["src/renderer/styles.css", "tests/e2e/scroll-workspaces.spec.ts"],
+    files: [
+      "src/renderer/styles.css",
+      "src/renderer/App.tsx",
+      "src/renderer/terminals.ts",
+      "tests/e2e/scroll-workspaces.spec.ts",
+      "tests/e2e/session-resume.spec.ts",
+    ],
     macAsset: {
       id: 658414941,
       name: "Passport-1.3.4-mac-arm64.dmg",

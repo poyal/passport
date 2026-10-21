@@ -179,6 +179,9 @@ test("restores history and cwd only when a saved tab is selected and preserves e
       (await boot(page)).sessionStates.find((s) => s.id === targets[1].paneId)
         ?.status,
     ).not.toBe("connected");
+    await expect(
+      page.locator(".view:not([hidden]) .xterm-rows"),
+    ).not.toContainText("HISTORY_B");
     await page.getByRole("button", { name: "연결", exact: true }).click();
     await ready(page, targets[1].paneId);
     const text = await page
@@ -265,11 +268,14 @@ if (process.argv.includes('--version')) { console.log('codex fixture'); process.
 if (process.argv.includes('--help')) { console.log('--no-daemon'); process.exit(0); }
 const args = process.argv.slice(2), resume = args.indexOf('resume');
 const id = resume >= 0 && args[resume+1] && !args[resume+1].startsWith('-') ? args[resume+1] : process.env.PASSPORT_GENERATION;
-fs.appendFileSync(${JSON.stringify(capture)}, JSON.stringify({id,args,cwd:process.cwd()})+'\\n');
 const helper = process.platform === 'win32' ? 'passport-helper.exe' : 'passport-helper';
 cp.execFileSync(helper, ['codex-hook'], {input:JSON.stringify({hook_event_name:'SessionStart',session_id:id,cwd:process.cwd()})});
+let input = '';
+if (process.stdin.isTTY) process.stdin.setRawMode(true);
+process.stdin.setEncoding('utf8'); process.stdin.on('data', data => { input += data; if (input.includes('exit')) process.exit(0); });
+fs.appendFileSync(${JSON.stringify(capture)}, JSON.stringify({id,args,cwd:process.cwd(),pid:process.pid})+'\\n');
 console.log('AGENT_RUNNING:'+id);
-process.stdin.setEncoding('utf8'); process.stdin.on('data', data => { if (data.includes('exit')) process.exit(0); });
+console.log('AGENT_READY:'+process.pid);
 setInterval(()=>{},1000);
 `,
   );
@@ -355,7 +361,13 @@ setInterval(()=>{},1000);
         .split("\n")
         .filter(Boolean)
         .map(
-          (s) => JSON.parse(s) as { id: string; args: string[]; cwd: string },
+          (s) =>
+            JSON.parse(s) as {
+              id: string;
+              args: string[];
+              cwd: string;
+              pid: number;
+            },
         );
     await expect.poll(async () => (await captures()).length).toBe(2);
     const originals = await captures();
@@ -382,6 +394,11 @@ setInterval(()=>{},1000);
       "--cd",
       dir,
     ]);
+    // The capture is written after stdin is installed; the PID marker must
+    // come from the resumed process, never from the restored old scrollback.
+    await expect(page.locator(".view:not([hidden]) .xterm-rows")).toContainText(
+      `AGENT_READY:${resumed[1].pid}`,
+    );
     await input(page, targets[1].paneId, "exit");
     await expect
       .poll(async () =>
