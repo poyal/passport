@@ -388,6 +388,8 @@ test("manually launched CLI wrappers deliver completion and input alerts and res
     );
   }
   const fixture = path.join(directory, "cli.cjs");
+  const claudeReady = path.join(directory, "claude-ready");
+  const releaseClaude = path.join(directory, "release-claude");
   await fs.writeFile(
     fixture,
     `
@@ -399,6 +401,12 @@ const send = (command, argv, input, shell = false) => {
   if(result.error || result.status) throw new Error('hook failed');
 };
 if(agent === 'claude') {
+  fs.writeFileSync(${JSON.stringify(claudeReady)}, 'ready');
+  const deadline = Date.now() + 10000;
+  while (!fs.existsSync(${JSON.stringify(releaseClaude)})) {
+    if (Date.now() > deadline) throw new Error('foreground fixture was not released');
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 10);
+  }
   const settings = JSON.parse(fs.readFileSync(args[args.indexOf('--settings')+1], 'utf8'));
   for(const [name,payload] of [['Notification',{notification_type:'permission_prompt',tool_use_id:'permission'}],['Stop',{}]]) {
     const hook = settings.hooks[name][0].hooks[0];
@@ -437,12 +445,22 @@ console.log('CLI_FIXTURE_FINISHED');
   try {
     const page = await application.firstWindow();
     await page.waitForSelector(".home-view");
-    await application.evaluate(({ dialog }) => {
+    await application.evaluate(({ dialog, app, BrowserWindow }) => {
       dialog.showMessageBox = async () => ({
         response: 1,
         checkboxChecked: false,
       });
       (globalThis as any).notificationTitles = [];
+      (globalThis as any).notificationFocus = [];
+      const recordFocus = (event: string) => {
+        (globalThis as any).notificationFocus.push({
+          event,
+          focused: BrowserWindow.getFocusedWindow()?.id ?? null,
+          at: Date.now(),
+        });
+      };
+      app.on("browser-window-focus", () => recordFocus("focus"));
+      app.on("browser-window-blur", () => recordFocus("blur"));
       // Native isSupported()/construction register Windows shortcuts even when
       // show is mocked. Replace the isolated fixture adapter before either call.
       const adapter = (globalThis as any).__passportE2ENotifications;
@@ -453,6 +471,7 @@ console.log('CLI_FIXTURE_FINISHED');
         Object.assign(new EventEmitter(), {
           title,
           show() {
+            recordFocus("notification");
             (globalThis as any).notificationTitles.push(title);
           },
           close() {},
@@ -508,23 +527,6 @@ console.log('CLI_FIXTURE_FINISHED');
         "PASSPORT_FIXTURE_READY > ",
       );
     else await waitForLocalPrompt(page);
-    await application.evaluate(({ app, BrowserWindow }) => {
-      app.focus({ steal: true });
-      BrowserWindow.getAllWindows()[0].focus();
-    });
-    await expect
-      .poll(() =>
-        application.evaluate(
-          ({ BrowserWindow }) => !!BrowserWindow.getFocusedWindow(),
-        ),
-      )
-      .toBe(true);
-    await page.locator(".xterm-helper-textarea").focus();
-    // Native activation and renderer focus arrive separately on macOS.
-    // Wait for both before a foreground notification policy assertion.
-    await expect
-      .poll(() => page.evaluate(() => document.hasFocus()))
-      .toBe(true);
     // This case checks native foreground notification policy, not keyboard
     // composition. Deliver its setup command atomically so the desktop IME
     // or a held physical modifier cannot alter the shell's return marker.
@@ -536,6 +538,29 @@ console.log('CLI_FIXTURE_FINISHED');
         }),
       pane,
     );
+    // Start the real CLI wrapper first, then release the mock's notifications
+    // only after native and renderer focus are confirmed. CLI startup and prior
+    // desktop activation can otherwise change focus between setup and delivery.
+    await expect
+      .poll(() => fs.readFile(claudeReady, "utf8").catch(() => ""))
+      .toBe("ready");
+    await application.evaluate(({ app, BrowserWindow }) => {
+      app.focus({ steal: true });
+      BrowserWindow.getAllWindows()[0].focus();
+    });
+    await expect
+      .poll(() =>
+        application.evaluate(({ BrowserWindow }) => {
+          const win = BrowserWindow.getAllWindows()[0];
+          return BrowserWindow.getFocusedWindow() === win && win.isVisible();
+        }),
+      )
+      .toBe(true);
+    await page.locator(".xterm-helper-textarea").focus();
+    await expect
+      .poll(() => page.evaluate(() => document.hasFocus()))
+      .toBe(true);
+    await fs.writeFile(releaseClaude, "go");
     // A Stop hook can arrive before the CLI exits. Require the real shell's
     // return marker before checking alerts and starting the background command.
     await expect(page.locator(".xterm-rows")).toContainText(
@@ -553,6 +578,9 @@ console.log('CLI_FIXTURE_FINISHED');
       );
     expect(
       await application.evaluate(() => (globalThis as any).notificationTitles),
+      JSON.stringify(
+        await application.evaluate(() => (globalThis as any).notificationFocus),
+      ),
     ).toEqual([]);
     await application.evaluate(({ BrowserWindow }) =>
       BrowserWindow.getAllWindows()[0].hide(),
