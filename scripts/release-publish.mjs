@@ -1,3 +1,4 @@
+import { windowsBackfillSource } from "./windows-backfill.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -139,7 +140,9 @@ export async function publicationPlan(
     ? initialWindowsRelease
     : receipts.every(usesWindows135Source)
       ? windows135Release
-      : undefined;
+      : receipts.length === 1
+        ? windowsBackfillSource(receipts[0])
+        : undefined;
   if (replaceWindowsIcon) {
     assert.ok(
       initialWindows && receipts.length === 1,
