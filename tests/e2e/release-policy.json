@@ -33,6 +33,11 @@
       "title": "terminal hyperlinks confirm the actual URL and open the browser without navigating the app"
     },
     {
+      "id": "terminal-links.plain-urls",
+      "file": "terminal-links.spec.ts",
+      "title": "plain terminal URLs in tables and wrapped lines open their exact web destinations"
+    },
+    {
       "id": "terminal-links.ipc-boundary",
       "file": "terminal-links.spec.ts",
       "title": "terminal link IPC rejects unsafe destinations and panes owned by another window"

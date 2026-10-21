@@ -1,6 +1,7 @@
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import { SerializeAddon } from "@xterm/addon-serialize";
+import { WebLinksAddon } from "@xterm/addon-web-links";
 import { configureTerminalUnicode, unicodeVersion } from "./terminal-unicode";
 import type { UnicodeWidth } from "../shared/terminal-config";
 import { highlightTerminal } from "./highlights";
@@ -97,6 +98,9 @@ export function configureTerminals(
 export function ensureTerminal(id: string) {
   const existing = terminals.get(id);
   if (existing) return existing;
+  const openLink = (_event: MouseEvent, url: string) => {
+    void api.call("terminal.link", { id, url }).catch(errorHandler);
+  };
   const term = new Terminal({
     cursorBlink: false,
     cursorStyle: "block",
@@ -109,9 +113,7 @@ export function ensureTerminal(id: string) {
     theme: getTheme("mocha").theme,
     convertEol: false,
     linkHandler: {
-      activate: (_event, url) => {
-        void api.call("terminal.link", { id, url }).catch(errorHandler);
-      },
+      activate: openLink,
     },
   });
   configureTerminalUnicode(term);
@@ -119,6 +121,7 @@ export function ensureTerminal(id: string) {
     search = new SearchAddon();
   term.loadAddon(fit);
   term.loadAddon(search);
+  term.loadAddon(new WebLinksAddon(openLink));
   const serialize = new SerializeAddon();
   term.loadAddon(serialize);
   const element = document.createElement("div");

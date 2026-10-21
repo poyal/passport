@@ -53,9 +53,15 @@ const state = () => application.evaluate(() => (globalThis as any).__links);
 type LinkPosition = { x: number; y: number };
 
 async function showLink(url: string, label: string) {
+  return showOutput(
+    `\r\n\x1b]8;;${url}\x1b\\${label}\x1b]8;;\x1b\\\r\n`,
+    label,
+  );
+}
+
+async function showOutput(data: string, label: string | RegExp) {
   await application.evaluate(
-    ({ BrowserWindow }, { id, url, label }) => {
-      const data = `\r\n\x1b]8;;${url}\x1b\\${label}\x1b]8;;\x1b\\\r\n`;
+    ({ BrowserWindow }, { id, data }) => {
       BrowserWindow.getAllWindows()[0].webContents.send("passport:event", {
         kind: "output",
         id,
@@ -63,9 +69,12 @@ async function showLink(url: string, label: string) {
         bytes: 0,
       });
     },
-    { id: paneId, url, label },
+    { id: paneId, data },
   );
-  const link = page.locator(".xterm-rows").getByText(label, { exact: true });
+  const link = page
+    .locator(".xterm-rows")
+    .getByText(label, { exact: true })
+    .first();
   await expect(link).toBeVisible();
   // Capture cell coordinates before hover decoration replaces these spans.
   // Both rectangles are read in the same renderer task, without CDP DOM races.
@@ -143,6 +152,55 @@ test("terminal hyperlinks confirm the actual URL and open the browser without na
   await expect(
     page.getByText("테스트 브라우저 실행 실패", { exact: true }),
   ).toBeVisible();
+});
+
+test("plain terminal URLs in tables and wrapped lines open their exact web destinations", async () => {
+  const originalURL = page.url();
+  const plainURL = "https://example.com/docs?q=one%20two#result";
+  const plainLink = await showOutput(`\r\n${plainURL}\r\n`, plainURL);
+  await clickLink(plainLink);
+  await expect.poll(async () => (await state()).prompts.length).toBe(1);
+  expect((await state()).prompts[0].detail).toBe(plainURL);
+  expect((await state()).opened).toEqual([]);
+
+  await application.evaluate(() => {
+    (globalThis as any).__links.response = 1;
+  });
+  await clickLink(plainLink);
+  await expect.poll(async () => (await state()).opened).toEqual([plainURL]);
+
+  const tableURL = "http://127.0.0.1:20080/team/script/-/merge_requests/18";
+  const tableLink = await showOutput(
+    `\r\n│ 스크립트 │ a710111 │ !18 (\x1b[36m${tableURL}\x1b[0m) │\r\n`,
+    tableURL,
+  );
+  await clickLink(tableLink);
+  await expect
+    .poll(async () => (await state()).opened)
+    .toEqual([plainURL, tableURL]);
+  expect((await state()).prompts.at(-1).detail).toBe(tableURL);
+
+  const wrappedURL = `https://example.com/${"x".repeat(350)}?query=yes#end`;
+  const wrappedLink = await showOutput(
+    `\x1b[2J\x1b[H${wrappedURL}\r\n`,
+    /^x+$/,
+  );
+  // Click a continuation row containing only the path, without the scheme.
+  await clickLink(wrappedLink);
+  await expect
+    .poll(async () => (await state()).opened)
+    .toEqual([plainURL, tableURL, wrappedURL]);
+  expect((await state()).prompts.at(-1).detail).toBe(wrappedURL);
+
+  // An explicit hyperlink keeps its destination even if its label is a URL.
+  const explicitLink = await showLink(destination, "https://example.com/label");
+  await clickLink(explicitLink);
+  await expect
+    .poll(async () => (await state()).opened)
+    .toEqual([plainURL, tableURL, wrappedURL, destination]);
+  expect((await state()).prompts.at(-1).detail).toBe(destination);
+  expect(page.url()).toBe(originalURL);
+  expect(await application.windows()).toHaveLength(1);
 });
 
 test("terminal link IPC rejects unsafe destinations and panes owned by another window", async () => {
