@@ -26,7 +26,7 @@ test("reconnects the same local pane with fresh CLI credentials and current prof
     executable = path.join(bin, "codex");
   await fs.writeFile(
     path.join(startup, ".zshrc"),
-    "HISTFILE=/dev/null\nPROMPT='RECONNECT_READY > '\n",
+    'HISTFILE=/dev/null\nPROMPT="RECONNECT_READY_${PASSPORT_SESSION_ID} > "\n',
   );
   await fs.writeFile(
     executable,
@@ -178,6 +178,18 @@ fs.writeFileSync(${JSON.stringify(capture)}, JSON.stringify({
             ?.status;
         })
         .toBe("ready");
+      const generation = await page.evaluate(async (id) => {
+        const boot = await window.passport.call("bootstrap", undefined);
+        return boot.sessionStates.find((state) => state.id === id)?.environment
+          ?.sessionInstanceId;
+      }, id);
+      expect(generation).toBeTruthy();
+      // A plain shell has no startup loader, so environment readiness does not
+      // mean zsh has reached its first prompt. Match this connection's prompt;
+      // the previous generation's prompt can remain in terminal scrollback.
+      await expect(page.locator(".xterm-rows")).toContainText(
+        `RECONNECT_READY_${generation} > `,
+      );
       await fs.rm(capture, { force: true });
       await page.evaluate(
         ({ id, data }) => window.passport.call("session.input", { id, data }),
