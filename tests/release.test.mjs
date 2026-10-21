@@ -1,3 +1,8 @@
+import {
+  windowsBackfills,
+  windowsBackfillSource,
+  assertBackfillSource,
+} from "../scripts/windows-backfill.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
@@ -1357,3 +1362,141 @@ for (const audit of [
       "The app must still close before reporting an audit failure",
     );
   });
+
+for (const policy of windowsBackfills) {
+  async function backfillFixture(t) {
+    const result = await initialWindowsFixture(t);
+    const { receipt, client, state } = result;
+    receipt.version = policy.version;
+    receipt.artifact.name = installerName(receipt.version, receipt.target);
+    client.getTag = async (tag) => ({
+      object: {
+        type: "commit",
+        sha:
+          tag === policy.sourceTag
+            ? receipt.source.commit
+            : policy.releaseCommit,
+      },
+    });
+    state.assets = [{ ...policy.macAsset, state: "uploaded" }];
+    return result;
+  }
+
+  test(`Windows ${policy.version} backfill preserves Mac provenance and uses its separate source tag`, async (t) => {
+    const { receipt, client, state } = await backfillFixture(t);
+    const plan = await publicationPlan(client, [receipt]);
+    assert.equal(plan.sourceTag, policy.sourceTag);
+    assert.equal(plan.releaseCommit, policy.releaseCommit);
+    assert.deepEqual(plan.uploads, [receipt.artifact.name]);
+    assert.ok(plan.sums.toString().includes(policy.macAsset.digest.slice(7)));
+    assert.deepEqual(state.mutations, []);
+    assert.equal(
+      windowsBackfillSource({ ...receipt, target: "mac-arm64" }),
+      undefined,
+    );
+    assert.equal(
+      windowsBackfillSource({ ...receipt, version: "1.0.1" }),
+      undefined,
+    );
+    assert.equal(
+      windowsBackfillSource({
+        ...receipt,
+        source: { commit: policy.releaseCommit },
+      }),
+      undefined,
+    );
+  });
+
+  test(`Windows ${policy.version} backfill rejects changed tags, Mac assets, drafts and conflicting installers`, async (t) => {
+    const { receipt, client, state } = await backfillFixture(t);
+    const getTag = client.getTag;
+    for (const tag of [`v${policy.version}`, policy.sourceTag]) {
+      client.getTag = async (name) =>
+        name === tag
+          ? { object: { type: "commit", sha: "0".repeat(40) } }
+          : getTag(name);
+      await assert.rejects(
+        publicationPlan(client, [receipt]),
+        /tag changed|Remote tag differs/,
+      );
+    }
+    client.getTag = getTag;
+    for (const key of ["id", "name", "size", "digest"]) {
+      const value = state.assets[0][key];
+      state.assets[0][key] = typeof value === "number" ? 1 : "changed";
+      await assert.rejects(
+        publicationPlan(client, [receipt]),
+        /installer changed/,
+      );
+      state.assets[0][key] = value;
+    }
+    state.release.draft = true;
+    await assert.rejects(
+      publicationPlan(client, [receipt]),
+      /existing public Mac release/,
+    );
+    state.release.draft = false;
+    await assert.rejects(
+      publicationPlan(client, [receipt], { replaceWindowsIcon: true }),
+      /only authorized/,
+    );
+    state.assets.push({
+      id: 20,
+      name: receipt.artifact.name,
+      size: 1,
+      digest: "sha256:" + "0".repeat(64),
+      state: "uploaded",
+    });
+    await assert.rejects(
+      publicationPlan(client, [receipt]),
+      /differ|replace|overwrite|changed/i,
+    );
+  });
+}
+
+test("historical Windows sources reject unrelated ancestry and changes outside the specific repair", async (t) => {
+  const { root, receipt } = await fixture(t, "win-x64");
+  const git = (...args) =>
+    execFileSync(
+      "git",
+      [
+        "-c",
+        "user.name=Release Test",
+        "-c",
+        "user.email=release@example.invalid",
+        ...args,
+      ],
+      { cwd: root, encoding: "utf8", stdio: "pipe" },
+    ).trim();
+  const policy = {
+    ...windowsBackfills[0],
+    releaseCommit: receipt.source.commit,
+  };
+  await fs.writeFile(
+    path.join(root, "tests/e2e/sharing.spec.ts"),
+    "// profile preparation\n",
+  );
+  git("add", "tests/e2e/sharing.spec.ts");
+  git("commit", "-m", "Prepare isolated profile");
+  assert.doesNotThrow(() =>
+    assertBackfillSource(root, policy, git("rev-parse", "HEAD")),
+  );
+  await fs.mkdir(path.join(root, "src/main"), { recursive: true });
+  await fs.writeFile(
+    path.join(root, "src/main/index.ts"),
+    "// unrelated application change\n",
+  );
+  git("add", "src/main/index.ts");
+  git("commit", "-m", "Unrelated application change");
+  assert.throws(
+    () => assertBackfillSource(root, policy, git("rev-parse", "HEAD")),
+    /outside its approved/,
+  );
+  assert.throws(() =>
+    assertBackfillSource(
+      root,
+      { ...policy, releaseCommit: "0".repeat(40) },
+      git("rev-parse", "HEAD"),
+    ),
+  );
+});

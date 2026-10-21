@@ -326,3 +326,5 @@ git show 'v<버전>:.github/workflows/desktop.yml'
 정상 배포 외에도 검증 실패, 커밋 변경, 같은 크기의 설치본 변경, 로그 변경, 다른 원격 태그, 같은 이름의 다른 파일, 업로드 중단, 체크섬 업로드 실패, 재실행, 기존 플랫폼 파일 보존을 확인한다. 실제 GitHub 게시 전에는 원격 API를 대체한 테스트로 변경 순서와 복구를 검사하고, 해당 OS에서 실제 최종 파일의 실행을 따로 확인한다.
 
 공식 참고: [GitHub Release 자산 API](https://docs.github.com/en/rest/releases/assets), [GitHub Release API](https://docs.github.com/en/rest/releases/releases), [GitHub CLI 업로드](https://cli.github.com/manual/gh_release_upload), [Electron 창 표시와 포커스](https://www.electronjs.org/docs/latest/api/browser-window#winshowinactive), [Electron 창 숨김과 렌더링](https://www.electronjs.org/docs/latest/api/browser-window#page-visibility).
+
+2026-10-21 사용자는 기존 Windows 검증 실패를 안내받은 뒤 **1.3.0·1.3.4·1.3.6 Windows 게시**와 실제 데스크톱 검사를 요청했습니다. 미게시 Windows 1.3.0·1.3.4는 각각 원본 태그에서 필요한 수정만 반영하고 `v1.3.0-win-x64`·`v1.3.4-win-x64`로 소스를 구분합니다. 1.3.0은 격리 시험 프로필의 Downloads 준비, 1.3.4는 최소 창 크기의 로그 레이아웃과 해당 회귀 검사, 두 버전의 게시 출처 검사·문서만 변경할 수 있습니다. 기존 Mac 태그·자산 ID·크기·SHA-256을 고정하며 검증 생략이나 기존 설치 파일 덮어쓰기는 허용하지 않습니다. Windows 1.3.6은 원본 `v1.3.6` 소스를 사용합니다.

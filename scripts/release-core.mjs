@@ -1,3 +1,7 @@
+import {
+  windowsBackfillSource,
+  assertBackfillSource,
+} from "./windows-backfill.mjs";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
@@ -199,6 +203,8 @@ export async function validateReceipt(root, receipt, state) {
   assert.equal(receipt.source.dirty, false, "Dirty builds cannot be published");
   assert.equal(state.dirty, false, "Commit local changes before publishing");
   assertSameSource(receipt.source, state);
+  const backfill = windowsBackfillSource(receipt);
+  if (backfill) assertBackfillSource(root, backfill, state.commit);
   if (usesInitialWindowsSource(receipt)) {
     execFileSync(
       "git",
