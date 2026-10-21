@@ -1,3 +1,4 @@
+import { windowsBackfillSource } from "./windows-backfill.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -133,6 +134,11 @@ export async function publicationPlan(
   const tag = `v${version}`;
   const releaseCommit = await tagCommit(client, tag);
   const initialWindows = receipts.every(usesInitialWindowsSource);
+  const sourceException = initialWindows
+    ? initialWindowsRelease
+    : receipts.length === 1
+      ? windowsBackfillSource(receipts[0])
+      : undefined;
   if (replaceWindowsIcon) {
     assert.ok(
       initialWindows && receipts.length === 1,
@@ -146,14 +152,14 @@ export async function publicationPlan(
   }
   const sourceTag = replaceWindowsIcon
     ? windowsIconReplacement.sourceTag
-    : initialWindows
-      ? initialWindowsRelease.sourceTag
+    : sourceException
+      ? sourceException.sourceTag
       : tag;
-  if (initialWindows)
+  if (sourceException)
     assert.equal(
       releaseCommit,
-      initialWindowsRelease.releaseCommit,
-      "Existing Mac 1.1.1 tag changed; stop publication",
+      sourceException.releaseCommit,
+      `Existing Mac ${version} tag changed; stop publication`,
     );
   assert.equal(
     sourceTag === tag ? releaseCommit : await tagCommit(client, sourceTag),
@@ -166,19 +172,19 @@ export async function publicationPlan(
     "A stable release cannot update a prerelease",
   );
   const assets = release ? await client.getAssets(release.id) : [];
-  if (initialWindows) {
+  if (sourceException) {
     assert.ok(
       release && !release.draft,
-      "Windows 1.1.1 must extend the existing public Mac release",
+      `Windows ${version} must extend the existing public Mac release`,
     );
     const mac = assets.find(
-      (asset) => asset.name === initialWindowsRelease.macAsset.name,
+      (asset) => asset.name === sourceException.macAsset.name,
     );
-    for (const [key, value] of Object.entries(initialWindowsRelease.macAsset))
+    for (const [key, value] of Object.entries(sourceException.macAsset))
       assert.equal(
         mac?.[key],
         value,
-        "Existing Mac 1.1.1 installer changed; stop publication",
+        `Existing Mac ${version} installer changed; stop publication`,
       );
   }
   assert.equal(
