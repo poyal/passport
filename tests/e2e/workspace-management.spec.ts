@@ -11,13 +11,14 @@ import {
   type Workspace,
 } from "../../src/shared/model";
 import { LOCAL_HOST_ID } from "../../src/shared/advanced";
+import { defaultTerminalSettings } from "../../src/shared/terminal-config";
 
 const suite = reusableApp({ name: "workspace-management" });
 const local = (): Pane => ({
   kind: "pane",
   id: id(),
   hostId: LOCAL_HOST_ID,
-  local: { shell: "default", cwd: "" },
+  local: { shell: defaultTerminalSettings(process.platform).shell, cwd: "" },
 });
 const document = () =>
   suite.page.evaluate(
