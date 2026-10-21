@@ -28,6 +28,7 @@ import {
   githubClient,
 } from "../scripts/release-publish.mjs";
 import { runCommand } from "../scripts/release-process.mjs";
+import { verifyEncryption } from "../scripts/prepare-mac-keychain.mjs";
 import { EventEmitter } from "node:events";
 import { PassThrough } from "node:stream";
 import { closeCleanly } from "./fixtures/electron-exit.ts";
@@ -44,6 +45,49 @@ import {
 } from "../scripts/release-gui-policy.mjs";
 
 // Synthetic reporter output for gate and publication tests; no Electron launch.
+test("Mac Keychain preparation requires encryption availability and a valid round trip", () => {
+  assert.throws(
+    () =>
+      verifyEncryption({
+        safeStorage: {
+          isEncryptionAvailable: () => false,
+          encryptString: () => {
+            throw new Error("must not encrypt when unavailable");
+          },
+        },
+      }),
+    /encryption is unavailable/,
+  );
+  assert.throws(
+    () =>
+      verifyEncryption({
+        safeStorage: {
+          isEncryptionAvailable: () => true,
+          encryptString: () => Buffer.from("encrypted"),
+          decryptString: () => "wrong value",
+        },
+      }),
+    /round trip failed/,
+  );
+  let ciphertext;
+  assert.equal(
+    verifyEncryption({
+      safeStorage: {
+        isEncryptionAvailable: () => true,
+        encryptString: (value) => {
+          ciphertext = Buffer.from(value);
+          return ciphertext;
+        },
+        decryptString: (value) => {
+          assert.equal(value, ciphertext);
+          return value.toString();
+        },
+      },
+    }),
+    true,
+  );
+});
+
 test("release and package configuration allow only the two supported targets", async () => {
   assert.deepEqual(Object.keys(targets).sort(), ["mac-arm64", "win-x64"]);
   const pkg = JSON.parse(

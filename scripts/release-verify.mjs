@@ -447,6 +447,15 @@ async function verify() {
         }
       }
       await fs.access(executable);
+      if (process.platform === "darwin")
+        await node(
+          "mac-keychain",
+          "scripts/prepare-mac-keychain.mjs",
+          [executable],
+          {
+            timeout: 240000,
+          },
+        );
     });
     await step("packaged-smoke", () =>
       node("packaged-smoke", "scripts/packaged-smoke.mjs", [executable], {
