@@ -2,13 +2,13 @@
 
 ## 범위와 공개 소스
 
-2026-10-21 [v1.3.6](https://github.com/poyal/passport/releases/tag/v1.3.6)의 **Mac ARM64** 설치본을 공개했습니다. 배포 소스는 `v1.3.6` 태그의 `d0e169ce926887e702902bc3309a0a344039da01`입니다. 후속 문서 커밋은 바이너리 소스와 구분합니다. Windows 1.3.6은 검증·게시하지 않았으며 공개 Windows 설치본은 [1.3.5](https://github.com/poyal/passport/releases/tag/v1.3.5)를 유지합니다.
+2026-10-21 [v1.3.6](https://github.com/poyal/passport/releases/tag/v1.3.6)의 **Mac ARM64·Windows x64** 설치본을 공개했습니다. 배포 소스는 `v1.3.6` 태그의 `d0e169ce926887e702902bc3309a0a344039da01`입니다. 후속 문서 커밋은 바이너리 소스와 구분합니다. Windows 추가 배포도 같은 `v1.3.6` 소스를 사용했으며 정식 검증과 공개 다운로드 확인을 완료했습니다.
 
 SQLite 스키마 7, 문서·portable 형식 2를 유지합니다. 일반 텍스트 HTTP/HTTPS 주소는 기존 소유 창 검사·실제 주소 확인·브라우저 열기 경로를 사용합니다. 표·괄호 안의 주소, 자동 줄바꿈된 주소와 명시적 하이퍼링크의 실제 목적지를 소스와 최종 설치본에서 검사했습니다. 새 PTY는 부모 Passport 세션의 인증·AI 실행·복원·시작 로더 상태를 제거하고 자신의 세션 값을 설정합니다.
 
 사용자 매뉴얼은 [1.3.6 README](README.md), 공통 절차는 [개발 가이드](../../development.md)와 [릴리즈 가이드](../../release.md)를 따릅니다. 매뉴얼의 기존 1.3.5·1.3.1 화면 이미지는 촬영 버전 표시를 유지해 재사용했습니다.
 
-## 정식 검증 환경
+## Mac 정식 검증 환경
 
 사용자가 실제 데스크톱 검사와 후보 앱의 키체인 접근을 승인한 뒤 깨끗한 배포 소스에서 `npm run release:verify -- --desktop`을 완료했습니다. 최종 실행은 `20261021T044909Z-d0e169c-mac-arm64-local-release`이며 `status: verified`, `preview: false`입니다. 최종 실행의 실패·재시도·flaky는 모두 0입니다.
 
@@ -22,7 +22,7 @@ SQLite 스키마 7, 문서·portable 형식 2를 유지합니다. 일반 텍스�
 
 Node·npm·Python·OpenSSL·Command Line Tools는 설치된 도구를 사용했습니다. Rust는 공식 rustup으로 작업 전용 경로에 설치했습니다. GitHub CLI 2.102.1은 공식 ARM64 ZIP의 SHA-256 `08bfef98b50c553df122bb34ee8dcf415cae7d3b108891488964a0df07aa2aeb`를 확인했습니다. 시스템 PATH·사용자 Rust 설정은 변경하지 않았습니다.
 
-## 검사 결과
+## Mac 검사 결과
 
 | 검사 | 결과 |
 | --- | --- |
@@ -44,7 +44,7 @@ Node·npm·Python·OpenSSL·Command Line Tools는 설치된 도구를 사용했�
 
 실제 데스크톱 검사는 소스·설치본에서 각각 앱 4개가 정상 종료했습니다. 종료 코드 0·시그널 없음·10초 종료 제한을 유지했습니다. 네이티브 포커스와 격리 클립보드를 사용했고 OS 알림 표시는 모의 어댑터로 검사했습니다.
 
-## 검증 중 확인한 조건
+## Mac 검증 중 확인한 조건
 
 - 첫 후보 `86bc634`는 기존 터미널의 복원 적용 검사에서 실패했습니다. 부모 Passport의 `PASSPORT_RESUME` 등 세션 환경이 새 PTY에 상속되는 원인을 수정했고, 부모 환경을 명시한 회귀 검사를 추가했습니다.
 - `fc556d3`의 첫 정식 실행은 데스크톱 전경 알림 억제에서 실패했습니다. 같은 소스의 단독 사례·전체 데스크톱 진단은 통과했으며 외부 포커스 변경 여부 등 정확한 원인은 확정하지 못했습니다. 최종 소스·설치본 데스크톱 검사에서는 통과했습니다.
@@ -60,12 +60,34 @@ Node·npm·Python·OpenSSL·Command Line Tools는 설치된 도구를 사용했�
 | 파일 | 크기(바이트) | SHA-256 |
 | --- | ---: | --- |
 | `Passport-1.3.6-mac-arm64.dmg` | 173,617,558 | `a3fa26ad65311de10a4baedb995044c5fa3ed28aca9cad1320bf0852893ca5c4` |
-| `SHA256SUMS.txt` | 95 | `d3ec141431b4e11ef34f58375708cd10e83fb640ef4240b2562e10334fc52edd` |
+| `Passport-1.3.6-win-x64.exe` | 207,294,427 | `d5f2d45436d2e85deb642033a96c7f40b94d7ad5819a7ac05647bbc793b00dae` |
+| `SHA256SUMS.txt` | 188 | `23f0da29ee2b92cfcea899cbb1baf543415e30aaafebb91770c6c04f26badfc1` |
 
-게시 도구 결과는 `published-and-download-verified`입니다. 인증 없는 공개 URL로 두 파일을 다운로드해 크기·SHA-256을 최종 manifest와 대조했고, 체크섬 파일의 DMG 항목과 공개 태그·최신 릴리즈를 확인했습니다. 기존 1.3.5 Mac·Windows 설치 파일과 체크섬의 자산 ID·크기·해시는 그대로입니다.
+게시 도구 결과는 `published-and-download-verified`입니다. Mac 선행 게시와 Windows 추가 게시에서 인증 없는 공개 URL로 각 설치 파일과 체크섬을 다운로드해 크기·SHA-256을 최종 manifest와 대조했습니다. 최종 합본 체크섬에는 DMG·EXE가 모두 포함되며 기존 Mac 자산과 `v1.3.6` 태그를 유지했습니다. 기존 1.3.5 Mac·Windows 설치 파일과 체크섬의 자산 ID·크기·해시는 그대로입니다.
 
 Mac 앱은 ad-hoc 서명이며 Developer ID·Apple 공증은 포함하지 않습니다. 사용자 설치 앱과 실제 데이터는 교체하지 않았습니다.
 
+## Windows 정식 검증과 추가 게시
+
+사용자가 실제 데스크톱 검사와 게시·푸시를 허용한 뒤 원본 `v1.3.6`의 깨끗한 별도 checkout에서 검증했습니다. 실행 ID는 `20261021T111116Z-d0e169c-win-x64-local-release`, 최종 상태는 `verified`, `preview: false`입니다. 소스 변경 없이 같은 설치 파일을 기존 릴리즈에 추가했습니다.
+
+환경은 Windows 11 x64(10.0.26300), Node 24.14.0, npm 11.21.1, Rust 1.99.1, Electron 44.8.0, Python 3.13.7, OpenSSL 3.5.7, Visual Studio Build Tools 2022, PowerShell 7.6.6입니다. 작업 전용 Rust·GitHub CLI는 저장소의 임시 도구 경로에 준비했고 시스템 PATH는 변경하지 않았습니다.
+
+| 검사 | Windows 결과 |
+| --- | --- |
+| 잠금 의존성·FTP/FTPS·타입·빌드·내장 runtime | 통과 |
+| 단위·통합 | 271 통과·10 생략 |
+| 배포 정책 | 78 통과·1 생략 |
+| 소스 / 최종 EXE 내부 앱 숨김 GUI | 각각 99 통과·8 생략 |
+| 소스 / 최종 EXE 내부 앱 실제 데스크톱 | 각각 4 통과 |
+| NSIS·설치본 실행 | 현재 사용자 범위·`/allusers` 거절·실제 PTY·helper·정상 종료 통과 |
+
+단위 생략은 다른 OS용 8개와 미선택 Docker·파일 부하 2개입니다. 게시 정책의 1개는 Windows에서 정책상 생략하는 artifact 심볼릭 링크 사례입니다. GUI 생략은 Mac 전용 4개와 미선택 Docker·지속 부하·대용량 텍스트·설치된 실제 AI CLI 4개입니다. 실제 DPAPI 저장·재시작, 네 종류의 Windows 셸, 드라이브 탐색과 다운로드 보호는 실행했습니다.
+
+소스·설치본 숨김 감사는 각각 시작 / 정상 종료 / 감사 **48 / 48 / 48**, 창 59개, 앱 재사용 42개, 표시 / 네이티브 포커스 **0 / 0**입니다. 실제 데스크톱은 각각 4개 앱이 정상 종료했습니다. 실패·재시도·flaky는 0입니다.
+
+게시 결과는 `published-and-download-verified`이며, 별도의 인증 없는 공개 다운로드에서도 EXE 207,294,427바이트와 위 SHA-256·합본 체크섬이 일치했습니다. 기존 Mac 파일과 공개 태그는 보존했습니다. Windows EXE는 Authenticode 서명이 없으며 사용자 설치 앱·실제 DB는 교체하지 않았습니다.
+
 ## 별도 확인 범위와 제한
 
-Windows 1.3.6, 최소 지원 macOS 14 실기, 물리 IME, 실제 OS 알림 표시, 다른 PC와의 LAN, 실제 AI 서비스·설치된 AI CLI 선택 검사, 깨끗한 계정의 설치·제거·업그레이드, Docker·장시간 부하는 이번 범위에 포함하지 않았습니다. 기존 버전의 다른 OS·실기 결과를 이번 버전의 검증으로 간주하지 않습니다.
+최소 지원 macOS 14 실기, 물리 IME, 실제 OS 알림 표시, 다른 PC와의 LAN, 실제 AI 서비스·설치된 AI CLI 선택 검사, 깨끗한 계정의 설치·제거·업그레이드, Docker·장시간 부하는 이번 범위에 포함하지 않았습니다. 기존 버전의 다른 OS·실기 결과를 이번 버전의 검증으로 간주하지 않습니다.

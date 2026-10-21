@@ -31,9 +31,9 @@
 | 컴퓨터                                       | 선택할 파일                | 다운로드 안내                                                                      |
 | -------------------------------------------- | -------------------------- | ---------------------------------------------------------------------------------- |
 | Mac · Apple Silicon(M 시리즈), macOS 14 이상 | `Passport-…-mac-arm64.dmg` | [Mac 1.3.6](https://github.com/poyal/passport/releases/tag/v1.3.6)                   |
-| Windows 11 · Intel / AMD(x64)                | `Passport-…-win-x64.exe`   | [Windows 1.3.5](https://github.com/poyal/passport/releases/tag/v1.3.5) |
+| Windows 11 · Intel / AMD(x64)                | `Passport-…-win-x64.exe`   | [Windows 1.3.6](https://github.com/poyal/passport/releases/tag/v1.3.6) |
 
-현재 공개 설치본은 **Mac 1.3.6·Windows 1.3.5**입니다. 이전 세션 복원·로그 묶음·터미널 쪽지 메뉴를 양쪽 OS에서 사용할 수 있습니다. Intel Mac은 지원하지 않습니다. [플랫폼별 배포 상태와 변경 사항](https://github.com/poyal/passport/releases).
+현재 공개 설치본은 **Mac·Windows 1.3.6**입니다. 이전 세션 복원·로그 묶음·터미널 쪽지 메뉴를 양쪽 OS에서 사용할 수 있습니다. Intel Mac은 지원하지 않습니다. [플랫폼별 배포 상태와 변경 사항](https://github.com/poyal/passport/releases).
 
 **그룹미설정** 필터·AI 자동 탭 아이콘·템플릿 구성 태그와 16:9 미리보기는 **Mac·Windows 1.3.5**부터 사용합니다.
 
@@ -81,7 +81,7 @@ Passport는 저장한 인증 정보와 AI 세션 복원 정보를 암호화할 �
 
 ### Windows에서 PC 보호·신뢰할 수 없음 경고가 나올 때
 
-1. [Windows 공식 릴리즈](https://github.com/poyal/passport/releases/tag/v1.3.5)에서 받은 `Passport-…-win-x64.exe`인지 확인합니다.
+1. [Windows 공식 릴리즈](https://github.com/poyal/passport/releases/tag/v1.3.6)에서 받은 `Passport-…-win-x64.exe`인지 확인합니다.
 2. 설치 파일을 실행할 때 **Windows의 PC 보호** 또는 인식할 수 없는 앱이라는 SmartScreen 경고가 표시되면 **추가 정보**를 누릅니다.
 3. 앱 이름이 다운로드한 Passport 설치 파일인지 확인한 뒤 **실행**을 선택합니다. 영문 Windows에서는 **More info → Run anyway**입니다. 서명이 없어 게시자는 **알 수 없는 게시자**로 표시될 수 있습니다.
 4. 설치를 마친 뒤 시작 메뉴에서 **Passport**를 실행합니다.
@@ -156,7 +156,7 @@ Windows 1.2.0부터는 터미널 탭이나 패널을 닫으면 그 터미널에�
 
 로컬·SSH 터미널에 출력된 링크를 클릭하면 **링크 열기** 확인 창이 표시됩니다. 실제 주소를 확인하고 **브라우저에서 열기**를 누르면 운영체제의 기본 브라우저로 엽니다. **취소**를 누르면 열지 않습니다.
 
-Mac 1.3.6부터 일반 텍스트의 `http://`·`https://` 주소도 자동 인식합니다. 표 안이나 괄호 안의 주소, 터미널 너비에 맞춰 자동 줄바꿈된 주소도 클릭할 수 있습니다. Windows 1.3.5에는 프로그램이 명시적으로 만든 하이퍼링크 열기만 포함되어 있습니다.
+Mac·Windows 1.3.6부터 일반 텍스트의 `http://`·`https://` 주소도 자동 인식합니다. 표 안이나 괄호 안의 주소, 터미널 너비에 맞춰 자동 줄바꿈된 주소도 클릭할 수 있습니다. 1.3.5 이하에서는 프로그램이 명시적으로 만든 하이퍼링크만 열 수 있습니다.
 
 ### 셸과 시작 프로파일
 
