@@ -19,7 +19,22 @@ export function localTerminalEnv(
     "PASSPORT_CONTROL_TOKEN",
     "PASSPORT_PANE_ID",
     "PASSPORT_SESSION_ID",
+    "PASSPORT_ENDPOINT",
+    "PASSPORT_TOKEN",
+    "PASSPORT_GENERATION",
+    "PASSPORT_AGENT_RUN",
+    "PASSPORT_RESUME",
+    "PASSPORT_AGENT_RESUME",
+    "PASSPORT_CLAUDE",
+    "PASSPORT_CODEX",
+    "PASSPORT_CLAUDE_SETTINGS",
+    "PASSPORT_STARTUP",
+    "PASSPORT_INIT_FAILED",
+    "PASSPORT_USER_ZDOTDIR",
+    "PASSPORT_HAD_ZDOTDIR",
   ]);
+  // A desktop app launched from a Passport pane must not reuse that pane's
+  // credentials, AI run identity or loader state. prepareLaunch supplies its own.
   for (const name of Object.keys(env))
     if (reset.has(name.toUpperCase())) delete env[name];
   return {

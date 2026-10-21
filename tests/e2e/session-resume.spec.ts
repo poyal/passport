@@ -485,6 +485,9 @@ setInterval(()=>{},1000);
       env: {
         ...process.env,
         PATH: bin + path.delimiter + process.env.PATH,
+        // Model a desktop app launched inside an already integrated Passport pane.
+        PASSPORT_RESUME: "1",
+        PASSPORT_AGENT_RUN: "parent-agent-run",
         PASSPORT_DATA_DIR: path.join(dir, "app"),
         PASSPORT_DISABLE_UPDATE_CHECK: "1",
         ZDOTDIR: startup,
