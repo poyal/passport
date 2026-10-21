@@ -11,6 +11,7 @@ export const windowsBackfills = Object.freeze([
     sourceTag: "v1.3.0-win-x64",
     files: [
       "tests/e2e/sharing.spec.ts",
+      "tests/e2e/terminal-control.spec.ts",
       "src/main/platform/win32/download.ts",
       "tests/share.test.ts",
       "tests/terminal-startup.test.ts",
