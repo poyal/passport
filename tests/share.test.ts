@@ -613,3 +613,25 @@ it("does not retain private source paths in failed completion receipts", async (
   );
   expect(a.service.status(request.id).error).toContain("ENOENT");
 });
+
+it.skipIf(process.platform !== "win32")(
+  "marks real Windows attachments with ZoneId 3 while preserving literal filenames and content",
+  async () => {
+    const root = await fs.mkdtemp(
+      path.join(os.tmpdir(), "passport-share-zone-"),
+    );
+    cleanups.push(() => fs.rm(root, { recursive: true, force: true }));
+    const file = path.join(root, "한글 ' [literal] ; $(not-a-command).txt");
+    const content = "Harmless Passport download protection fixture.\r\n";
+    await fs.writeFile(file, content);
+    await createWindowsDownload()(file);
+    expect(await fs.readFile(file, "utf8")).toBe(content);
+    expect(await fs.readFile(`${file}:Zone.Identifier`, "utf8")).toBe(
+      "[ZoneTransfer]\r\nZoneId=3\r\n",
+    );
+    await expect(
+      createWindowsDownload()(path.join(root, "missing.txt")),
+    ).rejects.toThrow(/다운로드 보호/);
+    expect(await fs.readdir(root)).toEqual([path.basename(file)]);
+  },
+);

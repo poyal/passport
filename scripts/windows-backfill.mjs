@@ -9,7 +9,11 @@ export const windowsBackfills = Object.freeze([
     target: "win-x64",
     releaseCommit: "359e207a11006446d786ee55bab94d0f874fdc03",
     sourceTag: "v1.3.0-win-x64",
-    files: ["tests/e2e/sharing.spec.ts"],
+    files: [
+      "tests/e2e/sharing.spec.ts",
+      "src/main/platform/win32/download.ts",
+      "tests/share.test.ts",
+    ],
     macAsset: {
       id: 646613918,
       name: "Passport-1.3.0-mac-arm64.dmg",

@@ -44,8 +44,9 @@ if ((Get-Item -LiteralPath $item.path).Attributes -band [IO.FileAttributes]::Rep
 [PassportAttachment]::Save($item.path)
 if (-not (Test-Path -LiteralPath $item.path -PathType Leaf)) { throw 'File blocked' }
 $zone = "[ZoneTransfer]\r\nZoneId=3\r\n"
-[IO.File]::WriteAllText($item.path + ':Zone.Identifier', $zone)
-if ([IO.File]::ReadAllText($item.path + ':Zone.Identifier') -ne $zone) { throw 'Unprotected destination' }
+# Windows PowerShell 5.1's .NET File APIs reject ADS paths. Use its filesystem provider.
+Set-Content -LiteralPath $item.path -Stream Zone.Identifier -Value $zone -Encoding Ascii -NoNewline
+if ((Get-Content -LiteralPath $item.path -Stream Zone.Identifier -Raw) -ne $zone) { throw 'Unprotected destination' }
 `;
 export function createWindowsDownload(
   run: DownloadRunner = runDownloadCommand,
