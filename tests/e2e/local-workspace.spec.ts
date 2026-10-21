@@ -523,7 +523,7 @@ console.log('CLI_FIXTURE_FINISHED');
       .toEqual(
         expect.arrayContaining([
           expect.objectContaining({ source: "claude", kind: "permission" }),
-          expect.objectContaining({ source: "claude", kind: "attention" }),
+          expect.objectContaining({ source: "claude", kind: "completed" }),
         ]),
       );
     expect(
