@@ -1,8 +1,8 @@
 # Passport 1.3.0 사용자 매뉴얼
 
-[현재 사용자 매뉴얼](../../../README.md) · [이 버전 검증과 제한](AGENTS.md) · [Mac 1.3.0 다운로드](https://github.com/poyal/passport/releases/tag/v1.3.0)
+[현재 사용자 매뉴얼](../../../README.md) · [이 버전 검증과 제한](AGENTS.md) · [Mac·Windows 1.3.0 다운로드](https://github.com/poyal/passport/releases/tag/v1.3.0)
 
-이 문서는 당시 공개 소스의 사용 안내를 보존합니다. Mac은 위 릴리즈의 DMG를 열고 **Passport**를 **응용 프로그램**으로 옮기세요. Windows 1.3.0 추가 배포는 검증 중 발견한 문제로 보류했습니다. Windows 설치 안내는 현재 사용자 매뉴얼을 참고하세요.
+이 문서는 당시 공개 소스의 사용 안내를 보존합니다. Mac은 위 릴리즈의 DMG를 열고 **Passport**를 **응용 프로그램**으로 옮기세요. Windows 11 x64에서는 같은 릴리즈의 `Passport-1.3.0-win-x64.exe`를 실행해 현재 사용자에게 설치하세요. 실행 중인 Passport는 먼저 종료하세요. Windows EXE에는 코드 서명이 없습니다. 상세 설치 안내는 현재 사용자 매뉴얼을 참고하세요.
 
 Passport는 로컬 AI와 SSH를 함께 사용하는 개인용 터미널·파일 전송 앱입니다. 새 시작 화면, 셸·프로파일·알림은 [로컬 AI 작업 안내](https://github.com/poyal/passport/blob/v1.3.0/docs/local-ai-workspaces.md)를 확인하세요. 서버 정보와 작업 환경은 내 컴퓨터에 저장하며, 다른 컴퓨터로 옮길 때는 파일 내보내기와 가져오기를 사용합니다.
 
