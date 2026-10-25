@@ -8,6 +8,7 @@
 | 공통 개발 규칙·환경 준비·플랫폼 계약·검사·E2E 작성 | [공통 개발 규칙](development.md) |
 | 버전 준비·검증·태그·GitHub 게시·실패 후 재개·정리 | [릴리즈 가이드](release.md) |
 | AI 작업의 기본 지침 | [루트 AGENTS](../AGENTS.md) |
+| Mac·Windows 1.3.7 후보 | [1.3.7 검증 기록](releases/v1.3.7/AGENTS.md) · [1.3.7 사용자 문서](releases/v1.3.7/README.md) |
 | 현재 Mac·Windows 공개 버전 1.3.6 | [1.3.6 검증 기록](releases/v1.3.6/AGENTS.md) · [1.3.6 사용자 문서](releases/v1.3.6/README.md) |
 | 이전 Mac·Windows 1.3.5 검증 결과 | [1.3.5 AI 기록 — Mac ARM64·Windows x64 공개](releases/v1.3.5/AGENTS.md) |
 | 이전 Mac·Windows 1.3.5 사용자 매뉴얼 | [1.3.5 사용자 문서](releases/v1.3.5/README.md) |
