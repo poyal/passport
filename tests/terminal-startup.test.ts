@@ -3,7 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { Store } from "../src/main/store";
 import { LocalSessions } from "../src/main/local";
 import { ActivityService, OscNotifications } from "../src/main/activity";
@@ -47,6 +47,64 @@ const vault = {
   encryptString: () => Buffer.alloc(0),
   decryptString: () => "",
 };
+
+it.each(["codex", "claude"])(
+  "native %s launcher skips itself and preserves missing CLI and child exit codes",
+  (agent) => {
+    const bundled = path.dirname(helperPath());
+    const launcher = path.join(
+      bundled,
+      agent + (process.platform === "win32" ? ".exe" : ""),
+    );
+    const env = {
+      ...process.env,
+      PATH: bundled + path.delimiter + bundled,
+      PASSPORT_ENDPOINT: "",
+      PASSPORT_RESUME: "0",
+      PASSPORT_CLAUDE: "0",
+      PASSPORT_CODEX: "0",
+    };
+    const missing = spawnSync(launcher, [], {
+      env,
+      encoding: "utf8",
+      windowsHide: true,
+      timeout: 3000,
+    });
+    expect(missing.error).toBeUndefined();
+    expect(missing.status).toBe(127);
+    expect(missing.stderr).toContain("실행 파일을 찾지 못했습니다");
+    const otherBundle = directory();
+    fs.copyFileSync(launcher, path.join(otherBundle, path.basename(launcher)));
+    fs.copyFileSync(
+      path.join(bundled, "passport-agent-launchers.json"),
+      path.join(otherBundle, "passport-agent-launchers.json"),
+    );
+    env.PATH += path.delimiter + otherBundle;
+    const inherited = spawnSync(launcher, [], {
+      env,
+      encoding: "utf8",
+      windowsHide: true,
+      timeout: 3000,
+    });
+    expect(inherited.error).toBeUndefined();
+    expect(inherited.status).toBe(127);
+    const bin = directory();
+    fs.writeFileSync(
+      path.join(bin, agent + (process.platform === "win32" ? ".cmd" : "")),
+      process.platform === "win32" ? "@exit /b 7\r\n" : "#!/bin/sh\nexit 7\n",
+      { mode: 0o755 },
+    );
+    env.PATH += path.delimiter + bin;
+    const exited = spawnSync(launcher, [], {
+      env,
+      encoding: "utf8",
+      windowsHide: true,
+      timeout: 3000,
+    });
+    expect(exited.error).toBeUndefined();
+    expect(exited.status).toBe(7);
+  },
+);
 
 it("tracks authenticated outer AI runs independently of notifications without persisting runtime identity", async () => {
   const store = new Store(directory(), vault);

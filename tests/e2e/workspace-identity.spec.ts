@@ -27,6 +27,104 @@ const split = (
   children,
 });
 
+test("plain terminals detect typed AI commands without notification or resume profiles", async () => {
+  const { page, application, directory } = suite;
+  const bin = path.join(directory, "plain-agent-bin");
+  await fs.mkdir(bin);
+  const script = path.join(bin, "plain-agent.cjs");
+  await fs.writeFile(
+    script,
+    `
+if (process.argv.includes('--version')) { console.log('plain agent fixture'); process.exit(0); }
+process.stdin.setRawMode(true);
+process.stdin.resume();
+process.stdin.on('data', data => { if (data.includes(3)) process.exit(0); });
+console.log('PLAIN_AGENT_READY_' + process.argv[2] + ' ' + JSON.stringify(process.argv.slice(3)));
+`,
+  );
+  const quote = (text: string) => "'" + text.replaceAll("'", "'\"'\"'") + "'";
+  for (const agent of ["codex", "claude"])
+    await fs.writeFile(
+      path.join(bin, agent + (process.platform === "win32" ? ".cmd" : "")),
+      process.platform === "win32"
+        ? `@"${process.execPath}" "${script}" ${agent} %*\r\n`
+        : `#!/bin/sh\nexec ${quote(process.execPath)} ${quote(script)} ${agent} "$@"\n`,
+      { mode: 0o755 },
+    );
+  const previousPath = await application.evaluate(({}, bin) => {
+    const previous = process.env.PATH;
+    process.env.PATH =
+      bin + (process.platform === "win32" ? ";" : ":") + previous;
+    return previous;
+  }, bin);
+  try {
+    for (const shell of process.platform === "win32"
+      ? (["pwsh", "windows-powershell", "cmd", "passport-bash"] as const)
+      : (["zsh", "bash"] as const)) {
+      await page.evaluate(async (shell) => {
+        const boot = await window.passport.call("bootstrap", undefined);
+        if (!boot.shells.some((s) => s.id === shell && s.available))
+          throw new Error(`Required shell unavailable: ${shell}`);
+        boot.document.settings.terminal.shell = shell;
+        boot.document.settings.terminal.profileIds = [];
+        boot.document.settings.notifications.codex = false;
+        boot.document.settings.notifications.claude = false;
+        boot.document.settings.sessionResume = false;
+        await window.passport.call("save", boot.document);
+      }, shell);
+      await page
+        .getByRole("button", { name: "새 로컬 터미널", exact: true })
+        .click();
+      const prompt = shell.includes("bash")
+        ? /\$\s*$/
+        : shell === "zsh"
+          ? /[%#]\s*$/
+          : />\s*$/;
+      await expect(
+        page.locator(".view:not([hidden]) .xterm-rows"),
+      ).toContainText(prompt);
+      const area = page
+        .locator(".view:not([hidden]) .xterm-helper-textarea")
+        .first();
+      const tab = page.locator(".workspace-tab.active");
+      for (const agent of ["codex", "claude"] as const) {
+        await area.focus();
+        await page.keyboard.type(`${agent} "space 한글"`);
+        await page.keyboard.press("Enter");
+        await expect(tab.locator(`.local-icon.${agent}`)).toBeVisible();
+        await expect(
+          page.locator(".view:not([hidden]) .xterm-rows"),
+        ).toContainText(`PLAIN_AGENT_READY_${agent} ["space 한글"]`);
+        // The real PTY sends Ctrl+C to a raw-mode CLI; the shell must survive.
+        await page.keyboard.press("Control+c");
+        await expect(
+          tab.locator(".local-icon"),
+          `${shell} ${agent} exits on Ctrl+C`,
+        ).toHaveCount(0);
+        await expect(
+          page.locator(".view:not([hidden]) .xterm-rows"),
+        ).toContainText(prompt);
+      }
+      expect(
+        await page.evaluate(() =>
+          window.passport.call("activity.list", undefined),
+        ),
+      ).toEqual([]);
+      await page.evaluate(async () => {
+        const boot = await window.passport.call("bootstrap", undefined);
+        boot.document.workspaces = [];
+        await window.passport.call("save", boot.document);
+      });
+      await expect(page.locator(".workspace-tab")).toHaveCount(0);
+    }
+  } finally {
+    await application.evaluate(({}, previousPath) => {
+      if (previousPath === undefined) delete process.env.PATH;
+      else process.env.PATH = previousPath;
+    }, previousPath);
+  }
+});
+
 test("AI tab icons follow live runs while manual choices templates and window moves preserve identity", async () => {
   const { page, application, directory } = suite;
   const bin = path.join(directory, "identity-bin");

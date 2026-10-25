@@ -53,6 +53,20 @@ copyFileSync(
   path.join(directory, name),
 );
 if (platform !== "win32") chmodSync(path.join(directory, name), 0o755);
+// Native launchers preserve shell startup/argument rules while reporting the
+// authenticated outer AI run, even when notifications and resume are disabled.
+for (const agent of ["codex", "claude"]) {
+  const launcher = path.join(
+    directory,
+    agent + (platform === "win32" ? ".exe" : ""),
+  );
+  copyFileSync(path.join(directory, name), launcher);
+  if (platform !== "win32") chmodSync(launcher, 0o755);
+}
+writeFileSync(
+  path.join(directory, "passport-agent-launchers.json"),
+  JSON.stringify({ format: "passport-agent-launchers", version: 1 }),
+);
 const cli = platform === "win32" ? "passport.exe" : "passport";
 copyFileSync(
   path.join("native/helper/target", target, "release", cli),

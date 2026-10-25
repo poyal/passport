@@ -1,5 +1,7 @@
 import { afterEach, expect, it, vi } from "vitest";
+import { resolveAppIdentity } from "../src/main/app-identity";
 import fs from "node:fs";
+
 import os from "node:os";
 import path from "node:path";
 import net from "node:net";
@@ -34,6 +36,23 @@ const developmentIdentity = {
   name: "Passport-dev",
   appId: "io.passport.desktop.dev",
 };
+
+it.each([
+  ["1.3.6", false, true],
+  ["1.3.6-dev", false, true],
+  ["1.3.6-dev", true, true],
+  ["1.3.6", true, false],
+] as const)(
+  "separates desktop identity for %s packaged=%s",
+  (version, packaged, development) => {
+    expect(resolveAppIdentity(version, packaged)).toEqual({
+      development,
+      name: development ? "Passport-dev" : "Passport",
+      appId: development ? "io.passport.desktop.dev" : "io.passport.desktop",
+      version: development ? "1.3.6-dev" : "1.3.6",
+    });
+  },
+);
 
 it("selects explicit desktop implementations and never maps an unknown OS to macOS", () => {
   expect(selectPlatform("darwin").terminal.id).toBe("darwin");

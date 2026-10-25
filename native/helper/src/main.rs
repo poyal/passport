@@ -142,12 +142,28 @@ fn hook(mode: &str, args: &[String]) {
     ));
 }
 fn executable(name: &str) -> Option<PathBuf> {
+    // The bundled codex/claude launchers share this helper's directory. Never
+    // resolve them as the actual CLI (including a repeated/case-varied PATH).
+    let bundled = env::current_exe().ok().and_then(|file| file.parent().and_then(|dir| fs::canonicalize(dir).ok()));
     let suffixes = if cfg!(windows) {
         vec![".exe", ".cmd", ".bat", ""]
     } else {
         vec![""]
     };
     for dir in env::split_paths(&env::var_os("PATH").unwrap_or_default()) {
+        // A desktop app may itself have been launched from another installed or
+        // development Passport terminal. Skip all bundled launcher directories,
+        // otherwise two copies can resolve and invoke one another recursively.
+        if fs::read(dir.join("passport-agent-launchers.json")).ok()
+            .and_then(|bytes| serde_json::from_slice::<Value>(&bytes).ok())
+            .is_some_and(|value| value["format"] == "passport-agent-launchers" && value["version"] == 1) {
+            continue;
+        }
+        if let (Some(bundled), Ok(candidate)) = (&bundled, fs::canonicalize(&dir)) {
+            if candidate == *bundled || (cfg!(windows) && candidate.to_string_lossy().eq_ignore_ascii_case(&bundled.to_string_lossy())) {
+                continue;
+            }
+        }
         for suffix in &suffixes {
             let file = dir.join(format!("{name}{suffix}"));
             if file.is_file() {
@@ -325,7 +341,11 @@ fn run(agent: &str, args: &[String]) -> i32 {
         json!({"source":"terminal","event":"profile-result","detail":info.chars().take(4096).collect::<String>()}),
     );
     let mut cli_args = Vec::new();
-    let helper = env::current_exe().unwrap_or_default();
+    // Hook command identities must stay stable whether invoked through a shell
+    // function or the native codex/claude launcher.
+    let helper = env::current_exe().unwrap_or_default().with_file_name(
+        if cfg!(windows) { "passport-helper.exe" } else { "passport-helper" }
+    );
     if agent == "codex" && env::var("PASSPORT_RESUME").as_deref() == Ok("1")
         && codex_interactive(args) && !args.iter().any(|a| a == "--no-daemon")
         && probe(&executable, "--help", 16384).is_some_and(|text| text.contains("--no-daemon")) {
@@ -456,6 +476,11 @@ fn run(agent: &str, args: &[String]) -> i32 {
 }
 fn main() {
     let args: Vec<String> = env::args().skip(1).collect();
+    let invoked = env::current_exe().unwrap_or_default();
+    let invoked_name = invoked.file_stem().and_then(|name| name.to_str()).unwrap_or("").to_ascii_lowercase();
+    if matches!(invoked_name.as_str(), "codex" | "claude") {
+        std::process::exit(run(&invoked_name, &args));
+    }
     let mode = args.first().map(String::as_str).unwrap_or("");
     if mode == "path-contains" {
         let needle = args.get(1).map(String::as_str).unwrap_or("");

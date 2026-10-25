@@ -3,6 +3,11 @@
   "description": "Explicit release test inventory. IDs remain stable when titles are deliberately updated. Entries without overrides are required on macOS and Windows in hidden mode.",
   "tests": [
     {
+      "id": "workspace-identity.plain-ai-icons",
+      "file": "workspace-identity.spec.ts",
+      "title": "plain terminals detect typed AI commands without notification or resume profiles"
+    },
+    {
       "id": "workspace-identity.ai-icons",
       "file": "workspace-identity.spec.ts",
       "title": "AI tab icons follow live runs while manual choices templates and window moves preserve identity"
@@ -404,7 +409,7 @@
     {
       "id": "shortcuts-settings.windows-routing",
       "file": "shortcuts-settings.spec.ts",
-      "title": "Windows shortcut routing copies without interrupt and honors disabled controls and paste under injected platform"
+      "title": "Windows shortcut routing copies selections or interrupts and honors disabled controls and paste under injected platform"
     },
     {
       "id": "shortcuts-settings.scroll",

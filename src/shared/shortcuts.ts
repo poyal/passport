@@ -456,6 +456,14 @@ export function ignoreShortcutMenu(
   const mac = platform === "darwin";
   if (context === "terminal" && managedTerminalKey(event, platform))
     return true;
+  // Electron's Edit menu would otherwise consume shell/TUI control characters.
+  // Leave native editing available in ordinary text fields and dialogs.
+  if (
+    context === "terminal" &&
+    platform === "win32" &&
+    shortcutMatch(event, ["Ctrl+A", "Ctrl+X", "Ctrl+Y", "Ctrl+Shift+Z"], false)
+  )
+    return true;
   if (context === "files" && managedFileMenuKey(event, platform)) return true;
   return shortcutActionIds.some((id) => {
     const scope = shortcutActions[id].scope;

@@ -27,6 +27,29 @@ module.exports = async (context) => {
     throw new Error(
       `Build the ${platform}-${arch} Passport CLI before packaging.`,
     );
+  for (const agent of ["codex", "claude"])
+    if (
+      !fs.existsSync(
+        path.join(
+          path.dirname(helper),
+          agent + (platform === "win32" ? ".exe" : ""),
+        ),
+      )
+    )
+      throw new Error(
+        `Build the ${platform}-${arch} AI launchers before packaging.`,
+      );
+  const launchers = JSON.parse(
+    fs.readFileSync(
+      path.join(path.dirname(helper), "passport-agent-launchers.json"),
+      "utf8",
+    ),
+  );
+  if (
+    launchers.format !== "passport-agent-launchers" ||
+    launchers.version !== 1
+  )
+    throw new Error("Invalid bundled AI launcher manifest");
   if (platform === "win32") {
     const pinned = JSON.parse(
       fs.readFileSync(path.join(root, "runtime-manifest.json")),

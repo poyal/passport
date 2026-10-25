@@ -107,22 +107,16 @@ import {
 } from "../shared/local-workspace";
 import { about } from "../shared/about";
 import { UpdateChecker } from "./updates";
+import { resolveAppIdentity } from "./app-identity";
 import {
   testWindowMode,
   testWindowOptions,
   presentWindow,
 } from "./test-window";
 
-const developmentBuild =
-  app.getVersion().endsWith("-dev") ||
-  (!app.isPackaged && process.env.PASSPORT_BUILD_CHANNEL === "dev");
-const appIdentity = {
-  name: developmentBuild ? "Passport-dev" : "Passport",
-  appId: developmentBuild ? "io.passport.desktop.dev" : "io.passport.desktop",
-};
-const appVersion = developmentBuild
-  ? app.getVersion().replace(/-dev$/, "") + "-dev"
-  : app.getVersion();
+const appIdentity = resolveAppIdentity(app.getVersion(), app.isPackaged);
+const developmentBuild = appIdentity.development;
+const appVersion = appIdentity.version;
 app.setName(appIdentity.name);
 const e2eWindowMode = testWindowMode(process.env);
 platform.desktop.initialize(app, e2eWindowMode, appIdentity);

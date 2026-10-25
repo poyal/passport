@@ -262,7 +262,7 @@ export function ensureTerminal(id: string) {
     }
     const mac = platform === "darwin";
     const keys = settings.shortcuts[platform];
-    const action = (
+    let action = (
       [
         "copy",
         "paste",
@@ -273,6 +273,15 @@ export function ensureTerminal(id: string) {
         "newline",
       ] as const
     ).find((action) => shortcutMatch(event, keys[action], mac));
+    // Windows copy follows the terminal convention: without a selection Ctrl+C
+    // interrupts. Keep custom copy keys and explicitly disabled bindings intact.
+    if (
+      action === "copy" &&
+      !mac &&
+      !term.hasSelection() &&
+      shortcutMatch(event, "Ctrl+C", false)
+    )
+      action = "interrupt";
     if (action || managedTerminalKey(event, platform)) {
       event.preventDefault();
       event.stopPropagation();
@@ -281,6 +290,7 @@ export function ensureTerminal(id: string) {
         void api
           .call("clipboard.write", { text: term.getSelection() })
           .catch(errorHandler);
+        if (!mac) term.clearSelection();
       } else if (action === "paste") {
         suppressNativePaste = true;
         setTimeout(() => {

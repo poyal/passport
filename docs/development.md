@@ -25,7 +25,7 @@ npm run dev
 
 `npm ci`의 postinstall은 ssh2 패치, Electron ABI용 `better-sqlite3`·`node-pty`, Windows ConPTY 패치를 준비합니다. 설치 실패를 `--ignore-scripts`나 `npmRebuild: false`로 우회하지 않습니다. Rust helper 빌드는 Cargo.lock을 적용하고 앱 버전과 의존 라이선스를 함께 생성합니다. `npm run build`에도 helper 빌드가 포함됩니다.
 
-개발 앱은 `Passport-dev`, `<버전>-dev`, `io.passport.desktop.dev`로 정식 앱 데이터와 분리됩니다. renderer는 개발 중 갱신되지만 main·preload 변경 후에는 앱을 다시 시작합니다. 시험은 `PASSPORT_DATA_DIR` 등 격리 경로를 사용하며 실행 중인 사용자의 DB·셸 설정·일반 클립보드를 수정하지 않습니다.
+개발 앱은 `Passport-dev`, `<버전>-dev`, `io.passport.desktop.dev`로 정식 앱 데이터와 분리됩니다. 패키징하지 않은 모든 실행(`npm start`·`electron .` 포함)은 환경 변수 유무와 관계없이 개발 식별자를 사용해 Windows 바로가기와 사용자 DB가 정식 앱에 연결되지 않게 합니다. renderer는 개발 중 갱신되지만 main·preload 변경 후에는 앱을 다시 시작합니다. 시험은 `PASSPORT_DATA_DIR` 등 격리 경로를 사용하며 실행 중인 사용자의 DB·셸 설정·일반 클립보드를 수정하지 않습니다.
 
 ## 폴더와 빌드 결과
 
@@ -174,7 +174,7 @@ SQLite 스키마는 7, 문서·portable 형식은 2입니다. 이행 전 백업�
 
 helper의 인증된 실행 시작·종료·대화 시작 이벤트로 패널별 AI 실행 인수와 native ID를 묶습니다. 실행 인수는 암호화하고 최초 프롬프트·첨부·선택기 인수는 재전송하지 않습니다. 사용자 설정·훅·신뢰를 보존하며 알 수 없는 옵션이나 ID 미확인 시 자동 AI 재개만 생략합니다. 알림 허용과 복원 추적은 별개입니다. 종료 처리 전에 AI 실행 상태를 고정하며 사용자 AI 종료와 앱의 종료 처리를 구분합니다.
 
-자동 탭 아이콘의 `SessionState.activeAgent`는 기존 인증된 `run-start`·`run-end`로 관리하는 메모리 상태입니다. 알림 허용·복원 저장과 독립이며 연결 세대와 실행 ID가 일치할 때만 갱신합니다. 단일 로컬 패널과 자동 아이콘 선택에만 적용하고, 직접 지정한 아이콘·문서·템플릿은 변경하지 않습니다. 응답 완료·대화 세션 종료는 CLI 실행 종료와 구분하며, 연결 종료·재연결 시 이전 실행 상태를 제거합니다.
+자동 탭 아이콘의 `SessionState.activeAgent`는 기존 인증된 `run-start`·`run-end`로 관리하는 메모리 상태입니다. 알림 허용·복원 저장과 독립이며 연결 세대와 실행 ID가 일치할 때만 갱신합니다. 내장 helper 폴더의 네이티브 `codex`·`claude` 실행기는 일반 로컬 셸에서도 실행 이벤트를 보냅니다. 실제 CLI 탐색에서 자신의 폴더와 `passport-agent-launchers.json`으로 식별되는 다른 Passport 실행기 폴더를 제외해 재귀 실행을 막고 인수·종료 코드를 전달합니다. 감지만으로 CLI 훅·알림·대화 복원을 켜거나 셸 로더·실행 정책을 변경하지 않습니다. 사용자 함수·별칭·앞선 PATH·절대 경로는 실행기를 우회할 수 있습니다. 단일 로컬 패널과 자동 아이콘 선택에만 적용하고, 직접 지정한 아이콘·문서·템플릿은 변경하지 않습니다. 응답 완료·대화 세션 종료는 CLI 실행 종료와 구분하며, 연결 종료·재연결 시 이전 실행 상태를 제거합니다.
 
 `SessionStart`의 ID 발급과 대화 저장을 구분합니다. `startup`·`clear`만 확인된 빈 세션은 같은 옵션으로 새로 열며, 입력·완료·재개 이벤트가 확인되면 ID로 재개합니다. 같은 ID의 늦은 시작 이벤트로 입력 상태를 되돌리지 않습니다. Claude의 보고된 transcript 경로는 암호화한 복원 정보에 보관하고 재개 전에 파일 존재·크기를 확인합니다. 다른 세션 파일을 검색하거나 최근 ID로 대체하지 않습니다.
 

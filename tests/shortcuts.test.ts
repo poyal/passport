@@ -329,6 +329,20 @@ describe("platform shortcut settings", () => {
       ),
     ).toBe(false);
   });
+  it("passes Windows editing control keys to the terminal but keeps text field editing", () => {
+    for (const key of ["a", "x", "y", "z"]) {
+      const control = event(key, { ctrlKey: true });
+      expect(
+        ignoreShortcutMenu("terminal", control, defaultShortcuts, "win32"),
+      ).toBe(true);
+      expect(
+        ignoreShortcutMenu("editing", control, defaultShortcuts, "win32"),
+      ).toBe(false);
+    }
+    expect(
+      ignoreShortcutMenu("terminal", event("F11"), defaultShortcuts, "win32"),
+    ).toBe(false);
+  });
   it("rejects partial lanes, malformed bindings and oversized key lists", () => {
     expect(shortcutSettingsSchema.safeParse({ win32: {} }).success).toBe(false);
     const settings = structuredClone(defaultShortcuts);

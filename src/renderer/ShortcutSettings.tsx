@@ -65,9 +65,10 @@ export function ShortcutSettings() {
         저장해 주세요.
       </p>
       <p className="hint">
-        복사는 선택한 텍스트가 없으면 아무 동작도 하지 않습니다. 명령 중단은
-        별도 키로 지정합니다. 입력칸 편집과 Esc·Tab·방향키 화면 조작은
-        유지됩니다.
+        Windows에서 Ctrl+C를 복사 키로 사용하면 선택한 텍스트를 복사하고, 선택이
+        없으면 현재 터미널에 중단 입력을 보냅니다. 다른 복사 키는 선택이 없으면
+        동작하지 않습니다. 명령 중단 키는 선택 여부와 관계없이 동작합니다.
+        입력칸 편집과 Esc·Tab·방향키 화면 조작은 유지됩니다.
       </p>
       {(["app", "terminal", "files"] as const).map((scope) => (
         <fieldset className="shortcut-group" key={scope} disabled={busy}>

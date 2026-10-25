@@ -111,7 +111,7 @@ test("shortcut editor replaces one key, rejects conflicts and persists only the 
     .toEqual(defaultShortcuts[os]);
 });
 
-test("Windows shortcut routing copies without interrupt and honors disabled controls and paste under injected platform", async () => {
+test("Windows shortcut routing copies selections or interrupts and honors disabled controls and paste under injected platform", async () => {
   const { page, application } = suite;
   // Only the renderer platform is injected. This is not a Windows native test.
   await application.evaluate(({ ipcMain }) => {
@@ -178,8 +178,11 @@ test("Windows shortcut routing copies without interrupt and honors disabled cont
         },
     );
   await page.keyboard.press("Control+c");
-  expect((await state()).inputs).toEqual([]);
+  await expect.poll(async () => (await state()).inputs).toEqual(["\x03"]);
   expect((await state()).copies).toEqual([]);
+  await application.evaluate(() => {
+    (globalThis as any).__shortcutIO.inputs = [];
+  });
   await page.getByRole("button", { name: "터미널 검색", exact: true }).click();
   await page.getByLabel("터미널 출력 검색").fill("COPY_MARKER");
   await expect(page.getByRole("status", { name: "검색 결과" })).not.toHaveText(
@@ -191,6 +194,22 @@ test("Windows shortcut routing copies without interrupt and honors disabled cont
     .poll(async () => (await state()).copies)
     .toEqual(["COPY_MARKER"]);
   expect((await state()).inputs).toEqual([]);
+  // Copy dismisses the selection so a second press can reach the application.
+  await page.keyboard.press("Control+c");
+  await expect.poll(async () => (await state()).inputs).toEqual(["\x03"]);
+  expect((await state()).copies).toEqual(["COPY_MARKER"]);
+  await application.evaluate(() => {
+    (globalThis as any).__shortcutIO.inputs = [];
+  });
+  // Native Edit menu accelerators must not eat ordinary terminal control keys.
+  for (const key of ["a", "x", "y", "l", "u", "w"])
+    await page.keyboard.press(`Control+${key}`);
+  await expect
+    .poll(async () => (await state()).inputs)
+    .toEqual(["\x01", "\x18", "\x19", "\x0c", "\x15", "\x17"]);
+  await application.evaluate(() => {
+    (globalThis as any).__shortcutIO.inputs = [];
+  });
   await page.keyboard.press("Control+Shift+c");
   await expect.poll(async () => (await state()).inputs).toEqual(["\x03"]);
   await page.keyboard.press("Control+v");
