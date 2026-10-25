@@ -20,6 +20,7 @@
 - 새 검증마다 도구 버전과 출처를 기록합니다. 현재 파이프라인은 Node 최소 버전과 Cargo 실행 여부를 확인하지만 모든 도구의 패치 버전을 고정하지는 않습니다. 다른 OS·ABI의 네이티브 산출물은 재사용하지 않습니다.
 - Mac의 새 ad-hoc 후보는 실제 `safeStorage`를 처음 사용할 때 키체인 접근 승인을 요청할 수 있습니다. 숨김 GUI의 앱 데이터 격리는 OS 키체인 승인까지 대신하지 않습니다. 요청한 후보 앱을 확인한 사용자가 macOS 창에서 직접 승인하며, 암호를 채팅·명령·로그로 받거나 키체인 삭제·접근 제어 변경·평문 mock으로 우회하지 않습니다. `한 번 허용`은 재시작 때 다시 물을 수 있습니다. 승인 대기로 검사가 실패했다면 해당 실패를 유지하고 후보의 OS 암호화 접근을 확인한 뒤 전체 정식 검증을 새로 실행합니다.
 - Mac 설치 파일 단계는 DMG 내부 후보의 실제 키체인 암호화·복호화를 격리 데이터로 먼저 확인합니다. OS 승인 준비에는 최대 180초를 허용하고 결과 로그를 증거에 포함합니다. 준비 실패는 릴리즈 실패이며 GUI 검사와 정상 종료의 기존 제한 시간은 늘리지 않습니다. 새로 패키징한 후보는 다시 승인이 필요할 수 있으므로 이 단계의 OS 창을 확인합니다.
+- Mac SSH의 `Background` 세션은 로그인 사용자의 키체인 상호작용이 거부될 수 있습니다. `launchctl managername`과 `security show-keychain-info ~/Library/Keychains/login.keychain-db`로 확인하고, `User interaction is not allowed`이면 키체인 잠금·접근 제어·HOME을 바꾸지 않습니다. 실제 데스크톱 검사 허용 범위에서 같은 사용자의 `gui/<UID>` 로그인 세션에 일회성 LaunchAgent를 등록해 **전체 정식 검증**을 실행합니다. 임시 plist·실행 스크립트는 `build/toolchains/`에 두고 Node·Rust·Python 경로를 명시하며 로그를 작업 폴더에 저장합니다. `launchctl bootstrap gui/<UID> <plist>`로 시작한 작업의 종료 코드·manifest·DMG 분리를 확인한 뒤 `launchctl bootout gui/<UID>/<Label>`로 등록을 해제합니다. 임시 작업을 로그인 시 자동 실행되는 `~/Library/LaunchAgents`에 설치하거나 키체인 승인을 자동 클릭하지 않습니다.
 
 현재 명령 설명은 산출물 생성 없이 확인할 수 있습니다.
 
