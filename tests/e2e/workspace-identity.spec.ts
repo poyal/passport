@@ -51,10 +51,22 @@ console.log('PLAIN_AGENT_READY_' + process.argv[2] + ' ' + JSON.stringify(proces
         : `#!/bin/sh\nexec ${quote(process.execPath)} ${quote(script)} ${agent} "$@"\n`,
       { mode: 0o755 },
     );
-  const previousPath = await application.evaluate(({}, bin) => {
-    const previous = process.env.PATH;
+  const previousEnvironment = await application.evaluate(({}, bin) => {
+    const previous = {
+      PATH: process.env.PATH,
+      ZDOTDIR: process.env.ZDOTDIR,
+      LANG: process.env.LANG,
+      LC_ALL: process.env.LC_ALL,
+    };
     process.env.PATH =
-      bin + (process.platform === "win32" ? ";" : ":") + previous;
+      bin + (process.platform === "win32" ? ";" : ":") + previous.PATH;
+    // A user's zsh startup (for example nvm) may put a real AI CLI before
+    // the fixture. Isolate shell startup without changing Electron's HOME.
+    if (process.platform === "darwin") {
+      process.env.ZDOTDIR = bin;
+      process.env.LANG = "en_US.UTF-8";
+      process.env.LC_ALL = "en_US.UTF-8";
+    }
     return previous;
   }, bin);
   try {
@@ -118,10 +130,12 @@ console.log('PLAIN_AGENT_READY_' + process.argv[2] + ' ' + JSON.stringify(proces
       await expect(page.locator(".workspace-tab")).toHaveCount(0);
     }
   } finally {
-    await application.evaluate(({}, previousPath) => {
-      if (previousPath === undefined) delete process.env.PATH;
-      else process.env.PATH = previousPath;
-    }, previousPath);
+    await application.evaluate(({}, previous) => {
+      for (const name of ["PATH", "ZDOTDIR", "LANG", "LC_ALL"] as const) {
+        if (previous[name] === undefined) delete process.env[name];
+        else process.env[name] = previous[name];
+      }
+    }, previousEnvironment);
   }
 });
 
