@@ -8,6 +8,7 @@ import type { LaunchSpec } from "./startup";
 import { platform } from "./platform";
 import type { PtyBehavior } from "./platform/contracts";
 import { localTerminalEnv } from "./terminal-env";
+import { TerminalInputQueue, ptyInputWriter } from "./terminal-input";
 type LocalSession = {
   pty: pty.IPty;
   inFlight: number;
@@ -18,6 +19,7 @@ type LocalSession = {
   launch?: LaunchSpec;
   startupTimer?: ReturnType<typeof setTimeout>;
   behavior: PtyBehavior;
+  inputQueue: TerminalInputQueue;
 };
 export class LocalSessions {
   // A closed tab may still own a native exit callback. Keep tracking that
@@ -62,6 +64,24 @@ export class LocalSessions {
       queue: "",
       alive: true,
       dataListener: { dispose() {} },
+      inputQueue: new TerminalInputQueue(
+        id,
+        ptyInputWriter(terminal),
+        this.emit,
+        (error) => {
+          if (this.sessions.get(id) !== entry) return;
+          this.close(id);
+          this.emit({
+            kind: "session",
+            state: {
+              id,
+              status: "error",
+              message: `터미널 입력 전송에 실패했습니다: ${error.message}`,
+            },
+          });
+        },
+        (data) => entry.behavior.input(data),
+      ),
     };
     this.sessions.set(id, entry);
     entry.dataListener = terminal.onData((data) => {
@@ -74,6 +94,7 @@ export class LocalSessions {
     });
     terminal.onExit(() => {
       entry.alive = false;
+      entry.inputQueue.dispose();
       clearTimeout(entry.startupTimer);
       try {
         entry.launch?.cleanup();
@@ -156,7 +177,15 @@ export class LocalSessions {
   input(id: string, data: string) {
     const s = this.sessions.get(id);
     if (!s?.alive) throw new Error("로컬 터미널이 종료되었습니다.");
-    s.pty.write(s.behavior.input(data));
+    s.inputQueue.input(data);
+  }
+  paste(id: string, text: string, bracketed: boolean, generation: string) {
+    const s = this.sessions.get(id);
+    if (!s?.alive) throw new Error("로컬 터미널이 종료되었습니다.");
+    return s.inputQueue.paste(text, bracketed, generation);
+  }
+  inputBusy(id: string) {
+    return !!this.sessions.get(id)?.inputQueue.busy;
   }
   resize(id: string, cols: number, rows: number) {
     const s = this.sessions.get(id);
@@ -178,6 +207,7 @@ export class LocalSessions {
     const s = this.sessions.get(id);
     if (!s) return;
     this.sessions.delete(id);
+    s.inputQueue.dispose();
     clearTimeout(s.timer);
     clearTimeout(s.startupTimer);
     s.dataListener.dispose();

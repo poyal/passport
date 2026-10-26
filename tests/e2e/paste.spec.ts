@@ -64,7 +64,16 @@ test.beforeEach(async () => {
         ["\x1b[?1;2c", "\x1b[I", "\x1b[O"].includes(input.data)
       )
         return original(event, name, input);
-      if (name === "session.input") {
+      if (name === "session.input" || name === "session.paste") {
+        if (name === "session.paste") {
+          const text = input.text
+            .replace(/[\r\n]+$/, "")
+            .replace(/\r?\n/g, "\r");
+          input = {
+            ...input,
+            data: input.bracketedPaste ? `\x1b[200~${text}\x1b[201~` : text,
+          };
+        }
         state.__pasteInputs.push(input);
         return { ok: true, value: undefined };
       }

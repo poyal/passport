@@ -126,7 +126,19 @@ test("Windows shortcut routing copies selections or interrupts and honors disabl
     ipcMain.removeHandler("passport:call");
     ipcMain.handle("passport:call", async (event, name, input) => {
       const state = (globalThis as any).__shortcutIO;
-      if (state.capture && name === "session.input") {
+      if (
+        state.capture &&
+        (name === "session.input" || name === "session.paste")
+      ) {
+        if (name === "session.paste") {
+          const text = input.text
+            .replace(/[\r\n]+$/, "")
+            .replace(/\r?\n/g, "\r");
+          input = {
+            ...input,
+            data: input.bracketedPaste ? `\x1b[200~${text}\x1b[201~` : text,
+          };
+        }
         // Keep ConPTY device/focus replies flowing to the real shell, as in
         // paste.spec.ts; they are not shortcut-generated input bytes.
         if (

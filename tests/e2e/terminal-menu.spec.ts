@@ -61,6 +61,8 @@ async function setup() {
         if (name === "clipboard.terminal")
           return { ok: true, value: { kind: "text", text: "MENU_PASTE" } };
         if (name === "session.input") g.__menuInputs.push(input);
+        if (name === "session.paste")
+          g.__menuInputs.push({ ...input, data: input.text });
         return original(event, name, input);
       });
       BrowserWindow.getAllWindows()[0].webContents.send("passport:event", {

@@ -2,7 +2,12 @@ import { it, expect, afterEach } from "vitest";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { randomBytes, randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
+import {
+  pasteTextLimit,
+  pasteStart,
+  pasteEnd,
+} from "../src/shared/terminal-input";
 import { sshFixture } from "./fixtures/ssh-server";
 import { emptyDocument, hostSchema, type Secret } from "../src/shared/model";
 import { connectSSH, Sessions } from "../src/main/ssh";
@@ -159,6 +164,49 @@ it("opens an interactive SSH terminal and routes output and input", async () => 
   manager.close(id);
   expect(manager.sessions.size).toBe(0);
 });
+it("bounds stalled SSH paste input and preserves two 4 MiB messages through resume", async () => {
+  const { host, store, secret, server } = await setup();
+  const manager = new Sessions(
+    store,
+    async () => true,
+    (event) => {
+      if (event.kind === "output") manager.ack(event.id, event.bytes);
+    },
+  );
+  cleanups.push(async () => manager.closeAll());
+  const id = randomUUID();
+  await manager.open(id, host, secret);
+  const stream = server.shells[0];
+  stream.removeAllListeners("data");
+  stream.pause();
+  const unit = "한글💻e\u0301";
+  const body =
+    unit.repeat(Math.floor(pasteTextLimit / Buffer.byteLength(unit))) +
+    "a".repeat(pasteTextLimit % Buffer.byteLength(unit));
+  const framed = pasteStart + body + pasteEnd;
+  const expected = createHash("sha256")
+    .update(framed)
+    .update(framed)
+    .digest("hex");
+  const received = createHash("sha256");
+  let bytes = 0;
+  stream.on("data", (data: Buffer) => {
+    bytes += data.length;
+    received.update(data);
+  });
+  manager.paste(id, body, true, manager.sessions.get(id)!.generation);
+  manager.paste(id, body, true, manager.sessions.get(id)!.generation);
+  expect(() => manager.input(id, "extra")).toThrow("대기 용량");
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  expect(manager.inputBusy(id)).toBe(true);
+  expect(bytes).toBe(0);
+  stream.resume();
+  await expect
+    .poll(() => bytes, { timeout: 10000 })
+    .toBe(Buffer.byteLength(framed) * 2);
+  expect(received.digest("hex")).toBe(expected);
+  await expect.poll(() => manager.inputBusy(id)).toBe(false);
+});
 it("runs a startup command once and never repeats it after automatic reconnect", async () => {
   const { host, store, secret, server } = await setup();
   const manager = new Sessions(
@@ -179,6 +227,8 @@ it("runs a startup command once and never repeats it after automatic reconnect",
   for (let n = 0; n < 100 && !server.input.length; n++)
     await new Promise((r) => setTimeout(r, 20));
   expect(server.input.join("")).toBe("STARTUP_ONCE\r");
+  const oldClient = manager.sessions.get(id)!.client!;
+  const oldGeneration = manager.sessions.get(id)!.generation;
   server.shells[0].close();
   for (let n = 0; n < 200 && server.shells.length < 2; n++)
     await new Promise((r) => setTimeout(r, 20));
@@ -189,6 +239,9 @@ it("runs a startup command once and never repeats it after automatic reconnect",
     n++
   )
     await new Promise((r) => setTimeout(r, 20));
+  expect(manager.sessions.get(id)?.status).toBe("connected");
+  expect(manager.sessions.get(id)?.generation).not.toBe(oldGeneration);
+  oldClient.emit("error", new Error("late error from the previous connection"));
   expect(manager.sessions.get(id)?.status).toBe("connected");
   manager.input(id, "AFTER_RECONNECT");
   for (

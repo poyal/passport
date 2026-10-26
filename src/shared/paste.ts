@@ -1,4 +1,5 @@
 import type { ShellId } from "./terminal-config";
+import { InputBudget, pasteTextLimit } from "./terminal-input";
 
 export const sshFileDropMessage =
   "SSH 터미널에서는 파일·폴더 드래그앤드롭을 지원하지 않습니다.";
@@ -39,12 +40,29 @@ export function quotePastePaths(paths: string[], shell: ShellId): string {
 // Start reading immediately to capture each gesture's clipboard. Deliver in order.
 export class PasteQueue {
   private tail = Promise.resolve();
+  private revision = 0;
+  constructor(
+    private readonly budget?: InputBudget,
+    private readonly id = "paste",
+  ) {}
+  cancel() {
+    this.revision++;
+  }
   enqueue<T>(
     read: () => Promise<T>,
     valid: () => boolean,
-    deliver: (value: T) => void,
+    deliver: (value: T) => unknown,
     fail: (error: unknown) => void,
+    reservation = pasteTextLimit,
   ) {
+    const revision = this.revision;
+    let release: (() => void) | undefined;
+    try {
+      release = this.budget?.reserve(this.id, reservation);
+    } catch (error) {
+      fail(error);
+      return Promise.resolve();
+    }
     const captured = Promise.resolve()
       .then(read)
       .then(
@@ -54,11 +72,15 @@ export class PasteQueue {
     this.tail = this.tail
       .then(async () => {
         const result = await captured;
-        if (!valid()) return;
-        if (result.ok) deliver(result.value);
-        else fail(result.error);
+        if (revision !== this.revision || !valid()) return;
+        if (result.ok) {
+          // Transfer the reservation to the sender before awaiting IPC admission.
+          release?.();
+          await deliver(result.value);
+        } else fail(result.error);
       })
-      .catch(fail);
+      .catch(fail)
+      .finally(release);
     return this.tail;
   }
 }

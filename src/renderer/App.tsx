@@ -28,7 +28,7 @@ import type {
   SessionState,
   TransferJob,
 } from "../shared/model";
-import { panes, preparePaste } from "../shared/layout";
+import { panes } from "../shared/layout";
 import { api, uuid, message } from "./api";
 import { AppContext } from "./context";
 import { WorkspaceTab, WorkspaceEditor } from "./WorkspaceTabs";
@@ -44,6 +44,8 @@ import {
   checkpointTerminal,
   restoreTerminal,
   configureTerminals,
+  sendTerminalPaste,
+  updateTerminalInput,
   ensureTerminal,
   terminals,
   disposeMissing,
@@ -261,6 +263,8 @@ export function App() {
         setActivities(event.items);
       } else if (event.kind === "activate-pane") {
         setActivation(event);
+      } else if (event.kind === "terminal-input") {
+        updateTerminalInput(event);
       } else if (event.kind === "session") {
         const known = bootRef.current?.document.workspaces.some(
           (w) =>
@@ -286,6 +290,13 @@ export function App() {
           entry.sessionInstanceId !== generation
         ) {
           entry.connectionRevision++;
+          entry.pasteQueue.cancel();
+          entry.inputRequests.clear();
+          window.dispatchEvent(
+            new CustomEvent("passport-input-changed", {
+              detail: event.state.id,
+            }),
+          );
           // Reconnecting reuses xterm's size but creates a PTY at its default
           // size. FitAddon need not emit another resize when the view is stable.
           if (event.state.status === "connected")
@@ -576,34 +587,32 @@ export function App() {
       await connectPane(paneId, host.id);
     }
   };
-  const deliverPaste = (
+  const deliverPaste = async (
     text: string,
     ids: string[],
     sessionInstanceId?: string,
   ) => {
     const failures: string[] = [];
+    const deliveries: Promise<void>[] = [];
     for (const id of [...new Set(ids)]) {
       const entry = terminals.get(id);
       try {
         if (!entry?.connected) throw new Error("연결된 터미널이 없습니다.");
         if (sessionInstanceId && entry.sessionInstanceId !== sessionInstanceId)
           throw new Error("파일 드롭 대상 터미널 연결이 변경되었습니다.");
-        const prepared = preparePaste(text);
-        entry.pasting = true;
-        entry.pasteSessionInstanceId = sessionInstanceId;
-        try {
-          entry.term.paste(prepared);
-        } finally {
-          entry.pasting = false;
-          entry.pasteSessionInstanceId = undefined;
-        }
+        deliveries.push(
+          sendTerminalPaste(id, text, sessionInstanceId).catch((error) => {
+            failures.push(message(error));
+          }),
+        );
       } catch (error) {
         failures.push(message(error));
       }
     }
-    if (failures.length) notify(new Error([...new Set(failures)].join("\n")));
     if (!sessionInstanceId && ids.includes(activePane))
       terminals.get(activePane)?.term.focus();
+    await Promise.all(deliveries);
+    if (failures.length) notify(new Error([...new Set(failures)].join("\n")));
   };
   const paste = (text: string, ids: string[]) => {
     const connected = [...new Set(ids)].filter(

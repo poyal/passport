@@ -18,6 +18,11 @@ import { api } from "./api";
 import { availableFont, terminalFontFamily } from "../shared/fonts";
 import { loadTerminalFont } from "./fonts";
 import { PasteQueue } from "../shared/paste";
+import {
+  InputBudget,
+  pasteBytes,
+  type InputStatus,
+} from "../shared/terminal-input";
 import { readControlText } from "../shared/terminal-control";
 import { resumeScreenLimit, type ResumeScreen } from "../shared/session-resume";
 type Entry = {
@@ -30,8 +35,8 @@ type Entry = {
   connectionRevision: number;
   sessionInstanceId?: string;
   unicodeWidth: UnicodeWidth;
-  pasteSessionInstanceId?: string;
   pasteQueue: PasteQueue;
+  inputRequests: Map<string, InputStatus>;
   serialize: SerializeAddon;
   appearance?: Appearance;
   appearanceKey?: string;
@@ -39,12 +44,48 @@ type Entry = {
   backspace: "DEL" | "BS";
   physicalKey?: string;
   composing: boolean;
-  pasting?: boolean;
   hydrating?: boolean;
   checkpointReady?: boolean;
   transferring?: boolean;
 };
 export const terminals = new Map<string, Entry>();
+const pasteBudget = new InputBudget();
+export function updateTerminalInput(event: InputStatus) {
+  const entry = terminals.get(event.id);
+  if (!entry || entry.sessionInstanceId !== event.generation) return;
+  if (event.status === "queued" || event.status === "sending")
+    entry.inputRequests.set(event.requestId, event);
+  else entry.inputRequests.delete(event.requestId);
+  window.dispatchEvent(
+    new CustomEvent("passport-input-changed", { detail: event.id }),
+  );
+}
+export async function sendTerminalPaste(
+  id: string,
+  text: string,
+  generation?: string,
+) {
+  const entry = terminals.get(id);
+  if (
+    !entry?.connected ||
+    entry.hydrating ||
+    entry.transferring ||
+    !entry.sessionInstanceId ||
+    (generation && generation !== entry.sessionInstanceId)
+  )
+    throw new Error("붙여넣기 대상 터미널 연결이 변경되었습니다.");
+  const release = pasteBudget.reserve(id, pasteBytes(text));
+  try {
+    await api.call("session.paste", {
+      id,
+      text,
+      sessionInstanceId: entry.sessionInstanceId,
+      bracketedPaste: entry.term.modes.bracketedPasteMode,
+    });
+  } finally {
+    release();
+  }
+}
 let settings: PassportDocument["settings"] | undefined;
 let platform: ShortcutPlatform | undefined;
 let installedFonts: string[] = [];
@@ -72,7 +113,7 @@ let pasteHandler: (
   text: string,
   ids: string[],
   sessionInstanceId?: string,
-) => void = () => {};
+) => void | Promise<void> = () => {};
 let errorHandler: (error: unknown) => void = () => {};
 export type TerminalMenuRequest = {
   id: string;
@@ -135,7 +176,8 @@ export function ensureTerminal(id: string) {
     connected: false,
     unicodeWidth: "unicode11",
     connectionRevision: 0,
-    pasteQueue: new PasteQueue(),
+    pasteQueue: new PasteQueue(pasteBudget, id),
+    inputRequests: new Map(),
     backspace: "DEL",
     composing: false,
   };
@@ -166,13 +208,13 @@ export function ensureTerminal(id: string) {
   });
   term.onData((data) => {
     if (!entry.connected || entry.hydrating) return;
+    if (data === "\x03") entry.pasteQueue.cancel();
     const physicalKey = entry.physicalKey === data;
     entry.physicalKey = undefined;
     if (entry.backspace === "BS" && data === "\x7f") data = "\b";
     // Only a physical key/composition can fan out. Device status reports and paste stay at their source.
     if (
       broadcast.includes(id) &&
-      !entry.pasting &&
       (physicalKey || (entry.composing && !data.includes("\x1b"))) &&
       !data.startsWith("\x1b[200~")
     )
@@ -184,7 +226,6 @@ export function ensureTerminal(id: string) {
         .call("session.input", {
           id,
           data,
-          sessionInstanceId: entry.pasteSessionInstanceId,
         })
         .catch(errorHandler);
   });
@@ -208,7 +249,8 @@ export function ensureTerminal(id: string) {
         !entry.hydrating &&
         entry.connectionRevision === revision,
       (value) => {
-        if (value.kind !== "empty") pasteHandler(value.text, [id]);
+        if (value.kind !== "empty")
+          return pasteHandler(value.text, [id], entry.sessionInstanceId);
       },
       errorHandler,
     );
@@ -311,6 +353,7 @@ export function ensureTerminal(id: string) {
           newline: "\x1b[13;2u",
         }[action];
         // Control actions and CLI image input belong to this pane, even during broadcast.
+        if (data === "\x03") entry.pasteQueue.cancel();
         void api.call("session.input", { id, data }).catch(errorHandler);
       }
       return false;
@@ -395,6 +438,7 @@ export function dropTerminalFiles(id: string, files: File[]) {
       entry.element.isConnected,
     (value) => pasteHandler(value.text, [id], value.sessionInstanceId),
     errorHandler,
+    262144,
   );
 }
 export function setTerminalTransfer(ids: string[], active: boolean) {
@@ -403,6 +447,7 @@ export function setTerminalTransfer(ids: string[], active: boolean) {
     if (entry) {
       entry.transferring = active;
       entry.connectionRevision++;
+      entry.pasteQueue.cancel();
     }
   }
   window.dispatchEvent(
@@ -485,6 +530,7 @@ export function applyAppearance(id: string, a: Appearance) {
 export function disposeMissing(ids: Set<string>) {
   for (const [id, e] of terminals) {
     if (!ids.has(id)) {
+      e.pasteQueue.cancel();
       e.resize?.disconnect();
       e.highlights?.dispose();
       e.term.dispose();

@@ -8,6 +8,10 @@ module.exports = async (context) => {
     (platform === "darwin" && arch === "arm64")
   ))
     throw new Error(`Unsupported package target: ${platform}-${arch}`);
+  const { patchPtyInput } = await import("./patch-pty-input.mjs");
+  await patchPtyInput(
+    path.join(context.packager.projectDir, "node_modules/node-pty"),
+  );
   const root = path.resolve("resources/terminal");
   const helper = path.join(
     root,

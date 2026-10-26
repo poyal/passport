@@ -521,6 +521,7 @@ export type TransferJob = {
   cleanup?: string;
 };
 export type AppEvent =
+  | import("./terminal-input").InputStatus
   | import("./session-resume").ResumeEvent
   | { kind: "share-changed" }
   | { kind: "share-open" }
@@ -773,6 +774,10 @@ export interface Calls {
       sessionInstanceId?: string;
     };
     output: void;
+  };
+  "session.paste": {
+    input: import("./terminal-input").SessionPaste;
+    output: { requestId: string };
   };
   "session.resize": {
     input: { id: string; cols: number; rows: number };

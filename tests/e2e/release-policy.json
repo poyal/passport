@@ -3,6 +3,16 @@
   "description": "Explicit release test inventory. IDs remain stable when titles are deliberately updated. Entries without overrides are required on macOS and Windows in hidden mode.",
   "tests": [
     {
+      "id": "large-paste.local-integrity",
+      "file": "large-paste.spec.ts",
+      "title": "4 MiB clipboard paste reaches the local PTY intact and rejects oversize and stale generations"
+    },
+    {
+      "id": "large-paste.ssh-fifo",
+      "file": "large-paste.spec.ts",
+      "title": "SSH paste preserves FIFO, cancellation and reconnect isolation while another pane responds"
+    },
+    {
       "id": "workspace-identity.plain-ai-icons",
       "file": "workspace-identity.spec.ts",
       "title": "plain terminals detect typed AI commands without notification or resume profiles"

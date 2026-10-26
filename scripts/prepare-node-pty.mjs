@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
+import { patchPtyInput } from "./patch-pty-input.mjs";
 
 const originalConptySource =
   "52c893b689ab3210c0961e2a6aa805a82350003767b21069b164926b5becd4e2";
@@ -207,6 +208,7 @@ if (
   process.argv[1] &&
   path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 ) {
+  await patchPtyInput(path.resolve("node_modules/node-pty"));
   if (process.platform === "win32") {
     assert.equal(
       process.env.npm_config_arch || process.arch,

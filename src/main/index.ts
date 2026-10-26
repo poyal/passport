@@ -23,6 +23,11 @@ import { randomUUID } from "node:crypto";
 import { getFonts } from "font-list";
 import { z } from "zod";
 import {
+  sessionPasteSchema,
+  InputBudget,
+  pasteTextLimit,
+} from "../shared/terminal-input";
+import {
   documentSchema,
   idSchema,
   secretSchema,
@@ -321,6 +326,7 @@ function startSessionLog(id: string) {
   if (group) resume.logGroup(id, group);
 }
 let quitting = false;
+const clipboardInputBudget = new InputBudget();
 let shutdown: Promise<void> | undefined;
 let shutdownComplete = false;
 const emit = (event: AppEvent, replay = false) => {
@@ -384,8 +390,12 @@ const emit = (event: AppEvent, replay = false) => {
     logs?.append(event.id, event.data);
     activity?.observe(event.id, event.data);
   }
-  if (event.kind === "output" || event.kind === "session") {
-    const id = event.kind === "output" ? event.id : event.state.id;
+  if (
+    event.kind === "output" ||
+    event.kind === "session" ||
+    event.kind === "terminal-input"
+  ) {
+    const id = event.kind === "session" ? event.state.id : event.id;
     const workspace = workspaceFor(id);
     const moving = workspace && moves.get(workspace.id);
     if (moving) {
@@ -668,6 +678,7 @@ const schemas: Record<Call, z.ZodType> = {
     binary: z.boolean().optional(),
     sessionInstanceId: idSchema.optional(),
   }),
+  "session.paste": sessionPasteSchema,
   "session.resize": z.object({
     id: idSchema,
     cols: z.number().int().min(2).max(1000),
@@ -833,6 +844,7 @@ async function call<K extends Call>(
     [
       "session.close",
       "session.input",
+      "session.paste",
       "session.resize",
       "session.ack",
       "logs.record",
@@ -1306,15 +1318,26 @@ async function call<K extends Call>(
     case "session.input":
       if (
         i.sessionInstanceId &&
-        (!locals.sessions.get(i.id)?.alive ||
+        (states.get(i.id)?.status !== "connected" ||
           moves.has(workspaceFor(i.id)?.id || "") ||
-          locals.sessions.get(i.id)?.launch?.snapshot.sessionInstanceId !==
-            i.sessionInstanceId)
+          states.get(i.id)?.generation !== i.sessionInstanceId)
       )
         throw new Error("파일 드롭 대상 터미널 연결이 변경되었습니다.");
       if (locals.sessions.has(i.id)) locals.input(i.id, i.data);
       else sessions.input(i.id, i.data, i.binary);
       return;
+    case "session.paste": {
+      if (
+        states.get(i.id)?.status !== "connected" ||
+        states.get(i.id)?.generation !== i.sessionInstanceId ||
+        moves.has(workspaceFor(i.id)?.id || "")
+      )
+        throw new Error("붙여넣기 대상 터미널 연결이 변경되었습니다.");
+      const requestId = locals.sessions.has(i.id)
+        ? locals.paste(i.id, i.text, i.bracketedPaste, i.sessionInstanceId)
+        : sessions.paste(i.id, i.text, i.bracketedPaste, i.sessionInstanceId);
+      return { requestId };
+    }
     case "session.resize":
       if (locals.sessions.has(i.id)) locals.resize(i.id, i.cols, i.rows);
       else sessions.resize(i.id, i.cols, i.rows);
@@ -1435,23 +1458,28 @@ async function call<K extends Call>(
         )
           throw new Error("붙여넣기 대상 터미널 연결이 변경되었습니다.");
       };
-      return prepareTerminalClipboard({
-        read: () => clipboard.read(),
-        readNativeFiles: platform.clipboard.readNativeFiles,
-        toPNG: (bytes) => {
-          const image = nativeImage.createFromBuffer(bytes);
-          const size = image.getSize();
-          if (image.isEmpty() || size.width * size.height > 64_000_000)
-            throw new Error(
-              "이미지가 손상되었거나 6400만 픽셀을 초과했습니다.",
-            );
-          return image.toPNG();
-        },
-        userData: app.getPath("userData"),
-        platform: process.platform,
-        shell: local?.launch?.snapshot.shell,
-        check,
-      });
+      const release = clipboardInputBudget.reserve(i.id, pasteTextLimit);
+      try {
+        return await prepareTerminalClipboard({
+          read: () => clipboard.read(),
+          readNativeFiles: platform.clipboard.readNativeFiles,
+          toPNG: (bytes) => {
+            const image = nativeImage.createFromBuffer(bytes);
+            const size = image.getSize();
+            if (image.isEmpty() || size.width * size.height > 64_000_000)
+              throw new Error(
+                "이미지가 손상되었거나 6400만 픽셀을 초과했습니다.",
+              );
+            return image.toPNG();
+          },
+          userData: app.getPath("userData"),
+          platform: process.platform,
+          shell: local?.launch?.snapshot.shell,
+          check,
+        });
+      } finally {
+        release();
+      }
     }
     case "clipboard.write":
       await clipboard.writeText(i.text);
@@ -1782,9 +1810,21 @@ async function call<K extends Call>(
       if (!workspace || owners.get(workspace.id) !== caller.id)
         throw new Error("이 창의 작업 탭만 이동할 수 있습니다.");
       if (moves.has(workspace.id)) throw new Error("창 이동이 진행 중입니다.");
+      if (
+        panes(workspace.root).some(
+          (pane) => locals.inputBusy(pane.id) || sessions.inputBusy(pane.id),
+        )
+      )
+        throw new Error("터미널 입력 전송이 끝난 뒤 창을 이동하세요.");
       const target = i.target ? windows.get(i.target) : await createWindow();
       if (!target || target.id === caller.id)
         throw new Error("다른 창을 선택하세요.");
+      if (
+        panes(workspace.root).some(
+          (pane) => locals.inputBusy(pane.id) || sessions.inputBusy(pane.id),
+        )
+      )
+        throw new Error("터미널 입력 전송이 끝난 뒤 창을 이동하세요.");
       const token = randomUUID();
       const timer = setTimeout(() => {
         const pending = moves.get(workspace.id);
@@ -2225,7 +2265,7 @@ void app
     };
     sessions = new Sessions(store, confirm, emit, detectedOS, {
       enabled: () => resume.enabled,
-      begin: (id) => resume.begin(id, randomUUID()),
+      begin: (id, generation) => resume.begin(id, generation),
       previousCwd: (id, host) =>
         resume.sshCwd(id, store.fingerprint(host.address, host.port)),
       hydrate: async (id, host) => {

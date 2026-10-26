@@ -34,6 +34,7 @@ import {
 } from "../scripts/release-publish.mjs";
 import { runCommand } from "../scripts/release-process.mjs";
 import { verifyEncryption } from "../scripts/prepare-mac-keychain.mjs";
+import { patchPtyInput } from "../scripts/patch-pty-input.mjs";
 import { EventEmitter } from "node:events";
 import { PassThrough } from "node:stream";
 import { closeCleanly } from "./fixtures/electron-exit.ts";
@@ -113,6 +114,51 @@ test("release and package configuration allow only the two supported targets", a
     checkResources({ electronPlatformName: "win32", arch: Arch.ia32 }),
     /Unsupported package target/,
   );
+});
+
+test("PTY input patch is repeatable and rejects unknown versions or modified completion code", async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "passport-pty-patch-"));
+  try {
+    await fs.mkdir(path.join(root, "lib"));
+    await fs.writeFile(
+      path.join(root, "package.json"),
+      JSON.stringify({ version: "1.1.0" }),
+    );
+    for (const name of ["unixTerminal.js", "windowsTerminal.js"])
+      await fs.copyFile(
+        path.join("node_modules/node-pty/lib", name),
+        path.join(root, "lib", name),
+      );
+    await patchPtyInput(root);
+    const before = await fs.readFile(
+      path.join(root, "lib/unixTerminal.js"),
+      "utf8",
+    );
+    await patchPtyInput(root);
+    assert.equal(
+      await fs.readFile(path.join(root, "lib/unixTerminal.js"), "utf8"),
+      before,
+    );
+    await fs.writeFile(
+      path.join(root, "package.json"),
+      JSON.stringify({ version: "2.0.0" }),
+    );
+    await assert.rejects(patchPtyInput(root), /Review the node-pty/);
+    await fs.writeFile(
+      path.join(root, "package.json"),
+      JSON.stringify({ version: "1.1.0" }),
+    );
+    await fs.writeFile(
+      path.join(root, "lib/unixTerminal.js"),
+      before.replace(
+        "this._writeStream.write(data, callback)",
+        "this._writeStream.write(data, changedCallback)",
+      ),
+    );
+    await assert.rejects(patchPtyInput(root), /Review PTY input patch/);
+  } finally {
+    await fs.rm(root, { recursive: true, force: true });
+  }
 });
 
 test("Windows PTY audit scopes paths and distinguishes reused process IDs", () => {
@@ -374,7 +420,7 @@ test("GUI policy records platform exclusions and optional skips explicitly", () 
     platform: "darwin",
     mode: "hidden",
   });
-  assert.equal(coverage.passed, 98);
+  assert.equal(coverage.passed, 100);
   assert.equal(coverage.skipped, 10);
   assert.equal(
     coverage.tests.filter(

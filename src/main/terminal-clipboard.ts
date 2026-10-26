@@ -1,6 +1,11 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
+import {
+  pasteBytes,
+  pasteTextLimit,
+  pasteSizeMessage,
+} from "../shared/terminal-input";
 import type { ShellId } from "../shared/terminal-config";
 import { quotePastePaths, type TerminalClipboard } from "../shared/paste";
 import {
@@ -65,15 +70,19 @@ export async function prepareTerminalClipboard(options: {
     return { kind: "image", path: file, text };
   }
   const parts: string[] = [];
+  let bytes = 0;
   for (const item of items) {
-    if (item.types.includes("text/plain"))
-      parts.push(
-        await (await clipboardBlob(item, "text/plain", 4 * 1024 * 1024)).text(),
-      );
+    if (item.types.includes("text/plain")) {
+      const blob = await clipboardBlob(item, "text/plain", Infinity);
+      if (blob.size > pasteTextLimit - bytes) throw new Error(pasteSizeMessage);
+      const text = await blob.text();
+      bytes += pasteBytes(text);
+      parts.push(text);
+      bytes++; // separator before the next item
+    }
   }
   const text = parts.join("\n");
-  if (text.length > 4 * 1024 * 1024)
-    throw new Error("붙여넣을 텍스트가 4MB를 초과했습니다.");
+  pasteBytes(text);
   options.check();
   return text ? { kind: "text", text } : { kind: "empty" };
 }

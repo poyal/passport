@@ -63,6 +63,31 @@ import {
   ToggleField,
 } from "./components";
 export const dragMime = "application/x-passport-layout";
+function TerminalInputProgress({ id }: { id: string }) {
+  const [, changed] = useState(0);
+  useEffect(() => {
+    const listener = (event: Event) => {
+      if ((event as CustomEvent<string>).detail === id)
+        changed((value) => value + 1);
+    };
+    window.addEventListener("passport-input-changed", listener);
+    return () => window.removeEventListener("passport-input-changed", listener);
+  }, [id]);
+  const requests = [...(terminals.get(id)?.inputRequests.values() ?? [])];
+  if (!requests.length) return null;
+  const active = requests.find((request) => request.status === "sending");
+  return (
+    <div className="connection-banner terminal-input-progress" role="status">
+      <span>
+        {active
+          ? `붙여넣기 전송 중 · ${Math.floor((active.bytes / Math.max(1, active.total)) * 100)}%`
+          : "붙여넣기 대기 중"}
+        {requests.length > 1 && ` · ${requests.length - 1}개 대기`} · Ctrl+C로
+        취소
+      </span>
+    </div>
+  );
+}
 export const dragGroupMime = "application/x-passport-group";
 export const dragWorkspaceMime = (id: string) =>
   `application/x-passport-workspace-${id}`;
@@ -758,6 +783,7 @@ function Leaf({
           </div>
         )}
       </div>
+      <TerminalInputProgress id={pane.id} />
       {app.sessionStates[pane.id]?.resumeMessage && (
         <div className="connection-banner" role="status">
           <span>{app.sessionStates[pane.id]?.resumeMessage}</span>

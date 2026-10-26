@@ -1,10 +1,11 @@
 import { prepareRemoteResume, ResumeOutput } from "./ssh-resume";
 import { detectRemoteOS } from "./remote-os";
 import { Client, type ClientChannel, type Algorithms } from "ssh2";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { StringDecoder } from "node:string_decoder";
 import type { AppEvent, Host, Secret } from "../shared/model";
 import type { Store } from "./store";
+import { TerminalInputQueue } from "./terminal-input";
 
 export type TrustPrompt = (host: Host, fingerprint: string) => Promise<boolean>;
 const sshAlgorithms: Algorithms = {
@@ -103,6 +104,7 @@ export function connectSSH(
 }
 type Session = {
   id: string;
+  generation: string;
   host: Host;
   secret: Secret;
   controller: AbortController;
@@ -121,6 +123,7 @@ type Session = {
   filter?: ResumeOutput;
   cleanup?: () => Promise<void>;
   readyTimer?: ReturnType<typeof setTimeout>;
+  inputQueue?: TerminalInputQueue;
 };
 export class Sessions {
   readonly sessions = new Map<string, Session>();
@@ -131,7 +134,7 @@ export class Sessions {
     readonly onDetectedOS?: (host: Host, os: string) => void,
     readonly resume?: {
       enabled: () => boolean;
-      begin: (id: string) => void;
+      begin: (id: string, generation: string) => void;
       cwd: (id: string, cwd: string) => void;
       previousCwd: (id: string, host: Host) => string | undefined;
       hydrate?: (id: string, host: Host) => Promise<void>;
@@ -146,6 +149,7 @@ export class Sessions {
       throw new Error("최대 32개 SSH 세션을 열 수 있습니다.");
     const s: Session = {
       id,
+      generation: randomUUID(),
       host,
       secret,
       controller: new AbortController(),
@@ -167,11 +171,16 @@ export class Sessions {
     message?: string,
   ) {
     s.status = status;
-    this.emit({ kind: "session", state: { id: s.id, status, message } });
+    this.emit({
+      kind: "session",
+      state: { id: s.id, generation: s.generation, status, message },
+    });
   }
   private async connect(s: Session, startup?: string) {
     if (s.intentional) return;
-    this.resume?.begin(s.id);
+    s.inputQueue?.dispose();
+    const generation = (s.generation = randomUUID());
+    this.resume?.begin(s.id, generation);
     this.status(
       s,
       "connecting",
@@ -185,11 +194,11 @@ export class Sessions {
         this.confirm,
         s.controller.signal,
       );
-      s.client = client;
-      if (s.intentional) {
+      if (s.intentional || s.generation !== generation) {
         client.end();
         return;
       }
+      s.client = client;
       if (this.resume?.enabled() && s.attempts === 0)
         await this.resume.hydrate?.(s.id, s.host);
       let prepared: Awaited<ReturnType<typeof prepareRemoteResume>> | undefined;
@@ -208,12 +217,11 @@ export class Sessions {
           );
         }
       }
-      if (s.intentional) {
+      if (s.intentional || s.generation !== generation) {
         await prepared?.cleanup();
         client.end();
         return;
       }
-      s.cleanup = prepared?.cleanup;
       let ready = false;
       const stream = await new Promise<ClientChannel>((resolve, reject) => {
         const callback = (err: Error | undefined, channel: ClientChannel) =>
@@ -234,6 +242,13 @@ export class Sessions {
             callback,
           );
       });
+      if (s.intentional || s.generation !== generation) {
+        await prepared?.cleanup();
+        stream.close();
+        client.end();
+        return;
+      }
+      s.cleanup = prepared?.cleanup;
       s.filter = prepared
         ? new ResumeOutput(prepared.nonce, (kind, value) => {
             if (s.intentional || s.client !== client) return;
@@ -242,7 +257,7 @@ export class Sessions {
             if (kind === "ready" && !ready) {
               ready = true;
               clearTimeout(s.readyTimer);
-              if (startup) stream.write(startup + "\r");
+              if (startup) s.inputQueue?.input(startup + "\r");
               void prepared?.cleanup();
             }
           })
@@ -255,11 +270,31 @@ export class Sessions {
               "SSH 셸 준비 신호가 없어 시작 스니펫을 실행하지 않았습니다. 서버 시작 설정을 확인하세요.",
             );
         }, 5000);
-      if (s.intentional) {
-        stream.close();
-        return;
-      }
       s.stream = stream;
+      s.inputQueue = new TerminalInputQueue(
+        s.id,
+        (data, done) => {
+          if (
+            s.stream !== stream ||
+            s.intentional ||
+            s.status !== "connected"
+          ) {
+            done(new Error("SSH 터미널 연결이 변경되었습니다."));
+            return;
+          }
+          stream.write(data, done);
+        },
+        this.emit,
+        (error) => {
+          if (s.stream !== stream || s.intentional) return;
+          this.close(s.id);
+          this.status(
+            s,
+            "error",
+            `터미널 입력 전송에 실패했습니다: ${error.message}`,
+          );
+        },
+      );
       this.status(s, "connected");
       if (this.onDetectedOS)
         void detectRemoteOS(client)
@@ -269,6 +304,7 @@ export class Sessions {
           })
           .catch(() => {});
       stream.on("data", (data: Buffer) => {
+        if (s.stream !== stream || s.intentional) return;
         const decoded = s.decoder.write(data);
         s.queue += s.filter ? s.filter.push(decoded) : decoded;
         if (s.inFlight + Buffer.byteLength(s.queue) >= 256 * 1024) {
@@ -278,6 +314,7 @@ export class Sessions {
         this.schedule(s);
       });
       stream.stderr.on("data", (data: Buffer) => {
+        if (s.stream !== stream || s.intentional) return;
         const decoded = s.decoder.write(data);
         s.queue += s.filter ? s.filter.push(decoded) : decoded;
         if (s.inFlight + Buffer.byteLength(s.queue) >= 256 * 1024) {
@@ -287,6 +324,8 @@ export class Sessions {
         this.schedule(s);
       });
       stream.once("close", () => {
+        if (s.stream !== stream) return;
+        s.inputQueue?.dispose();
         const tail = s.decoder.end();
         s.queue += s.filter ? s.filter.push(tail) + s.filter.end() : tail;
         clearTimeout(s.readyTimer);
@@ -302,14 +341,18 @@ export class Sessions {
         }
         client.end();
       });
-      if (startup && !prepared) stream.write(startup + "\r");
-      client.once("close", () => this.disconnected(s));
+      if (startup && !prepared) s.inputQueue.input(startup + "\r");
+      client.once("close", () => {
+        if (s.client === client) this.disconnected(s);
+      });
       client.on("error", (error) => {
-        if (!s.intentional)
+        if (!s.intentional && s.client === client) {
+          s.inputQueue?.dispose();
           this.status(s, "error", `SSH 연결 오류: ${error.message}`);
+        }
       });
     } catch (error) {
-      if (s.intentional) return;
+      if (s.intentional || s.generation !== generation) return;
       const message =
         error instanceof Error ? error.message : "SSH 연결에 실패했습니다.";
       this.status(s, "error", message);
@@ -319,6 +362,7 @@ export class Sessions {
   }
   private disconnected(s: Session) {
     if (s.intentional) return;
+    s.inputQueue?.dispose();
     this.status(s, "disconnected", "연결이 종료되었습니다.");
     this.reconnect(s);
   }
@@ -359,7 +403,16 @@ export class Sessions {
     const s = this.sessions.get(id);
     if (!s?.stream || s.status !== "connected")
       throw new Error("연결된 터미널이 아닙니다.");
-    s.stream.write(Buffer.from(data, binary ? "latin1" : "utf8"));
+    s.inputQueue!.input(data, binary);
+  }
+  paste(id: string, text: string, bracketed: boolean, generation: string) {
+    const s = this.sessions.get(id);
+    if (!s?.inputQueue || s.status !== "connected")
+      throw new Error("연결된 터미널이 아닙니다.");
+    return s.inputQueue.paste(text, bracketed, generation);
+  }
+  inputBusy(id: string) {
+    return !!this.sessions.get(id)?.inputQueue?.busy;
   }
   resize(id: string, cols: number, rows: number) {
     const s = this.sessions.get(id);
@@ -372,6 +425,7 @@ export class Sessions {
     const s = this.sessions.get(id);
     if (!s) return;
     s.intentional = true;
+    s.inputQueue?.dispose();
     clearTimeout(s.readyTimer);
     void s.cleanup?.();
     clearTimeout(s.retry);

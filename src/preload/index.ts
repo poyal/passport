@@ -71,6 +71,7 @@ const names: Call[] = [
   "window.snapshot",
   "session.close",
   "session.input",
+  "session.paste",
   "session.resize",
   "session.ack",
   "files.connections",

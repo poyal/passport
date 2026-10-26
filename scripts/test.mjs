@@ -1,8 +1,10 @@
 import { spawn } from "node:child_process";
 import electron from "electron";
 import checkTestEnvironment from "./check-test-environment.mjs";
+import { patchPtyInput } from "./patch-pty-input.mjs";
 import "./patch-ssh2.mjs";
 await checkTestEnvironment();
+await patchPtyInput("node_modules/node-pty");
 const child = spawn(
   electron,
   ["node_modules/vitest/vitest.mjs", "run", ...process.argv.slice(2)],
