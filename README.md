@@ -30,10 +30,10 @@
 
 | 컴퓨터                                       | 선택할 파일                | 다운로드 안내                                                                      |
 | -------------------------------------------- | -------------------------- | ---------------------------------------------------------------------------------- |
-| Mac · Apple Silicon(M 시리즈), macOS 14 이상 | `Passport-…-mac-arm64.dmg` | [Mac 1.3.7](https://github.com/poyal/passport/releases/tag/v1.3.7)                   |
-| Windows 11 · Intel / AMD(x64)                | `Passport-…-win-x64.exe`   | [Windows 1.3.7](https://github.com/poyal/passport/releases/tag/v1.3.7) |
+| Mac · Apple Silicon(M 시리즈), macOS 14 이상 | `Passport-…-mac-arm64.dmg` | [Mac 1.3.8](https://github.com/poyal/passport/releases/tag/v1.3.8)                   |
+| Windows 11 · Intel / AMD(x64)                | `Passport-…-win-x64.exe`   | [Windows 1.3.8](https://github.com/poyal/passport/releases/tag/v1.3.8) |
 
-현재 공개 설치본은 **Mac·Windows 1.3.7**입니다. Windows의 Ctrl+C 복사·중단과 일반 터미널의 AI 실행 감지를 개선했습니다. 이전 세션 복원·로그 묶음·터미널 쪽지 메뉴를 양쪽 OS에서 사용할 수 있습니다. Intel Mac은 지원하지 않습니다. [플랫폼별 배포 상태와 변경 사항](https://github.com/poyal/passport/releases).
+현재 공개 설치본은 **Mac·Windows 1.3.8**입니다. UTF-8 기준 4 MiB 붙여넣기, 터미널 입력 순서 보존과 전송 진행 표시·취소를 지원합니다. 이전 세션 복원·로그 묶음·터미널 쪽지 메뉴를 양쪽 OS에서 사용할 수 있습니다. Intel Mac은 지원하지 않습니다. [플랫폼별 배포 상태와 변경 사항](https://github.com/poyal/passport/releases).
 
 **그룹미설정** 필터·AI 자동 탭 아이콘·템플릿 구성 태그와 16:9 미리보기는 **Mac·Windows 1.3.5**부터 사용합니다.
 
@@ -81,7 +81,7 @@ Passport는 저장한 인증 정보와 AI 세션 복원 정보를 암호화할 �
 
 ### Windows에서 PC 보호·신뢰할 수 없음 경고가 나올 때
 
-1. [Windows 공식 릴리즈](https://github.com/poyal/passport/releases/tag/v1.3.7)에서 받은 `Passport-…-win-x64.exe`인지 확인합니다.
+1. [Windows 공식 릴리즈](https://github.com/poyal/passport/releases/tag/v1.3.8)에서 받은 `Passport-…-win-x64.exe`인지 확인합니다.
 2. 설치 파일을 실행할 때 **Windows의 PC 보호** 또는 인식할 수 없는 앱이라는 SmartScreen 경고가 표시되면 **추가 정보**를 누릅니다.
 3. 앱 이름이 다운로드한 Passport 설치 파일인지 확인한 뒤 **실행**을 선택합니다. 영문 Windows에서는 **More info → Run anyway**입니다. 서명이 없어 게시자는 **알 수 없는 게시자**로 표시될 수 있습니다.
 4. 설치를 마친 뒤 시작 메뉴에서 **Passport**를 실행합니다.

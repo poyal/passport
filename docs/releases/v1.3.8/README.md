@@ -35,7 +35,7 @@ Mac·Windows 1.3.8의 사용자 매뉴얼입니다. 배포 소스와 검사 범�
 | Mac · Apple Silicon(M 시리즈), macOS 14 이상 | `Passport-…-mac-arm64.dmg` | [Mac 1.3.8](https://github.com/poyal/passport/releases/tag/v1.3.8)                   |
 | Windows 11 · Intel / AMD(x64)                | `Passport-…-win-x64.exe`   | [Windows 1.3.8](https://github.com/poyal/passport/releases/tag/v1.3.8) |
 
-**Mac·Windows 1.3.8** 릴리즈 후보 문서입니다. 정식 검증·공개 다운로드 확인은 아직 완료하지 않았습니다. UTF-8 기준 4 MiB 붙여넣기와 터미널 입력 순서 보존을 포함합니다. 이전 세션 복원·로그 묶음·터미널 쪽지 메뉴를 양쪽 OS에서 사용할 수 있습니다. Intel Mac은 지원하지 않습니다. [플랫폼별 배포 상태와 변경 사항](https://github.com/poyal/passport/releases).
+현재 공개 설치본은 **Mac·Windows 1.3.8**입니다. UTF-8 기준 4 MiB 붙여넣기, 터미널 입력 순서 보존과 전송 진행 표시·취소를 지원합니다. 이전 세션 복원·로그 묶음·터미널 쪽지 메뉴를 양쪽 OS에서 사용할 수 있습니다. Intel Mac은 지원하지 않습니다. [플랫폼별 배포 상태와 변경 사항](https://github.com/poyal/passport/releases).
 
 **그룹미설정** 필터·AI 자동 탭 아이콘·템플릿 구성 태그와 16:9 미리보기는 **Mac·Windows 1.3.5**부터 사용합니다.
 
