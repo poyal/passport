@@ -273,7 +273,7 @@ cp.execFileSync(helper, ['codex-hook'], {input:JSON.stringify({hook_event_name:'
 let input = '';
 if (process.stdin.isTTY) process.stdin.setRawMode(true);
 process.stdin.setEncoding('utf8'); process.stdin.on('data', data => { input += data; if (input.includes('exit')) process.exit(0); });
-fs.appendFileSync(${JSON.stringify(capture)}, JSON.stringify({id,args,cwd:process.cwd(),pid:process.pid})+'\\n');
+fs.appendFileSync(${JSON.stringify(capture)}, JSON.stringify({id,args,cwd:process.cwd(),pid:process.pid,paneId:process.env.PASSPORT_PANE_ID})+'\\n');
 console.log('AGENT_RUNNING:'+id);
 console.log('AGENT_READY:'+process.pid);
 setInterval(()=>{},1000);
@@ -367,6 +367,7 @@ setInterval(()=>{},1000);
               args: string[];
               cwd: string;
               pid: number;
+              paneId: string;
             },
         );
     await expect.poll(async () => (await captures()).length).toBe(2);
@@ -381,7 +382,15 @@ setInterval(()=>{},1000);
       }, target);
     }
     await expect.poll(async () => (await captures()).length).toBe(4);
-    const resumed = (await captures()).slice(2);
+    // Both shells start asynchronously. Match captures to their owning panes;
+    // process readiness order is not a session restoration contract.
+    const resumedCaptures = (await captures()).slice(2);
+    expect(resumedCaptures.map((r) => r.paneId).sort()).toEqual(
+      targets.map((target) => target.paneId).sort(),
+    );
+    const resumed = targets.map((target) =>
+      resumedCaptures.find((r) => r.paneId === target.paneId)!,
+    );
     expect(resumed.map((r) => r.id)).toEqual(originals.map((r) => r.id));
     expect(resumed[0].args).not.toContain("-a");
     expect(resumed[1].args.slice(-8)).toEqual([

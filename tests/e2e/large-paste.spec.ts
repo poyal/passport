@@ -134,7 +134,9 @@ process.stdout.write('\\x1b[?2004hPASTE_READY\\r\\n');
     .poll(
       async () =>
         JSON.parse(await fs.readFile(result, "utf8").catch(() => "{}")),
-      { timeout: 10000 },
+      // Windows Node's console reader takes about 29 s for this Unicode body;
+      // keep the global GUI and shutdown deadlines unchanged.
+      { timeout: process.platform === "win32" ? 35000 : 10000 },
     )
     .toEqual({ bytes: Buffer.byteLength(expected), hash: digest(expected) });
   await expect(pane.locator(".terminal-input-progress")).toHaveCount(0);

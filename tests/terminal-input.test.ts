@@ -299,53 +299,61 @@ it("Windows PTY completion waits for readiness and the input socket callback", (
   expect(done).toHaveBeenCalledTimes(1);
 });
 
-it("delivers 4 MiB of Unicode through a real local PTY with an exact byte hash", async () => {
-  const unit = "한글💻e\u0301";
-  const text =
-    unit.repeat(Math.floor(pasteTextLimit / Buffer.byteLength(unit))) +
-    "a".repeat(pasteTextLimit % Buffer.byteLength(unit));
-  const body = Buffer.from(text);
-  expect(body.length).toBe(pasteTextLimit);
-  const expected = Buffer.from(pasteStart + text + pasteEnd);
-  const code = `process.stdin.setRawMode(true); const hash = require('node:crypto').createHash('sha256'); let bytes = 0; process.stdin.on('data', chunk => { bytes += chunk.length; hash.update(chunk); if (bytes >= ${expected.length}) { process.stdout.write('RESULT:' + bytes + ':' + hash.digest('hex') + '\\n'); process.stdin.pause(); } }); process.stdout.write('READY\\n');`;
-  const terminal = pty.spawn(
-    process.env.npm_node_execpath || process.execPath,
-    ["-e", code],
-    {
-      name: "xterm-256color",
-      cols: 100,
-      rows: 30,
-      useConptyDll: process.platform === "win32",
-      env: localTerminalEnv(),
-    },
-  );
-  let output = "";
-  terminal.onData((data) => {
-    output += data;
-  });
-  const exit = new Promise<void>((resolve) =>
-    terminal.onExit(() => setImmediate(resolve)),
-  );
-  const errors: Error[] = [];
-  const queue = new TerminalInputQueue(
-    "native",
-    ptyInputWriter(terminal),
-    () => {},
-    (error) => errors.push(error),
-    undefined,
-    new InputBudget(),
-  );
-  try {
-    await expect.poll(() => output, { timeout: 5000 }).toContain("READY");
-    queue.paste(text, true, "generation");
-    await expect
-      .poll(() => output, { timeout: 10000 })
-      .toContain(`RESULT:${expected.length}:${hash(expected)}`);
-    await expect.poll(() => queue.busy).toBe(false);
-    expect(errors).toEqual([]);
-  } finally {
-    queue.dispose();
-    terminal.kill();
-    await exit;
-  }
-});
+it(
+  "delivers 4 MiB of Unicode through a real local PTY with an exact byte hash",
+  async () => {
+    const unit = "한글💻e\u0301";
+    const text =
+      unit.repeat(Math.floor(pasteTextLimit / Buffer.byteLength(unit))) +
+      "a".repeat(pasteTextLimit % Buffer.byteLength(unit));
+    const body = Buffer.from(text);
+    expect(body.length).toBe(pasteTextLimit);
+    const expected = Buffer.from(pasteStart + text + pasteEnd);
+    const code = `process.stdin.setRawMode(true); const hash = require('node:crypto').createHash('sha256'); let bytes = 0; process.stdin.on('data', chunk => { bytes += chunk.length; hash.update(chunk); if (bytes >= ${expected.length}) { process.stdout.write('RESULT:' + bytes + ':' + hash.digest('hex') + '\\n'); process.stdin.pause(); } }); process.stdout.write('READY\\n');`;
+    const terminal = pty.spawn(
+      process.env.npm_node_execpath || process.execPath,
+      ["-e", code],
+      {
+        name: "xterm-256color",
+        cols: 100,
+        rows: 30,
+        useConptyDll: process.platform === "win32",
+        env: localTerminalEnv(),
+      },
+    );
+    let output = "";
+    terminal.onData((data) => {
+      output += data;
+    });
+    const exit = new Promise<void>((resolve) =>
+      terminal.onExit(() => setImmediate(resolve)),
+    );
+    const errors: Error[] = [];
+    const queue = new TerminalInputQueue(
+      "native",
+      ptyInputWriter(terminal),
+      () => {},
+      (error) => errors.push(error),
+      undefined,
+      new InputBudget(),
+    );
+    try {
+      await expect.poll(() => output, { timeout: 5000 }).toContain("READY");
+      queue.paste(text, true, "generation");
+      // Windows Node reads Unicode through the console input API. A real 4 MiB
+      // read takes about 29 s on the release host, after transport writes finish.
+      await expect
+        .poll(() => output, {
+          timeout: process.platform === "win32" ? 35000 : 10000,
+        })
+        .toContain(`RESULT:${expected.length}:${hash(expected)}`);
+      await expect.poll(() => queue.busy).toBe(false);
+      expect(errors).toEqual([]);
+    } finally {
+      queue.dispose();
+      terminal.kill();
+      await exit;
+    }
+  },
+  process.platform === "win32" ? 45000 : 20000,
+);
