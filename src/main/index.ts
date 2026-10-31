@@ -1933,9 +1933,14 @@ async function createWindow(withLocalTerminal = false) {
     executable: process.execPath,
     packaged: app.isPackaged,
   };
+  const offscreenWindow =
+    e2eWindowMode === "hidden" && platform.desktop.offscreenForHiddenWindows;
   const win = new BrowserWindow({
     ...platform.desktop.windowOptions(desktopContext),
     ...testWindowOptions(e2eWindowMode),
+    // Offscreen painting uses the outer bounds. Windows' invisible resize
+    // border otherwise adds a pixel at fractional desktop scale factors.
+    ...(offscreenWindow ? { frame: false, thickFrame: false } : {}),
     width: 1440,
     height: 900,
     minWidth: 1024,
@@ -1949,9 +1954,7 @@ async function createWindow(withLocalTerminal = false) {
       sandbox: true,
       webSecurity: true,
       backgroundThrottling: !e2eWindowMode,
-      offscreen:
-        e2eWindowMode === "hidden" &&
-        platform.desktop.offscreenForHiddenWindows,
+      offscreen: offscreenWindow,
     },
   });
   platform.desktop.configureWindow(win, desktopContext, e2eWindowMode);

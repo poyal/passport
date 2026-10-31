@@ -167,7 +167,7 @@ GUI 시험 소스는 **`tests/e2e/` 하나**입니다. 릴리즈는 같은 시�
 
 빌드된 앱에는 `node scripts/e2e.mjs [--show 또는 --desktop] <spec>`을 사용할 수 있습니다. `PASSPORT_E2E_EXECUTABLE`에 검증할 패키지의 실행 파일 절대 경로를 지정하면 격리 데이터로 그 앱을 검사합니다. 숨김 모드를 지원하지 않는 예전 바이너리는 실행 전에 거부하며 자동으로 창 표시 모드로 바꾸지 않습니다. 설치된 사용자 앱을 임의로 교체하지 않습니다.
 
-Windows 숨김 검사는 Electron의 [offscreen 렌더링](https://www.electronjs.org/docs/latest/tutorial/offscreen-rendering)을 사용합니다. Chromium 152는 표시되지 않는 Windows 창에서 프레임 표시 시각을 기다리는 TextRecord를 계속 보관하므로, 숨김 상태에서도 렌더링이 완료되는 대상을 제공합니다. 메모리 상한·하이라이트·출력량은 그대로 검사하고 강제 GC를 사용하지 않습니다. 표시 창과 실제 데스크톱 검사는 일반 렌더링을 사용하며, 숨김 검사 결과를 물리 화면의 표시 지연으로 해석하지 않습니다.
+Windows 숨김 검사는 Electron의 [offscreen 렌더링](https://www.electronjs.org/docs/latest/tutorial/offscreen-rendering)을 사용합니다. Chromium 152는 표시되지 않는 Windows 창에서 프레임 표시 시각을 기다리는 TextRecord를 계속 보관하므로, 숨김 상태에서도 렌더링이 완료되는 대상을 제공합니다. 오프스크린 창은 보이지 않는 네이티브 테두리도 제거해 150% 배율에서 콘텐츠와 렌더러 크기가 1px 달라지는 것을 막고, GUI에서 정확한 너비·높이를 확인합니다. 메모리 상한·하이라이트·출력량은 그대로 검사하고 강제 GC를 사용하지 않습니다. 표시 창과 실제 데스크톱 검사는 일반 렌더링을 사용하며, 숨김 검사 결과를 물리 화면의 표시 지연으로 해석하지 않습니다.
 
 ### 앱 재사용과 복구 계약
 

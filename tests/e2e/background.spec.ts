@@ -33,6 +33,19 @@ test("isolated windows accept terminal input and move workspaces without native 
     }));
   try {
     const page = await application.firstWindow();
+    const initialSize = await application.evaluate(({ BrowserWindow }) => {
+      const win = BrowserWindow.getAllWindows()[0];
+      const size = win.getContentSize();
+      win.setContentSize(1100, 760);
+      return size;
+    });
+    // Keep exact CSS dimensions even when the desktop uses fractional DPI.
+    await expect
+      .poll(() => page.evaluate(() => [innerWidth, innerHeight]))
+      .toEqual([1100, 760]);
+    await application.evaluate(({ BrowserWindow }, size) => {
+      BrowserWindow.getAllWindows()[0].setContentSize(size[0], size[1]);
+    }, initialSize);
     await page
       .getByRole("button", { name: "새 로컬 터미널", exact: true })
       .click();
