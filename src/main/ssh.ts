@@ -6,6 +6,7 @@ import { StringDecoder } from "node:string_decoder";
 import type { AppEvent, Host, Secret } from "../shared/model";
 import type { Store } from "./store";
 import { TerminalInputQueue } from "./terminal-input";
+import { terminalOutputChunk } from "./terminal-output";
 
 export type TrustPrompt = (host: Host, fingerprint: string) => Promise<boolean>;
 const sshAlgorithms: Algorithms = {
@@ -111,6 +112,7 @@ type Session = {
   client?: Client;
   stream?: ClientChannel;
   decoder: StringDecoder;
+  stderrDecoder: StringDecoder;
   queue: string;
   inFlight: number;
   flush?: ReturnType<typeof setTimeout>;
@@ -154,6 +156,7 @@ export class Sessions {
       secret,
       controller: new AbortController(),
       decoder: new StringDecoder("utf8"),
+      stderrDecoder: new StringDecoder("utf8"),
       queue: "",
       inFlight: 0,
       attempts: 0,
@@ -179,6 +182,10 @@ export class Sessions {
   private async connect(s: Session, startup?: string) {
     if (s.intentional) return;
     s.inputQueue?.dispose();
+    clearTimeout(s.flush);
+    s.flush = undefined;
+    s.queue = "";
+    s.inFlight = 0;
     const generation = (s.generation = randomUUID());
     this.resume?.begin(s.id, generation);
     this.status(
@@ -251,7 +258,12 @@ export class Sessions {
       s.cleanup = prepared?.cleanup;
       s.filter = prepared
         ? new ResumeOutput(prepared.nonce, (kind, value) => {
-            if (s.intentional || s.client !== client) return;
+            if (
+              s.intentional ||
+              s.generation !== generation ||
+              s.client !== client
+            )
+              return;
             if (kind === "cwd") this.resume?.cwd(s.id, value);
             if (kind === "warning") this.resume?.notice(s.id, value);
             if (kind === "ready" && !ready) {
@@ -264,7 +276,7 @@ export class Sessions {
         : undefined;
       if (prepared)
         s.readyTimer = setTimeout(() => {
-          if (!ready && !s.intentional)
+          if (!ready && !s.intentional && s.generation === generation)
             this.resume?.notice(
               s.id,
               "SSH 셸 준비 신호가 없어 시작 스니펫을 실행하지 않았습니다. 서버 시작 설정을 확인하세요.",
@@ -276,6 +288,7 @@ export class Sessions {
         (data, done) => {
           if (
             s.stream !== stream ||
+            s.generation !== generation ||
             s.intentional ||
             s.status !== "connected"
           ) {
@@ -286,7 +299,12 @@ export class Sessions {
         },
         this.emit,
         (error) => {
-          if (s.stream !== stream || s.intentional) return;
+          if (
+            s.stream !== stream ||
+            s.generation !== generation ||
+            s.intentional
+          )
+            return;
           this.close(s.id);
           this.status(
             s,
@@ -299,12 +317,18 @@ export class Sessions {
       if (this.onDetectedOS)
         void detectRemoteOS(client)
           .then((os) => {
-            if (os && !s.intentional && s.client === client)
+            if (
+              os &&
+              !s.intentional &&
+              s.generation === generation &&
+              s.client === client
+            )
               this.onDetectedOS?.(s.host, os);
           })
           .catch(() => {});
       stream.on("data", (data: Buffer) => {
-        if (s.stream !== stream || s.intentional) return;
+        if (s.stream !== stream || s.generation !== generation || s.intentional)
+          return;
         const decoded = s.decoder.write(data);
         s.queue += s.filter ? s.filter.push(decoded) : decoded;
         if (s.inFlight + Buffer.byteLength(s.queue) >= 256 * 1024) {
@@ -314,8 +338,9 @@ export class Sessions {
         this.schedule(s);
       });
       stream.stderr.on("data", (data: Buffer) => {
-        if (s.stream !== stream || s.intentional) return;
-        const decoded = s.decoder.write(data);
+        if (s.stream !== stream || s.generation !== generation || s.intentional)
+          return;
+        const decoded = s.stderrDecoder.write(data);
         s.queue += s.filter ? s.filter.push(decoded) : decoded;
         if (s.inFlight + Buffer.byteLength(s.queue) >= 256 * 1024) {
           stream.pause();
@@ -324,29 +349,36 @@ export class Sessions {
         this.schedule(s);
       });
       stream.once("close", () => {
-        if (s.stream !== stream) return;
+        if (s.stream !== stream || s.generation !== generation) return;
         s.inputQueue?.dispose();
-        const tail = s.decoder.end();
+        const tail = s.decoder.end() + s.stderrDecoder.end();
         s.queue += s.filter ? s.filter.push(tail) + s.filter.end() : tail;
         clearTimeout(s.readyTimer);
         void s.cleanup?.();
         clearTimeout(s.flush);
         s.flush = undefined;
-        if (s.queue && !s.intentional) {
-          const data = s.queue;
-          s.queue = "";
+        // Closing streams can leave more than one ACK's IPC limit queued.
+        // Preserve the normal Unicode-safe chunk boundary while draining.
+        while (s.queue && !s.intentional) {
+          const data = terminalOutputChunk(s.queue);
+          s.queue = s.queue.slice(data.length);
           const bytes = Buffer.byteLength(data);
           s.inFlight += bytes;
-          this.emit({ kind: "output", id: s.id, data, bytes });
+          this.emit({ kind: "output", id: s.id, generation, data, bytes });
         }
         client.end();
       });
       if (startup && !prepared) s.inputQueue.input(startup + "\r");
       client.once("close", () => {
-        if (s.client === client) this.disconnected(s);
+        if (s.client === client && s.generation === generation)
+          this.disconnected(s);
       });
       client.on("error", (error) => {
-        if (!s.intentional && s.client === client) {
+        if (
+          !s.intentional &&
+          s.generation === generation &&
+          s.client === client
+        ) {
           s.inputQueue?.dispose();
           this.status(s, "error", `SSH 연결 오류: ${error.message}`);
         }
@@ -373,6 +405,7 @@ export class Sessions {
     s.retry = setTimeout(() => {
       s.retry = undefined;
       s.decoder = new StringDecoder("utf8");
+      s.stderrDecoder = new StringDecoder("utf8");
       void this.connect(s);
     }, delay);
   }
@@ -381,17 +414,23 @@ export class Sessions {
       s.flush = setTimeout(() => {
         s.flush = undefined;
         if (s.intentional || !s.queue || s.inFlight >= 256 * 1024) return;
-        const data = s.queue.slice(0, 32768);
+        const data = terminalOutputChunk(s.queue);
         s.queue = s.queue.slice(data.length);
         const bytes = Buffer.byteLength(data);
         s.inFlight += bytes;
-        this.emit({ kind: "output", id: s.id, data, bytes });
+        this.emit({
+          kind: "output",
+          id: s.id,
+          generation: s.generation,
+          data,
+          bytes,
+        });
         if (s.queue) this.schedule(s);
       }, 8);
   }
-  ack(id: string, bytes: number) {
+  ack(id: string, bytes: number, generation?: string) {
     const s = this.sessions.get(id);
-    if (!s) return;
+    if (!s || (generation !== undefined && s.generation !== generation)) return;
     s.inFlight = Math.max(0, s.inFlight - bytes);
     if (s.inFlight + Buffer.byteLength(s.queue) < 128 * 1024) {
       s.stream?.resume();
@@ -414,9 +453,9 @@ export class Sessions {
   inputBusy(id: string) {
     return !!this.sessions.get(id)?.inputQueue?.busy;
   }
-  resize(id: string, cols: number, rows: number) {
+  resize(id: string, cols: number, rows: number, generation?: string) {
     const s = this.sessions.get(id);
-    if (!s) return;
+    if (!s || (generation !== undefined && s.generation !== generation)) return;
     s.cols = cols;
     s.rows = rows;
     s.stream?.setWindow(rows, cols, 0, 0);

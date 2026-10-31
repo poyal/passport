@@ -230,8 +230,30 @@ test("large terminal text remains interactive and bounded through 1 GiB", async 
           );
           lastProgress = performance.now();
         }
-        if (memory.at(-1)! > 3072)
+        if (memory.at(-1)! > 3072) {
+          const cdp = await page.context().newCDPSession(page);
+          const diagnostics = {
+            memory,
+            app: await app.evaluate(({ app }) => ({
+              processes: app.getAppMetrics(),
+              mainHeap: process.memoryUsage(),
+            })),
+            renderer: await page.evaluate(() => ({
+              heapUsed: (performance as any).memory?.usedJSHeapSize,
+              heapTotal: (performance as any).memory?.totalJSHeapSize,
+              nodes: document.getElementsByTagName("*").length,
+            })),
+            heap: await cdp.send("Runtime.getHeapUsage"),
+            dom: await cdp.send("Memory.getDOMCounters"),
+          };
+          await cdp.detach();
+          await fs.writeFile(
+            info.outputPath("terminal-memory-failure.json"),
+            JSON.stringify(diagnostics, null, 2),
+          );
+          console.log("Terminal memory limit:", JSON.stringify(diagnostics));
           throw new Error("terminal working set exceeded 3 GiB");
+        }
         await new Promise((resolve) => setTimeout(resolve, 200));
       }
       await writer;

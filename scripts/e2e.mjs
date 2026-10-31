@@ -66,7 +66,14 @@ try {
         PASSPORT_E2E_LIFECYCLE_LOG: path.join(directory, "lifecycle.jsonl"),
       },
       log: path.join(directory, "e2e.log"),
-      timeout: 15 * 60 * 1000,
+      // Long-running scenarios have fixed workload durations. Preserve the
+      // ordinary suite budget and add only their explicit opt-in runtime.
+      timeout:
+        (15 +
+          (process.env.PASSPORT_UI_STRESS === "1" ? 42 : 0) +
+          (process.env.PASSPORT_TEXT_BENCH === "1" ? 12 : 0)) *
+        60 *
+        1000,
     },
   );
   if (args.includes("--list")) metadata.status = "listed";

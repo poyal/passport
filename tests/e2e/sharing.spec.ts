@@ -449,6 +449,13 @@ test("pairs two devices, sends messages with optional attachments after one appr
     b.page.locator(".share-message-list button.pending"),
   ).toHaveCount(0);
   await expect(b.page.locator(".share-message-list button")).toHaveCount(1);
+  await expect(
+    b.page.getByRole("status").filter({ hasText: "쪽지를 받았습니다." }),
+  ).toBeVisible();
+  await expect(
+    a.page.getByRole("status").filter({ hasText: "상대에게 전달했습니다." }),
+  ).toBeVisible();
+  await expect(b.page.locator(".toast.error")).toHaveCount(0);
   await b.page.locator(".share-message-list button").click();
   await expect(b.page.locator(".share-markdown h1")).toHaveText("작업 결과");
   await expect(

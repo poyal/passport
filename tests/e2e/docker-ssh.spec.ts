@@ -206,8 +206,16 @@ test("real Docker SSH and SFTP through the desktop application", async ({}, info
               let cancelSent = false;
               const timeout = setTimeout(() => {
                 off();
-                reject(new Error("Docker SFTP transfer timed out"));
-              }, 60000);
+                const latest = id ? jobs.get(id) : undefined;
+                reject(
+                  new Error(
+                    `Docker SFTP transfer timed out: ${JSON.stringify({ cancel, id, state: latest?.state, bytes: latest?.bytes, total: latest?.total, speed: latest?.speed })}`,
+                  ),
+                );
+                // The same servers can be reached from the other OS through an
+                // SSH tunnel. Allow the 128 MiB roundtrip at that measured rate;
+                // the suite's overall deadline still bounds an unresponsive job.
+              }, 120000);
               const finish = (job: TransferJob) => {
                 if (
                   cancel &&

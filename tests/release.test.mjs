@@ -37,6 +37,8 @@ import { verifyEncryption } from "../scripts/prepare-mac-keychain.mjs";
 import { patchPtyInput } from "../scripts/patch-pty-input.mjs";
 import { EventEmitter } from "node:events";
 import { PassThrough } from "node:stream";
+import vm from "node:vm";
+import { singleFlightVips } from "../scripts/build-icons.mjs";
 import { closeCleanly } from "./fixtures/electron-exit.ts";
 import { e2eMode } from "../scripts/e2e-mode.mjs";
 import {
@@ -51,6 +53,36 @@ import {
 } from "../scripts/release-gui-policy.mjs";
 
 // Synthetic reporter output for gate and publication tests; no Electron launch.
+test("concurrent ICO sizes share one pending WASM initialization and reject changed vendor code", async () => {
+  let started = 0,
+    complete;
+  const context = {
+    VipsFactory: () => {
+      started++;
+      return new Promise((resolve) => {
+        complete = resolve;
+      });
+    },
+  };
+  vm.runInNewContext(
+    singleFlightVips(`var vipsInstance = null;
+async function getVips() {
+  if (vipsInstance) return vipsInstance;
+  vipsInstance = await VipsFactory({});
+  return vipsInstance;
+}`),
+    context,
+  );
+  const sizes = Array.from({ length: 7 }, () => context.getVips());
+  assert.equal(started, 1);
+  const instance = { ready: true };
+  complete(instance);
+  assert.ok((await Promise.all(sizes)).every((result) => result === instance));
+  assert.throws(
+    () => singleFlightVips("unreviewed upstream tool"),
+    /Review icon tool/,
+  );
+});
 test("Mac Keychain preparation requires encryption availability and a valid round trip", () => {
   assert.throws(
     () =>
@@ -420,8 +452,8 @@ test("GUI policy records platform exclusions and optional skips explicitly", () 
     platform: "darwin",
     mode: "hidden",
   });
-  assert.equal(coverage.passed, 100);
-  assert.equal(coverage.skipped, 10);
+  assert.equal(coverage.passed, 104);
+  assert.equal(coverage.skipped, 11);
   assert.equal(
     coverage.tests.filter(
       (test) => test.skipReason === "not applicable on darwin",
@@ -432,13 +464,13 @@ test("GUI policy records platform exclusions and optional skips explicitly", () 
     coverage.tests.filter((test) =>
       test.skipReason?.startsWith("optional feature"),
     ).length,
-    4,
+    5,
   );
   const windows = validateGuiReport(guiReport("win32"), {
     platform: "win32",
     mode: "hidden",
   });
-  assert.equal(windows.skipped, 8);
+  assert.equal(windows.skipped, 9);
   assert.equal(
     windows.tests.filter(
       (test) => test.skipReason === "not applicable on win32",
@@ -578,7 +610,7 @@ for (const feature of ["docker", "stress", "throughput", "native-ai"]) {
       guiReport("darwin", "hidden", [feature]),
       { platform: "darwin", mode: "hidden", optional: [feature] },
     );
-    assert.equal(coverage.skipped, 9);
+    assert.equal(coverage.skipped, feature === "stress" ? 9 : 10);
   });
 }
 

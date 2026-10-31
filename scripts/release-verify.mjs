@@ -218,7 +218,12 @@ async function verify() {
       "node_modules/@playwright/test/cli.js",
       ["test", "--max-failures=1", "--output", path.join(checks, label)],
       {
-        timeout: 12 * 60 * 1000,
+        timeout:
+          (12 +
+            (process.env.PASSPORT_UI_STRESS === "1" ? 42 : 0) +
+            (process.env.PASSPORT_TEXT_BENCH === "1" ? 12 : 0)) *
+          60 *
+          1000,
         env: {
           ...guiEnv,
           PASSPORT_TEST_REPORT: report,

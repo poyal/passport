@@ -204,6 +204,75 @@ it("persists each pane's native ID and encrypted argv, retains shutdown eligibil
   expect(f.resume.get(f.id)?.agent?.running).toBe(false);
   expect(agentResumeCommand(f.resume.get(f.id)!.agent!)).toBeUndefined();
 });
+it("retains a confirmed conversation across exact native resumes without SessionStart and clears unrelated runs", () => {
+  const f = fixture();
+  const base = {
+    source: "codex" as const,
+    generation: f.generation,
+    agentRun: "initial",
+  };
+  f.resume.agentEvent(f.id, {
+    ...base,
+    event: "run-start",
+    cwd: f.directory,
+    home: "/fixture-home",
+    args: ["-a", "never"],
+  });
+  f.resume.agentEvent(f.id, {
+    ...base,
+    event: "turn-start",
+    session: "confirmed",
+    transcript: "/fixture-transcript",
+  });
+  const original = f.resume.get(f.id)!.agent!;
+  for (let i = 0; i < 2; i++) {
+    f.resume.stop(f.id, true);
+    f.resume.begin(f.id, f.generation);
+    f.resume.agentEvent(f.id, {
+      ...base,
+      agentRun: `resumed-${i}`,
+      event: "run-start",
+      cwd: f.directory,
+      home: "/fixture-home",
+      args: agentResumeCommand(original),
+    });
+    expect(f.resume.get(f.id)?.agent).toEqual(original);
+  }
+  for (const change of [
+    { args: ["-a", "never"] },
+    { args: ["-a", "never", "resume", "different", "--cd", f.directory] },
+    { home: "/different-home" },
+    { cwd: "/different-directory" },
+  ]) {
+    // Establish the original with an authoritative hook before each mismatch.
+    f.resume.stop(f.id, true);
+    f.resume.begin(f.id, f.generation);
+    f.resume.agentEvent(f.id, {
+      ...base,
+      event: "run-start",
+      cwd: f.directory,
+      home: "/fixture-home",
+      args: original.args,
+    });
+    f.resume.agentEvent(f.id, {
+      ...base,
+      event: "turn-start",
+      session: "confirmed",
+    });
+    f.resume.stop(f.id, true);
+    f.resume.begin(f.id, f.generation);
+    f.resume.agentEvent(f.id, {
+      ...base,
+      agentRun: "different",
+      event: "run-start",
+      cwd: f.directory,
+      home: "/fixture-home",
+      args: agentResumeCommand(original),
+      ...change,
+    });
+    expect(f.resume.get(f.id)?.agent?.session).toBeUndefined();
+  }
+});
 it("retains history across app reopen and rejects stale owners, generations, and writes after disabling", async () => {
   const f = fixture();
   await capture(f);

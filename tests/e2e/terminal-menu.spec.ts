@@ -106,16 +106,24 @@ async function setup() {
 }
 
 async function output(id: string, text: string) {
+  const generation = await suite.page.evaluate(
+    async (id) =>
+      (await window.passport.call("bootstrap", undefined)).sessionStates.find(
+        (s) => s.id === id,
+      )!.generation!,
+    id,
+  );
   await suite.application.evaluate(
-    ({ BrowserWindow }, { id, text }) => {
+    ({ BrowserWindow }, { id, text, generation }) => {
       BrowserWindow.getAllWindows()[0].webContents.send("passport:event", {
         kind: "output",
         id,
+        generation,
         data: text,
         bytes: 0,
       });
     },
-    { id, text },
+    { id, text, generation },
   );
 }
 async function selectText(

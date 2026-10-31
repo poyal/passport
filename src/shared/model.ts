@@ -532,9 +532,15 @@ export type AppEvent =
   | { kind: "activity"; items: Activity[] }
   | { kind: "activate-pane"; workspaceId: string; paneId: string }
   | { kind: "update"; state: import("./updates").UpdateState }
-  | { kind: "notice"; message: string }
+  | { kind: "notice"; message: string; level?: "info" | "error" }
   | { kind: "session"; state: SessionState }
-  | { kind: "output"; id: string; data: string; bytes: number }
+  | {
+      kind: "output";
+      id: string;
+      generation: string;
+      data: string;
+      bytes: number;
+    }
   | { kind: "transfer"; job: TransferJob }
   | {
       kind: "document";
@@ -780,10 +786,13 @@ export interface Calls {
     output: { requestId: string };
   };
   "session.resize": {
-    input: { id: string; cols: number; rows: number };
+    input: { id: string; cols: number; rows: number; generation: string };
     output: void;
   };
-  "session.ack": { input: { id: string; bytes: number }; output: void };
+  "session.ack": {
+    input: { id: string; bytes: number; generation: string };
+    output: void;
+  };
   "files.connections": { input: undefined; output: Endpoint[] };
   "files.connect": {
     input: { hostId: string | null; secret?: Secret; previousId?: string };

@@ -44,7 +44,10 @@ export class Tunnels {
         this.confirm,
         r.controller.signal,
       );
-      if (r.stopping) throw new Error("터널을 중지했습니다.");
+      if (r.stopping) {
+        r.client.end();
+        throw new Error("터널을 중지했습니다.");
+      }
       r.client.once("close", () => {
         if (!r.stopping) {
           this.stop(rule.id);
@@ -99,10 +102,12 @@ export class Tunnels {
           });
         });
         r.server.on("error", (e) => {
+          if (r.stopping || this.running.get(rule.id) !== r) return;
           this.stop(rule.id);
           this.status(rule.id, "error", e.message);
         });
       }
+      if (r.stopping) return { id: rule.id, status: "stopped" as const };
       return this.status(rule.id, "running");
     } catch (e) {
       if (r.stopping)
@@ -155,6 +160,10 @@ export class Tunnels {
         if (err) {
           if (prefix) socket.end(Buffer.from([5, 5, 0, 1, 0, 0, 0, 0, 0, 0]));
           else socket.destroy();
+          return;
+        }
+        if (r.stopping || socket.destroyed) {
+          channel.destroy();
           return;
         }
         if (prefix) {

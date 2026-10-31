@@ -701,6 +701,63 @@ it("receives native Codex argv notifications without persisting assistant messag
   }
 });
 
+it("receives every concurrent native hook when several restored CLIs start together", async () => {
+  const store = new Store(directory(), vault);
+  const received: string[] = [];
+  const service = new ActivityService(store.db, {
+    workspace: () => "workspace",
+    changed: () => {},
+    notify: () => {},
+    ready: () => {},
+    error: () => {},
+    resume: (_id, event) => {
+      if (event.session) received.push(event.session);
+    },
+  });
+  try {
+    await service.start();
+    const credentials = service.register("pane", randomUUID(), {
+      claude: false,
+      codex: false,
+    });
+    for (let round = 0; round < 4; round++) {
+      const sessions = Array.from({ length: 16 }, () => randomUUID());
+      await Promise.all(
+        sessions.map(
+          (session) =>
+            new Promise<void>((resolve, reject) => {
+              const child = spawn(helperPath(), ["codex-hook"], {
+                env: {
+                  ...process.env,
+                  ...credentials,
+                  PASSPORT_AGENT_RUN: session,
+                },
+                stdio: ["pipe", "ignore", "ignore"],
+              });
+              child.once("error", reject);
+              child.once("exit", (code) =>
+                code === 0
+                  ? resolve()
+                  : reject(new Error(`Hook exited ${code}`)),
+              );
+              child.stdin.end(
+                JSON.stringify({
+                  hook_event_name: "SessionStart",
+                  session_id: session,
+                  source: "resume",
+                }),
+              );
+            }),
+        ),
+      );
+      expect(received.slice(round * 16).sort()).toEqual(sessions.sort());
+    }
+  } finally {
+    await service.close();
+    store.close();
+  }
+});
+
 it("native hook adapter returns neutrally within its deadline on unclosed stdin and malformed payloads", async () => {
   const started = Date.now();
   const child = spawn(helperPath(), ["claude-hook"], {

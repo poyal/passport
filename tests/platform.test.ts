@@ -57,6 +57,10 @@ it.each([
 it("selects explicit desktop implementations and never maps an unknown OS to macOS", () => {
   expect(selectPlatform("darwin").terminal.id).toBe("darwin");
   expect(selectPlatform("win32").terminal.id).toBe("win32");
+  expect(selectPlatform("darwin").desktop.offscreenForHiddenWindows).toBe(
+    false,
+  );
+  expect(selectPlatform("win32").desktop.offscreenForHiddenWindows).toBe(true);
   for (const id of ["linux", "unknown", "__proto__", "constructor"])
     expect(() => selectPlatform(id)).toThrow("지원하지 않는 운영체제");
 });

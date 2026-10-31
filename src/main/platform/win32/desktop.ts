@@ -7,6 +7,9 @@ const icon = (context: DesktopContext) =>
     : path.win32.join(context.appPath, "build/icon.ico");
 export const windowsDesktop: DesktopPlatform = {
   quitOnLastWindow: true,
+  // Hidden HWNDs never present frames. Chromium 152 otherwise retains paint
+  // timing records indefinitely when background throttling is off in tests.
+  offscreenForHiddenWindows: true,
   initialize(app, _mode, identity) {
     app.setAppUserModelId(identity.appId);
   },

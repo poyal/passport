@@ -40,10 +40,20 @@ fn transmit(payload: Value) {
             }
             #[cfg(windows)]
             {
-                let mut pipe = fs::OpenOptions::new()
-                    .read(true)
-                    .write(true)
-                    .open(endpoint)?;
+                let started = std::time::Instant::now();
+                // Node creates the next named-pipe instance asynchronously.
+                // Concurrent restored CLIs can reach it while all instances
+                // are busy. Retry only that transient error within the same
+                // deadline; never replay a message after writing has begun.
+                let mut pipe = loop {
+                    match fs::OpenOptions::new().read(true).write(true).open(&endpoint) {
+                        Ok(pipe) => break pipe,
+                        Err(error) if error.raw_os_error() == Some(231) && started.elapsed() < DEADLINE => {
+                            thread::sleep(Duration::from_millis(5));
+                        }
+                        Err(error) => return Err(error),
+                    }
+                };
                 pipe.write_all(&bytes)?;
                 let mut ack = [0_u8; 1];
                 pipe.read_exact(&mut ack)?;
@@ -321,6 +331,15 @@ fn codex_overrides(args: &[String]) -> (bool, [bool; 3]) {
     }
     (!notify, tui.map(|present| !present))
 }
+fn codex_hook_command(helper: &std::path::Path) -> String {
+    if cfg!(windows) {
+        // Codex executes Windows command hooks with PowerShell. A quoted path
+        // alone is a string expression, not an invocation.
+        format!("& '{}' codex-hook", helper.to_string_lossy().replace('\'', "''"))
+    } else {
+        format!("'{}' codex-hook", helper.to_string_lossy().replace('\'', "'\"'\"'"))
+    }
+}
 fn run(agent: &str, args: &[String]) -> i32 {
     if agent != "claude" && agent != "codex" {
         return 2;
@@ -400,11 +419,7 @@ fn run(agent: &str, args: &[String]) -> i32 {
         // stable so normal /hooks trust survives a new terminal generation.
         let conflict = args.iter().any(|a| a.contains("hooks.") || a.starts_with("hooks="));
         if !conflict {
-            let command = if cfg!(windows) {
-                format!("\"{}\" codex-hook", helper.to_string_lossy())
-            } else {
-                format!("'{}' codex-hook", helper.to_string_lossy().replace('\'', "'\"'\"'"))
-            };
+            let command = codex_hook_command(&helper);
             for name in ["SessionStart", "UserPromptSubmit"] {
                 cli_args.extend(["-c".into(), format!("hooks.{name}=[{{hooks=[{{type=\"command\",command={}}}]}}]", json!(command))]);
             }
@@ -612,6 +627,23 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn codex_hook_path_executes_in_the_platform_shell() {
+        let unique = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
+        let dir = env::temp_dir().join(format!("passport-hook-{}-{unique}-한글 O'Brien &", std::process::id()));
+        fs::create_dir(&dir).unwrap();
+        // The test binary accepts an unmatched test filter and exits normally;
+        // this checks real shell invocation and escaping without running a CLI.
+        let helper = dir.join(if cfg!(windows) { "helper.exe" } else { "helper" });
+        fs::copy(env::current_exe().unwrap(), &helper).unwrap();
+        let mut shell = Command::new(if cfg!(windows) { "powershell.exe" } else { "/bin/sh" });
+        if cfg!(windows) { shell.args(["-NoProfile", "-NonInteractive", "-Command"]); }
+        else { shell.arg("-c"); }
+        let output = shell.arg(codex_hook_command(&helper)).output().unwrap();
+        fs::remove_dir_all(&dir).unwrap();
+        assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
+        assert!(String::from_utf8_lossy(&output.stdout).contains("running 0 tests"));
+    }
     #[test]
     fn standalone_codex_only_for_local_interactive_clients() {
         let interactive = |args: &[&str]| codex_interactive(&args.iter().map(|s| s.to_string()).collect::<Vec<_>>());

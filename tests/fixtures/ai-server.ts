@@ -5,6 +5,7 @@ import { randomUUID } from "node:crypto";
 // inference over loopback. No account credentials or paid API calls are used.
 export async function aiServer() {
   let requests = 0;
+  const histories: string[] = [];
   const server = http.createServer(async (req, res) => {
     let raw = "";
     for await (const chunk of req) raw += chunk;
@@ -31,6 +32,7 @@ export async function aiServer() {
       return;
     }
     requests++;
+    histories.push(JSON.stringify(body.messages ?? body.input ?? []));
     res.writeHead(200, {
       "Content-Type": "text/event-stream",
       Connection: "close",
@@ -113,6 +115,7 @@ export async function aiServer() {
   return {
     url: `http://127.0.0.1:${port}`,
     requests: () => requests,
+    histories: () => histories,
     close: () =>
       new Promise<void>((resolve, reject) => {
         server.close((error) => (error ? reject(error) : resolve()));

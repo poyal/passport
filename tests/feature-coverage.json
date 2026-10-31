@@ -1,0 +1,453 @@
+{
+  "schemaVersion": 1,
+  "description": "실행 증거를 연결하는 기능 목록입니다. 매핑 자체는 통과 증거가 아닙니다. 추가 IPC·GUI 정책은 이 목록도 갱신해야 합니다.",
+  "manual": [
+    "물리 한글 IME 조합과 OS 글꼴 표시",
+    "OS 알림·Keychain 승인",
+    "실제 유료 AI 서비스·로그인",
+    "격리 계정의 설치·업그레이드·제거",
+    "실제 두 기기의 LAN 승인과 최소 지원 OS"
+  ],
+  "features": [
+    {
+      "id": "lifecycle",
+      "name": "실행·종료·격리",
+      "calls": [
+        "bootstrap",
+        "window.create",
+        "window.list",
+        "window.keyboardContext"
+      ],
+      "unit": [
+        "tests/runtime.test.ts",
+        "tests/windows-pty.test.ts",
+        "tests/test-window.test.ts"
+      ],
+      "e2e": [
+        "background.isolated-windows-accept-terminal-input-and-move-workspaces-withou",
+        "shutdown.quits-normally-with-four-active-native-ptys",
+        "shutdown.quits-normally-with-four-closed-native-ptys",
+        "shutdown.quits-normally-with-four-reopened-native-ptys",
+        "shutdown.shares-one-instance-per-data-directory-and-allows-isolated-data-d",
+        "shutdown.closes-live-terminals-without-parsing-externally-changed-settings",
+        "reuse.clean-state"
+      ],
+      "outcomes": ["중복 실행, 프로필 격리, 정상 종료와 자식 프로세스 회수"]
+    },
+    {
+      "id": "hosts",
+      "name": "호스트·그룹·인증",
+      "calls": ["auth.save", "auth.delete", "key.pick"],
+      "unit": [
+        "tests/store.test.ts",
+        "tests/host-os.test.ts",
+        "tests/data-recovery.test.ts"
+      ],
+      "e2e": [
+        "failure-recovery.host-save",
+        "failure-recovery.host-delete",
+        "failure-recovery.revision",
+        "failure-recovery.export-cancel",
+        "usability.new-hosts-start-empty-saved-credentials-collapse-account-fields-a",
+        "usability.sftp-parent-row-reaches-root-with-one-click-file-errors-alert-and",
+        "usability.all-main-screens-and-settings-tabs-fit-light-and-dark-themes-at-w",
+        "usability.direct-passwords-become-reusable-protected-profiles-instead-of-ho",
+        "usability.background-host-metadata-updates-preserve-unsaved-host-edits",
+        "usability.settings-tabs-preserve-drafts-and-keyboard-navigation-manual-icon",
+        "usability.profile-account-connects-paste-is-immediate-and-literal-automatic"
+      ],
+      "outcomes": [
+        "저장·삭제 실패 시 초안 보존, 인증 참조 무결성, 이전 revision 거부"
+      ]
+    },
+    {
+      "id": "shells",
+      "name": "셸·시작 프로필",
+      "calls": ["local.shells", "terminal.preview", "terminal.folder"],
+      "unit": [
+        "tests/terminal-startup.test.ts",
+        "tests/terminal-env.test.ts",
+        "tests/platform.test.ts"
+      ],
+      "e2e": [
+        "local-colors.local-cli-colors-survive-a-colorless-app-launcher-plain",
+        "local-colors.local-cli-colors-survive-a-colorless-app-launcher-ai-profile",
+        "local-colors.local-cli-colors-survive-a-colorless-app-launcher-explicit-no-col",
+        "local-workspace.an-unavailable-default-shell-leaves-a-retryable-local-tab",
+        "local-workspace.creates-mixed-local-ssh-workspaces-previews-profiles-routes-alert",
+        "local-workspace.edits-several-startup-profiles-and-notification-preferences-witho",
+        "windows-shells.windows-passport-bash-applies-a-startup-profile-and-accepts-termi",
+        "windows-shells.windows-cmd-applies-a-startup-profile-and-accepts-terminal-input",
+        "windows-shells.windows-windows-powershell-applies-a-startup-profile-and-accepts",
+        "windows-shells.windows-pwsh-applies-a-startup-profile-and-accepts-terminal-input",
+        "local-workspace.manually-launched-cli-wrappers-deliver-completion-and-input-alert"
+      ],
+      "outcomes": [
+        "실제 셸 시작, 환경 적용, 준비 신호와 오류, 사용자 설정 보존"
+      ]
+    },
+    {
+      "id": "input",
+      "name": "터미널 입력",
+      "calls": [
+        "session.input",
+        "session.paste",
+        "session.broadcast",
+        "session.resize",
+        "session.ack",
+        "clipboard.read",
+        "clipboard.terminal",
+        "clipboard.write",
+        "terminal.drop"
+      ],
+      "unit": [
+        "tests/terminal-input.test.ts",
+        "tests/paste.test.ts",
+        "tests/terminal-drop.test.ts",
+        "tests/terminal-generation.test.ts"
+      ],
+      "e2e": [
+        "large-paste.local-integrity",
+        "large-paste.ssh-fifo",
+        "paste.literal-text-files-no-duplicate",
+        "paste.image-and-original-pane",
+        "paste.finder-native-full-paths",
+        "terminal-input.hover",
+        "terminal-input.file-paths",
+        "terminal-input.reconnect",
+        "terminal-input.newline",
+        "terminal-input.newline-editor",
+        "terminal-input.order"
+      ],
+      "outcomes": [
+        "4 MiB Unicode 바이트 해시, FIFO·취소·세대 격리, 클립보드·파일 입력"
+      ]
+    },
+    {
+      "id": "rendering",
+      "name": "글자·화면·복원",
+      "calls": ["resume.reply", "terminal.link"],
+      "unit": [
+        "tests/terminal-unicode.test.ts",
+        "tests/terminal-restore.test.ts",
+        "tests/terminal-highlights.test.ts",
+        "tests/terminal-links.test.ts",
+        "tests/session-resume.test.ts"
+      ],
+      "e2e": [
+        "stress.mixed-soak",
+        "terminal-links.browser-open",
+        "terminal-links.plain-urls",
+        "terminal-links.ipc-boundary",
+        "stress.16-visible-terminals-process-100-kib-s-each-for-ten-minutes",
+        "throughput.large-terminal-text-remains-interactive-and-bounded-through-1-gib",
+        "terminal-experience.independent-windows",
+        "terminal-experience.bundled-fonts",
+        "terminal-experience.read-on-view",
+        "terminal-experience.read-focus-contract",
+        "terminal-unicode.zsh-edit",
+        "terminal-unicode.ssh-screen",
+        "session-resume.lazy-history",
+        "session-resume.agent-options",
+        "session-resume.restart-after-enable"
+      ],
+      "outcomes": [
+        "한글·이모지 폭과 UTF-8 경계, 복원 경쟁 상태, 실제 렌더 지연과 메모리 상한"
+      ]
+    },
+    {
+      "id": "workspaces",
+      "name": "탭·분할·템플릿",
+      "calls": ["terminal.create", "window.move", "window.snapshot"],
+      "unit": [
+        "tests/layout.test.ts",
+        "tests/workspace-templates.test.ts",
+        "tests/advanced.test.ts"
+      ],
+      "e2e": [
+        "workspace-identity.plain-ai-icons",
+        "workspace-identity.ai-icons",
+        "workspace-identity.template-tags",
+        "layout-drag.nested-horizontal-groups-fill-the-available-space-even-when-minim",
+        "layout-drag.nested-vertical-groups-fill-the-available-space-even-when-minimum",
+        "layout-drag.grouped-tabs-can-reorder-but-cannot-merge-their-individual-panels",
+        "layout-drag.self-drop",
+        "scroll-workspaces.file-action-triggers-toggle-dismiss-restore-focus-and-stay-in-bou",
+        "scroll-workspaces.log-list-and-output-fit-and-scroll-independently-at-both-themes-a",
+        "scroll-workspaces.plus-opens-a-local-tab-immediately-using-defaults-and-focuses-inp",
+        "scroll-workspaces.workspace-save-button-preserves-only-that-tab-focus-and-splits-te",
+        "scroll-workspaces.saving-the-selected-tab-refuses-a-closed-source",
+        "scroll-workspaces.long-workspace-libraries-scroll-without-moving-controls-and-refus",
+        "workspace-management.local-icons",
+        "workspace-management.identity",
+        "workspace-management.global-defaults",
+        "workspace-management.groups",
+        "workspace-management.recovery",
+        "workspace-management.recovery-auth",
+        "workspace-management.openssh-paste"
+      ],
+      "outcomes": [
+        "이동 전후 세션 소유권과 이력, 최소 크기·스크롤·탭 정체성 유지"
+      ]
+    },
+    {
+      "id": "ssh",
+      "name": "SSH 접속·복구",
+      "calls": ["session.connect", "session.close"],
+      "unit": [
+        "tests/ssh.test.ts",
+        "tests/ssh-resume.test.ts",
+        "tests/remote-os.test.ts",
+        "tests/terminal-generation.test.ts",
+        "tests/ssh-generation.test.ts"
+      ],
+      "e2e": [
+        "docker-ssh.real-docker-ssh-and-sftp-through-the-desktop-application",
+        "legacy.legacy-ssh-works-without-a-host-option-for-terminal-and-sftp-and",
+        "terminal-reconnect.profiles"
+      ],
+      "outcomes": ["실제 인증·호스트 키·레거시 협상, 재연결 세대·스트림 분리"]
+    },
+    {
+      "id": "tunnels",
+      "name": "터널",
+      "calls": ["tunnel.start", "tunnel.stop"],
+      "unit": ["tests/tunnels.test.ts", "tests/docker-ssh.test.ts"],
+      "e2e": [
+        "app.host-crud-live-ssh-split-session-preservation-themes-and-persiste",
+        "app.independent-file-panels-context-menus-local-copy-and-queue",
+        "app.long-file-lists-stay-above-the-queue-and-scroll-independently-at",
+        "app.opening-the-app-never-requests-access-to-the-operating-system-sec"
+      ],
+      "outcomes": ["로컬·역방향·SOCKS 바이트 왕복, 포트 충돌·인증 취소 후 회수"]
+    },
+    {
+      "id": "files",
+      "name": "파일 패널·프로토콜",
+      "calls": [
+        "files.connections",
+        "files.connect",
+        "files.close",
+        "files.list",
+        "files.action"
+      ],
+      "unit": [
+        "tests/local-files.test.ts",
+        "tests/ftp.test.ts",
+        "tests/transfers.test.ts"
+      ],
+      "e2e": [
+        "file-colors.file-types-follow-every-theme-while-server-ansi-input-and-output",
+        "windows-files.windows-drive-root-remains-browsable-around-protected-system-file"
+      ],
+      "outcomes": [
+        "로컬·SFTP·FTP·FTPS 목록/작업, 인증·권한 실패, 경로·드라이브"
+      ]
+    },
+    {
+      "id": "transfers",
+      "name": "전송 큐",
+      "calls": ["transfer.add", "transfer.cancel", "transfer.retry"],
+      "unit": ["tests/transfers.test.ts", "tests/stress.test.ts"],
+      "e2e": [
+        "app.host-crud-live-ssh-split-session-preservation-themes-and-persiste",
+        "app.independent-file-panels-context-menus-local-copy-and-queue",
+        "app.long-file-lists-stay-above-the-queue-and-scroll-independently-at",
+        "app.opening-the-app-never-requests-access-to-the-operating-system-sec"
+      ],
+      "outcomes": [
+        "충돌 정책·취소·재시도·부분 실패, 4 GiB 해시와 10,000개 파일 내용"
+      ]
+    },
+    {
+      "id": "commands",
+      "name": "명령·터미널 CLI",
+      "calls": ["session.execute", "command.suggest", "control.reply"],
+      "unit": ["tests/terminal-control.test.ts", "tests/advanced.test.ts"],
+      "e2e": [
+        "terminal-control.input-read",
+        "terminal-control.ownership",
+        "terminal-control.permissions",
+        "advanced.broadcast-uses-physical-keys-only-explicit-execution-records-hist",
+        "advanced.moves-a-live-split-workspace-to-another-native-window-and-back-wi",
+        "advanced.opens-and-keeps-a-local-tab-active-when-ownership-events-arrive-a",
+        "advanced.bulk-host-edits-change-only-checked-fields",
+        "advanced.500-host-list-and-expanded-host-settings-scroll-independently-ins",
+        "advanced.saves-custom-colors-and-shortcuts-and-applies-highlights-without"
+      ],
+      "outcomes": ["요청과 실행 결과 구분, 실제 수신 바이트, CLI 권한·소유권"]
+    },
+    {
+      "id": "activity",
+      "name": "AI·알림",
+      "calls": [
+        "activity.list",
+        "activity.read",
+        "activity.open",
+        "activity.clear",
+        "activity.focus",
+        "activity.test",
+        "activity.settings"
+      ],
+      "unit": [
+        "tests/activity-policy.test.ts",
+        "tests/terminal-startup.test.ts"
+      ],
+      "e2e": [
+        "local-workspace.an-unavailable-default-shell-leaves-a-retryable-local-tab",
+        "local-workspace.creates-mixed-local-ssh-workspaces-previews-profiles-routes-alert",
+        "local-workspace.edits-several-startup-profiles-and-notification-preferences-witho",
+        "local-workspace.manually-launched-cli-wrappers-deliver-completion-and-input-alert",
+        "session-resume.native-agents"
+      ],
+      "outcomes": [
+        "훅·완료/입력 요청·읽음 상태, 실제 설치 CLI의 격리 대화 재개"
+      ]
+    },
+    {
+      "id": "sharing",
+      "name": "친구·쪽지·파일 공유",
+      "calls": [
+        "share.state",
+        "share.dismissError",
+        "share.unlock",
+        "share.reset",
+        "share.configure",
+        "share.invite",
+        "share.join",
+        "share.pair",
+        "share.peer",
+        "share.send",
+        "share.approve",
+        "share.cancel",
+        "share.message",
+        "share.deleteMessage",
+        "share.openAttachment",
+        "share.folder",
+        "share.file"
+      ],
+      "unit": ["tests/share.test.ts", "tests/terminal-message.test.ts"],
+      "e2e": [
+        "sharing.ui",
+        "terminal-menu.actions",
+        "terminal-menu.quick-send",
+        "terminal-menu.compose",
+        "terminal-menu.ssh",
+        "sharing.1",
+        "sharing.2",
+        "sharing.dismiss-expired-error"
+      ],
+      "outcomes": [
+        "페어링·승인·취소·보호 저장, 오프라인/만료 오류와 수신 내용"
+      ],
+      "scenario": ["scripts/lan-verify.mjs"]
+    },
+    {
+      "id": "logs",
+      "name": "세션 로그",
+      "calls": [
+        "logs.list",
+        "logs.groups",
+        "logs.readGroup",
+        "logs.exportGroup",
+        "logs.deleteGroup",
+        "logs.record",
+        "logs.read",
+        "logs.bookmark",
+        "logs.export",
+        "logs.delete"
+      ],
+      "unit": [
+        "tests/log-groups.test.ts",
+        "tests/log-text.test.ts",
+        "tests/runtime.test.ts",
+        "tests/local-output-exit.test.ts"
+      ],
+      "e2e": [
+        "settings-tools.export-explains-short-passwords-and-writes-decryptable-credential",
+        "settings-tools.imports-ask-after-file-selection-allow-password-retry-cancel-tick",
+        "settings-tools.settings-use-accessible-switches-merge-themes-and-expose-only-the",
+        "settings-tools.log-viewer-removes-terminal-controls-and-hyperlinks-while-the-ori",
+        "settings-tools.terminal-search-counts-matches-scrolls-on-enter-wraps-highlights",
+        "logs.grouped-reconnect"
+      ],
+      "outcomes": [
+        "기록 동의·연결 묶음·검색·보존 한도, 안전한 표시와 원본 내보내기"
+      ]
+    },
+    {
+      "id": "settings",
+      "name": "설정·접근성",
+      "calls": ["save", "theme.import", "theme.export"],
+      "unit": [
+        "tests/shortcuts.test.ts",
+        "tests/terminal-experience.test.ts",
+        "tests/errors.test.ts"
+      ],
+      "e2e": [
+        "settings-tools.export-explains-short-passwords-and-writes-decryptable-credential",
+        "settings-tools.imports-ask-after-file-selection-allow-password-retry-cancel-tick",
+        "settings-tools.settings-use-accessible-switches-merge-themes-and-expose-only-the",
+        "settings-tools.log-viewer-removes-terminal-controls-and-hyperlinks-while-the-ori",
+        "settings-tools.terminal-search-counts-matches-scrolls-on-enter-wraps-highlights",
+        "shortcuts-settings.editor",
+        "shortcuts-settings.windows-routing",
+        "shortcuts-settings.scroll",
+        "shortcuts-settings.files",
+        "shortcuts-settings.control-spacing"
+      ],
+      "outcomes": [
+        "설정 초안·키보드 탐색·라벨·명암·최소 창, 유효성 오류와 성공 메시지"
+      ]
+    },
+    {
+      "id": "data",
+      "name": "내보내기·백업·이관",
+      "calls": [
+        "data.export",
+        "data.preview",
+        "data.unlock",
+        "data.cancel",
+        "data.apply",
+        "backup.list",
+        "backup.preview"
+      ],
+      "unit": [
+        "tests/portable.test.ts",
+        "tests/data-recovery.test.ts",
+        "tests/store.test.ts"
+      ],
+      "e2e": [
+        "failure-recovery.host-save",
+        "failure-recovery.host-delete",
+        "failure-recovery.revision",
+        "failure-recovery.export-cancel",
+        "settings-tools.export-explains-short-passwords-and-writes-decryptable-credential",
+        "settings-tools.imports-ask-after-file-selection-allow-password-retry-cancel-tick",
+        "settings-tools.settings-use-accessible-switches-merge-themes-and-expose-only-the",
+        "settings-tools.log-viewer-removes-terminal-controls-and-hyperlinks-while-the-ori",
+        "settings-tools.terminal-search-counts-matches-scrolls-on-enter-wraps-highlights"
+      ],
+      "outcomes": [
+        "암호화 변조·잘못된 암호·경로 탈출 거부, 실패 원복과 취소 시 무변경"
+      ]
+    },
+    {
+      "id": "release",
+      "name": "업데이트·설치",
+      "calls": ["updates.check", "updates.open", "external.open"],
+      "unit": ["tests/updates.test.ts", "tests/platform.test.ts"],
+      "e2e": [
+        "updates.about-checks-updates-directs-downloads-to-the-correct-installer-a",
+        "updates.an-ahead-of-release-installation-never-offers-a-downgrade",
+        "updates.an-offline-check-stays-inside-about-while-the-host-screen-remains",
+        "updates.a-release-without-an-installer-offers-notes-without-a-broken-down",
+        "windows-credentials.windows-dpapi-protects-stored-credentials-and-reconnects-after-re",
+        "updates.current-version-spacing"
+      ],
+      "outcomes": [
+        "현재/최신/오프라인/자산 누락 UI, 플랫폼별 설치 파일과 보호 저장"
+      ]
+    }
+  ]
+}

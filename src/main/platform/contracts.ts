@@ -59,6 +59,7 @@ export type DesktopContext = {
 };
 export interface DesktopPlatform {
   readonly quitOnLastWindow: boolean;
+  readonly offscreenForHiddenWindows: boolean;
   initialize(
     app: Pick<App, "setActivationPolicy" | "setAppUserModelId">,
     mode: WindowMode,

@@ -299,12 +299,13 @@ export function App() {
           );
           // Reconnecting reuses xterm's size but creates a PTY at its default
           // size. FitAddon need not emit another resize when the view is stable.
-          if (event.state.status === "connected")
+          if (event.state.status === "connected" && generation)
             void api
               .call("session.resize", {
                 id: event.state.id,
                 cols: entry.term.cols,
                 rows: entry.term.rows,
+                generation,
               })
               .catch(notify);
         }
@@ -323,15 +324,28 @@ export function App() {
           )
         ) {
           void api
-            .call("session.ack", { id: event.id, bytes: event.bytes })
+            .call("session.ack", {
+              id: event.id,
+              bytes: event.bytes,
+              generation: event.generation,
+            })
             .catch(() => {});
           return;
         }
         const entry = ensureTerminal(event.id);
+        if (entry.sessionInstanceId !== event.generation) return;
         entry.term.write(event.data, () => {
-          entry.checkpointReady = true;
+          if (
+            terminals.get(event.id) === entry &&
+            entry.sessionInstanceId === event.generation
+          )
+            entry.checkpointReady = true;
           void api
-            .call("session.ack", { id: event.id, bytes: event.bytes })
+            .call("session.ack", {
+              id: event.id,
+              bytes: event.bytes,
+              generation: event.generation,
+            })
             .catch(() => {});
         });
       } else if (event.kind === "transfer") {
@@ -343,7 +357,9 @@ export function App() {
             : [...prev, event.job],
         );
       } else if (event.kind === "notice") {
-        notify(new Error(event.message));
+        notify(
+          event.level === "info" ? event.message : new Error(event.message),
+        );
       } else if (event.kind === "update") {
         updateRef.current = event.state;
         if (bootRef.current) {

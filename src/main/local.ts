@@ -1,6 +1,7 @@
 import * as pty from "node-pty";
 import fs from "node:fs";
 import os from "node:os";
+import { randomUUID } from "node:crypto";
 import type { AppEvent, LocalShell } from "../shared/model";
 import { shellPaths } from "./shells";
 export { shellPaths, availableShells } from "./shells";
@@ -9,7 +10,9 @@ import { platform } from "./platform";
 import type { PtyBehavior } from "./platform/contracts";
 import { localTerminalEnv } from "./terminal-env";
 import { TerminalInputQueue, ptyInputWriter } from "./terminal-input";
+import { terminalOutputChunk } from "./terminal-output";
 type LocalSession = {
+  generation: string;
   pty: pty.IPty;
   inFlight: number;
   queue: string;
@@ -57,6 +60,7 @@ export class LocalSessions {
     });
     this.pendingExits.add(exited);
     const entry: LocalSession = {
+      generation: launch?.snapshot.sessionInstanceId ?? randomUUID(),
       pty: terminal,
       behavior: platform.terminal.createPtyBehavior(launch?.snapshot),
       launch,
@@ -110,13 +114,37 @@ export class LocalSessions {
         resolveExit();
       });
       if (this.sessions.get(id) === entry) {
-        this.flush(id);
-        this.emit({ kind: "session", state: { id, status: "disconnected" } });
+        // Logs and resume state stop on disconnected. Deliver the bounded
+        // remaining queue first, even when the renderer still owes old ACKs.
+        clearTimeout(entry.timer);
+        entry.timer = undefined;
+        while (entry.queue) {
+          const data = terminalOutputChunk(entry.queue);
+          entry.queue = entry.queue.slice(data.length);
+          const bytes = Buffer.byteLength(data);
+          entry.inFlight += bytes;
+          this.emit({
+            kind: "output",
+            id,
+            generation: entry.generation,
+            data,
+            bytes,
+          });
+        }
+        this.emit({
+          kind: "session",
+          state: { id, generation: entry.generation, status: "disconnected" },
+        });
       }
     });
     this.emit({
       kind: "session",
-      state: { id, status: "connected", environment: launch?.snapshot },
+      state: {
+        id,
+        generation: entry.generation,
+        status: "connected",
+        environment: launch?.snapshot,
+      },
     });
     if (launch && launch.snapshot.status === "starting")
       entry.startupTimer = setTimeout(() => {
@@ -166,11 +194,11 @@ export class LocalSessions {
       s.timer = undefined;
       if (this.sessions.get(id) !== s) return;
       if (!s.queue || s.inFlight >= 262144) return;
-      const data = s.queue.slice(0, 32768);
+      const data = terminalOutputChunk(s.queue);
       s.queue = s.queue.slice(data.length);
       const bytes = Buffer.byteLength(data);
       s.inFlight += bytes;
-      this.emit({ kind: "output", id, data, bytes });
+      this.emit({ kind: "output", id, generation: s.generation, data, bytes });
       if (s.queue) this.flush(id);
     }, 8);
   }
@@ -187,17 +215,18 @@ export class LocalSessions {
   inputBusy(id: string) {
     return !!this.sessions.get(id)?.inputQueue.busy;
   }
-  resize(id: string, cols: number, rows: number) {
+  resize(id: string, cols: number, rows: number, generation?: string) {
     const s = this.sessions.get(id);
+    if (generation !== undefined && s?.generation !== generation) return;
     if (s?.alive) {
       if (s.pty.cols === cols && s.pty.rows === rows) return;
       s.pty.resize(cols, rows);
       s.behavior.resized();
     }
   }
-  ack(id: string, bytes: number) {
+  ack(id: string, bytes: number, generation?: string) {
     const s = this.sessions.get(id);
-    if (!s) return;
+    if (!s || (generation !== undefined && s.generation !== generation)) return;
     s.inFlight = Math.max(0, s.inFlight - bytes);
     if (s.alive && s.inFlight + Buffer.byteLength(s.queue) < 131072)
       s.pty.resume();
@@ -216,7 +245,10 @@ export class LocalSessions {
       // Drain paused PTYs so node-pty can deliver its exit notification.
       s.pty.resume();
       s.behavior.terminate(s.pty, () => s.alive);
-      this.emit({ kind: "session", state: { id, status: "disconnected" } });
+      this.emit({
+        kind: "session",
+        state: { id, generation: s.generation, status: "disconnected" },
+      });
     }
   }
   closeAll() {

@@ -150,7 +150,7 @@ export class ShareService {
       protect(file: string): Promise<void>;
       changed(): void;
       attention(): void;
-      completed?(message: string): void;
+      completed?(message: string, level: "info" | "error"): void;
     },
   ) {
     this.timer = setInterval(() => this.sweep(), 10000);
@@ -913,6 +913,7 @@ export class ShareService {
               cancelled: "쪽지 전송을 취소했습니다.",
               failed: "쪽지 전송에 실패했습니다.",
             }[state],
+      state === "delivered" ? "info" : "error",
     );
     this.changed();
   }

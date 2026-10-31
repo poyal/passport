@@ -6,5 +6,4 @@ declare global {
 }
 export const api = window.passport;
 export const uuid = () => crypto.randomUUID();
-export const message = (error: unknown) =>
-  error instanceof Error ? error.message : "작업에 실패했습니다.";
+export { errorMessage as message } from "../shared/errors";

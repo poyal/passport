@@ -9,13 +9,8 @@ await patchPtyInput("node_modules/node-pty");
 await mkdir("build", { recursive: true });
 await copyFile("assets/app-icon.png", "build/icon.png");
 if (process.platform === "win32") {
-  const { runIconsTool } =
-    await import("app-builder-lib/out/toolsets/icons.js");
-  await runIconsTool({
-    inputFile: "build/icon.png",
-    outputFormat: "ico",
-    outDir: "build",
-  });
+  const { buildWindowsIcon } = await import("./build-icons.mjs");
+  await buildWindowsIcon();
 }
 await build({
   entryPoints: ["src/main/index.ts"],

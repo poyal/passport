@@ -223,7 +223,7 @@ export class Store {
       this.read().groups.some((g) => g.defaults.authId === id)
     )
       throw new Error(
-        "사용 중인 인증 프로필입니다. 호스트에서 연결을 해제해 주세요.",
+        "사용 중인 인증 프로필입니다. 호스트의 SSH·파일 연결 인증과 그룹 기본값에서 이 프로필의 선택을 해제한 뒤 다시 삭제하세요.",
       );
     this.db.prepare("DELETE FROM credentials WHERE id=?").run(id);
     return this.profiles();

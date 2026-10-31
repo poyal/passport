@@ -192,7 +192,7 @@ test("closes live terminals without parsing externally changed settings", async 
     });
     await expect(
       page.evaluate(() => window.passport.call("bootstrap", undefined)),
-    ).rejects.toThrow("expected 2");
+    ).rejects.toThrow("지원하지 않는 데이터 버전입니다");
   } finally {
     try {
       await closeCleanly(application);

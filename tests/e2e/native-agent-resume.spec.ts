@@ -33,6 +33,7 @@ test(title, async ({}, info) => {
 model="fixture"
 model_provider="fixture"
 check_for_update_on_startup=false
+log_dir=${JSON.stringify(path.join(codex, "log"))}
 approval_policy="on-request"
 approvals_reviewer="auto_review"
 default_permissions=":workspace"
@@ -50,7 +51,9 @@ trust_level="trusted"
     JSON.stringify({
       hasCompletedOnboarding: true,
       theme: "dark",
-      projects: { [cwd]: { hasTrustDialogAccepted: true } },
+      projects: {
+        [cwd.replaceAll("\\", "/")]: { hasTrustDialogAccepted: true },
+      },
       customApiKeyResponses: { approved: ["passport-fixture"] },
     }),
   );
@@ -81,7 +84,9 @@ trust_level="trusted"
         CLAUDE_CONFIG_DIR: claude,
         ANTHROPIC_API_KEY: "passport-fixture",
         ANTHROPIC_BASE_URL: server.url,
-        DISABLE_NONESSENTIAL_TRAFFIC: "1",
+        CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1",
+        DISABLE_AUTOUPDATER: "1",
+        RUST_LOG: "warn,codex_hooks=debug",
         PASSPORT_DATA_DIR: appData,
         PASSPORT_DISABLE_UPDATE_CHECK: "1",
       },
@@ -189,6 +194,10 @@ trust_level="trusted"
     await expect(rows()).toContainText("Trust all and continue", {
       timeout: 20000,
     });
+    await info.attach("native-hook-review", {
+      body: await rows().innerText(),
+      contentType: "text/plain",
+    });
     // Review/trust only Passport's own hooks in this disposable native profile.
     await submit(codexId, "2");
     await expect(rows()).toContainText("OpenAI Codex", { timeout: 15000 });
@@ -232,6 +241,16 @@ trust_level="trusted"
     const originalClaude = (await stored(claudeId))!;
     expect(originalClaude.args).toEqual(["--permission-mode", "plan"]);
     expect((await fs.stat(originalClaude.transcript!)).size).toBeGreaterThan(0);
+    const emptyCodexId = await create("Native Empty Codex");
+    await submit(emptyCodexId, "codex");
+    await expect(rows()).toContainText("OpenAI Codex", { timeout: 15000 });
+    await expect
+      .poll(() => stored(emptyCodexId))
+      .toMatchObject({ agent: "codex", running: true, args: [] });
+    const emptyCodex = (await stored(emptyCodexId))!;
+    // Some native Codex launches omit SessionStart before the first prompt.
+    // Unknown and confirmed-empty both require a fresh launch, never resume.
+    expect(emptyCodex.hasConversation).not.toBe(true);
     const emptyId = await create("Native Empty");
     await submit(emptyId, "claude --permission-mode plan");
     await expect
@@ -241,12 +260,71 @@ trust_level="trusted"
     await closeCleanly(application);
     application = await launch();
     page = await application.firstWindow();
+    await page.evaluate(() => {
+      const output = ((window as any).__nativeResumeOutput = {} as Record<
+        string,
+        string
+      >);
+      window.passport.onEvent((event) => {
+        if (event.kind === "output")
+          output[event.id] = ((output[event.id] || "") + event.data).slice(
+            -200000,
+          );
+      });
+    });
     await expect
       .poll(async () => (await stored(emptyId))?.session, { timeout: 20000 })
       .not.toBe(empty.session);
     await expect
       .poll(async () => (await stored(emptyId))?.hasConversation)
       .toBe(false);
+    await expect(rows()).not.toContainText("No conversation found");
+    await select("Native Empty Codex");
+    await ready(emptyCodexId);
+    if (!emptyCodex.session) {
+      await expect(
+        page.getByText(/Codex 대화 ID.*셸만 복원했습니다/),
+      ).toBeVisible();
+      // With no native identity the app must restore only the shell, not
+      // guess whether an unobserved conversation exists. Follow its guidance.
+      await submit(emptyCodexId, "codex");
+    }
+    await expect
+      .poll(
+        () =>
+          page.evaluate(
+            (id) => (window as any).__nativeResumeOutput[id] || "",
+            emptyCodexId,
+          ),
+        { timeout: 20000 },
+      )
+      .toContain("OpenAI Codex");
+    expect((await stored(emptyCodexId))?.hasConversation).not.toBe(true);
+    const beforeEmpty = server.requests();
+    await submit(emptyCodexId, "passport fixture empty codex after restart");
+    await expect
+      .poll(
+        () =>
+          server
+            .histories()
+            .slice(beforeEmpty)
+            .some(
+              (history) =>
+                history.includes(
+                  "passport fixture empty codex after restart",
+                ) &&
+                !history.includes("passport fixture first") &&
+                !history.includes("passport fixture options") &&
+                !history.includes("PASSPORT_NATIVE_REPLY"),
+            ),
+        { timeout: 20000 },
+      )
+      .toBe(true);
+    await expect
+      .poll(async () => (await stored(emptyCodexId))?.hasConversation)
+      .toBe(true);
+    expect((await stored(emptyCodexId))?.session).toBeTruthy();
+    expect((await stored(emptyCodexId))?.session).not.toBe(emptyCodex.session);
     await expect(rows()).not.toContainText("No conversation found");
     for (const [name, id, original] of [
       ["Native Codex", codexId, originalCodex],
@@ -255,8 +333,20 @@ trust_level="trusted"
     ] as const) {
       await select(name);
       await ready(id);
-      // The old screen alone is not proof of a native resume: wait for the
-      // new run's SessionStart, then submit another prompt to the actual CLI.
+      // Check fresh PTY output, not the restored screen. Some native Codex
+      // resumes omit SessionStart; the exact prior identity must survive that
+      // interval. The next model request and native transcript independently
+      // prove that the actual CLI continues this conversation.
+      await expect
+        .poll(
+          () =>
+            page.evaluate(
+              (id) => (window as any).__nativeResumeOutput[id] || "",
+              id,
+            ),
+          { timeout: 20000 },
+        )
+        .toContain("PASSPORT_NATIVE_REPLY");
       await expect
         .poll(async () => (await stored(id))?.session, { timeout: 20000 })
         .toBe(original.session);
@@ -268,6 +358,33 @@ trust_level="trusted"
       await expect
         .poll(() => server.requests(), { timeout: 20000 })
         .toBeGreaterThan(before);
+      // Title generation can reach the API before the resumed conversation.
+      // Require a new request carrying all three conversation messages.
+      await expect
+        .poll(
+          () =>
+            server
+              .histories()
+              .slice(before)
+              .some(
+                (history) =>
+                  history.includes(
+                    name === "Native Codex Options"
+                      ? "passport fixture options"
+                      : "passport fixture first",
+                  ) &&
+                  history.includes("PASSPORT_NATIVE_REPLY") &&
+                  history.includes("passport fixture second"),
+              ),
+          { timeout: 20000 },
+        )
+        .toBe(true);
+      expect(original.transcript).toBeTruthy();
+      await expect
+        .poll(() => fs.readFile(original.transcript!, "utf8"), {
+          timeout: 10000,
+        })
+        .toContain("passport fixture second");
       await expect
         .poll(async () => (await stored(id))?.hasConversation)
         .toBe(true);
@@ -293,7 +410,7 @@ trust_level="trusted"
           .filter((file) => file.endsWith(".log"))
           .map(async (file) => [
             file,
-            (await fs.readFile(path.join(codex, file), "utf8")).slice(-20000),
+            (await fs.readFile(path.join(codex, file), "utf8")).slice(-100000),
           ]),
       ),
     );
@@ -319,8 +436,43 @@ trust_level="trusted"
         db.close();
       }
     }, appData);
+    const environment = await page.evaluate(async () =>
+      (await window.passport.call("bootstrap", undefined)).sessionStates.map(
+        (state) => ({
+          id: state.id,
+          status: state.status,
+          generation: state.generation,
+          results: state.environment?.results,
+        }),
+      ),
+    );
+    const processes =
+      process.platform === "win32"
+        ? await application
+            .evaluate(() => {
+              const { execFileSync } =
+                process.getBuiltinModule("node:child_process");
+              // Restrict command lines to this disposable test app's descendants.
+              const script = `$all = @(Get-CimInstance Win32_Process); $ids = [Collections.Generic.HashSet[int]]::new(); [void]$ids.Add(${process.pid}); do { $added = $false; foreach ($p in $all) { if ($ids.Contains([int]$p.ParentProcessId) -and $ids.Add([int]$p.ProcessId)) { $added = $true } } } while ($added); $all | Where-Object { $ids.Contains([int]$_.ProcessId) } | Select-Object ProcessId,ParentProcessId,Name,CommandLine | ConvertTo-Json -Depth 3`;
+              return JSON.parse(
+                execFileSync(
+                  "powershell.exe",
+                  ["-NoProfile", "-NonInteractive", "-Command", script],
+                  { encoding: "utf8", timeout: 10000 },
+                ),
+              );
+            })
+            .catch((error) => ({ error: String(error) }))
+        : undefined;
+    const diagnostics = JSON.stringify(
+      { files, logs, agents, environment, processes },
+      null,
+      2,
+    );
+    await fs.mkdir(info.outputDir, { recursive: true });
+    await fs.writeFile(info.outputPath("native-diagnostics.json"), diagnostics);
     await info.attach("native-diagnostics", {
-      body: JSON.stringify({ files, logs, agents }, null, 2),
+      body: diagnostics,
       contentType: "application/json",
     });
     throw error;

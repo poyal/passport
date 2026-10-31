@@ -60,16 +60,28 @@ async function showLink(url: string, label: string) {
 }
 
 async function showOutput(data: string, label: string | RegExp) {
+  const generation = await page.evaluate(
+    async (id) =>
+      (await window.passport.call("bootstrap", undefined)).sessionStates.find(
+        (s) => s.id === id,
+      )?.generation ?? crypto.randomUUID(),
+    paneId,
+  );
   await application.evaluate(
-    ({ BrowserWindow }, { id, data }) => {
+    ({ BrowserWindow }, { id, data, generation }) => {
+      BrowserWindow.getAllWindows()[0].webContents.send("passport:event", {
+        kind: "session",
+        state: { id, generation, status: "disconnected" },
+      });
       BrowserWindow.getAllWindows()[0].webContents.send("passport:event", {
         kind: "output",
         id,
+        generation,
         data,
         bytes: 0,
       });
     },
-    { id: paneId, data },
+    { id: paneId, data, generation },
   );
   const link = page
     .locator(".xterm-rows")

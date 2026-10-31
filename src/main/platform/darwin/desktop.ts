@@ -3,6 +3,7 @@ import type { DesktopPlatform } from "../contracts";
 
 export const darwinDesktop: DesktopPlatform = {
   quitOnLastWindow: false,
+  offscreenForHiddenWindows: false,
   initialize(app, mode, _identity) {
     if (mode) app.setActivationPolicy("accessory");
   },

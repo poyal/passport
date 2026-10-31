@@ -271,11 +271,15 @@ async function fixture(name: string, secure = vault()) {
   cleanups.push(() => fs.rm(root, { recursive: true, force: true }));
   const store = new ShareStore(root, secure, root);
   const notices: string[] = [];
+  const levels: string[] = [];
   const service = new ShareService(store, {
     protect: async () => {},
     changed: () => {},
     attention: () => {},
-    completed: (message) => notices.push(message),
+    completed: (message, level) => {
+      notices.push(message);
+      levels.push(level);
+    },
   });
   cleanups.push(() => service.close());
   await service.configure({
@@ -291,6 +295,7 @@ async function fixture(name: string, secure = vault()) {
     identity: await store.identity(),
     endpoint: service.snapshot().endpoint!,
     notices,
+    levels,
   };
 }
 async function paired() {
@@ -326,6 +331,7 @@ it("matches completion events to the transfer result once on each device", async
   const { a, b } = await paired();
   const start = async () => {
     a.notices.length = b.notices.length = 0;
+    a.levels.length = b.levels.length = 0;
     const transfer = a.service.send({ to: "지수", text: "이벤트 확인" });
     await vi.waitFor(() =>
       expect(b.service.snapshot().transfers).toHaveLength(1),
@@ -343,6 +349,8 @@ it("matches completion events to the transfer result once on each device", async
   );
   expect(a.notices).toEqual(["상대에게 전달했습니다."]);
   expect(b.notices).toEqual(["쪽지를 받았습니다."]);
+  expect(a.levels).toEqual(["info"]);
+  expect(b.levels).toEqual(["info"]);
   a.service.cancel(accepted.id);
   expect(a.notices).toHaveLength(1);
   expect(
@@ -355,6 +363,8 @@ it("matches completion events to the transfer result once on each device", async
     { timeout: 5000 },
   );
   expect(a.notices).toEqual(["상대가 쪽지 요청을 거절했습니다."]);
+  expect(a.levels).toEqual(["error"]);
+  expect(b.levels).toEqual(["error"]);
   expect(b.notices).toHaveLength(1); // Receiver wording remains the user's reverted wording; see event audit.
   expect(b.store.messages()).toHaveLength(1);
   const cancelled = await start();

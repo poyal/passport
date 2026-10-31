@@ -45,6 +45,7 @@ type Entry = {
   physicalKey?: string;
   composing: boolean;
   hydrating?: boolean;
+  hydrationRevision?: number;
   checkpointReady?: boolean;
   transferring?: boolean;
 };
@@ -236,7 +237,21 @@ export function ensureTerminal(id: string) {
         .catch(errorHandler);
   });
   term.onResize(({ cols, rows }) => {
-    void api.call("session.resize", { id, cols, rows }).catch(errorHandler);
+    if (
+      !entry.connected ||
+      entry.hydrating ||
+      entry.transferring ||
+      !entry.sessionInstanceId
+    )
+      return;
+    void api
+      .call("session.resize", {
+        id,
+        cols,
+        rows,
+        generation: entry.sessionInstanceId,
+      })
+      .catch(errorHandler);
   });
   const readPaste = () => {
     if (!entry.connected || entry.hydrating) return;
@@ -472,7 +487,7 @@ export function attachTerminal(
       container.clientWidth > 50 &&
       container.clientHeight > 50
     ) {
-      entry.fit.fit();
+      if (!entry.hydrating) entry.fit.fit();
     }
   };
   entry.resize = new ResizeObserver(fit);
@@ -512,7 +527,12 @@ export function applyAppearance(id: string, a: Appearance) {
     if (terminals.get(id) !== e || e.appearanceKey !== appearanceKey) return;
     e.term.options.fontFamily = terminalFontFamily(loadedFamily);
     e.term.options.fontSize = a.fontSize;
-    if (e.element.clientWidth > 50 && e.element.clientHeight > 50) e.fit.fit();
+    if (
+      !e.hydrating &&
+      e.element.clientWidth > 50 &&
+      e.element.clientHeight > 50
+    )
+      e.fit.fit();
     e.term.refresh(0, e.term.rows - 1);
   };
   void loadTerminalFont(family, a.fontWeight === "bold")
@@ -596,15 +616,25 @@ export async function serializeTerminals(
 export function hydrateTerminals(snapshots: TerminalSnapshot[]) {
   for (const s of snapshots) {
     const e = ensureTerminal(s.id);
+    const hydration = (e.hydrationRevision = (e.hydrationRevision ?? 0) + 1);
     e.connected = false;
+    e.hydrating = true;
+    e.checkpointReady = false;
     e.sessionInstanceId = s.sessionInstanceId;
     e.term.resize(s.cols, s.rows);
     e.term.reset();
     setTerminalUnicode(s.id, s.unicodeWidth ?? "unicode11");
-    e.hydrating = true;
     e.term.write(s.data, () => {
+      if (
+        terminals.get(s.id) !== e ||
+        e.hydrationRevision !== hydration ||
+        e.sessionInstanceId !== s.sessionInstanceId
+      )
+        return;
       e.hydrating = false;
       e.checkpointReady = true;
+      if (e.element.clientWidth > 50 && e.element.clientHeight > 50)
+        e.fit.fit();
     });
   }
 }
@@ -616,8 +646,15 @@ export async function checkpointTerminal(
   // A renderer reload creates an empty terminal before reconnecting. It must
   // not replace the saved screen until output or a restored snapshot arrives.
   if (!e || !e.checkpointReady || e.hydrating || e.transferring) return;
+  const revision = e.connectionRevision;
   await new Promise<void>((resolve) => e.term.write("", resolve));
-  if (terminals.get(id) !== e || e.hydrating || e.transferring) return;
+  if (
+    terminals.get(id) !== e ||
+    e.connectionRevision !== revision ||
+    e.hydrating ||
+    e.transferring
+  )
+    return;
   const serialize = (lines: number) =>
     e.serialize.serialize({
       scrollback: lines,
@@ -648,10 +685,19 @@ export async function restoreTerminal(
   cancelled: () => boolean,
 ) {
   const e = ensureTerminal(screen.id);
+  const revision = e.connectionRevision;
   await new Promise<void>((resolve) => e.term.write("", resolve));
-  if (cancelled() || terminals.get(screen.id) !== e || e.transferring) return;
+  if (
+    cancelled() ||
+    terminals.get(screen.id) !== e ||
+    e.connectionRevision !== revision ||
+    e.transferring
+  )
+    return;
+  const hydration = (e.hydrationRevision = (e.hydrationRevision ?? 0) + 1);
   e.connected = false;
   e.hydrating = true;
+  e.checkpointReady = false;
   const { cols, rows } = e.term;
   e.term.reset();
   setTerminalUnicode(screen.id, screen.unicodeWidth ?? "unicode11");
@@ -662,10 +708,22 @@ export async function restoreTerminal(
       resolve,
     ),
   );
-  if (terminals.get(screen.id) === e) {
+  if (terminals.get(screen.id) === e && e.hydrationRevision === hydration) {
+    if (cancelled() || e.connectionRevision !== revision || e.transferring) {
+      e.hydrating = false;
+      if (
+        !e.transferring &&
+        e.element.clientWidth > 50 &&
+        e.element.clientHeight > 50
+      )
+        e.fit.fit();
+      return;
+    }
     e.term.resize(cols, rows);
     e.hydrating = false;
     e.checkpointReady = true;
+    // Layout/font loading may have changed while xterm parsed the snapshot.
+    if (e.element.clientWidth > 50 && e.element.clientHeight > 50) e.fit.fit();
   }
 }
 

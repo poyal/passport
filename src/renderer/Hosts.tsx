@@ -185,7 +185,7 @@ export function Hosts() {
         `${h.name}을 삭제할까요?${count ? ` 관련 터미널 ${count}개도 닫습니다.` : ""}`,
       )
     ) {
-      await update((d) => ({
+      const removed = await update((d) => ({
         ...d,
         hosts: d.hosts.filter((x) => x.id !== h.id),
         tunnels: d.tunnels.filter((t) => t.hostId !== h.id),
@@ -197,8 +197,10 @@ export function Hosts() {
           return root ? [{ ...w, root }] : [];
         }),
       }));
-      setSelected(null);
-      setDraft(null);
+      if (removed) {
+        setSelected(null);
+        setDraft(null);
+      }
     }
   };
   const renderGroups = (parent: string | null, depth = 0): React.ReactNode =>

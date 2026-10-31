@@ -156,9 +156,11 @@ export function highlightTerminal(
   const schedule = () => {
     if (frame === undefined) frame = requestAnimationFrame(draw);
   };
-  // Parse callbacks run before the terminal's next paint: new lines never get a delayed recolor.
+  // A burst can parse many chunks before a frame is painted. Decorate only
+  // the latest viewport once per frame; intermediate rows immediately scroll
+  // away and allocating their markers/DOM creates excessive memory pressure.
   const listeners = [
-    term.onWriteParsed(draw),
+    term.onWriteParsed(schedule),
     term.onScroll(schedule),
     term.onResize(schedule),
   ];

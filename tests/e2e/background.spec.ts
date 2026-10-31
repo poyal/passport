@@ -28,6 +28,7 @@ test("isolated windows accept terminal input and move workspaces without native 
         visible: win.isVisible(),
         focused: win.isFocused(),
         focusable: win.isFocusable(),
+        offscreen: win.webContents.isOffscreen(),
       })),
     }));
   try {
@@ -62,6 +63,7 @@ test("isolated windows accept terminal input and move workspaces without native 
       visible: e2eMode() === "passive",
       focused: false,
       focusable: false,
+      offscreen: process.platform === "win32" && e2eMode() === "hidden",
     };
     await expect.poll(state).toEqual({
       audit: {

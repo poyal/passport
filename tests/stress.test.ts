@@ -37,6 +37,13 @@ it.skipIf(!enabled)(
       const source = path.join(root, "large.bin"),
         fd = await fs.open(source, "w");
       await fd.truncate(4 * 1024 ** 3);
+      for (const offset of [0, 4096, 2 * 1024 ** 3, 4 * 1024 ** 3 - 4096])
+        await fd.write(
+          Buffer.from(`POSITION:${offset}:한글💻`),
+          0,
+          undefined,
+          offset,
+        );
       await fd.close();
       const wait = async (id: string) => {
         for (let n = 0; n < 30000; n++) {
@@ -84,6 +91,7 @@ it.skipIf(!enabled)(
         expect(
           await fs.readFile(path.join(root, "out", "many", `${i}.txt`), "utf8"),
         ).toBe(`file ${i}`);
+      expect(peak - baseline).toBeLessThan(512 * 1024 ** 2);
       const result = {
         date: new Date().toISOString(),
         platform: process.platform,

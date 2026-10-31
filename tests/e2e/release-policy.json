@@ -3,6 +3,34 @@
   "description": "Explicit release test inventory. IDs remain stable when titles are deliberately updated. Entries without overrides are required on macOS and Windows in hidden mode.",
   "tests": [
     {
+      "id": "failure-recovery.host-save",
+      "file": "failure-recovery.spec.ts",
+      "title": "failed host saves retain draft values and allow one successful retry",
+      "mode": "hidden",
+      "platforms": ["darwin", "win32"]
+    },
+    {
+      "id": "failure-recovery.host-delete",
+      "file": "failure-recovery.spec.ts",
+      "title": "failed host deletion keeps the selected draft and cancel preserves the stored host",
+      "mode": "hidden",
+      "platforms": ["darwin", "win32"]
+    },
+    {
+      "id": "failure-recovery.revision",
+      "file": "failure-recovery.spec.ts",
+      "title": "a stale document cannot overwrite another window's saved settings",
+      "mode": "hidden",
+      "platforms": ["darwin", "win32"]
+    },
+    {
+      "id": "failure-recovery.export-cancel",
+      "file": "failure-recovery.spec.ts",
+      "title": "save cancellation reports no completion and creates no export",
+      "mode": "hidden",
+      "platforms": ["darwin", "win32"]
+    },
+    {
       "id": "large-paste.local-integrity",
       "file": "large-paste.spec.ts",
       "title": "4 MiB clipboard paste reaches the local PTY intact and rejects oversize and stale generations"
@@ -257,6 +285,12 @@
       "id": "stress.16-visible-terminals-process-100-kib-s-each-for-ten-minutes",
       "file": "stress.spec.ts",
       "title": "16 visible terminals process 100 KiB/s each for ten minutes",
+      "optional": "stress"
+    },
+    {
+      "id": "stress.mixed-soak",
+      "file": "stress.spec.ts",
+      "title": "thirty minute mixed terminal file and settings soak remains responsive and bounded",
       "optional": "stress"
     },
     {

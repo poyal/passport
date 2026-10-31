@@ -22,7 +22,7 @@ const input = (page: Page, id: string, data: string) =>
     data: data + "\r",
   });
 
-test("restores history and cwd only when a saved tab is selected and preserves explicit disconnects", async () => {
+test("restores history and cwd only when a saved tab is selected and preserves explicit disconnects", async ({}, info) => {
   const dir = await fs.realpath(
       await fs.mkdtemp(path.join(os.tmpdir(), "passport-resume-ui-")),
     ),
@@ -87,8 +87,8 @@ test("restores history and cwd only when a saved tab is selected and preserves e
         page,
         target.paneId,
         process.platform === "win32"
-          ? `Set-Location -LiteralPath ${ps(project)}; Write-Output ('HISTORY_' + '${letter}')`
-          : `cd -- ${sh(project)}; printf 'HISTORY_%s\\n' ${letter}`,
+          ? `Set-Location -LiteralPath ${ps(project)}; Write-Output ('HISTORY_' + '${letter} 한글💻 é')`
+          : `cd -- ${sh(project)}; printf 'HISTORY_%s 한글💻 é\\n' ${letter}`,
       );
       await expect(
         page.locator(".view:not([hidden]) .xterm-rows"),
@@ -112,8 +112,45 @@ test("restores history and cwd only when a saved tab is selected and preserves e
     ).toEqual([targets[0].paneId]);
     expect(b.sessionStates[0].environment?.cwd).toBe(project);
     await expect(page.locator(".view:not([hidden]) .xterm-rows")).toContainText(
-      "HISTORY_A",
+      "HISTORY_A 한글💻 é",
     );
+    // Restore, font load, layout resize and live editing must agree about
+    // Unicode cell widths. Verify the bytes the shell writes independently
+    // of xterm's displayed text; no OS IME is simulated by this fixture.
+    const typed = "복원 후 💻 é 🇰🇷 ".repeat(20) + "끝";
+    const captured = path.join(project, "restored-input.txt");
+    const command =
+      process.platform === "win32"
+        ? `[System.IO.File]::WriteAllText(${ps(captured)}, ${ps(typed)})`
+        : `printf %s ${sh(typed)} > ${sh(captured)}`;
+    await application.evaluate(({ BrowserWindow }) =>
+      BrowserWindow.getAllWindows()[0].setContentSize(1000, 700),
+    );
+    const keyboard = page.locator(".view:not([hidden]) .xterm-helper-textarea");
+    await keyboard.focus();
+    const characters = Array.from(command),
+      split = Math.floor(characters.length / 2);
+    await keyboard.pressSequentially(characters.slice(0, split).join(""));
+    await application.evaluate(({ BrowserWindow }) =>
+      BrowserWindow.getAllWindows()[0].setContentSize(1440, 900),
+    );
+    await keyboard.pressSequentially(characters.slice(split).join(""));
+    await keyboard.press("Enter");
+    await expect
+      .poll(() => fs.readFile(captured, "utf8").catch(() => ""))
+      .toBe(typed);
+    const visual = "RESTORED_UNICODE | 한글 가나다 | 💻 🇰🇷 | é | 0123456789";
+    await input(
+      page,
+      targets[0].paneId,
+      process.platform === "win32"
+        ? `Write-Output ${ps(visual)}`
+        : `printf '%s\\n' ${sh(visual)}`,
+    );
+    await expect(page.locator(".view:not([hidden]) .xterm-rows")).toContainText(
+      visual,
+    );
+    await page.screenshot({ path: info.outputPath("restored-unicode.png") });
     await input(
       page,
       targets[0].paneId,

@@ -1,4 +1,5 @@
 import { ignoreShortcutMenu, type ShortcutContext } from "../shared/shortcuts";
+import { errorMessage } from "../shared/errors";
 import {
   app,
   BrowserWindow,
@@ -381,7 +382,7 @@ const emit = (event: AppEvent, replay = false) => {
     if (parser) {
       const data = parser.push(event.data);
       if (!data) {
-        locals.ack(event.id, event.bytes);
+        locals.ack(event.id, event.bytes, event.generation);
         return;
       }
       event = { ...event, data };
@@ -406,8 +407,8 @@ const emit = (event: AppEvent, replay = false) => {
     if (destination && !destination.isDestroyed())
       destination.webContents.send("passport:event", event);
     else if (event.kind === "output") {
-      sessions.ack(id, event.bytes);
-      locals.ack(id, event.bytes);
+      sessions.ack(id, event.bytes, event.generation);
+      locals.ack(id, event.bytes, event.generation);
     }
   } else
     for (const w of windows.values())
@@ -681,11 +682,13 @@ const schemas: Record<Call, z.ZodType> = {
   "session.paste": sessionPasteSchema,
   "session.resize": z.object({
     id: idSchema,
+    generation: idSchema,
     cols: z.number().int().min(2).max(1000),
     rows: z.number().int().min(1).max(500),
   }),
   "session.ack": z.object({
     id: idSchema,
+    generation: idSchema,
     bytes: z.number().int().min(0).max(262144),
   }),
   "files.connections": z.undefined(),
@@ -1209,7 +1212,7 @@ async function call<K extends Call>(
                 i.id,
                 agent.reason ||
                   (agent.agent === "codex"
-                    ? "Codex 대화 ID를 받지 못해 셸만 복원했습니다. Codex의 훅 검토 화면 또는 /hooks에서 Passport 훅을 신뢰한 뒤 대화를 시작하세요."
+                    ? "Codex 대화 ID를 확인하지 못해 셸만 복원했습니다. Codex를 다시 실행하세요. 대화를 진행한 뒤에도 반복되면 /hooks에서 Passport 훅의 신뢰 상태를 확인하세요."
                     : "Claude 대화 ID를 받지 못해 셸만 복원했습니다. Claude의 훅 설정과 실행 옵션을 확인하세요."),
               );
             localEnvironments.set(i.id, snapshot);
@@ -1339,12 +1342,13 @@ async function call<K extends Call>(
       return { requestId };
     }
     case "session.resize":
-      if (locals.sessions.has(i.id)) locals.resize(i.id, i.cols, i.rows);
-      else sessions.resize(i.id, i.cols, i.rows);
+      if (locals.sessions.has(i.id))
+        locals.resize(i.id, i.cols, i.rows, i.generation);
+      else sessions.resize(i.id, i.cols, i.rows, i.generation);
       return;
     case "session.ack":
-      if (locals.sessions.has(i.id)) locals.ack(i.id, i.bytes);
-      else sessions.ack(i.id, i.bytes);
+      if (locals.sessions.has(i.id)) locals.ack(i.id, i.bytes, i.generation);
+      else sessions.ack(i.id, i.bytes, i.generation);
       return;
     case "files.connections":
       return [...files.adapters.values()]
@@ -1945,6 +1949,9 @@ async function createWindow(withLocalTerminal = false) {
       sandbox: true,
       webSecurity: true,
       backgroundThrottling: !e2eWindowMode,
+      offscreen:
+        e2eWindowMode === "hidden" &&
+        platform.desktop.offscreenForHiddenWindows,
     },
   });
   platform.desktop.configureWindow(win, desktopContext, e2eWindowMode);
@@ -2143,7 +2150,7 @@ void app
       ),
       {
         protect: platform.protectDownload,
-        completed: (message) => emit({ kind: "notice", message }),
+        completed: (message, level) => emit({ kind: "notice", message, level }),
         changed: () => {
           terminalControl?.configure(store.read().settings.terminal.cliAccess);
           emit({ kind: "share-changed" });
@@ -2313,12 +2320,7 @@ void app
       } catch (error) {
         return {
           ok: false,
-          error:
-            error instanceof z.ZodError
-              ? `입력값을 확인해 주세요: ${error.issues[0]?.message}`
-              : error instanceof Error
-                ? error.message
-                : "작업에 실패했습니다.",
+          error: errorMessage(error),
         };
       }
     });

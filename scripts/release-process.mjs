@@ -30,6 +30,11 @@ export async function runCommand(
         { stdio: "ignore", windowsHide: true },
       );
       taskkill.on("error", () => child.kill());
+      // Permission/policy denial is an exit status, not a spawn error. Fall
+      // back to our direct child handle instead of hanging past the deadline.
+      taskkill.once("exit", (code) => {
+        if (code !== 0) child.kill();
+      });
     } else {
       try {
         process.kill(-child.pid, "SIGTERM");

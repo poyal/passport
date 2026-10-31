@@ -162,6 +162,9 @@ test("broadcast uses physical keys only, explicit execution records history, log
   server.input.splice(0);
   await page.getByRole("button", { name: "명령 실행", exact: true }).click();
   await expect.poll(() => server.input.join("")).toBe("printf '한글'\r");
+  await expect(page.getByRole("status")).toContainText(
+    "명령 입력을 요청했습니다. 실행 결과는 각 터미널에서 확인하세요.",
+  );
   expect(
     await page.evaluate(() =>
       window.passport.call("command.suggest", { query: "printf" }),
@@ -204,8 +207,14 @@ test("moves a live split workspace to another native window and back with scroll
   await expect(page.locator(".workspace-tab")).toHaveCount(0);
   // A delayed layout update from the source window must be harmless after ownership moves.
   await page.evaluate(async (id) => {
-    await window.passport.call("session.resize", { id, cols: 77, rows: 17 });
-    await window.passport.call("session.ack", { id, bytes: 1 });
+    const generation = crypto.randomUUID();
+    await window.passport.call("session.resize", {
+      id,
+      cols: 77,
+      rows: 17,
+      generation,
+    });
+    await window.passport.call("session.ack", { id, bytes: 1, generation });
   }, paneA);
   await expect(
     page.evaluate(

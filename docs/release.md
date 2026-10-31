@@ -102,6 +102,8 @@ GUI는 `tests/e2e/release-policy.json`의 안정적인 ID·파일·제목·모�
 
 다른 플랫폼 전용 시험과 미선택 Docker·장시간 부하·설치된 AI CLI 검사만 정책에 따라 생략합니다. `PASSPORT_DOCKER_MANIFEST`, `PASSPORT_UI_STRESS=1`, `PASSPORT_TEXT_BENCH=1`, `PASSPORT_NATIVE_AI=1`을 지정한 선택 검사는 통과가 필수입니다. Windows 내장 Bash·cmd·Windows PowerShell·PowerShell 7, DPAPI·드라이브 검사는 환경 미준비를 이유로 생략할 수 없습니다. 고정 검사 수를 복사하지 말고 실제 정책과 보고서를 확인합니다.
 
+`PASSPORT_UI_STRESS=1`은 16패널 10분과 SFTP·외형 변경·재로드를 섞은 30분 검사를 모두 선택합니다. `PASSPORT_STRESS=1`은 단위 단계의 4 GiB·10,000개 파일 검사를 선택합니다. 소스와 설치 파일에서 같은 선택 항목을 유지하고, 고정 작업 시간만 runner 예산에 더합니다. 파일 해시·수신 바이트·렌더 지연·메모리 원본 결과도 보존합니다. Docker 서버는 [재사용 절차](development.md#ftpftps와-선택-검사)로 두 OS와 설치본까지 유지할 수 있으며 정리가 끝나기 전 다른 실행의 fixture를 제거하지 않습니다. 실제 LAN 시나리오 결과는 SSH 터널을 통한 Docker 결과와 별도로 기록합니다.
+
 세션 복원을 릴리즈할 때 설치된 Codex·Claude CLI를 함께 검사하려면 검증 명령에 `PASSPORT_NATIVE_AI=1`을 지정합니다. 소스와 최종 설치본에서 같은 CLI 버전으로 수행하며 실제 CLI 버전·훅 신뢰·정상 재시작·동일 대화 재개 범위를 기록합니다. 모델 응답은 루프백 fixture이므로 실제 유료 서비스 검증이라고 표시하지 않습니다. Electron의 HOME·USERPROFILE은 변경하지 않으며 상세 격리는 [개발 가이드](development.md#ftpftps와-선택-검사)를 따릅니다.
 
 E2E 수명은 실행별 launches·exits·auditedShutdowns가 같고 숨김 표시·네이티브 포커스가 0이어야 합니다. 앱 종료는 코드 0·시그널 없음·10초 제한을 유지하며 강제 종료를 정상 종료로 적지 않습니다. 자세한 작성·복구 계약은 [E2E 가이드](development.md#e2e-실행과-작성)를 따릅니다.

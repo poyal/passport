@@ -60,7 +60,8 @@ npm run dev
 | 목적 | 명령 | 범위 |
 | --- | --- | --- |
 | 컴파일 | `npm run build` | TypeScript·Rust helper·앱 번들 |
-| 타입·단위·통합 검사 | `npm run check` | 타입 검사 후 Electron 런타임의 Vitest |
+| 타입·단위·통합 검사 | `npm run check` | 타입·기능 검사 목록·Rust helper·Electron 런타임의 Vitest |
+| 기능별 검사 누락 확인 | `npm run test:coverage-map` | IPC와 GUI 정책의 기능별 연결·파일 존재 확인 |
 | 관련 단위 검사 | `node scripts/test.mjs tests/platform.test.ts` | 파일 인수로 범위를 좁힘 |
 | 배포 정책·게시 회귀 | `npm run test:release` | `tests/release.test.mjs`; GUI 실행·실제 게시 없음 |
 | 릴리즈 기본 검사 | `npm run release:check` | check와 test:release; 설치 파일 검증은 별도 |
@@ -72,6 +73,18 @@ npm run dev
 단위 검사는 Electron ABI 네이티브 모듈을 사용하므로 `scripts/test.mjs`가 Electron을 Node 모드로 실행합니다. 일반 Node에서 `npx vitest`만 실행한 결과로 대체하지 않습니다. 테스트 fixture의 localhost listen이 차단되면 환경을 바로잡고, 이를 기능 실패나 통과로 기록하지 않습니다.
 
 변경한 계약의 단위 검사와 관련 GUI를 먼저 수행합니다. 예를 들어 플랫폼 변경은 `tests/platform.test.ts`·`tests/runtime.test.ts`, 입력은 `tests/paste.test.ts`·`tests/terminal-unicode.test.ts`, PTY 종료는 `tests/windows-pty.test.ts`와 `tests/e2e/shutdown.spec.ts`를 함께 검토합니다. 릴리즈 검증은 관련 부분 검사로 대체하지 않습니다. **문구·링크·배치만 바꾼 경우는 문서 확인만 수행합니다.**
+
+### 기능별 회귀와 UI 결과 확인
+
+[기능별 검사 목록](../tests/feature-coverage.json)은 실행·호스트·셸·입력·화면 복원·작업 탭·SSH·터널·파일·전송·명령·알림·공유·로그·설정·데이터·배포의 17개 기능군을 관리합니다. 각 기능의 관찰할 결과, IPC, 단위 검사 파일과 GUI 정책 ID를 연결합니다. 새 IPC나 GUI 시나리오를 추가·삭제하면 목록도 갱신합니다. 목록 검사는 실행 성공이나 코드 커버리지 비율을 증명하지 않습니다. 통과 판단은 실제 단위·GUI·네이티브 보고서로 합니다.
+
+저장·삭제·연결·전송은 성공뿐 아니라 진행 중, 실패, 취소, 재시도와 다른 창의 변경을 확인합니다. 실패한 저장·삭제는 입력 초안을 유지하고, 취소한 내보내기는 완료 메시지를 띄우지 않아야 합니다. 명령 입력 요청 성공은 원격 명령의 종료·성공과 다릅니다. UI 안내를 검사할 때 DB 재조회, 수신 바이트·해시, 파일 존재, 실제 셸 버퍼 등 독립된 결과도 함께 확인합니다. 비밀번호·키·잘못된 입력 원문을 스키마 오류에 노출하지 않습니다.
+
+터미널 `output`·ACK·resize는 연결 세대를 전달합니다. 이전 연결의 늦은 콜백으로 새 연결의 backpressure·화면 크기를 바꾸지 않습니다. 화면 복원 중 글꼴 로드·ResizeObserver는 저장된 격자의 파싱을 방해하지 않으며, 완료 시 현재 창 크기로 다시 맞춥니다. 취소·새 연결·새 hydration 이후의 콜백은 이전 화면을 체크포인트로 승격하지 않습니다. SSH stdout·stderr는 각각 UTF-8 디코더를 사용하고 출력 조각은 UTF-16 surrogate pair 중간에서 끊지 않습니다.
+
+로컬 프로세스가 종료되면 배치 타이머에 남은 출력을 먼저 전달한 뒤 연결 종료와 로그 종료를 알립니다. SSH 재접속이 아직 인증 중일 때도 이전 stream·client 콜백은 연결 세대로 거절합니다. Windows native helper는 여러 CLI의 동시 시작으로 named pipe가 사용 중일 때만 기존 500ms 한도 안에서 재시도하며, 이미 쓴 이벤트를 재전송하지 않습니다. Codex의 Windows 훅은 PowerShell 호출 연산자로 실행하며 공백·한글·작은따옴표가 포함된 실제 실행 경로를 양쪽 OS 셸에서 검사합니다.
+
+Windows PTY·프로세스 감사는 프로세스 조회와 정상 종료가 가능한 실행 환경이 필요합니다. 샌드박스의 이력 파일·CIM 접근 거부는 기록하고 허용된 데스크톱 환경에서 다시 검사합니다. 4 MiB 실제 콘솔 입력 지연을 측정할 때 같은 기기에서 빌드·다른 GUI 부하 검사를 동시에 돌리지 않습니다. 다른 사용자 앱을 임의 종료하지 않습니다.
 
 ### FTP·FTPS와 선택 검사
 
@@ -97,9 +110,48 @@ FTPS는 OpenSSL을 이용해 시험 인증서를 만듭니다. 인증서 검증�
 
 `npm run test:ssh:docker`는 실행 중인 Docker 엔진·네트워크·여유 저장 공간이 필요합니다. 임시 인증과 루프백 포트로 OS별 SSH/SFTP/터널·GUI 전송을 검사하며 해당 실행의 컨테이너만 정리합니다. 결과 기본 경로는 `release/checks/docker-ssh/results.json`입니다. 구형 알고리즘 fixture의 성공을 실제 모든 구형 OS에서 검증한 것으로 쓰지 않습니다.
 
+소스와 설치 파일에 같은 Docker 서버를 사용하려면 `node scripts/docker-ssh.mjs --prepare`가 출력한 manifest 경로를 `PASSPORT_DOCKER_MANIFEST`로 지정합니다. 작업 후 `node scripts/docker-ssh.mjs --cleanup <manifest.json>`으로 해당 실행의 컨테이너와 임시 인증만 정리합니다. manifest에는 시험용 개인 키가 있으므로 Git·보고서에 넣지 않습니다. 다른 기기에서 검증할 때는 시험 포트만 SSH 역방향 포워딩하여 루프백으로 제공하고 해당 기기의 manifest 포트를 맞춥니다. 실제 LAN 검증과 구분합니다. Docker 창이 열려 있는지와 엔진이 응답하는지는 별개이며 `docker info`와 실제 빌드를 확인합니다.
+
 `PASSPORT_STRESS=1 node scripts/test.mjs tests/stress.test.ts`는 대용량 파일·다수 파일을 검사합니다. `PASSPORT_UI_STRESS=1 node scripts/e2e.mjs tests/e2e/stress.spec.ts`는 지속 UI 부하, `npm run test:terminal:large`는 대용량 텍스트 처리 검사입니다. Windows에서는 해당 환경 변수를 `$env:변수명 = '1'`로 설정하고 실행 후 해제합니다. 일반 문서 수정에 선택 검사를 덧붙이지 않으며, 실행 범위·지속 시간·기기를 최종 결과에 명시합니다. 원본 JSON·로그를 docs에 보관하지 않습니다.
 
-`PASSPORT_NATIVE_AI=1 node scripts/e2e.mjs tests/e2e/native-agent-resume.spec.ts`는 PATH에 설치된 실제 Codex·Claude CLI로 대화 생성, 실행 옵션 보존, 앱 완전 종료·재시작 후 동일 대화 재개와 빈 Claude 재실행을 검사합니다. 앱 DB·셸 시작 파일·AI 설정·대화 저장 폴더를 격리하고 모델 응답만 루프백 서버로 제공합니다. Electron 프로세스의 HOME·USERPROFILE은 유지합니다. macOS에서 HOME을 임시 폴더로 바꾸면 Keychain을 찾지 못하고 생성·재설정 요청을 띄울 수 있으므로 이 방식으로 앱을 격리하지 않습니다. 실제 CLI·훅·대화 파일 검증이며 유료 API·로그인·외부 모델 서비스 검증은 아닙니다. Codex의 훅 신뢰는 격리 프로필의 기본 검토 화면에서 승인합니다. CLI가 없거나 동작이 달라지면 요청한 검사는 실패하며 모의 CLI로 대체하지 않습니다.
+`PASSPORT_NATIVE_AI=1 node scripts/e2e.mjs tests/e2e/native-agent-resume.spec.ts`는 PATH에 설치된 실제 Codex·Claude CLI로 대화 생성, 실행 옵션 보존, 앱 완전 종료·재시작 후 동일 대화 재개, 빈 대화의 새 실행, ID 미확인 시 셸 복원 안내와 수동 새 실행을 검사합니다. 앱 DB·셸 시작 파일·AI 설정·대화 저장 폴더를 격리하고 모델 응답만 루프백 서버로 제공합니다. Electron 프로세스의 HOME·USERPROFILE은 유지합니다. macOS에서 HOME을 임시 폴더로 바꾸면 Keychain을 찾지 못하고 생성·재설정 요청을 띄울 수 있으므로 이 방식으로 앱을 격리하지 않습니다. 실제 CLI·훅·대화 파일 검증이며 유료 API·로그인·외부 모델 서비스 검증은 아닙니다. Codex의 훅 신뢰는 격리 프로필의 기본 검토 화면에서 승인합니다. CLI가 없거나 동작이 달라지면 요청한 검사는 실패하며 모의 CLI로 대체하지 않습니다.
+
+시험 CLI는 버전을 고정하고 시험 프로세스에서만 자동 업데이트를 끕니다. Claude는 `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1`·`DISABLE_AUTOUPDATER=1`, Codex는 격리 config의 `check_for_update_on_startup=false`를 사용합니다. 실패 시 격리 프로필의 진단만 수집하며 실제 사용자 설정·로그·자격 증명은 읽지 않습니다.
+
+일부 실제 Codex 재개에서는 `SessionStart`가 오지 않을 수 있습니다. 기존에 확인한 대화만 정확히 같은 재개 argv·작업 폴더·설정 위치로 실행할 때 ID와 대화 존재 정보를 유지합니다. 다른 실행·새 대화는 새 훅으로 확인하며 종료 이벤트는 복원 자격을 해제합니다. 실제 CLI 회귀 검사는 저장 화면과 구분한 새 PTY 출력, 이전 문맥을 포함한 새 모델 요청, 같은 대화 파일에 추가된 입력, 동일 대화 ID·옵션을 함께 확인합니다.
+
+선택 부하 검사는 다음 기준을 사용합니다. 지정한 선택 검사의 실패를 생략으로 바꾸지 않습니다. 실행 전 필요한 저장 공간과 기기 자원을 확인합니다.
+
+| 검사 | 부하와 판정 |
+| --- | --- |
+| UI 지속 부하 | 터미널 16개 × 100 KiB/s × 10분, 목표 바이트의 95% 이상 |
+| 혼합 부하 | 같은 출력으로 30분, SFTP 생성·이름 변경·목록·삭제, 글꼴·테마·창 크기 변경, 5분마다 화면 재로드와 SSH/SFTP 재연결·이전 채널 회수 |
+| 입력 응답 | SSH/IPC 왕복 p95 < 100ms, 고정된 첫 행의 DOM 갱신 후 렌더 프레임 p95 < 250ms·최대 < 3초 |
+| 앱 메모리 | 전체 프로세스 working set < 3 GiB, 워밍업 뒤 중앙값 증가 ≤ 256 MiB; 30분 검사는 5∼10분과 마지막 5분 비교 |
+| 대용량 텍스트 | 16·64·256·1,024 MiB Unicode/ANSI 출력과 64 KiB 긴 줄, 마지막 마커의 실제 표시·수신량·프레임·메모리 기록 |
+| 파일 부하 | 위치별 표식이 있는 4 GiB 파일의 SHA-256, 10,000개 파일의 내용 대조, 전체 검사 중 RSS 증가 < 512 MiB |
+
+UI 부하의 렌더 검사는 출력이 입력 마커를 지우지 않도록 첫 행을 예약합니다. 물리 키 입력이나 IME 조합의 지연으로 해석하지 않습니다. 부하의 고정 실행 시간만 선택 시 외부 runner 예산에 더하며 일반 GUI·정상 종료 제한은 유지합니다. Windows 아이콘 빌드는 검증된 `icons@1.1.0`의 Vips 초기화 promise를 공유해 병렬 크기 변환마다 1 GiB WASM 엔진을 중복 생성하지 않도록 작업 폴더의 복사본에만 패치합니다. upstream 코드가 바뀌면 재검토 전 실패합니다.
+
+자동 검사와 별도로 물리 한글 IME의 조합 중 이동·삭제·붙여넣기, 실제 OS 알림·Keychain 승인, 로그인한 AI 서비스, 격리 계정의 설치·업그레이드·제거, 실제 다른 PC와의 LAN 승인, 최소 지원 OS를 구분해 기록합니다. 미실행 항목을 자동 검사 통과로 대체하지 않습니다.
+
+### 두 기기 사이의 실제 LAN 시나리오
+
+`scripts/lan-verify.mjs`는 같은 소스의 Windows·Mac 앱을 서로 다른 실제 LAN IPv4에 연결합니다. 각 기기의 OS 암호화, 직접 TLS 연결, 친구 등록 승인, 양방향 8 MiB 첨부의 SHA-256·Unicode 본문, 승인 전 내용 비공개, 비활성 HTML, Windows 다운로드 영역·Mac quarantine, 거절·친구 삭제를 검사합니다. 일반 숨김 E2E와 별도이며 사용자 홈과 Keychain 정책을 바꾸지 않습니다. 앱 네트워크 권한 창은 사용자가 승인합니다.
+
+먼저 Mac의 GUI 로그인 세션에서 아래 수신 역할을 시작합니다. 주소와 실행 폴더는 실제 값으로 바꿉니다.
+
+```sh
+node scripts/lan-verify.mjs --role responder --address <Mac-LAN-IPv4> --directory release/checks/lan-mac-<실행-ID>
+```
+
+출력 폴더의 `ready.json`만 Windows 작업 폴더로 복사한 뒤 3분 안에 다음을 시작합니다. 등록키는 해당 시험의 짧은 수명 인증 정보이며 Git·최종 보고서에 넣지 않습니다.
+
+```sh
+node scripts/lan-verify.mjs --role initiator --address <Windows-LAN-IPv4> --directory release/checks/lan-win-<실행-ID> --peer release/checks/mac-ready.json
+```
+
+제어용 파일 복사에 SSH를 사용해도 앱 쪽지 경로는 별개입니다. 스크립트는 같은 주소·루프백·같은 OS를 거부합니다. 두 `result.json`의 성공과 정상 종료 감사를 함께 확인하고 복사한 등록키를 삭제합니다. 이 검사는 Wi-Fi·유선 환경 전체, 공용 인터넷, 최소 지원 OS를 대표하지 않습니다.
 
 ## E2E 실행과 작성
 
@@ -114,6 +166,8 @@ GUI 시험 소스는 **`tests/e2e/` 하나**입니다. 릴리즈는 같은 시�
 | desktop | `npm run test:e2e:desktop` | `@desktop` 실제 포커스·클립보드 검사 |
 
 빌드된 앱에는 `node scripts/e2e.mjs [--show 또는 --desktop] <spec>`을 사용할 수 있습니다. `PASSPORT_E2E_EXECUTABLE`에 검증할 패키지의 실행 파일 절대 경로를 지정하면 격리 데이터로 그 앱을 검사합니다. 숨김 모드를 지원하지 않는 예전 바이너리는 실행 전에 거부하며 자동으로 창 표시 모드로 바꾸지 않습니다. 설치된 사용자 앱을 임의로 교체하지 않습니다.
+
+Windows 숨김 검사는 Electron의 [offscreen 렌더링](https://www.electronjs.org/docs/latest/tutorial/offscreen-rendering)을 사용합니다. Chromium 152는 표시되지 않는 Windows 창에서 프레임 표시 시각을 기다리는 TextRecord를 계속 보관하므로, 숨김 상태에서도 렌더링이 완료되는 대상을 제공합니다. 메모리 상한·하이라이트·출력량은 그대로 검사하고 강제 GC를 사용하지 않습니다. 표시 창과 실제 데스크톱 검사는 일반 렌더링을 사용하며, 숨김 검사 결과를 물리 화면의 표시 지연으로 해석하지 않습니다.
 
 ### 앱 재사용과 복구 계약
 
@@ -148,7 +202,7 @@ OS 기능은 `src/main/platform/contracts.ts`의 타입 계약과 `darwin/`·`wi
 | `TerminalPlatform` | 셸 탐색·실행 파일 아키텍처·기본 인수·경로·profileKey·환경 준비·PTY 동작만 담당. `configureEnvironment`는 새 세션 환경을 수정하고 사용자 셸 파일을 덮어쓰지 않음 |
 | `PtyBehavior` | PTY마다 새 인스턴스 생성. 출력은 큐에 넣기 전에 observe, input은 동기 문자열 변환이며 직접 PTY write 금지. 실제 크기 변경 때 resized 호출. terminate 반환을 네이티브 종료 완료로 보지 않음 |
 | `ClipboardPlatform` | 파일 형식 없음은 `undefined`, 빈 목록은 `[]`, 읽기 실패는 reject. 파일·이미지·텍스트 순서와 비동기 전후 소유 창·세대 재검사 유지 |
-| `DesktopPlatform` | Windows AppUserModelID 설정 → 숨김 생성 → ICO·setAppDetails → ready-to-show → 표시. 숨김 시험 정책을 마지막에 적용 |
+| `DesktopPlatform` | Windows AppUserModelID 설정 → 숨김 생성 → ICO·setAppDetails → ready-to-show → 표시. 숨김 시험의 offscreen 렌더링 여부를 OS 구현이 정하며 표시·포커스 차단 정책을 마지막에 적용 |
 | `ActivityEndpoint` | 생성 → 서버 listen → listening(권한 설정), 연결·서버 종료 → dispose. Mac 소켓과 Windows pipe 차이만 분리; DB 정책은 공통 계층에 둠 |
 | `protectDownload` | Mac quarantine, Windows IAttachmentExecute의 Save와 ZoneId 3 적용 후 파일 해시 재검사. 보호 실패 시 파일 공개 중단; 자동 실행 금지 |
 

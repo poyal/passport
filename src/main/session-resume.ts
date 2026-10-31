@@ -13,7 +13,7 @@ import {
   type AgentResume,
   type ResumeScreen,
 } from "../shared/session-resume";
-import { resumeArguments } from "./agent-resume";
+import { agentResumeCommand, resumeArguments } from "./agent-resume";
 import type { Store } from "./store";
 
 const recordSchema = z.object({
@@ -267,7 +267,27 @@ export class SessionResume {
       const parsed = event.args
         ? resumeArguments(event.source, event.args)
         : { args: [], reason: "실행 옵션을 확인하지 못했습니다." };
+      const previous = record.agent;
+      // A native CLI can resume without emitting SessionStart. Preserve only
+      // a previously confirmed conversation for the exact resume command we
+      // issued in the same cwd/config home. A fresh/manual/different run must
+      // still obtain its own native identity from a hook.
+      const continuing =
+        previous?.hasConversation === true &&
+        previous.agent === event.source &&
+        previous.cwd === event.cwd &&
+        previous.home === event.home &&
+        event.args &&
+        JSON.stringify(event.args) ===
+          JSON.stringify(agentResumeCommand(previous));
       record.agent = {
+        ...(continuing
+          ? {
+              session: previous.session,
+              hasConversation: true,
+              transcript: previous.transcript,
+            }
+          : {}),
         agent: event.source,
         cwd: event.cwd,
         home: event.home,

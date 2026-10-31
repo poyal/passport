@@ -513,7 +513,9 @@ export function ExecuteCommand({
                 }),
               )
               .then(() => {
-                app.notify("명령을 실행했습니다.");
+                app.notify(
+                  "명령 입력을 요청했습니다. 실행 결과는 각 터미널에서 확인하세요.",
+                );
                 onClose();
               })
               .catch(app.notify)

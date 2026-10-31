@@ -252,6 +252,33 @@ it("runs a startup command once and never repeats it after automatic reconnect",
     await new Promise((r) => setTimeout(r, 20));
   expect(server.input.join("")).toBe("STARTUP_ONCE\rAFTER_RECONNECT");
 });
+it("decodes independent UTF-8 stdout and stderr chunks without corrupting either stream", async () => {
+  const { host, store, secret, server } = await setup();
+  let output = "";
+  const manager = new Sessions(
+    store,
+    async () => true,
+    (event) => {
+      if (event.kind === "output") {
+        output += event.data;
+        manager.ack(event.id, event.bytes, event.generation);
+      }
+    },
+  );
+  cleanups.push(async () => manager.closeAll());
+  const id = randomUUID();
+  await manager.open(id, host, secret);
+  await expect.poll(() => output).toContain("테스트 서버");
+  output = "";
+  const korean = Buffer.from("한"),
+    emoji = Buffer.from("💻");
+  server.shells[0].write(korean.subarray(0, 2));
+  server.shells[0].stderr.write(emoji.subarray(0, 2));
+  server.shells[0].write(korean.subarray(2));
+  server.shells[0].stderr.write(emoji.subarray(2));
+  await expect.poll(() => output).toBe("한💻");
+});
+
 it("streams local → SFTP → a different SFTP connection and changes permissions", async () => {
   const { host, store, secret, root } = await setup();
   await fs.mkdir(path.join(root, "source"));
