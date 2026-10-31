@@ -28,7 +28,10 @@ export function errorMessage(error: unknown): string {
   if (!issue) return "입력값을 확인하세요.";
   // Custom Korean domain errors already explain the required action. Never
   // display Zod's JSON dump or echo an invalid password/key/value in the UI.
-  if (issue.code === "custom" && /[가-힣]/.test(issue.message))
+  if (
+    ["custom", "too_small", "too_big", "invalid_format"].includes(issue.code) &&
+    /[가-힣]/.test(issue.message)
+  )
     return issue.message;
   if (issue.path.at(-1) === "version" && issue.code === "invalid_value")
     return "지원하지 않는 데이터 버전입니다. 최신 앱인지 확인하고, 필요한 경우 호환되는 백업으로 복원하세요.";

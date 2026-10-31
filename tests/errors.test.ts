@@ -1,6 +1,10 @@
 import { expect, it } from "vitest";
 import { z } from "zod";
 import { errorMessage } from "../src/shared/errors";
+import {
+  pasteTextLimit,
+  sessionPasteSchema,
+} from "../src/shared/terminal-input";
 
 it("names the invalid field and bound without exposing secret values or schema JSON", () => {
   const schema = z.object({
@@ -45,4 +49,16 @@ it("preserves domain guidance and safely handles non-Error failures", () => {
     "디스크 공간을 확인하세요.",
   );
   expect(errorMessage({ password: "private" })).toBe("작업에 실패했습니다.");
+});
+
+it("preserves the clipboard byte-limit guidance authored on a string bound", () => {
+  const result = sessionPasteSchema.safeParse({
+    id: "00000000-0000-4000-8000-000000000001",
+    sessionInstanceId: "00000000-0000-4000-8000-000000000002",
+    text: "x".repeat(pasteTextLimit + 1),
+    bracketedPaste: false,
+  });
+  expect(result.success).toBe(false);
+  expect(errorMessage(result.error)).toContain("4 MiB");
+  expect(errorMessage(result.error)).not.toContain("4194304자");
 });
