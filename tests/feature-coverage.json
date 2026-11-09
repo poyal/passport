@@ -30,9 +30,18 @@
         "shutdown.quits-normally-with-four-reopened-native-ptys",
         "shutdown.shares-one-instance-per-data-directory-and-allows-isolated-data-d",
         "shutdown.closes-live-terminals-without-parsing-externally-changed-settings",
-        "reuse.clean-state"
+        "reuse.clean-state",
+        "window-close.removes-tabs",
+        "window-close.save-failure",
+        "window-close.transfer-source",
+        "window-close.transfer-target",
+        "window-close.quit-preserves",
+        "window-close.last-window"
       ],
-      "outcomes": ["중복 실행, 프로필 격리, 정상 종료와 자식 프로세스 회수"]
+      "outcomes": [
+        "중복 실행, 프로필 격리, 정상 종료와 자식 프로세스 회수",
+        "개별 창 닫기의 탭 제거와 취소·실패 보존, 마지막 창·앱 종료의 복원 유지"
+      ]
     },
     {
       "id": "hosts",
@@ -326,7 +335,11 @@
         "share.folder",
         "share.file"
       ],
-      "unit": ["tests/share.test.ts", "tests/terminal-message.test.ts"],
+      "unit": [
+        "tests/share.test.ts",
+        "tests/terminal-message.test.ts",
+        "tests/terminal-mouse.test.ts"
+      ],
       "e2e": [
         "sharing.ui",
         "terminal-menu.actions",
@@ -335,10 +348,12 @@
         "terminal-menu.ssh",
         "sharing.1",
         "sharing.2",
-        "sharing.dismiss-expired-error"
+        "sharing.dismiss-expired-error",
+        "terminal-menu.local-mouse"
       ],
       "outcomes": [
-        "페어링·승인·취소·보호 저장, 오프라인/만료 오류와 수신 내용"
+        "페어링·승인·취소·보호 저장, 오프라인/만료 오류와 수신 내용",
+        "TUI 마우스 누름·드래그·해제와 앱 메뉴의 입력 분리"
       ],
       "scenario": ["scripts/lan-verify.mjs"]
     },

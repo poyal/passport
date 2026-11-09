@@ -623,6 +623,42 @@
       "id": "logs.grouped-reconnect",
       "file": "log-groups.spec.ts",
       "title": "SSH reconnects keep a log group with visible expired segments and recording gaps"
+    },
+    {
+      "id": "window-close.removes-tabs",
+      "file": "window-close.spec.ts",
+      "title": "closing a window removes only its tabs and resume records while cancellation keeps connections"
+    },
+    {
+      "id": "window-close.save-failure",
+      "file": "window-close.spec.ts",
+      "title": "a failed tab deletion keeps the window and live terminal until a successful retry"
+    },
+    {
+      "id": "window-close.transfer-source",
+      "file": "window-close.spec.ts",
+      "title": "closing a transfer source rejects delayed snapshots without moving or resurrecting tabs"
+    },
+    {
+      "id": "window-close.transfer-target",
+      "file": "window-close.spec.ts",
+      "title": "closing a transfer target rejects delayed snapshots without moving or resurrecting tabs"
+    },
+    {
+      "id": "window-close.quit-preserves",
+      "file": "window-close.spec.ts",
+      "title": "application quit preserves every window's tabs for the next launch"
+    },
+    {
+      "id": "window-close.last-window",
+      "file": "window-close.spec.ts",
+      "title": "macOS last window close preserves tabs when the app is activated again",
+      "platforms": ["darwin"]
+    },
+    {
+      "id": "terminal-menu.local-mouse",
+      "file": "terminal-menu.spec.ts",
+      "title": "local TUI mouse gestures keep presses drags and releases together without clipboard interference"
     }
   ]
 }

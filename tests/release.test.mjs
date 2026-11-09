@@ -452,7 +452,7 @@ test("GUI policy records platform exclusions and optional skips explicitly", () 
     platform: "darwin",
     mode: "hidden",
   });
-  assert.equal(coverage.passed, 104);
+  assert.equal(coverage.passed, 111);
   assert.equal(coverage.skipped, 11);
   assert.equal(
     coverage.tests.filter(
@@ -470,12 +470,12 @@ test("GUI policy records platform exclusions and optional skips explicitly", () 
     platform: "win32",
     mode: "hidden",
   });
-  assert.equal(windows.skipped, 9);
+  assert.equal(windows.skipped, 10);
   assert.equal(
     windows.tests.filter(
       (test) => test.skipReason === "not applicable on win32",
     ).length,
-    4,
+    5,
   );
   assert.ok(
     windows.tests

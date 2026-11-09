@@ -25,12 +25,14 @@ import {
 } from "../shared/terminal-input";
 import { readControlText } from "../shared/terminal-control";
 import { resumeScreenLimit, type ResumeScreen } from "../shared/session-resume";
+import { bindTerminalMouse } from "./terminal-mouse";
 type Entry = {
   term: Terminal;
   fit: FitAddon;
   search: SearchAddon;
   element: HTMLDivElement;
   resize?: ResizeObserver;
+  disposeMouse?: () => void;
   connected: boolean;
   connectionRevision: number;
   sessionInstanceId?: string;
@@ -384,44 +386,10 @@ export function ensureTerminal(id: string) {
     },
     true,
   );
-  // Preserve a selection while opening the menu, and keep its click out of
-  // applications using terminal mouse reporting. Shift explicitly opens our menu.
-  const appMenu = (event: MouseEvent) =>
-    term.hasSelection() ||
-    event.shiftKey ||
-    term.modes.mouseTrackingMode === "none";
-  element.addEventListener(
-    "mousedown",
-    (event) => {
-      if (event.button === 2 && appMenu(event)) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-      }
-    },
-    true,
-  );
-  element.addEventListener(
-    "mouseup",
-    (event) => {
-      if (event.button === 2 && appMenu(event)) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-      }
-    },
-    true,
-  );
-  element.addEventListener(
-    "contextmenu",
-    (event) => {
-      event.preventDefault();
-      if (!appMenu(event)) return;
-      event.stopImmediatePropagation();
-      // Keyboard requests were already handled above; Chromium may emit this too.
-      if (event.button !== 2 && event.clientX === 0 && event.clientY === 0)
-        return;
-      openMenu(event.clientX, event.clientY);
-    },
-    true,
+  entry.disposeMouse = bindTerminalMouse(
+    element,
+    () => term.modes.mouseTrackingMode !== "none",
+    openMenu,
   );
   return entry;
 }
@@ -552,6 +520,7 @@ export function disposeMissing(ids: Set<string>) {
     if (!ids.has(id)) {
       e.pasteQueue.cancel();
       e.resize?.disconnect();
+      e.disposeMouse?.();
       e.highlights?.dispose();
       e.term.dispose();
       e.element.remove();

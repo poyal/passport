@@ -208,6 +208,7 @@ function trackBanner(banner: Notification) {
   banners.track(banner);
 }
 const windows = new Map<number, BrowserWindow>();
+const closingWindows = new Set<number>();
 const keyboardContexts = new Map<number, ShortcutContext>();
 const initialTerminals = new Map<
   number,
@@ -1808,6 +1809,8 @@ async function call<K extends Call>(
         title: `${appIdentity.name} 창 ${w.id}`,
       }));
     case "window.move": {
+      if (closingWindows.has(caller.id))
+        throw new Error("닫는 중인 창의 탭은 이동할 수 없습니다.");
       const workspace = store
         .read()
         .workspaces.find((w) => w.id === i.workspaceId);
@@ -1823,6 +1826,14 @@ async function call<K extends Call>(
       const target = i.target ? windows.get(i.target) : await createWindow();
       if (!target || target.id === caller.id)
         throw new Error("다른 창을 선택하세요.");
+      if (
+        caller.isDestroyed() ||
+        target.isDestroyed() ||
+        closingWindows.has(caller.id) ||
+        closingWindows.has(target.id) ||
+        owners.get(workspace.id) !== caller.id
+      )
+        throw new Error("닫는 중인 창의 탭은 이동할 수 없습니다.");
       if (
         panes(workspace.root).some(
           (pane) => locals.inputBusy(pane.id) || sessions.inputBusy(pane.id),
@@ -1880,7 +1891,13 @@ async function call<K extends Call>(
       )
         throw new Error("터미널 상태가 일치하지 않습니다.");
       const target = windows.get(moving.target);
-      if (!target) throw new Error("대상 창이 닫혔습니다.");
+      if (
+        !target ||
+        target.isDestroyed() ||
+        closingWindows.has(caller.id) ||
+        closingWindows.has(target.id)
+      )
+        throw new Error("대상 창이 닫혔거나 닫는 중입니다.");
       clearTimeout(moving.timer);
       moves.delete(workspaceId);
       owners.set(workspaceId, target.id);
@@ -1995,13 +2012,16 @@ async function createWindow(withLocalTerminal = false) {
   win.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
   win.webContents.on("will-navigate", (e) => e.preventDefault());
   win.webContents.on("will-attach-webview", (e) => e.preventDefault());
-  const releaseConnections = () => {
+  const cancelMoves = () => {
     for (const [id, move] of moves)
       if (move.source === win.id || move.target === win.id) {
         clearTimeout(move.timer);
         moves.delete(id);
         for (const event of move.events) emit(event, true);
       }
+  };
+  const releaseConnections = () => {
+    cancelMoves();
     // Closing a window must release its live resources even if persisted
     // settings have become unreadable. Ownership uses the last accepted layout.
     for (const w of documentCache?.workspaces ?? [])
@@ -2025,59 +2045,95 @@ async function createWindow(withLocalTerminal = false) {
       releaseConnections();
     }
   });
-  let closing = false;
-  let checkpointed = false;
-  const checkpointWindow = async () => {
-    const ids = [...states.keys()].filter((id) => ownerOf(id) === win.id);
-    for (const id of ids) resume.stop(id, resume.get(id)?.automatic ?? true);
-    await Promise.all(ids.map((id) => resume.checkpoint(id)));
-    checkpointed = true;
-    if (!win.isDestroyed()) win.close();
-  };
+  let closePending = false;
+  let closeReady = false;
   win.on("close", (event) => {
-    if (closing) {
-      if (resume.enabled && !checkpointed) {
-        event.preventDefault();
-        void checkpointWindow();
-      }
-      return;
-    }
-    if (
-      [...states.values()].some(
-        (s) =>
-          ownerOf(s.id) === win.id &&
-          ["connected", "connecting"].includes(s.status),
-      ) ||
-      [...transfers.jobs.values()].some(
-        (j) =>
-          (endpointOwners.get(j.source) === win.id ||
-            endpointOwners.get(j.destination) === win.id) &&
-          ["running", "queued"].includes(j.state),
-      )
-    ) {
-      event.preventDefault();
-      void dialog
-        .showMessageBox(win, {
+    if (closeReady) return;
+    event.preventDefault();
+    if (closePending) return;
+    closePending = true;
+    // Another window can cancel an application quit while this dialog is open.
+    // That must never turn this close request into deletion of saved tabs.
+    const quitRequested = quitting;
+    void (async () => {
+      if (
+        [...states.values()].some(
+          (s) =>
+            ownerOf(s.id) === win.id &&
+            ["connected", "connecting"].includes(s.status),
+        ) ||
+        [...transfers.jobs.values()].some(
+          (j) =>
+            (endpointOwners.get(j.source) === win.id ||
+              endpointOwners.get(j.destination) === win.id) &&
+            ["running", "queued"].includes(j.state),
+        )
+      ) {
+        const result = await dialog.showMessageBox(win, {
           type: "question",
-          message: "연결과 전송을 종료하고 Passport를 닫을까요?",
+          message: "이 창의 연결과 전송을 종료하고 창을 닫을까요?",
           buttons: ["계속 사용", "종료"],
           cancelId: 0,
           defaultId: 0,
-        })
-        .then((r) => {
-          if (r.response === 1) {
-            closing = true;
-            if (resume.enabled)
-              void checkpointWindow().then(() => {
-                if (quitting) app.quit();
-              });
-            else if (quitting) app.quit();
-            else win?.close();
-          } else {
-            quitting = false;
-          }
         });
-    }
+        if (result.response !== 1) {
+          quitting = false;
+          return;
+        }
+      }
+      if (win.isDestroyed()) return;
+      const anotherWindow = [...windows.values()].some(
+        (other) =>
+          other.id !== win.id &&
+          !other.isDestroyed() &&
+          !closingWindows.has(other.id),
+      );
+      if (!quitRequested && !quitting && anotherWindow) {
+        const doc = store.read();
+        const remaining = doc.workspaces.filter(
+          (w) => owners.get(w.id) !== win.id,
+        );
+        // Commit before touching live resources. A failed save leaves the window,
+        // its connections and any pending transfer intact for another attempt.
+        const saved =
+          remaining.length === doc.workspaces.length
+            ? doc
+            : store.save({ ...doc, workspaces: remaining });
+        closingWindows.add(win.id);
+        releaseConnections();
+        logs.retainConnections(
+          new Set(remaining.flatMap((w) => panes(w.root).map((p) => p.id))),
+        );
+        publishDocument(saved);
+      } else {
+        closingWindows.add(win.id);
+        cancelMoves();
+        if (resume.enabled) {
+          const ids = [...states.keys()].filter((id) => ownerOf(id) === win.id);
+          for (const id of ids)
+            resume.stop(id, resume.get(id)?.automatic ?? true);
+          await Promise.all(ids.map((id) => resume.checkpoint(id)));
+        }
+      }
+      // Do not recursively close an idle window inside its original close
+      // event. Electron must finish cancelling that event before we retry.
+      await new Promise<void>((resolve) => setImmediate(resolve));
+      closeReady = true;
+      if (!win.isDestroyed()) win.close();
+      if (quitting && !shutdown) app.quit();
+    })()
+      .catch((error) => {
+        quitting = false;
+        closingWindows.delete(win.id);
+        if (!win.isDestroyed())
+          win.webContents.send("passport:event", {
+            kind: "notice",
+            message: `창을 닫지 못했습니다: ${errorMessage(error)}`,
+          } satisfies AppEvent);
+      })
+      .finally(() => {
+        closePending = false;
+      });
   });
   win.on("closed", () => {
     focusedPanes.delete(win.id);
@@ -2086,12 +2142,10 @@ async function createWindow(withLocalTerminal = false) {
       if (pending.owner === win.id) encryptedImports.delete(token);
     releaseConnections();
     windows.delete(win.id);
+    closingWindows.delete(win.id);
     window = windows.values().next().value;
     for (const [workspace, id] of owners)
-      if (id === win.id) {
-        if (window) owners.set(workspace, window.id);
-        else owners.delete(workspace);
-      }
+      if (id === win.id) owners.delete(workspace);
     if (windows.size && documentCache) publishDocument(documentCache);
   });
   const dev =

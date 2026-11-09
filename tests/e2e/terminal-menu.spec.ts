@@ -34,6 +34,7 @@ async function setup() {
       g.__menuSendError = "";
       g.__menuReleaseSend = undefined;
       g.__menuInputs = [];
+      g.__menuCaptureMouse = false;
       clipboard.writeText = async (text) => {
         g.__menuCopied = text;
       };
@@ -60,7 +61,10 @@ async function setup() {
         }
         if (name === "clipboard.terminal")
           return { ok: true, value: { kind: "text", text: "MENU_PASTE" } };
-        if (name === "session.input") g.__menuInputs.push(input);
+        if (name === "session.input") {
+          g.__menuInputs.push(input);
+          if (g.__menuCaptureMouse) return { ok: true };
+        }
         if (name === "session.paste")
           g.__menuInputs.push({ ...input, data: input.text });
         return original(event, name, input);
@@ -206,6 +210,110 @@ async function recipient(name: string) {
     .click();
   await suite.page.getByRole("option", { name: new RegExp(name) }).click();
 }
+
+async function exerciseTuiMouse(write: (text: string) => Promise<void>) {
+  const { page, application } = suite;
+  const reports = async () => {
+    const text = await application.evaluate(() =>
+      (globalThis as any).__menuInputs
+        .map((i: { data: string }) => i.data)
+        .join(""),
+    );
+    return [...text.matchAll(/\x1b\[<(\d+);\d+;\d+([Mm])/g)].map(
+      (m) => `${Number(m[1]) & ~28}${m[2]}`,
+    );
+  };
+  const clear = () =>
+    application.evaluate(() => {
+      (globalThis as any).__menuInputs = [];
+    });
+  await write("\x1b[?1049h\x1b[2J\x1b[H\x1b[?1000h\x1b[?1006hMOUSE_SELECTED");
+  await expect(terminal(page)).toContainText("MOUSE_SELECTED");
+  // Search creates a genuine xterm selection even while mouse reporting is on.
+  await page.getByRole("button", { name: "터미널 검색", exact: true }).click();
+  await page
+    .getByPlaceholder("출력 검색 · Enter 다음 / Shift+Enter 이전")
+    .fill("MOUSE_SELECTED");
+  await expect(page.getByRole("status", { name: "검색 결과" })).toHaveText(
+    "1/1",
+  );
+  await terminal(page).click({
+    button: "right",
+    modifiers: ["Shift"],
+    position: { x: 60, y: 45 },
+  });
+  await expect(
+    menu(page).getByRole("menuitem", { name: "복사", exact: true }),
+  ).toBeEnabled();
+  await page.keyboard.press("Escape");
+  await clear();
+  await terminal(page).click({ button: "right", position: { x: 60, y: 45 } });
+  await expect(menu(page)).toHaveCount(0);
+  await expect.poll(reports).toEqual(["2M", "2m"]);
+  expect(
+    await terminal(page)
+      .locator("textarea")
+      .evaluate((el) => el.style.zIndex),
+  ).not.toBe("1000");
+  await page.getByRole("button", { name: "검색 닫기", exact: true }).click();
+
+  for (const mode of [1002, 1003]) {
+    await write(`\x1b[?1000l\x1b[?${mode}h\r\nDRAG_${mode}`);
+    await expect(terminal(page)).toContainText(`DRAG_${mode}`);
+    const rect = (await terminal(page).locator(".xterm-screen").boundingBox())!;
+    for (const button of ["left", "right"] as const) {
+      await page.mouse.move(rect.x + 50, rect.y + 45);
+      await clear();
+      await page.mouse.down({ button });
+      await page.mouse.move(rect.x + 150, rect.y + 85, { steps: 5 });
+      await page.mouse.up({ button });
+      const code = button === "left" ? 0 : 2;
+      await expect.poll(async () => (await reports()).at(-1)).toBe(`${code}m`);
+      const events = await reports();
+      expect(events[0]).toBe(`${code}M`);
+      expect(events.filter((e) => e === `${code}M`)).toHaveLength(1);
+      expect(events.filter((e) => e === `${code}m`)).toHaveLength(1);
+      expect(events).toContain(`${code + 32}M`);
+      await expect(menu(page)).toHaveCount(0);
+    }
+    // Change Shift after the press and release outside the terminal.
+    await page.mouse.move(rect.x + 50, rect.y + 45);
+    await clear();
+    await page.mouse.down({ button: "right" });
+    await page.keyboard.down("Shift");
+    await page.mouse.move(rect.x + 150, rect.y - 10, { steps: 3 });
+    await page.mouse.up({ button: "right" });
+    await page.keyboard.up("Shift");
+    await expect.poll(async () => (await reports()).at(-1)).toBe("2m");
+    await expect(menu(page)).toHaveCount(0);
+    await write(`\x1b[?${mode}l`);
+  }
+  await write("\x1b[?1000h");
+  await clear();
+  await terminal(page).click({
+    button: "right",
+    modifiers: ["Shift"],
+    position: { x: 60, y: 45 },
+  });
+  await expect(menu(page)).toBeVisible();
+  expect(await reports()).toEqual([]);
+  await page.keyboard.press("Escape");
+  await terminal(page).locator("textarea").press("Shift+F10");
+  await expect(menu(page)).toBeVisible();
+  expect(await reports()).toEqual([]);
+  await page.keyboard.press("Escape");
+  await write("\x1b[?1000l\x1b[?1006l\x1b[?1049l");
+}
+
+test("local TUI mouse gestures keep presses drags and releases together without clipboard interference", async () => {
+  const target = await setup();
+  // Exercise real xterm -> IPC routing without injecting mouse escape codes
+  // into the local login shell. The SSH case also checks transport delivery.
+  await suite.application.evaluate(() => {
+    (globalThis as any).__menuCaptureMouse = true;
+  });
+  await exerciseTuiMouse((text) => output(target.paneId, text));
+});
 
 test("terminal menus preserve selected text, target paste and expose sharing availability with keyboard navigation", async ({}, info) => {
   const { page, application } = suite;
@@ -470,6 +578,11 @@ test("SSH terminal menus preserve mouse reporting and fit at the window edge", a
     );
     await page.getByRole("button", { name: host.name, exact: true }).click();
     await expect.poll(() => server.shells.length).toBe(1);
+    await exerciseTuiMouse(async (text) => {
+      server.shells[0].write(text);
+    });
+    expect(server.input.join("")).toMatch(/\x1b\[<2;\d+;\d+M/);
+    expect(server.input.join("")).toMatch(/\x1b\[<2;\d+;\d+m/);
     server.shells[0].write("\x1b[?1000h\x1b[?1006h\r\nMOUSE_READY");
     await expect(terminal(page)).toContainText("MOUSE_READY");
     const before = server.input.length;
