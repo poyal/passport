@@ -11,7 +11,7 @@
 | Node.js 24 이상, npm, Git, stable Rust | arm64 Node, Xcode Command Line Tools, Rust `aarch64-apple-darwin` 대상 | x64 Node, Python, Visual Studio C++ 빌드 도구·Windows SDK·Spectre 완화 라이브러리, Rust `x86_64-pc-windows-msvc` 대상 |
 | FTP/FTPS 검사: Python 3·OpenSSL | `python3`, `openssl`을 PATH에서 실행할 수 있어야 함 | `python`, `openssl`, Windows PowerShell 5.1 및 PowerShell 7 필요 |
 
-Windows 정식 검증은 `%ProgramFiles%/PowerShell/7/pwsh.exe`와 PATH의 `pwsh`를 모두 확인합니다. OpenSSL이 없다면 설치된 Git for Windows의 `usr/bin` 경로를 확인해 PATH에 추가할 수 있습니다. PowerShell의 npm 스크립트 실행 정책에 걸리면 `npm.cmd`를 사용합니다. Python·컴파일러·SDK가 필요한 네이티브 의존성 설치 오류를 무시하지 않습니다.
+Windows 정식 검증은 `%ProgramFiles%/PowerShell/7/pwsh.exe`와 PATH의 `pwsh`를 모두 확인합니다. Bash에서 시작한 검증 세션은 상속된 `ORIGINAL_PATH`가 새 PATH를 덮어써 시험 셸에서 Node를 찾지 못할 수 있습니다. 이 경우 검증 프로세스에서만 `Remove-Item Env:ORIGINAL_PATH -ErrorAction SilentlyContinue`로 기존 값을 제거하고 현재 도구 PATH를 상속합니다. 사용자 셸 파일·전역 환경은 바꾸지 않습니다. OpenSSL이 없다면 설치된 Git for Windows의 `usr/bin` 경로를 확인해 PATH에 추가할 수 있습니다. PowerShell의 npm 스크립트 실행 정책에 걸리면 `npm.cmd`를 사용합니다. Python·컴파일러·SDK가 필요한 네이티브 의존성 설치 오류를 무시하지 않습니다.
 
 시스템에 설치된 Rust·GitHub CLI 등 공용 도구를 사용합니다. 작업 전용 설치가 필요하면 ignored `build/toolchains/`를 사용하고 작업 종료 후 삭제합니다. 별도 Rust 설치는 `CARGO_HOME`, `RUSTUP_HOME`, `PASSPORT_CARGO`를 실제 위치에 맞게 설정합니다. 이전 작업의 도구가 남아 있다고 가정하지 않습니다.
 

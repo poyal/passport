@@ -15,6 +15,9 @@ import { PasteQueue } from "../src/shared/paste";
 import { prepareTerminalClipboard } from "../src/main/terminal-clipboard";
 import { localTerminalEnv } from "../src/main/terminal-env";
 import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { execFileSync } from "node:child_process";
 import vm from "node:vm";
 
 const queues: TerminalInputQueue[] = [];
@@ -309,10 +312,23 @@ it(
     const body = Buffer.from(text);
     expect(body.length).toBe(pasteTextLimit);
     const expected = Buffer.from(pasteStart + text + pasteEnd);
+    const directory =
+      process.platform === "win32"
+        ? fs.mkdtempSync(path.join(os.tmpdir(), "passport-paste-unit-"))
+        : undefined;
+    const received = directory && path.join(directory, "received.bin");
+    const receiver = directory && path.join(directory, "paste-receiver.exe");
+    if (receiver) {
+      execFileSync(
+        process.env.PASSPORT_RUSTC || "rustc",
+        ["tests/fixtures/paste-receiver.rs", "-o", receiver],
+        { stdio: "pipe", windowsHide: true },
+      );
+    }
     const code = `process.stdin.setRawMode(true); const hash = require('node:crypto').createHash('sha256'); let bytes = 0; process.stdin.on('data', chunk => { bytes += chunk.length; hash.update(chunk); if (bytes >= ${expected.length}) { process.stdout.write('RESULT:' + bytes + ':' + hash.digest('hex') + '\\n'); process.stdin.pause(); } }); process.stdout.write('READY\\n');`;
     const terminal = pty.spawn(
-      process.env.npm_node_execpath || process.execPath,
-      ["-e", code],
+      receiver || process.env.npm_node_execpath || process.execPath,
+      received ? [received] : ["-e", code],
       {
         name: "xterm-256color",
         cols: 100,
@@ -340,12 +356,19 @@ it(
     try {
       await expect.poll(() => output, { timeout: 5000 }).toContain("READY");
       queue.paste(text, true, "generation");
-      // Windows Node reads Unicode through the console input API. A real 4 MiB
-      // read takes about 29 s on the release host, after transport writes finish.
+      // Use the same native Windows console receiver as the GUI test, retaining
+      // the existing delivery deadline and exact byte/hash comparison.
       await expect
-        .poll(() => output, {
-          timeout: process.platform === "win32" ? 35000 : 10000,
-        })
+        .poll(
+          () => {
+            if (!received) return output;
+            const data = fs.readFileSync(received);
+            return `RESULT:${data.length}:${hash(data)}`;
+          },
+          {
+            timeout: process.platform === "win32" ? 35000 : 10000,
+          },
+        )
         .toContain(`RESULT:${expected.length}:${hash(expected)}`);
       await expect.poll(() => queue.busy).toBe(false);
       expect(errors).toEqual([]);
@@ -353,6 +376,7 @@ it(
       queue.dispose();
       terminal.kill();
       await exit;
+      if (directory) fs.rmSync(directory, { recursive: true, force: true });
     }
   },
   process.platform === "win32" ? 45000 : 20000,
