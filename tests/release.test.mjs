@@ -439,6 +439,81 @@ function fakeGitHub(commit) {
   return { state, client, add, blobs };
 }
 
+test("update payloads require version-to-version evidence and are published without replacing existing assets", async (t) => {
+  const { root, receipt } = await fixture(t, "win-x64");
+  receipt.updateArtifacts = [];
+  for (const name of [
+    "Passport-2.0.0-win32-x64-update.zip",
+    "update-win32-x64.json",
+    "update-win32-x64.sig",
+  ]) {
+    const bytes = Buffer.from(`fixture ${name}`);
+    const file = `release/builds/test/${name}`;
+    await fs.writeFile(path.join(root, file), bytes);
+    receipt.updateArtifacts.push({
+      name,
+      path: file,
+      bytes: bytes.length,
+      sha256: sha256(bytes),
+    });
+  }
+  await assert.rejects(
+    validateReceipt(root, receipt),
+    /Missing updater verification/,
+  );
+  const report = "release/checks/test/installed-update.json";
+  const result = {
+    kind: "installed-update",
+    status: "passed",
+    nativeEncryption: true,
+    platform: "win32",
+    from: "1.9.0",
+    to: "2.0.0",
+    packageSha256: receipt.updateArtifacts[0].sha256,
+  };
+  await fs.writeFile(path.join(root, report), JSON.stringify(result));
+  receipt.checks.push(
+    { name: "native-updater", status: "passed" },
+    { name: "installed-update", status: "passed", report },
+  );
+  receipt.evidence.push({
+    path: report,
+    sha256: await hashFile(path.join(root, report)),
+  });
+  for (const incomplete of [
+    { ...result, status: "flow-verified", nativeEncryption: false },
+    { ...result, nativeEncryption: false },
+  ]) {
+    await fs.writeFile(path.join(root, report), JSON.stringify(incomplete));
+    receipt.evidence.at(-1).sha256 = await hashFile(path.join(root, report));
+    await assert.rejects(validateReceipt(root, receipt));
+  }
+  await fs.writeFile(path.join(root, report), JSON.stringify(result));
+  receipt.evidence.at(-1).sha256 = await hashFile(path.join(root, report));
+  await validateReceipt(root, receipt);
+  const github = fakeGitHub(receipt.source.commit);
+  const plan = await publicationPlan(github.client, [receipt]);
+  for (const artifact of receipt.updateArtifacts)
+    assert.ok(plan.uploads.includes(artifact.name));
+  const published = await publishVerified({
+    root,
+    receipts: [receipt],
+    client: github.client,
+    execute: true,
+  });
+  assert.equal(published.status, "published-and-download-verified");
+  assert.equal(github.state.assets.length, 5);
+  assert.equal(
+    (await publicationPlan(github.client, [receipt])).uploads.length,
+    0,
+  );
+  await fs.appendFile(
+    path.join(root, receipt.updateArtifacts[0].path),
+    "changed",
+  );
+  await assert.rejects(validateReceipt(root, receipt));
+});
+
 test("a clean verified installer and its evidence are accepted", async (t) => {
   const { root, receipt } = await fixture(t);
   assert.equal(
@@ -452,7 +527,7 @@ test("GUI policy records platform exclusions and optional skips explicitly", () 
     platform: "darwin",
     mode: "hidden",
   });
-  assert.equal(coverage.passed, 111);
+  assert.equal(coverage.passed, 112);
   assert.equal(coverage.skipped, 11);
   assert.equal(
     coverage.tests.filter(
@@ -1561,6 +1636,55 @@ test("Electron teardown accepts a split cleanup marker before requiring process 
     },
   };
   await closeCleanly(app, 1000);
+  assert.equal(child.exitCode, 0);
+});
+
+test("an update IPC reply cannot block debugger disconnection after native cleanup", async () => {
+  const child = Object.assign(new EventEmitter(), {
+    exitCode: null,
+    signalCode: null,
+    stderr: new PassThrough(),
+  });
+  let requested = false;
+  const app = {
+    process: () => child,
+    evaluate: async (_fn, externalQuit) => {
+      if (externalQuit !== undefined) assert.equal(externalQuit, true);
+    },
+    close: async () => {
+      assert.equal(requested, true);
+      child.exitCode = 0;
+      child.emit("exit", 0, null);
+    },
+  };
+  await closeCleanly(app, 1000, () => {
+    requested = true;
+    setImmediate(() =>
+      child.stderr.write("\nPASSPORT_E2E_NATIVE_CLEANUP_COMPLETE\n"),
+    );
+    return new Promise(() => {});
+  });
+  assert.equal(child.exitCode, 0);
+});
+
+test("updater transport disposal cannot mask the old application's real exit", async () => {
+  const child = Object.assign(new EventEmitter(), {
+    exitCode: null,
+    signalCode: null,
+    stderr: new PassThrough(),
+  });
+  const app = {
+    process: () => child,
+    evaluate: async () => {},
+    close: () => {
+      child.exitCode = 0;
+      child.emit("exit", 0, null);
+      return new Promise(() => {});
+    },
+  };
+  await closeCleanly(app, 1000, async () => {
+    child.stderr.write("\nPASSPORT_E2E_NATIVE_CLEANUP_COMPLETE\n");
+  });
   assert.equal(child.exitCode, 0);
 });
 

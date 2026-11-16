@@ -113,6 +113,21 @@ import {
 } from "../shared/local-workspace";
 import { about } from "../shared/about";
 import { UpdateChecker } from "./updates";
+import { UpdateDownload } from "./update-download";
+import {
+  prepareUpdateInstall,
+  acknowledgeUpdate,
+  previousUpdateFailure,
+} from "./update-install";
+declare const PASSPORT_UPDATE_PUBLIC_KEY: string;
+const updatePublicKey =
+  typeof PASSPORT_UPDATE_PUBLIC_KEY === "string"
+    ? PASSPORT_UPDATE_PUBLIC_KEY
+    : "";
+const updateTransaction = process.env.PASSPORT_UPDATE_TRANSACTION;
+const updateToken = process.env.PASSPORT_UPDATE_TOKEN;
+delete process.env.PASSPORT_UPDATE_TRANSACTION;
+delete process.env.PASSPORT_UPDATE_TOKEN;
 import { resolveAppIdentity } from "./app-identity";
 import {
   testWindowMode,
@@ -178,6 +193,9 @@ const previews = new Map<
 const encryptedImports = new Map<string, { text: string; owner: number }>();
 let fonts: string[] = [];
 let updates: UpdateChecker;
+let updateDownload: UpdateDownload;
+let installAfterShutdown: (() => Promise<void>) | undefined;
+let preparingUpdate = false;
 let locals: LocalSessions, logs: SessionLogs, tunnels: Tunnels;
 let activity: ActivityService;
 let resume: SessionResume;
@@ -582,6 +600,9 @@ const schemas: Record<Call, z.ZodType> = {
   bootstrap: z.undefined(),
   "updates.check": z.undefined(),
   "updates.open": z.object({ target: z.enum(["download", "release"]) }),
+  "updates.download": z.undefined(),
+  "updates.cancel": z.undefined(),
+  "updates.install": z.undefined(),
   save: documentSchema,
   "auth.save": z.object({
     id: idSchema,
@@ -1514,6 +1535,70 @@ async function call<K extends Call>(
     }
     case "updates.check":
       return updates.check();
+    case "updates.download": {
+      if (!app.isPackaged || developmentBuild || !updatePublicKey)
+        throw new Error("이 빌드에는 앱 내 업데이트가 구성되지 않았습니다.");
+      if (updates.state.status !== "available" || !updates.state.latestVersion)
+        throw new Error("업데이트를 먼저 확인해 주세요.");
+      if (
+        updates.state.installation?.phase === "downloading" ||
+        updates.state.installation?.phase === "ready"
+      )
+        return;
+      updates.installation({
+        phase: "downloading",
+        received: 0,
+        total: 0,
+        message: "업데이트를 다운로드하고 있습니다.",
+      });
+      try {
+        await updateDownload.download(updates.state.latestVersion);
+        updates.installation({
+          phase: "ready",
+          received: 0,
+          total: 0,
+          message: "업데이트 준비가 완료되었습니다.",
+        });
+      } catch {
+        updates.installation({
+          phase: "error",
+          received: 0,
+          total: 0,
+          message:
+            "다운로드가 중단되었거나 파일을 검증하지 못했습니다. 다시 시도해 주세요.",
+        });
+      }
+      return;
+    }
+    case "updates.cancel":
+      updateDownload.cancel();
+      return;
+    case "updates.install": {
+      if (
+        !updateDownload.ready ||
+        updates.state.installation?.phase !== "ready" ||
+        quitting ||
+        preparingUpdate
+      )
+        return;
+      preparingUpdate = true;
+      try {
+        installAfterShutdown = await prepareUpdateInstall(
+          updateDownload.ready,
+          {
+            platform: platform.update,
+            executable: process.execPath,
+            resources: process.resourcesPath,
+            data: app.getPath("userData"),
+            current: appVersion,
+          },
+        );
+      } finally {
+        preparingUpdate = false;
+      }
+      app.quit();
+      return;
+    }
     case "updates.open":
       await shell.openExternal(updates.target(i.target));
       return;
@@ -2078,6 +2163,7 @@ async function createWindow(withLocalTerminal = false) {
         });
         if (result.response !== 1) {
           quitting = false;
+          installAfterShutdown = undefined;
           return;
         }
       }
@@ -2124,6 +2210,7 @@ async function createWindow(withLocalTerminal = false) {
     })()
       .catch((error) => {
         quitting = false;
+        installAfterShutdown = undefined;
         closingWindows.delete(win.id);
         if (!win.isDestroyed())
           win.webContents.send("passport:event", {
@@ -2194,9 +2281,32 @@ void app
       version: appVersion,
       platform: process.platform,
       arch: process.arch,
+      inAppUpdates: app.isPackaged && !developmentBuild && !!updatePublicKey,
       fetch: (url, init) => net.fetch(url, init),
       emit: (state) => emit({ kind: "update", state }),
     });
+    updateDownload = new UpdateDownload({
+      directory: path.join(app.getPath("userData"), "updates"),
+      publicKey: updatePublicKey,
+      current: appVersion,
+      target: platform.update.target,
+      fetch: (url, init) => net.fetch(url.toString(), init),
+      progress: (received, total) =>
+        updates.installation({
+          phase: "downloading",
+          received,
+          total,
+          message: "업데이트를 다운로드하고 있습니다.",
+        }),
+    });
+    const updateFailure = await previousUpdateFailure(app.getPath("userData"));
+    if (updateFailure)
+      updates.installation({
+        phase: "error",
+        received: 0,
+        total: 0,
+        message: updateFailure,
+      });
     fonts = await getFonts({ disableQuoting: true }).catch(() => []);
     store = new Store(app.getPath("userData"), safeStorage);
     sharing = new ShareService(
@@ -2461,6 +2571,39 @@ void app
     }, 60_000);
     logPruneTimer.unref();
     await createWindow();
+    await acknowledgeUpdate(
+      app.getPath("userData"),
+      updateTransaction,
+      updateToken,
+      appVersion,
+    );
+    // Dedicated installed-update harness only. Never inspect or terminate a
+    // normal profile in response to an updater test environment variable.
+    if (
+      updateTransaction &&
+      process.env.PASSPORT_E2E_UPDATE === "1" &&
+      process.env.PASSPORT_DATA_DIR &&
+      e2eWindowMode === "hidden"
+    ) {
+      const flowOnly = process.env.PASSPORT_E2E_UPDATE_FLOW_ONLY === "1";
+      const restored = flowOnly
+        ? null
+        : safeStorage.decryptString(
+            await fs.readFile(
+              path.join(app.getPath("userData"), "update-test-secret"),
+            ),
+          );
+      await fs.writeFile(
+        path.join(updateTransaction, "startup-test.json"),
+        JSON.stringify({
+          version: appVersion,
+          secretRestored: flowOnly ? null : restored === "passport-update-test",
+          windows: e2eWindowAudit,
+        }),
+      );
+      app.quit();
+      return;
+    }
     if (quitting) return;
     updates.start(
       app.isPackaged &&
@@ -2502,6 +2645,7 @@ app.on("will-quit", (event) => {
   shutdown = (async () => {
     terminalControl?.configure("off");
     updates?.dispose();
+    updateDownload?.cancel();
     tunnels?.closeAll();
     sessions?.closeAll();
     transfers?.cancelAll();
@@ -2513,6 +2657,19 @@ app.on("will-quit", (event) => {
     await sharing?.close();
     resume?.close();
     store?.close();
+    try {
+      await installAfterShutdown?.();
+    } catch {
+      if (updateDownload.ready) {
+        await fs
+          .writeFile(
+            path.join(updateDownload.ready.directory, "error.txt"),
+            "Updater could not start",
+          )
+          .catch(() => {});
+      }
+      app.relaunch();
+    }
     shutdownComplete = true;
     app.quit();
   })();

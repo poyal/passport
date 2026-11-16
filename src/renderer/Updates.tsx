@@ -6,13 +6,15 @@ export function UpdatesPanel() {
   const app = useApp();
   const state = app.boot.updateState;
   const checking = state.status === "checking";
+  const installation = state.installation;
+  const downloading = installation?.phase === "downloading";
   return (
     <section className="settings-card update-card" aria-busy={checking}>
       <div className="settings-card-header">
         <h3>업데이트</h3>
         <button
           type="button"
-          disabled={checking}
+          disabled={checking || downloading || installation?.phase === "ready"}
           onClick={() =>
             void api.call("updates.check", undefined).catch(app.notify)
           }
@@ -45,7 +47,50 @@ export function UpdatesPanel() {
       {state.status === "available" && (
         <>
           <div className="row update-actions">
-            {state.installerAvailable && (
+            {state.inAppAvailable && (
+              <>
+                {installation?.phase === "ready" ? (
+                  <button
+                    type="button"
+                    className="primary"
+                    onClick={() =>
+                      void api
+                        .call("updates.install", undefined)
+                        .catch(app.notify)
+                    }
+                  >
+                    재시작하여 업데이트
+                  </button>
+                ) : downloading ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void api
+                        .call("updates.cancel", undefined)
+                        .catch(app.notify)
+                    }
+                  >
+                    다운로드 취소
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="primary"
+                    onClick={() =>
+                      void api
+                        .call("updates.download", undefined)
+                        .catch(app.notify)
+                    }
+                  >
+                    <Download size={16} />
+                    {installation?.phase === "error"
+                      ? "다시 다운로드"
+                      : "업데이트 다운로드"}
+                  </button>
+                )}
+              </>
+            )}
+            {!state.inAppAvailable && state.installerAvailable && (
               <button
                 type="button"
                 className="primary"
@@ -71,7 +116,25 @@ export function UpdatesPanel() {
               변경 내역 보기
             </button>
           </div>
-          {state.installerAvailable && (
+          {installation && (
+            <div role="status" aria-live="polite">
+              <p>{installation.message}</p>
+              {downloading && (
+                <progress
+                  aria-label="업데이트 다운로드 진행률"
+                  value={installation.total ? installation.received : undefined}
+                  max={installation.total || 1}
+                />
+              )}
+            </div>
+          )}
+          {state.inAppAvailable && (
+            <p className="hint">
+              작업을 마친 뒤 재시작하면 업데이트가 적용됩니다. 실행 중인 터미널
+              작업은 종료되며 호스트·인증·설정과 탭·분할 배치는 유지됩니다.
+            </p>
+          )}
+          {!state.inAppAvailable && state.installerAvailable && (
             <p className="hint">
               {app.boot.platform === "darwin"
                 ? "작업을 마친 뒤 Passport를 완전히 종료하고, 받은 DMG에서 앱을 응용 프로그램 폴더에 대치하세요."
@@ -82,8 +145,9 @@ export function UpdatesPanel() {
         </>
       )}
       <p className="hint">
-        앱을 시작할 때 새 버전을 자동으로 확인합니다. 설치 파일은 브라우저에서
-        다운로드하며 설치와 앱 재시작은 직접 진행합니다.
+        앱을 시작할 때 새 버전을 자동으로 확인합니다. 업데이트 파일을 받은 뒤
+        재시작 시점을 직접 선택할 수 있습니다. 앱 내 업데이트를 지원하지 않는
+        배포본은 설치 파일 다운로드로 안내합니다.
       </p>
     </section>
   );

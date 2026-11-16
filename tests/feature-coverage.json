@@ -450,10 +450,23 @@
     {
       "id": "release",
       "name": "업데이트·설치",
-      "calls": ["updates.check", "updates.open", "external.open"],
-      "unit": ["tests/updates.test.ts", "tests/platform.test.ts"],
+      "calls": [
+        "updates.check",
+        "updates.open",
+        "updates.download",
+        "updates.cancel",
+        "updates.install",
+        "external.open"
+      ],
+      "unit": [
+        "tests/updates.test.ts",
+        "tests/update-protocol.test.ts",
+        "tests/update-download.test.ts",
+        "tests/platform.test.ts"
+      ],
       "e2e": [
         "updates.about-checks-updates-directs-downloads-to-the-correct-installer-a",
+        "updates.in-app-flow",
         "updates.an-ahead-of-release-installation-never-offers-a-downgrade",
         "updates.an-offline-check-stays-inside-about-while-the-host-screen-remains",
         "updates.a-release-without-an-installer-offers-notes-without-a-broken-down",

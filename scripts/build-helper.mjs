@@ -73,6 +73,13 @@ copyFileSync(
   path.join(directory, cli),
 );
 if (platform !== "win32") chmodSync(path.join(directory, cli), 0o755);
+const updater =
+  platform === "win32" ? "passport-updater.exe" : "passport-updater";
+copyFileSync(
+  path.join("native/helper/target", target, "release", updater),
+  path.join(directory, updater),
+);
+if (platform !== "win32") chmodSync(path.join(directory, updater), 0o755);
 const metadata = spawnSync(
   cargo,
   [

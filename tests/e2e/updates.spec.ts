@@ -10,6 +10,54 @@ import { expectReadableSpacing } from "../fixtures/ui-spacing";
 let application: ElectronApplication, page: Page;
 const errors: string[] = [];
 let currentVersion: string, nextVersion: string;
+
+test("in-app update progress offers cancellation retry and restart without an installer", async () => {
+  for (const phase of ["downloading", "error", "ready"] as const) {
+    await application.evaluate(
+      ({ BrowserWindow }, { phase, currentVersion, nextVersion }) => {
+        for (const window of BrowserWindow.getAllWindows())
+          window.webContents.send("passport:event", {
+            kind: "update",
+            state: {
+              status: "available",
+              currentVersion,
+              latestVersion: nextVersion,
+              checkedAt: Date.now(),
+              installerAvailable: true,
+              inAppAvailable: true,
+              message: "새 버전이 있습니다.",
+              installation: {
+                phase,
+                received: 50,
+                total: 100,
+                message: "업데이트 상태",
+              },
+            },
+          });
+      },
+      { phase, currentVersion, nextVersion },
+    );
+    await expect(
+      page.getByRole("button", { name: "설치 파일 다운로드", exact: true }),
+    ).toHaveCount(0);
+    const label =
+      phase === "downloading"
+        ? "다운로드 취소"
+        : phase === "error"
+          ? "다시 다운로드"
+          : "재시작하여 업데이트";
+    await expect(
+      page.getByRole("button", { name: label, exact: true }),
+    ).toBeVisible();
+    await expect(page.getByRole("progressbar")).toHaveCount(
+      phase === "downloading" ? 1 : 0,
+    );
+    if (phase !== "error")
+      await expect(
+        page.getByRole("button", { name: "업데이트 확인", exact: true }),
+      ).toBeDisabled();
+  }
+});
 const installerName = (version: string) =>
   process.platform === "win32"
     ? `Passport-${version}-win-${process.arch}.exe`

@@ -703,6 +703,9 @@ export interface Calls {
     output: import("./updates").UpdateState;
   };
   "updates.open": { input: { target: "download" | "release" }; output: void };
+  "updates.download": { input: undefined; output: void };
+  "updates.cancel": { input: undefined; output: void };
+  "updates.install": { input: undefined; output: void };
   save: { input: PassportDocument; output: PassportDocument };
   "auth.save": {
     input: { id: string; name: string; username?: string; secret: Secret };

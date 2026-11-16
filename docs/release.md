@@ -112,6 +112,18 @@ E2E 수명은 실행별 launches·exits·auditedShutdowns가 같고 숨김 표�
 
 현재 Mac 패키징은 ad-hoc 서명이며 Developer ID·Apple 공증을 포함하지 않습니다. codesign 무결성 성공은 공증·Gatekeeper 승인과 다릅니다. Developer ID 배포로 전환할 때는 `electron-builder.mac-signed.cjs`의 요구 설정·`CSC_NAME`과 공증을 준비하고 정식 검증의 패키징 단계에도 같은 설정을 적용해야 합니다. 별도로 만든 signed DMG를 기존 manifest에 끼워 넣지 않습니다.
 
+### 앱 내 업데이트를 포함하는 배포
+
+배포 담당자가 별도로 보관하는 Ed25519 개인 키 파일을 `PASSPORT_UPDATE_PRIVATE_KEY_FILE`, 대응하는 SPKI PEM 공개 키를 `PASSPORT_UPDATE_PUBLIC_KEY`로 지정합니다. 공개 키는 빌드 시 main과 updater에 내장되므로 버전마다 새 키를 만들지 않습니다. 이는 Apple Developer ID나 Windows Authenticode 인증서가 아니며 OS의 게시자 신뢰를 대신하지 않습니다. 공개 키가 없는 빌드는 수동 다운로드 경로를 유지합니다.
+
+`PASSPORT_UPDATE_PREVIOUS_APP`에는 같은 키를 포함한 이전 버전 앱 폴더를 지정합니다. 정식 검증은 설치본에서 `Passport-<버전>-<darwin-arm64|win32-x64>-update.zip`과 OS별 `update-<대상>.json`·`.sig`를 만들고 네이티브 updater 검사 및 실제 두 버전 간 설치 검사를 실행합니다. 최초 전환 버전은 격리된 이전 시험 빌드를 먼저 준비해야 하며 같은 버전끼리 교체한 결과를 사용하지 않습니다.
+
+새 산출물은 `verification.json`의 `updateArtifacts`에 크기·해시를 기록합니다. 게시기는 실제 업데이트 보고서의 이전/이후 버전·OS·ZIP 해시와 파일 무결성을 다시 확인하며, 실패·누락이면 게시하지 않습니다. OS별 메타데이터를 사용해 다른 OS의 이미 게시된 업데이트를 변경하지 않습니다. 기존 DMG·EXE는 최초 설치용으로 계속 배포합니다.
+
+실제 설치 검사는 숨김 모드이며 Gatekeeper 승인 화면·macOS 최소 지원 버전·Windows SmartScreen 검사를 증명하지 않습니다. Mac의 최초 승인 이후 보안 설정 재방문 여부는 별도의 실기로 확인하고, 미검증이면 완료로 기록하지 않습니다. 사용자 설치본·실제 DB는 시험 대상으로 사용하지 않습니다.
+
+교체 중 중단되면 앱 데이터의 `updates/<transaction>/`와 설치 경로 옆 `.passport-backup-<transaction>`을 보존합니다. 관련 앱과 helper가 모두 종료된 것을 확인한 뒤 해당 transaction의 `passport-updater[.exe] <transaction-절대경로> --recover`로 복구합니다. 실행 중인 새 앱의 DB를 덮어쓰지 않으며 복구본이 없으면 중단합니다. 성공한 transaction은 다음 정상 시작에서 정리합니다.
+
 ## 3. 소스와 원격 태그 확정
 
 정식 검증을 통과한 **동일 커밋**을 원격에 올리고 `v<package.json 버전>` 태그를 그 커밋에 연결합니다. 저장소의 workflow 설정도 확인해 태그 push가 의도하지 않은 과거 게시 경로를 실행하지 않는지 확인합니다. 현재 `desktop.yml`은 수동 검증용이며 공개 게시하지 않습니다.

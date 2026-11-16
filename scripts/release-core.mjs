@@ -335,6 +335,58 @@ export async function validateReceipt(root, receipt, state) {
   assert.equal(receipt.environment.platform, targets[receipt.target].platform);
   assert.equal(receipt.environment.arch, targets[receipt.target].arch);
   const filename = await releasePath(root, receipt.artifact.path);
+  if (receipt.updateArtifacts !== undefined) {
+    const platformTarget = `${receipt.environment.platform}-${receipt.environment.arch}`;
+    assert.deepEqual(
+      receipt.updateArtifacts.map((a) => a.name).sort(),
+      [
+        `Passport-${receipt.version}-${platformTarget}-update.zip`,
+        `update-${platformTarget}.json`,
+        `update-${platformTarget}.sig`,
+      ].sort(),
+      "Incomplete update artifacts",
+    );
+    for (const name of ["native-updater", "installed-update"]) {
+      const checks = receipt.checks.filter((c) => c.name === name);
+      assert.equal(checks.length, 1, `Missing updater verification: ${name}`);
+      assert.equal(
+        checks[0].status,
+        "passed",
+        `Updater verification failed: ${name}`,
+      );
+    }
+    for (const artifact of receipt.updateArtifacts) {
+      const file = await releasePath(root, artifact.path);
+      assert.equal(path.basename(file), artifact.name);
+      assert.equal((await fs.stat(file)).size, artifact.bytes);
+      assert.equal(
+        await hashFile(file),
+        artifact.sha256,
+        "Update artifact changed after verification",
+      );
+    }
+    const reportPath = receipt.checks.find(
+      (c) => c.name === "installed-update",
+    ).report;
+    const updateReport = JSON.parse(
+      await fs.readFile(await releasePath(root, reportPath), "utf8"),
+    );
+    assert.equal(
+      receipt.evidence.filter((e) => e.path === reportPath).length,
+      1,
+      "Missing installed-update report evidence",
+    );
+    assert.equal(updateReport.kind, "installed-update");
+    assert.equal(updateReport.status, "passed");
+    assert.equal(updateReport.nativeEncryption, true);
+    assert.equal(updateReport.platform, receipt.environment.platform);
+    assert.notEqual(updateReport.from, updateReport.to);
+    assert.equal(updateReport.to, receipt.version);
+    assert.equal(
+      updateReport.packageSha256,
+      receipt.updateArtifacts.find((a) => a.name.endsWith(".zip")).sha256,
+    );
+  }
   assert.equal(path.basename(filename), receipt.artifact.name);
   assert.equal(
     (await fs.stat(filename)).size,

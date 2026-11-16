@@ -9,6 +9,8 @@ import { createDarwinActivityEndpoint } from "./darwin/activity-endpoint";
 import { createWindowsActivityEndpoint } from "./win32/activity-endpoint";
 import { createDarwinDownload } from "./darwin/download";
 import { createWindowsDownload } from "./win32/download";
+import { darwinUpdate } from "./darwin/update";
+import { windowsUpdate } from "./win32/update";
 
 // Factories only capture dependencies. Reading shells, opening OS services and
 // creating sockets must wait for an explicit call by the owning service.
@@ -18,6 +20,7 @@ const services: Record<string, PlatformServices> = {
     terminal: createDarwinTerminal(),
     clipboard: createDarwinClipboard(),
     desktop: darwinDesktop,
+    update: darwinUpdate,
     createActivityEndpoint: createDarwinActivityEndpoint,
     createControlEndpoint: createDarwinActivityEndpoint,
     protectDownload: createDarwinDownload(),
@@ -27,6 +30,7 @@ const services: Record<string, PlatformServices> = {
     terminal: createWindowsTerminal(),
     clipboard: createWindowsClipboard(),
     desktop: windowsDesktop,
+    update: windowsUpdate,
     createActivityEndpoint: createWindowsActivityEndpoint,
     createControlEndpoint: createWindowsActivityEndpoint,
     protectDownload: createWindowsDownload(),

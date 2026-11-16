@@ -27,6 +27,15 @@ module.exports = async (context) => {
     path.dirname(helper),
     platform === "win32" ? "passport.exe" : "passport",
   );
+  if (
+    !fs.existsSync(
+      path.join(
+        path.dirname(helper),
+        platform === "win32" ? "passport-updater.exe" : "passport-updater",
+      ),
+    )
+  )
+    throw new Error(`Build the ${platform}-${arch} updater before packaging.`);
   if (!fs.existsSync(cli))
     throw new Error(
       `Build the ${platform}-${arch} Passport CLI before packaging.`,

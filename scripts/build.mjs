@@ -18,6 +18,11 @@ await build({
   bundle: true,
   platform: "node",
   format: "cjs",
+  define: {
+    PASSPORT_UPDATE_PUBLIC_KEY: JSON.stringify(
+      process.env.PASSPORT_UPDATE_PUBLIC_KEY || "",
+    ),
+  },
   external: [
     "electron",
     "better-sqlite3",

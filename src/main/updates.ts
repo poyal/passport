@@ -54,6 +54,20 @@ export function releaseDetails(raw: unknown, platform: string, arch: string) {
     version,
     releaseURL: `${base}/tag/${release.tag_name}`,
     downloadURL: installer ? expectedURL : undefined,
+    inAppAvailable: [
+      `update-${platform}-${arch}.json`,
+      `update-${platform}-${arch}.sig`,
+      `Passport-${version}-${platform}-${arch}-update.zip`,
+    ].every((name) =>
+      release.assets.some(
+        (asset) =>
+          asset.name === name &&
+          asset.state === "uploaded" &&
+          asset.size > 0 &&
+          asset.browser_download_url ===
+            `${base}/download/${release.tag_name}/${name}`,
+      ),
+    ),
   };
 }
 
@@ -65,6 +79,7 @@ type Options = {
   emit: (state: UpdateState) => void;
   now?: () => number;
   timeoutMs?: number;
+  inAppUpdates?: boolean;
 };
 
 export class UpdateChecker {
@@ -74,6 +89,9 @@ export class UpdateChecker {
   private release?: ReturnType<typeof releaseDetails>;
   private started = false;
   private disposed = false;
+  installation(state: UpdateState["installation"]) {
+    this.set({ ...this.state, installation: state });
+  }
   constructor(private options: Options) {
     this.state = initialUpdateState(options.version);
   }
@@ -83,6 +101,11 @@ export class UpdateChecker {
     void this.check();
   }
   check(): Promise<UpdateState> {
+    if (
+      this.state.installation?.phase === "downloading" ||
+      this.state.installation?.phase === "ready"
+    )
+      return Promise.resolve(this.state);
     if (this.pending) return this.pending;
     const now = (this.options.now ?? Date.now)();
     if (
@@ -186,6 +209,7 @@ export class UpdateChecker {
         latestVersion: release.version,
         status: comparison > 0 ? "available" : "current",
         installerAvailable: !!release.downloadURL,
+        inAppAvailable: !!this.options.inAppUpdates && release.inAppAvailable,
         checkedAt: (this.options.now ?? Date.now)(),
         message:
           comparison > 0

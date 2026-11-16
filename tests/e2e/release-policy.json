@@ -471,6 +471,11 @@
       "title": "home and populated settings dialogs keep related controls and help separated"
     },
     {
+      "id": "updates.in-app-flow",
+      "file": "updates.spec.ts",
+      "title": "in-app update progress offers cancellation retry and restart without an installer"
+    },
+    {
       "id": "updates.current-version-spacing",
       "file": "updates.spec.ts",
       "title": "an up-to-date result keeps its explanation separated from the status panel"

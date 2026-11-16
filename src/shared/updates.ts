@@ -4,7 +4,14 @@ export type UpdateState = {
   latestVersion: string | null;
   checkedAt: number | null;
   installerAvailable: boolean;
+  inAppAvailable?: boolean;
   message: string;
+  installation?: {
+    phase: "downloading" | "ready" | "error";
+    received: number;
+    total: number;
+    message: string;
+  };
 };
 
 export const initialUpdateState = (currentVersion: string): UpdateState => ({

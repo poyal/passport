@@ -88,7 +88,13 @@ export interface PlatformServices {
   readonly terminal: TerminalPlatform;
   readonly clipboard: ClipboardPlatform;
   readonly desktop: DesktopPlatform;
+  readonly update: UpdatePlatform;
   createActivityEndpoint(): ActivityEndpoint;
   createControlEndpoint(): ActivityEndpoint;
   protectDownload(file: string): Promise<void>;
+}
+export interface UpdatePlatform {
+  readonly target: "darwin-arm64" | "win32-x64";
+  readonly helperName: string;
+  installRoot(executable: string): string;
 }

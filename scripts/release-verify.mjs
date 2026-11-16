@@ -17,6 +17,7 @@ import {
 } from "./release-core.mjs";
 import { runCommand } from "./release-process.mjs";
 import { beginWindowsPtyAudit } from "./windows-pty-audit.mjs";
+import { prepareUpdatePackage } from "./update-package.mjs";
 import { summarizeElectronLifecycle } from "./e2e-lifecycle.mjs";
 import {
   loadGuiPolicy,
@@ -468,6 +469,57 @@ async function verify() {
       }),
     );
     await step("packaged-gui", () => gui("packaged-gui", executable));
+    if (process.env.PASSPORT_UPDATE_PUBLIC_KEY) {
+      assert.ok(
+        process.env.PASSPORT_UPDATE_PRIVATE_KEY_FILE,
+        "Update signing key is required",
+      );
+      assert.ok(
+        process.env.PASSPORT_UPDATE_PREVIOUS_APP,
+        "A previous packaged app with the same update key is required for an actual version-to-version update test",
+      );
+      const appDirectory =
+        process.platform === "darwin"
+          ? path.resolve(executable, "../../..")
+          : path.dirname(executable);
+      const output = path.join(build, "updates");
+      const names = await prepareUpdatePackage({
+        app: appDirectory,
+        output,
+        version: pkg.version,
+        target: `${process.platform}-${process.arch}`,
+        privateKeyFile: process.env.PASSPORT_UPDATE_PRIVATE_KEY_FILE,
+        publicKey: process.env.PASSPORT_UPDATE_PUBLIC_KEY,
+      });
+      record.updateArtifacts = await Promise.all(
+        names.map(async (name) => ({
+          name,
+          path: relative(path.join(output, name)),
+          bytes: (await fs.stat(path.join(output, name))).size,
+          sha256: await hashFile(path.join(output, name)),
+        })),
+      );
+      await step("native-updater", () =>
+        node("native-updater", "scripts/test-updater.mjs", [], {
+          timeout: 300000,
+        }),
+      );
+      const updateReport = path.join(checks, "installed-update.json");
+      await step("installed-update", () =>
+        node(
+          "installed-update",
+          "scripts/verify-installed-update.mjs",
+          [process.env.PASSPORT_UPDATE_PREVIOUS_APP, output, updateReport],
+          { timeout: 300000 },
+        ),
+      );
+      record.checks.find((c) => c.name === "installed-update").report =
+        relative(updateReport);
+      record.evidence.push({
+        path: relative(updateReport),
+        sha256: await hashFile(updateReport),
+      });
+    }
     if (options.desktop)
       await step("packaged-desktop", () =>
         gui("packaged-desktop", executable, "desktop"),

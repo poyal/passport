@@ -12,6 +12,7 @@ import {
   parseArguments,
   withReleaseLock,
   writeJSON,
+  releasePath,
   initialWindowsRelease,
   usesInitialWindowsSource,
   windows135Release,
@@ -20,7 +21,11 @@ import {
 } from "./release-core.mjs";
 
 const installerPattern =
-  /^Passport-\d+\.\d+\.\d+-(mac-arm64\.dmg|win-x64\.exe)$/;
+  /^(?:Passport-\d+\.\d+\.\d+-(?:mac-arm64\.dmg|win-x64\.exe|(?:darwin-arm64|win32-x64)-update\.zip)|update-(?:darwin-arm64|win32-x64)\.(?:json|sig))$/;
+const artifacts = (receipt) => [
+  receipt.artifact,
+  ...(receipt.updateArtifacts || []),
+];
 const sumsName = "SHA256SUMS.txt";
 
 export function githubClient(token, fetcher = fetch) {
@@ -202,7 +207,8 @@ export async function publicationPlan(
   const entries = new Map();
   for (const asset of installers) {
     assert.ok(
-      asset.name.startsWith(`Passport-${version}-`),
+      asset.name.startsWith(`Passport-${version}-`) ||
+        /^update-(darwin-arm64|win32-x64)\.(json|sig)$/.test(asset.name),
       "Unexpected installer version on release",
     );
     assert.equal(
@@ -240,35 +246,38 @@ export async function publicationPlan(
   const uploads = [];
   const replacements = [];
   for (const receipt of receipts) {
-    const { artifact } = receipt;
-    const existing = assets.find((asset) => asset.name === artifact.name);
-    if (existing) {
-      if (
-        replaceWindowsIcon &&
-        existing.digest !== `sha256:${artifact.sha256}`
-      ) {
-        for (const [key, value] of Object.entries(windowsIconReplacement.asset))
+    for (const artifact of artifacts(receipt)) {
+      const existing = assets.find((asset) => asset.name === artifact.name);
+      if (existing) {
+        if (
+          replaceWindowsIcon &&
+          existing.digest !== `sha256:${artifact.sha256}`
+        ) {
+          for (const [key, value] of Object.entries(
+            windowsIconReplacement.asset,
+          ))
+            assert.equal(
+              existing[key],
+              value,
+              "Published Windows installer differs from the explicitly approved replacement",
+            );
+          replacements.push(existing);
+          uploads.push(artifact.name);
+        } else {
           assert.equal(
-            existing[key],
-            value,
-            "Published Windows installer differs from the explicitly approved replacement",
+            existing.digest,
+            `sha256:${artifact.sha256}`,
+            `An installer with different bytes already exists: ${artifact.name}`,
           );
-        replacements.push(existing);
-        uploads.push(artifact.name);
-      } else {
-        assert.equal(
-          existing.digest,
-          `sha256:${artifact.sha256}`,
-          `An installer with different bytes already exists: ${artifact.name}`,
-        );
-        assert.equal(
-          existing.size,
-          artifact.bytes,
-          "Remote installer size differs",
-        );
-      }
-    } else uploads.push(artifact.name);
-    entries.set(artifact.name, artifact.sha256);
+          assert.equal(
+            existing.size,
+            artifact.bytes,
+            "Remote installer size differs",
+          );
+        }
+      } else uploads.push(artifact.name);
+      entries.set(artifact.name, artifact.sha256);
+    }
   }
   const sums = Buffer.from(
     [...entries]
@@ -429,36 +438,41 @@ export async function publishVerified({
     }));
   for (let index = 0; index < receipts.length; index++) {
     const receipt = receipts[index];
-    const { artifact } = receipt;
-    // Buffer the exact verified bytes, so a concurrent file edit cannot alter
-    // the bytes being streamed into GitHub after the final hash check.
-    const bytes = await fs.readFile(filenames[index]);
-    assert.equal(
-      sha256(bytes),
-      artifact.sha256,
-      "Installer changed before upload",
-    );
-    const old = plan.replacements.find((item) => item.name === artifact.name);
-    let asset;
-    if (old)
-      asset = await replaceVerifiedInstaller({
-        root,
-        client,
-        release,
-        receipt,
-        old,
-        bytes,
-        originalAssets: plan.assets,
-      });
-    else
-      asset = plan.uploads.includes(artifact.name)
-        ? await client.upload(release, artifact.name, bytes)
-        : plan.assets.find((item) => item.name === artifact.name);
-    assert.equal(
-      sha256(await client.download(asset)),
-      artifact.sha256,
-      "Uploaded installer download hash differs",
-    );
+    for (const artifact of artifacts(receipt)) {
+      // Buffer the exact verified bytes, so a concurrent file edit cannot alter
+      // the bytes being streamed into GitHub after the final hash check.
+      const bytes = await fs.readFile(
+        artifact === receipt.artifact
+          ? filenames[index]
+          : await releasePath(root, artifact.path),
+      );
+      assert.equal(
+        sha256(bytes),
+        artifact.sha256,
+        "Installer changed before upload",
+      );
+      const old = plan.replacements.find((item) => item.name === artifact.name);
+      let asset;
+      if (old)
+        asset = await replaceVerifiedInstaller({
+          root,
+          client,
+          release,
+          receipt,
+          old,
+          bytes,
+          originalAssets: plan.assets,
+        });
+      else
+        asset = plan.uploads.includes(artifact.name)
+          ? await client.upload(release, artifact.name, bytes)
+          : plan.assets.find((item) => item.name === artifact.name);
+      assert.equal(
+        sha256(await client.download(asset)),
+        artifact.sha256,
+        "Uploaded installer download hash differs",
+      );
+    }
   }
   // Detect simultaneous platform publishers before touching shared checksums.
   const current = await client.getAssets(release.id);
@@ -466,7 +480,9 @@ export async function publishVerified({
     ...plan.assets
       .filter((asset) => installerPattern.test(asset.name))
       .map((asset) => asset.name),
-    ...receipts.map((receipt) => receipt.artifact.name),
+    ...receipts.flatMap((receipt) =>
+      artifacts(receipt).map((artifact) => artifact.name),
+    ),
   ]);
   const currentNames = current
     .filter((asset) => installerPattern.test(asset.name))
@@ -580,21 +596,23 @@ async function main() {
             : []),
         );
         await fs.mkdir(directory, { recursive: true });
-        const destination = path.join(directory, receipt.artifact.name);
-        // Preserve any existing local package with a different provenance.
-        try {
-          await fs.copyFile(
-            path.join(root, receipt.artifact.path),
-            destination,
-            (await import("node:fs")).constants.COPYFILE_EXCL,
-          );
-        } catch (error) {
-          if (error.code !== "EEXIST") throw error;
-          assert.equal(
-            sha256(await fs.readFile(destination)),
-            receipt.artifact.sha256,
-            "Package archive conflict; published installer is unchanged",
-          );
+        for (const artifact of artifacts(receipt)) {
+          const destination = path.join(directory, artifact.name);
+          // Preserve any existing local package with a different provenance.
+          try {
+            await fs.copyFile(
+              path.join(root, artifact.path),
+              destination,
+              (await import("node:fs")).constants.COPYFILE_EXCL,
+            );
+          } catch (error) {
+            if (error.code !== "EEXIST") throw error;
+            assert.equal(
+              sha256(await fs.readFile(destination)),
+              artifact.sha256,
+              "Package archive conflict; published installer is unchanged",
+            );
+          }
         }
         await writeJSON(path.join(directory, "artifact.json"), {
           createdAt: new Date().toISOString(),
@@ -605,6 +623,7 @@ async function main() {
           platform: receipt.target,
           status: "success",
           artifact: receipt.artifact,
+          updateArtifacts: receipt.updateArtifacts,
           publication: result,
         });
       }

@@ -205,6 +205,15 @@ OS 기능은 `src/main/platform/contracts.ts`의 타입 계약과 `darwin/`·`wi
 | `DesktopPlatform` | Windows AppUserModelID 설정 → 숨김 생성 → ICO·setAppDetails → ready-to-show → 표시. 숨김 시험의 offscreen 렌더링 여부를 OS 구현이 정하며 표시·포커스 차단 정책을 마지막에 적용 |
 | `ActivityEndpoint` | 생성 → 서버 listen → listening(권한 설정), 연결·서버 종료 → dispose. Mac 소켓과 Windows pipe 차이만 분리; DB 정책은 공통 계층에 둠 |
 | `protectDownload` | Mac quarantine, Windows IAttachmentExecute의 Save와 ZoneId 3 적용 후 파일 해시 재검사. 보호 실패 시 파일 공개 중단; 자동 실행 금지 |
+| `UpdatePlatform` | 설치 루트·helper 이름·업데이트 대상만 OS별로 결정. 설치된 앱의 업데이트는 사용자가 적용을 선택한 경우에만 별도 updater가 수행하며 공유 첨부파일의 `protectDownload` 계약과 혼용하지 않음 |
+
+앱 내 업데이트는 `updates.download`·`updates.cancel`·`updates.install` IPC를 사용합니다. 공개 키는 `PASSPORT_UPDATE_PUBLIC_KEY`로 main 번들과 Rust updater에 동일하게 내장합니다. 키가 없는 개발·기존 빌드는 수동 다운로드를 유지합니다. updater는 Ed25519 서명과 ZIP 크기·SHA-256을 재검증하고, 정상 종료 후 파일 교체·DB 스냅샷·시작 확인을 수행합니다. 서명 개인 키를 앱·저장소·로그에 넣지 않습니다.
+
+`node scripts/test-updater.mjs`는 네이티브 시험용 앱의 교체·복구·변조 거절 검사입니다. 실제 Passport 검사는 `node scripts/verify-installed-update.mjs <이전-app-폴더> <서명된-업데이트-폴더>`로 수행하며, 이전 앱을 격리 복사한 뒤 숨김 모드에서 서로 다른 버전·암호화 데이터 복원·문서 보존을 확인합니다. 두 빌드는 동일한 업데이트 공개 키를 포함해야 합니다. 네이티브 fixture 통과를 실제 앱·Gatekeeper·최소 OS 검사로 대체하지 않습니다.
+
+설치본 업데이트 시험은 서명된 실제 패키지를 루프백으로 전달하며 GitHub 게시 없이 다운로드·교체·재시작을 검사합니다. `--flow-only`는 키체인 승인이 준비되지 않은 환경에서 암호화 데이터 검사를 제외한 진단 옵션입니다. 결과는 `flow-verified`이며 릴리즈 통과 증거로 사용할 수 없습니다. 기본 검사는 실제 OS 암호화와 저장한 인증·설정 보존을 필수로 확인합니다.
+
+임시 버전 두 개를 만들 때는 독립 Git 루트인 작업 복사본에서 `package.json`·`package-lock.json`의 버전을 함께 바꾸고 같은 시험용 업데이트 키로 빌드합니다. 해당 복사본에서 `npm ci`를 실행합니다. `node_modules`를 다른 프로젝트의 junction으로 공유하면 패키징 시 간접 의존성이 빠질 수 있으며, 상위 저장소의 하위 폴더만 복사하면 `git apply` 기반 네이티브 패치의 적용 위치도 달라집니다. 원래 작업 폴더의 버전·사용자 설치본·프로필을 변경하지 않고 시험이 끝나면 임시 키와 앱을 정리합니다.
 
 PTY 출력은 256 KiB 미처리에서 읽기를 멈추고 xterm 쓰기 완료 ACK 뒤 재개합니다. 세대가 다른 콜백은 새 연결을 바꾸지 못하게 하며 탭·창 이동 중 버퍼·출력 순서·소유권을 보존합니다. 종료 전 읽기를 재개하고 `pendingExits`로 네이티브 종료 콜백 반환까지 기다린 뒤 DB·Electron을 닫습니다. Windows 자식은 job object로 관리하며 POSIX 시그널을 쓰지 않습니다. ConPTY 소스 해시·강제 재빌드를 유지합니다. Windows Passport Bash의 resize 보정은 해당 세대·조건에만 적용하고 다른 셸·TUI에 퍼뜨리지 않습니다.
 
