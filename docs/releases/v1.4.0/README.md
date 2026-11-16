@@ -620,6 +620,6 @@ Mac 최초 설치의 보안 승인과 키체인 비밀번호 요청은 별개입
 
 - [버전별 변경 사항](https://github.com/poyal/passport/releases)
 - [개발·검증·릴리즈 안내](../../../docs/README.md)
-- [오픈소스 고지](THIRD_PARTY_NOTICES.md)
+- [오픈소스 고지](../../../THIRD_PARTY_NOTICES.md)
 
 제작자 **Poyal** · [poyal.work@gmail.com](mailto:poyal.work@gmail.com) · [GitHub](https://github.com/poyal/passport) · [문의·오류 신고](https://github.com/poyal/passport/issues)

@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { createHash, randomUUID } from "node:crypto";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { reusableApp } from "../fixtures/reusable-app";
@@ -100,6 +101,14 @@ test("4 MiB clipboard paste reaches the local PTY intact and rejects oversize an
   const expected = pasteStart + text + pasteEnd;
   const receiver = path.join(suite.directory, "receiver.cjs");
   const result = path.join(suite.directory, "received.json");
+  const nativeReceiver = path.join(suite.directory, "paste-receiver.exe");
+  if (process.platform === "win32") {
+    execFileSync(
+      process.env.PASSPORT_RUSTC || "rustc",
+      ["tests/fixtures/paste-receiver.rs", "-o", nativeReceiver],
+      { stdio: "pipe", windowsHide: true },
+    );
+  }
   await fs.writeFile(
     receiver,
     `
@@ -120,7 +129,10 @@ process.stdout.write('\\x1b[?2004hPASTE_READY\\r\\n');
     ({ id, data }) => window.passport.call("session.input", { id, data }),
     {
       id: state.id,
-      data: `${quote(process.execPath)} ${quote(receiver)}\r`,
+      data:
+        process.platform === "win32"
+          ? `${quote(nativeReceiver)} ${quote(result)}\r`
+          : `${quote(process.execPath)} ${quote(receiver)}\r`,
     },
   );
   const pane = suite.page.locator(`[data-pane-id="${state.id}"]`);
@@ -132,10 +144,14 @@ process.stdout.write('\\x1b[?2004hPASTE_READY\\r\\n');
   );
   await expect
     .poll(
-      async () =>
-        JSON.parse(await fs.readFile(result, "utf8").catch(() => "{}")),
-      // Windows Node's console reader takes about 29 s for this Unicode body;
-      // keep the global GUI and shutdown deadlines unchanged.
+      async () => {
+        if (process.platform === "win32") {
+          const data = await fs.readFile(result).catch(() => Buffer.alloc(0));
+          return { bytes: data.length, hash: digest(data) };
+        }
+        return JSON.parse(await fs.readFile(result, "utf8").catch(() => "{}"));
+      },
+      // Preserve the existing delivery deadline and the global GUI/shutdown limits.
       { timeout: process.platform === "win32" ? 35000 : 10000 },
     )
     .toEqual({ bytes: Buffer.byteLength(expected), hash: digest(expected) });
