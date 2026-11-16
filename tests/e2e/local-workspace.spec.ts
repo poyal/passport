@@ -374,9 +374,18 @@ test.describe("local workspace UI", () => {
 });
 
 test("manually launched CLI wrappers deliver completion and input alerts and respect foreground policy @desktop", async () => {
+  // Codex also reads config from working-directory ancestors. A Windows user
+  // Temp directory is beneath USERPROFILE, so CODEX_HOME alone cannot isolate
+  // this fixture from the real user's .codex/config.toml.
+  const tempRoot =
+    process.platform === "win32"
+      ? path.join(process.env.SystemRoot || "C:\\Windows", "Temp")
+      : os.tmpdir();
   const directory = await fs.mkdtemp(
-    path.join(os.tmpdir(), "passport-notify-e2e-"),
+    path.join(tempRoot, "passport-notify-e2e-"),
   );
+  const codexHome = path.join(directory, "codex");
+  await fs.mkdir(codexHome);
   const bin = path.join(directory, "bin");
   await fs.mkdir(bin);
   const shellDirectory = path.join(directory, "shell");
@@ -439,6 +448,8 @@ console.log('CLI_FIXTURE_FINISHED');
       PASSPORT_DATA_DIR: path.join(directory, "data"),
       PASSPORT_DISABLE_UPDATE_CHECK: "1",
       PASSPORT_E2E_NOTIFICATIONS: "1",
+      CODEX_HOME: codexHome,
+      CLAUDE_CONFIG_DIR: path.join(directory, "claude"),
       ...(process.platform === "darwin" ? { ZDOTDIR: shellDirectory } : {}),
     },
   });
@@ -490,6 +501,7 @@ console.log('CLI_FIXTURE_FINISHED');
         };
         b.document.settings.terminal.shell =
           b.platform === "win32" ? "passport-bash" : "zsh";
+        b.document.settings.terminal.cwd = directory;
         b.document.settings.terminal.profiles.push({
           id: "fixture-path",
           name: "Fixture CLI",
