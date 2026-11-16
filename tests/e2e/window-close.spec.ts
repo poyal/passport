@@ -90,8 +90,10 @@ test.describe("individual window close", () => {
       false,
     );
     expect(after.sessionStates.some((s) => s.id === second.paneId)).toBe(false);
-    await page.locator(".view:not([hidden]) textarea").press("Control+c");
-    await page.keyboard.type("echo CLOSE_SURVIVOR");
+    // This shell is already idle. An unnecessary Ctrl+C can discard the first
+    // characters of the following command while Windows readline handles it.
+    await page.locator(".view:not([hidden]) textarea").focus();
+    await page.keyboard.type("printf 'CLOSE_%s\\n' SURVIVOR");
     await page.keyboard.press("Enter");
     await expect(page.locator(".view:not([hidden]) .xterm-rows")).toContainText(
       "CLOSE_SURVIVOR",
