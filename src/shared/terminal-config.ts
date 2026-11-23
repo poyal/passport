@@ -74,6 +74,7 @@ export const terminalSettingsSchema = z.object({
   profileIds: z.array(z.string().max(128)).max(32).default([]),
   profiles: z.array(startupProfileSchema).max(100).default([]),
   autoLogLocal: z.boolean().default(false),
+  inlineAutosuggestions: z.boolean().default(false),
   cliAccess: controlModeSchema.default("off"),
 });
 export type TerminalSettings = z.infer<typeof terminalSettingsSchema>;
@@ -139,6 +140,7 @@ export function defaultTerminalSettings(
     profileIds: platform === "win32" && !legacy ? ["unix-shortcuts"] : [],
     profiles: [],
     autoLogLocal: false,
+    inlineAutosuggestions: false,
     cliAccess: "off",
   };
 }

@@ -720,6 +720,20 @@ export function TerminalSettings() {
       </section>
       <section className="settings-card">
         <ToggleField
+          label="로컬 셸 인라인 자동완성"
+          checked={settings.inlineAutosuggestions}
+          onChange={(inlineAutosuggestions) =>
+            void save({ inlineAutosuggestions })
+          }
+        />
+        <p className="hint">
+          새 macOS zsh·Passport Bash·PowerShell에서 줄 끝의 제안을 →로 채우고
+          Enter로 실행합니다. PowerShell은 설치된 PSReadLine 버전에 따라
+          히스토리만 제안하거나 기본 Tab 완성을 사용합니다.
+        </p>
+      </section>
+      <section className="settings-card">
+        <ToggleField
           label="로컬 터미널 자동 로그 기록"
           checked={settings.autoLogLocal}
           onChange={(autoLogLocal) => void save({ autoLogLocal })}

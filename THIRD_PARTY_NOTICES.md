@@ -6,6 +6,13 @@ Passport의 프로젝트 라이선스를 별도로 부여하는 문서가 아닙
 
 JetBrains Mono: Copyright JetBrains s.r.o., SIL Open Font License 1.1. 앱에 400/700 굵기를 포함하며, 글꼴 이름을 변경하지 않습니다. 원문은 `@fontsource/jetbrains-mono` 패키지의 LICENSE와 함께 배포합니다.
 
+## 로컬 셸 자동완성
+
+로컬 셸의 선택적 자동완성에는 다음 구성요소를 포함합니다.
+
+- [zsh-autosuggestions v0.7.1](https://github.com/zsh-users/zsh-autosuggestions/tree/v0.7.1) · MIT. 배포 스크립트의 SHA-256은 `eec7ba8f7a71414ace0ea0fab0908d005b24cf65d83b169c0ff97815d3cfc51a`입니다. 원문은 앱 리소스의 `terminal/autosuggestions/zsh/LICENSE`에 있습니다.
+- [ble.sh 1529427](https://github.com/akinomyoga/ble.sh/tree/1529427) · BSD-3-Clause 및 동봉 고지. `ble-nightly-20261031+1529427.tar.xz`의 SHA-256은 `d80197ac0733872d1795134df8cd252d07f49813996312da0e40827e9abc451c`입니다. 실행 스크립트·라이브러리·연동 스크립트와 `terminal/autosuggestions/bash/licenses/`를 포함합니다.
+
 ## 터미널 팔레트
 
 다음 프로젝트의 색상 값을 터미널 배경·전경·ANSI 16색·커서에 대응시켰습니다. 선택 영역은 전경색에 Passport가 투명도를 추가한 값이며, 기본 블랙은 자체 프리셋입니다. 256색·트루컬러 처리와 원격 ANSI 해석은 xterm.js를 사용합니다.

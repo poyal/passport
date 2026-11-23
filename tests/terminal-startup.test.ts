@@ -10,6 +10,7 @@ import { ActivityService, OscNotifications } from "../src/main/activity";
 import {
   prepareLaunch,
   previewEnvironment,
+  psQuote,
   shQuote,
   cmdValue,
 } from "../src/main/startup";
@@ -47,6 +48,105 @@ const vault = {
   encryptString: () => Buffer.alloc(0),
   decryptString: () => "",
 };
+
+it
+  .skipIf(process.platform !== "win32")
+  .each(["pwsh", "windows-powershell"] as const)(
+  "%s loads supported inline predictions with isolated history and preserves a usable prompt",
+  async (shell) => {
+    const cwd = directory();
+    const config = { shell, cwd };
+    const settings = defaultTerminalSettings("win32");
+    settings.profileIds = [];
+    expect(settings.inlineAutosuggestions).toBe(false);
+    const plain = prepareLaunch(
+      config,
+      settings,
+      notificationSettingsSchema.parse({}),
+      cwd,
+      {},
+    );
+    expect(plain.args).toEqual(["-NoLogo"]);
+    settings.inlineAutosuggestions = true;
+    const launch = prepareLaunch(
+      config,
+      settings,
+      notificationSettingsSchema.parse({}),
+      cwd,
+      {},
+    );
+    if (!Array.isArray(launch.args))
+      throw new Error("Expected PowerShell arguments");
+    launch.args.unshift("-NoProfile");
+    const script = launch.args.pop();
+    launch.args.push(
+      "Import-Module PSReadLine; Set-PSReadLineOption -HistorySavePath " +
+        psQuote(path.join(cwd, "isolated-history")) +
+        "; " +
+        script +
+        "; $o=Get-PSReadLineOption; [IO.File]::WriteAllText(" +
+        psQuote(path.join(cwd, "capability")) +
+        ", [string]$o.PredictionSource + '|' + [string]((Get-Command Set-PSReadLineOption).Parameters.ContainsKey('PredictionViewStyle')))",
+    );
+    let output = "";
+    const local = new LocalSessions((event) => {
+      if (event.kind === "output") {
+        output += event.data;
+        local.ack(event.id, event.bytes);
+        if (event.data.includes("\x1b[6n")) local.input(event.id, "\x1b[1;1R");
+      }
+    });
+    const read = (file: string) =>
+      fs.existsSync(path.join(cwd, file))
+        ? fs.readFileSync(path.join(cwd, file), "utf8")
+        : undefined;
+    try {
+      local.open("pane", config, launch);
+      await expect
+        .poll(() => read("capability"), { timeout: 15000 })
+        .toBeDefined();
+      const [source, hasPluginApi] = read("capability")!.split("|");
+      if (shell === "pwsh" && hasPluginApi === "True") {
+        expect(source).toBe("HistoryAndPlugin");
+        fs.mkdirSync(path.join(cwd, "example 한글"));
+        local.input("pane", "cd exa");
+        await expect.poll(() => output).toContain("한글");
+        local.input("pane", "\x1b[C\r");
+      }
+      local.input(
+        "pane",
+        "[IO.File]::WriteAllText(" +
+          psQuote(path.join(cwd, "folder")) +
+          ",(Get-Location).Path)\r",
+      );
+      await expect
+        .poll(() => read("folder"))
+        .toBe(
+          source === "HistoryAndPlugin" ? path.join(cwd, "example 한글") : cwd,
+        );
+      if (source.startsWith("History")) {
+        const marker = path.relative(
+          cwd,
+          path.join(read("folder")!, "history-marker"),
+        );
+        local.input("pane", "Add-Content history-marker ok\r");
+        await expect.poll(() => read(marker)?.trim()).toBe("ok");
+        output = "";
+        // The existing file also matches this prefix. The history result
+        // includes the value; accepting just the path cannot append a line.
+        local.input("pane", "Add-Content hist");
+        await expect.poll(() => output).toContain("marker ok");
+        local.input("pane", "\x1b[C\r");
+        await expect
+          .poll(() => read(marker)?.trim().split(/\r?\n/))
+          .toEqual(["ok", "ok"]);
+      }
+    } finally {
+      await local.shutdown();
+    }
+  },
+  30000,
+);
 
 it.each(["codex", "claude"])(
   "native %s launcher skips itself and preserves missing CLI and child exit codes",

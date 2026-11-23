@@ -582,6 +582,13 @@
       "title": "lets both peers send, approve and read notes with the real CLI without terminal access"
     },
     {
+      "id": "inline-suggestions.local-shell",
+      "file": "inline-suggestions.spec.ts",
+      "title": "accepts local path and history suggestions only in the shell editor",
+      "mode": "hidden",
+      "platforms": ["darwin", "win32"]
+    },
+    {
       "id": "terminal-unicode.zsh-edit",
       "file": "terminal-unicode.spec.ts",
       "title": "macOS zsh edits wrapped emoji prompts and pasted Unicode without stale text",

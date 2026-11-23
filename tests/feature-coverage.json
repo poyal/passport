@@ -85,6 +85,7 @@
         "local-workspace.an-unavailable-default-shell-leaves-a-retryable-local-tab",
         "local-workspace.creates-mixed-local-ssh-workspaces-previews-profiles-routes-alert",
         "local-workspace.edits-several-startup-profiles-and-notification-preferences-witho",
+        "inline-suggestions.local-shell",
         "windows-shells.windows-passport-bash-applies-a-startup-profile-and-accepts-termi",
         "windows-shells.windows-cmd-applies-a-startup-profile-and-accepts-terminal-input",
         "windows-shells.windows-windows-powershell-applies-a-startup-profile-and-accepts",

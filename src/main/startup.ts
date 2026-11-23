@@ -208,7 +208,14 @@ export function prepareLaunch(
   for (const key of Object.keys(env))
     if (key.toUpperCase() === "PATH") delete env[key];
   env.PATH = cliDirectory + path.delimiter + inheritedPath;
-  if (!profiles.length && !config.agent && !resume.enabled) {
+  const shell = snapshot.shell;
+  const suggestions =
+    settings.inlineAutosuggestions &&
+    (platform.id === "darwin"
+      ? shell === "zsh"
+      : ["passport-bash", "pwsh", "windows-powershell"].includes(shell));
+  const assets = path.join(resourceRoot(), "autosuggestions");
+  if (!profiles.length && !config.agent && !resume.enabled && !suggestions) {
     // A plain shell needs no loader or execution-policy exception. In particular,
     // Bash keeps its native login/logout semantics when injection is disabled.
     snapshot.status = "ready";
@@ -295,7 +302,6 @@ export function prepareLaunch(
     "claude-settings.json",
     JSON.stringify({ hooks }),
   );
-  const shell = snapshot.shell;
   let args: string[] | string;
   if (shell === "bash" || shell === "zsh" || shell === "passport-bash") {
     const helperUnix = bashFile(helper);
@@ -320,6 +326,10 @@ export function prepareLaunch(
     for (const agent of ["claude", "codex"] as const)
       if ((integration && notifications[agent]) || resume.enabled)
         body += `unalias ${agent} 2>/dev/null\nfunction ${agent}() { ${q(helperUnix)} run ${agent} "$@"; }\n`;
+    if (suggestions) {
+      const script = shell === "zsh" ? "enable.zsh" : "enable.bash";
+      body += `source ${q(bashFile(path.join(assets, script)))} || ${q(helperUnix)} result '인라인 자동완성을 시작하지 못했습니다.'\n`;
+    }
     body += `${q(helperUnix)} ready\n`;
     if (launchAgent) body += `${q(helperUnix)} ${launchAgent}\n`;
     body = `if [ "$PASSPORT_INIT_FAILED" != 1 ]; then\n${body}else\n${q(helperUnix)} result '!error:사용자 시작 파일에서 오류가 발생했습니다. AI 자동 실행을 생략했습니다.'\nfi\n`;
@@ -354,6 +364,8 @@ export function prepareLaunch(
     for (const agent of ["claude", "codex"] as const)
       if ((integration && notifications[agent]) || resume.enabled)
         body += `function global:${agent} { & ${psQuote(helper)} run ${agent} @args }\r\n`;
+    if (suggestions)
+      body += `try { & ${psQuote(path.join(assets, "powershell", "enable.ps1"))} } catch { & ${psQuote(helper)} result '인라인 자동완성을 시작하지 못했습니다.' }\r\n`;
     body += `& ${psQuote(helper)} ready\r\n`;
     if (launchAgent) body += `& ${psQuote(helper)} ${launchAgent}\r\n`;
     const file = write(

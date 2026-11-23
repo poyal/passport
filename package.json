@@ -66,6 +66,11 @@
       "icon": "build/icon.png",
       "extraResources": [
         {
+          "from": "resources/terminal/autosuggestions",
+          "to": "terminal/autosuggestions",
+          "filter": ["enable.zsh", "zsh/**/*"]
+        },
+        {
           "from": "resources/terminal/helper/darwin-${arch}",
           "to": "terminal/helper/darwin-${arch}",
           "filter": [
@@ -94,6 +99,11 @@
         {
           "from": "build/icon.ico",
           "to": "icon.ico"
+        },
+        {
+          "from": "resources/terminal/autosuggestions",
+          "to": "terminal/autosuggestions",
+          "filter": ["enable.bash", "bash/**/*", "powershell/**/*"]
         },
         {
           "from": "resources/terminal/helper/win32-${arch}",

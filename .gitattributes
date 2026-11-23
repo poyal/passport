@@ -1,0 +1,4 @@
+resources/terminal/autosuggestions/bash/** -text
+resources/terminal/autosuggestions/zsh/** -text
+resources/terminal/autosuggestions/*.bash text eol=lf
+resources/terminal/autosuggestions/*.zsh text eol=lf

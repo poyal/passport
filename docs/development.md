@@ -29,6 +29,8 @@ npm run dev
 
 ## 폴더와 빌드 결과
 
+로컬 인라인 자동완성은 사용자 초기화 후 세션별 셸 로더에서 켭니다. `resources/terminal/autosuggestions/`의 OS별 리소스는 ASAR 밖에 패키징해 셸이 직접 읽습니다. 셸 입력·히스토리·키 수락은 ZLE, ble.sh, PSReadLine에서 처리합니다. 기존 사용자 플러그인을 중복 로드하지 않으며 SSH 세션에는 주입하지 않습니다.
+
 | 경로 | 역할 |
 | --- | --- |
 | `src/main/` | 세션·SSH·PTY·DB·인증·파일 전송·터널·IPC 소유 |
