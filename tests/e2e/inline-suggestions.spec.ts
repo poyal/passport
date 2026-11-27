@@ -37,7 +37,14 @@ test.beforeAll(async () => {
 });
 const suite = reusableApp({
   name: "inline-suggestions",
-  env: process.platform === "win32" ? { HOME: home } : { ZDOTDIR: home },
+  env:
+    process.platform === "win32"
+      ? {
+          HOME: home,
+          XDG_CACHE_HOME: path.join(home, ".cache"),
+          XDG_STATE_HOME: path.join(home, ".local", "state"),
+        }
+      : { ZDOTDIR: home },
 });
 test.afterAll(async () => fs.rm(home, { recursive: true, force: true }));
 
@@ -82,6 +89,11 @@ test("accepts local path and history suggestions only in the shell editor", asyn
       { timeout: 20000 },
     )
     .toBe(true);
+  if (process.platform === "win32") {
+    expect(
+      await fs.readdir(path.join(home, ".cache", "blesh")),
+    ).not.toHaveLength(0);
+  }
   await input.pressSequentially("cat exa", { delay: 50 });
   await expect(rows).toContainText("한글.txt", { timeout: 20000 });
   await input.press("ArrowRight");

@@ -1458,7 +1458,6 @@ function ble/base/initialize-runtime-directory/.home {
 function ble/base/initialize-runtime-directory {
   ble/base/initialize-runtime-directory/.xdg && return 0
   ble/base/initialize-runtime-directory/.tmp && return 0
-  ble/base/initialize-runtime-directory/.base && return 0
   ble/base/initialize-runtime-directory/.home
 }
 if ! ble/base/initialize-runtime-directory; then
@@ -1521,11 +1520,7 @@ function ble/base/clean-up-runtime-directory {
 function ble/base/initialize-cache-directory/.xdg {
   [[ $_ble_base != */out ]] || return 1
   local cache_dir=${XDG_CACHE_HOME:-$HOME/.cache}
-  if [[ ! -d $cache_dir ]]; then
-    [[ $XDG_CACHE_HOME ]] &&
-      ble/util/print "ble.sh: XDG_CACHE_HOME='$XDG_CACHE_HOME' is not a directory." >&2
-    return 1
-  fi
+  [[ -d $cache_dir ]] || ble/bin/mkdir -p -- "$cache_dir" || return 1
   if ! [[ -r $cache_dir && -w $cache_dir && -x $cache_dir ]]; then
     [[ $XDG_CACHE_HOME ]] &&
       ble/util/print "ble.sh: XDG_CACHE_HOME='$XDG_CACHE_HOME' doesn't have a proper permission." >&2
@@ -1582,7 +1577,8 @@ function ble/base/migrate-cache-directory {
   ble/base/migrate-cache-directory/.move "$_ble_base_cache/man" "$_ble_base_cache/complete.mandb"
   [[ $failglob ]] && shopt -s failglob
 }
-if ! ble/base/initialize-cache-directory; then
+# Passport bundles these resources with the app. Store generated files in user directories.
+if ! ble/base/initialize-cache-directory/.xdg; then
   ble/util/print "ble.sh: failed to initialize \$_ble_base_cache." >&2
   ble/base/clear-version-variables
   ble/init/clean-up 2>/dev/null # set -x 対策 #D0930
@@ -1626,7 +1622,7 @@ function ble/base/initialize-state-directory {
   ble/util/print "ble.sh: using the non-standard position of the state directory: '$state_dir/$UID'" >&2
   ble/base/.create-user-directory _ble_base_state "$state_dir/$UID"
 }
-if ! ble/base/initialize-state-directory; then
+if ! ble/base/initialize-state-directory/.xdg; then
   ble/util/print "ble.sh: failed to initialize \$_ble_base_state." >&2
   ble/base/clear-version-variables
   ble/init/clean-up 2>/dev/null # set -x 対策 #D0930

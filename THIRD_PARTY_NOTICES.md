@@ -12,6 +12,7 @@ JetBrains Mono: Copyright JetBrains s.r.o., SIL Open Font License 1.1. 앱에 40
 
 - [zsh-autosuggestions v0.7.1](https://github.com/zsh-users/zsh-autosuggestions/tree/v0.7.1) · MIT. 배포 스크립트의 SHA-256은 `eec7ba8f7a71414ace0ea0fab0908d005b24cf65d83b169c0ff97815d3cfc51a`입니다. 원문은 앱 리소스의 `terminal/autosuggestions/zsh/LICENSE`에 있습니다.
 - [ble.sh 1529427](https://github.com/akinomyoga/ble.sh/tree/1529427) · BSD-3-Clause 및 동봉 고지. `ble-nightly-20261031+1529427.tar.xz`의 SHA-256은 `d80197ac0733872d1795134df8cd252d07f49813996312da0e40827e9abc451c`입니다. 실행 스크립트·라이브러리·연동 스크립트와 `terminal/autosuggestions/bash/licenses/`를 포함합니다.
+  Passport 배포본은 사용자 캐시 디렉터리를 처음 실행할 때 만들며, 런타임·캐시·상태 파일의 저장 위치를 사용자용 경로로 제한합니다.
 
 ## 터미널 팔레트
 

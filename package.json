@@ -103,7 +103,14 @@
         {
           "from": "resources/terminal/autosuggestions",
           "to": "terminal/autosuggestions",
-          "filter": ["enable.bash", "bash/**/*", "powershell/**/*"]
+          "filter": [
+            "enable.bash",
+            "bash/ble.sh",
+            "bash/lib/**/*",
+            "bash/contrib/**/*",
+            "bash/licenses/**/*",
+            "powershell/**/*"
+          ]
         },
         {
           "from": "resources/terminal/helper/win32-${arch}",
