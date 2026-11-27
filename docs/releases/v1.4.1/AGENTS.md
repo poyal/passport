@@ -1,5 +1,51 @@
 # Passport 1.4.1 검증 기록
 
-Mac ARM64와 Windows x64의 정식 검증 및 GitHub 공개는 대기 중입니다. 사용법은 [1.4.1 사용자 매뉴얼](README.md)에서 확인하세요.
+Mac ARM64와 Windows x64 모두 `f0813b69b5fe8e9573e185f0ea9a9a1d4896da81`에서 빌드해 `v1.4.1`로 공개했습니다. [GitHub 릴리즈](https://github.com/poyal/passport/releases/tag/v1.4.1) · [사용자 매뉴얼](README.md)
 
-이 후보에는 [이슈 #12](https://github.com/poyal/passport/issues/12)의 로컬 셸 인라인 자동완성이 포함됩니다. 기본 설정은 꺼짐입니다. 경로·히스토리 제안, 오른쪽 방향키로 수락한 뒤 Enter로 실행하는 동작, 전경 프로그램으로 방향키를 전달하는 동작이 회귀 검사 대상입니다. 후보 선택에는 셸의 Tab 완성을 사용합니다.
+## 인라인 자동완성
+
+macOS zsh와 Windows Passport Bash에서 기본값이 꺼짐인지 확인하고 설정을 켠 뒤 새 로컬 터미널을 열었습니다. 한글·공백이 있는 파일 경로와 이전 명령의 제안을 오른쪽 방향키로 수락하고 Enter를 눌러야 실행되는 것을 실제 파일 내용으로 확인했습니다. 비밀번호 입력은 제안에 남지 않았으며, 일반·대체 화면 전경 프로그램이 방향키 바이트를 직접 받았습니다. 두 OS의 소스 앱과 설치본에서 같은 사례가 통과했습니다. [이슈 #12](https://github.com/poyal/passport/issues/12)
+
+Windows에서는 새 사용자 캐시 경로에 ble.sh 캐시가 생성되는 것도 확인했습니다. 최종 EXE에서 추출한 자동완성 리소스 39개는 소스 파일 목록·SHA-256과 모두 일치했습니다. Windows PowerShell 5.1과 PowerShell 7은 설치된 PSReadLine의 지원 범위에 맞춰 별도로 검사했습니다. 여러 후보는 셸의 Tab 완성으로 확인합니다.
+
+## 정식 검증
+
+두 OS의 네이티브 환경에서 숨김 GUI와 실제 데스크톱 포커스·클립보드 검사를 실행했습니다. Mac은 macOS 27.2.1이고 Windows는 Windows 11 x64입니다. 단위·정책·GUI 열은 통과 / 생략 수이며, 데스크톱 열은 소스와 설치본의 통과 수입니다.
+
+| 대상 | 단위·통합 | 게시 정책 | 소스 GUI | 설치본 GUI | 데스크톱 (소스 / 설치본 통과) |
+| --- | --- | --- | --- | --- | --- |
+| mac-arm64 | 338 / 9 | 89 / 0 | 113 / 11 | 113 / 11 | 4 / 4 |
+| win-x64 | 337 / 10 | 88 / 1 | 114 / 10 | 114 / 10 | 4 / 4 |
+
+| 대상 | 정식 실행 ID | 도구 | 소스·설치본 숨김 앱 실행 / 정상 종료 / 종료 감사 |
+| --- | --- | --- | --- |
+| mac-arm64 | `20261127T073607Z-f0813b6-mac-arm64-local-release` | Darwin 27.2.0, Node v24.21.0, npm 11.19.0, cargo 1.100.0 (3acc79c0c 2026-11-05), Electron 44.10.0 | 52 / 52 / 52 · 52 / 52 / 52 |
+| win-x64 | `20261127T073138Z-f0813b6-win-x64-local-release` | OS 10.0.26300, Node v26.13.0, npm 11.20.0, cargo 1.100.0 (3acc79c0c 2026-11-05), Electron 44.10.0 | 54 / 54 / 54 · 54 / 54 / 54 |
+
+숨김 검사에서 네이티브 창 표시와 포커스 횟수는 모두 0이었습니다. 필수 GUI 사례는 재시도와 실패 없이 통과했습니다. 다른 플랫폼 전용 사례 및 선택하지 않은 Docker·장시간 부하·실제 AI CLI 사례는 정책상 생략했습니다.
+
+## 1.4.0에서 앱 내 업데이트
+
+두 OS에서 이전 공개 버전의 격리 복사본으로 서명된 1.4.1 업데이트를 내려받아 설치했습니다. 이전 앱 정상 종료, 새 앱 시작, 재실행, 기존 호스트·설정 보존, OS 암호화 인증정보 복원을 확인했습니다. 기존 설정에 없던 인라인 자동완성 항목은 꺼짐으로 초기화됐습니다. Mac은 Keychain, Windows는 DPAPI를 사용했습니다. 네이티브 updater의 서명·패키지 변조 거절 및 중단 복구 검사도 통과했습니다.
+
+검증 과정에서 구버전 설정과 새 기본값의 비교를 바로잡고, Windows에서 사용자 캐시가 없는 경우 ble.sh가 앱 리소스 디렉터리에 쓰는 동작을 수정했습니다. 두 수정이 모두 포함된 커밋에서 정식 검증을 다시 수행했습니다.
+
+## 공개 다운로드
+
+2026-11-27T08:07:29.780Z에 GitHub 최신 릴리즈의 공개 URL에서 인증 없이 다음 파일을 내려받았습니다. 크기·SHA-256을 검증 기록 및 합본 체크섬과 대조하고 두 OS의 업데이트 메타데이터에서 Ed25519 서명을 검증했습니다.
+
+| 파일 | 바이트 | SHA-256 |
+| --- | ---: | --- |
+| `Passport-1.4.1-darwin-arm64-update.zip` | 173763953 | `06e09befe0309bbc69193d7f03d60735bcaee2fc280a36d9b57a8ee6c0f1a256` |
+| `Passport-1.4.1-mac-arm64.dmg` | 174880101 | `e9173fbf601abea4caeae6472e4b4c77f26f323dfd80240ccfd6006a4ed6a667` |
+| `Passport-1.4.1-win-x64.exe` | 207422381 | `7dc3edfffbd0efa5c63c3d032066a53d3755135c7645a79efe1ac4e9c8b24c42` |
+| `Passport-1.4.1-win32-x64-update.zip` | 365203562 | `79c3500ee5a89db64f0b16c818d6f1f567e135a39d1304a41673d6037bfbf849` |
+| `SHA256SUMS.txt` | 751 | `33ca12d90a0b250c3d76c267e1c965d9609416d505dfae80e3639a1f51532387` |
+| `update-darwin-arm64.json` | 221 | `35605cca500be3c697c99568c0349dbffef7172c45d18e7d82a4d80e285c2493` |
+| `update-darwin-arm64.sig` | 64 | `d4b14583822b0bc7dc23c85214c1b7793cc5f2f127f7621b0aeae6421b1c2e5d` |
+| `update-win32-x64.json` | 215 | `b7461f6925b33064800fd10affdb9fa8d700f24a211f99e02bf44b84568db7e8` |
+| `update-win32-x64.sig` | 64 | `4e0eed9bad7dd3947c903e784cee20dca43b93dfe0cbb12a13f971e97acaab1d` |
+
+## 검증 범위
+
+Mac DMG의 ad-hoc 서명 무결성과 Windows NSIS 설치 파일 내부 앱을 확인했습니다. Mac Developer ID·공증과 Windows Authenticode 서명은 제공하지 않습니다. 최소 지원 OS, Gatekeeper·SmartScreen 승인 화면, 물리 한글 IME, 로그인한 외부 AI 서비스 및 깨끗한 사용자 계정의 설치·제거는 이번 검증 범위 밖입니다.
