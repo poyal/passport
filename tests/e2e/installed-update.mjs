@@ -259,6 +259,11 @@ try {
   });
   const nextPage = await app.firstWindow();
   await nextPage.waitForSelector(".home-view");
+  // Older versions saved no value. An upgrade must leave suggestions off
+  // for those users and preserve the preference when it already exists.
+  if (!Object.hasOwn(before.settings.terminal, "inlineAutosuggestions")) {
+    before.settings.terminal.inlineAutosuggestions = false;
+  }
   assert.deepEqual(
     await nextPage.evaluate(
       async () => (await window.passport.call("bootstrap")).document,
