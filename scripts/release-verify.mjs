@@ -505,11 +505,18 @@ async function verify() {
         }),
       );
       const updateReport = path.join(checks, "installed-update.json");
+      const legacyWindows =
+        process.platform === "win32" && pkg.version === "1.4.2";
       await step("installed-update", () =>
         node(
           "installed-update",
           "scripts/verify-installed-update.mjs",
-          [process.env.PASSPORT_UPDATE_PREVIOUS_APP, output, updateReport],
+          [
+            process.env.PASSPORT_UPDATE_PREVIOUS_APP,
+            output,
+            updateReport,
+            ...(legacyWindows ? ["--win141-from-parent"] : []),
+          ],
           { timeout: 300000 },
         ),
       );
@@ -519,6 +526,31 @@ async function verify() {
         path: relative(updateReport),
         sha256: await hashFile(updateReport),
       });
+      if (legacyWindows) {
+        const report = path.join(checks, "shortcut-updater.json");
+        await step("shortcut-updater", () =>
+          node(
+            "shortcut-updater",
+            "scripts/verify-installed-update.mjs",
+            [
+              process.env.PASSPORT_UPDATE_PREVIOUS_APP,
+              output,
+              report,
+              path.join(
+                appDirectory,
+                "resources/terminal/helper/win32-x64/passport-updater.exe",
+              ),
+            ],
+            { timeout: 300000 },
+          ),
+        );
+        record.checks.find((c) => c.name === "shortcut-updater").report =
+          relative(report);
+        record.evidence.push({
+          path: relative(report),
+          sha256: await hashFile(report),
+        });
+      }
     }
     if (options.desktop)
       await step("packaged-desktop", () =>

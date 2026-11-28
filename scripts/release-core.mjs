@@ -386,6 +386,29 @@ export async function validateReceipt(root, receipt, state) {
       updateReport.packageSha256,
       receipt.updateArtifacts.find((a) => a.name.endsWith(".zip")).sha256,
     );
+    if (receipt.target === "win-x64" && receipt.version === "1.4.2") {
+      assert.equal(updateReport.from, "1.4.1");
+      assert.equal(updateReport.updaterSource, "previous-release");
+      assert.equal(updateReport.workingDirectory, "outside-install");
+      assert.equal(updateReport.credentialsRestored, true);
+      const checks = receipt.checks.filter(
+        (c) => c.name === "shortcut-updater",
+      );
+      assert.equal(checks.length, 1);
+      assert.equal(checks[0].status, "passed");
+      assert.equal(
+        receipt.evidence.filter((e) => e.path === checks[0].report).length,
+        1,
+      );
+      const shortcut = JSON.parse(
+        await fs.readFile(await releasePath(root, checks[0].report), "utf8"),
+      );
+      assert.deepEqual(shortcut, {
+        ...updateReport,
+        workingDirectory: "install",
+        updaterSource: "candidate",
+      });
+    }
   }
   assert.equal(path.basename(filename), receipt.artifact.name);
   assert.equal(

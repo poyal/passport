@@ -60,6 +60,8 @@ export async function prepareUpdateInstall(
   // shutdown have completed. Cancelling a window close cannot arm an update.
   return async () => {
     const child = spawn(helper, [root], {
+      // A Windows shortcut starts Passport in the very folder the helper renames.
+      cwd: options.platform.target === "win32-x64" ? root : undefined,
       detached: true,
       stdio: "ignore",
       windowsHide: true,

@@ -120,6 +120,8 @@ E2E 수명은 실행별 launches·exits·auditedShutdowns가 같고 숨김 표�
 
 새 산출물은 `verification.json`의 `updateArtifacts`에 크기·해시를 기록합니다. 게시기는 실제 업데이트 보고서의 이전/이후 버전·OS·ZIP 해시와 파일 무결성을 다시 확인하며, 실패·누락이면 게시하지 않습니다. OS별 메타데이터를 사용해 다른 OS의 이미 게시된 업데이트를 변경하지 않습니다. 기존 DMG·EXE는 최초 설치용으로 계속 배포합니다.
 
+Windows 설치본 검사는 시작 메뉴 바로가기와 같은 작업 디렉터리(기존 설치 폴더)에서 이전 앱을 실행합니다. 교체를 수행하는 도우미는 이전 앱에 포함되어 있으므로 설치 폴더 잠금 결함이 있는 공개 버전에서 처음 전환할 때에는 새 버전 설치 파일로도 업데이트할 수 있도록 안내합니다.
+
 실제 설치 검사는 숨김 모드이며 Gatekeeper 승인 화면·macOS 최소 지원 버전·Windows SmartScreen 검사를 증명하지 않습니다. Mac의 최초 승인 이후 보안 설정 재방문 여부는 별도의 실기로 확인하고, 미검증이면 완료로 기록하지 않습니다. 사용자 설치본·실제 DB는 시험 대상으로 사용하지 않습니다.
 
 교체 중 중단되면 앱 데이터의 `updates/<transaction>/`와 설치 경로 옆 `.passport-backup-<transaction>`을 보존합니다. 관련 앱과 helper가 모두 종료된 것을 확인한 뒤 해당 transaction의 `passport-updater[.exe] <transaction-절대경로> --recover`로 복구합니다. 실행 중인 새 앱의 DB를 덮어쓰지 않으며 복구본이 없으면 중단합니다. 성공한 transaction은 다음 정상 시작에서 정리합니다.

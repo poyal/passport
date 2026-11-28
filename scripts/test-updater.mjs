@@ -166,6 +166,7 @@ try {
     let failed = false;
     try {
       execFileSync(updater, [transaction, ...(recovery ? ["--recover"] : [])], {
+        cwd: process.platform === "win32" ? target : undefined,
         timeout: 30_000,
         stdio: "pipe",
         windowsHide: true,

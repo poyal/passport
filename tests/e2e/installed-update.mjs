@@ -10,9 +10,11 @@ import { electron } from "../../scripts/e2e-electron.mjs";
 import { closeCleanly } from "../fixtures/electron-exit.ts";
 
 const flowOnly = process.argv.includes("--flow-only");
-const [previousApp, packageDirectory, reportFile] = process.argv
-  .slice(2)
-  .filter((a) => a !== "--flow-only");
+const legacyWindows = process.argv.includes("--win141-from-parent");
+const [previousApp, packageDirectory, reportFile, candidateHelper] =
+  process.argv
+    .slice(2)
+    .filter((a) => a !== "--flow-only" && a !== "--win141-from-parent");
 if (!previousApp || !packageDirectory)
   throw new Error(
     "Usage: node scripts/verify-installed-update.mjs <previous-app-directory> <signed-update-directory>",
@@ -22,6 +24,11 @@ const metadataName = `update-${target}.json`,
   signatureName = `update-${target}.sig`;
 const metadata = await fs.readFile(path.join(packageDirectory, metadataName));
 const manifest = JSON.parse(metadata);
+if (legacyWindows || candidateHelper) {
+  assert.equal(process.platform, "win32");
+  assert.equal(manifest.version, "1.4.2");
+  assert.ok(!(legacyWindows && candidateHelper));
+}
 const payloadName = manifest.platforms[target].name;
 const payloads = {};
 for (const name of [metadataName, signatureName, payloadName])
@@ -51,6 +58,17 @@ await fs.cp(await fs.realpath(previousApp), install, {
   recursive: true,
   verbatimSymlinks: true,
 });
+if (candidateHelper) {
+  // Exercise the shipping helper from the inherited shortcut directory in a
+  // second copy. The separate incoming upgrade uses the untouched 1.4.1 app.
+  await fs.copyFile(
+    candidateHelper,
+    path.join(
+      install,
+      "resources/terminal/helper/win32-x64/passport-updater.exe",
+    ),
+  );
+}
 await fs.mkdir(data);
 const executable = path.join(
   install,
@@ -65,6 +83,13 @@ try {
   const fixtureURL = `http://127.0.0.1:${server.address().port}`;
   app = await electron.launch({
     executablePath: executable,
+    // Released 1.4.1 must be started from outside the install for this one hop.
+    cwd:
+      process.platform === "win32"
+        ? legacyWindows
+          ? root
+          : install
+        : undefined,
     args: [],
     env: {
       ...process.env,
@@ -79,6 +104,7 @@ try {
   const page = await app.firstWindow();
   await page.waitForSelector(".home-view");
   const oldVersion = await app.evaluate(({ app }) => app.getVersion());
+  if (legacyWindows || candidateHelper) assert.equal(oldVersion, "1.4.1");
   assert.notEqual(
     oldVersion,
     manifest.version,
@@ -206,6 +232,13 @@ try {
   const deadline = Date.now() + 120000;
   let report;
   while (Date.now() < deadline) {
+    const error = await fs
+      .readFile(path.join(transaction, "error.txt"), "utf8")
+      .catch((err) => {
+        if (err.code !== "ENOENT") throw err;
+        return "";
+      });
+    assert.ok(!error, `Updater failed in ${transaction}: ${error}`);
     try {
       report = JSON.parse(
         await fs.readFile(path.join(transaction, "startup-test.json"), "utf8"),
@@ -315,6 +348,10 @@ try {
       status: flowOnly ? "flow-verified" : "passed",
       nativeEncryption: !flowOnly,
       credentialsRestored: !flowOnly,
+      ...(process.platform === "win32" && {
+        workingDirectory: legacyWindows ? "outside-install" : "install",
+        updaterSource: candidateHelper ? "candidate" : "previous-release",
+      }),
       packageSha256: packageHash.digest("hex"),
       osProtectionPrompts: "not-attested-by-hidden-test",
     },

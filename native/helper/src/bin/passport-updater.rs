@@ -150,6 +150,10 @@ fn run(root: &Path, recover: bool) -> Result<()> {
     {
         return Err("Unsafe update paths".into());
     }
+    // Older launchers and manual recovery can start us inside the install.
+    // Windows keeps that directory open until we change our working directory.
+    #[cfg(windows)]
+    std::env::set_current_dir(&root)?;
     // Lock lives outside the replaced app; a second helper never performs a
     // concurrent replacement. A stale lock is retained for explicit recovery.
     if let Ok(lock_pid) = fs::read_to_string(root.join("lock")) {
