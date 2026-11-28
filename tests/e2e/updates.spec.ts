@@ -143,6 +143,19 @@ async function mockRelease(
 
 test("About checks updates, directs downloads to the correct installer, and shows a persistent About shortcut", async ({}, info) => {
   await mockRelease(nextVersion, true, 300);
+  const interval = page.getByLabel("자동 업데이트 확인 간격");
+  await expect(interval).toHaveValue("1");
+  await expect(interval.getByRole("option")).toHaveCount(24);
+  await interval.selectOption("24");
+  await expect
+    .poll(() =>
+      page.evaluate(
+        async () =>
+          (await window.passport.call("bootstrap", undefined)).document.settings
+            .updateCheckIntervalHours,
+      ),
+    )
+    .toBe(24);
   await page
     .getByRole("button", { name: "업데이트 확인", exact: true })
     .click();
@@ -215,6 +228,7 @@ test("About checks updates, directs downloads to the correct installer, and show
   await expect(
     page.getByRole("heading", { name: "About Passport", exact: true }),
   ).toBeVisible();
+  await expect(interval).toHaveValue("24");
   await expect(page.locator(".update-result")).toContainText(
     `현재 버전 ${currentVersion}`,
   );

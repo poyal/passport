@@ -23,7 +23,7 @@ const release = (version = "1.0.2", platform = "mac", arch = "arm64") => {
   };
 };
 const fixture = (fetcher = vi.fn(async () => Response.json(release()))) => {
-  let now = 10000;
+  let offset = 0;
   const states: unknown[] = [];
   const checker = new UpdateChecker({
     version: "1.0.1",
@@ -31,14 +31,14 @@ const fixture = (fetcher = vi.fn(async () => Response.json(release()))) => {
     arch: "arm64",
     fetch: fetcher,
     emit: (state) => states.push(state),
-    now: () => now,
+    now: () => Date.now() + offset,
   });
   return {
     checker,
     fetcher,
     states,
     advance: () => {
-      now += 6000;
+      offset += 6000;
     },
   };
 };
@@ -130,10 +130,10 @@ describe("GitHub release checks", () => {
         }),
     );
     const { checker, states } = fixture(fetcher);
-    checker.start(false);
+    checker.start(false, 1);
     expect(fetcher).not.toHaveBeenCalled();
-    checker.start(true);
-    checker.start(true);
+    checker.start(true, 1);
+    checker.start(true, 1);
     const first = checker.check(),
       second = checker.check();
     expect(first).toBe(second);
@@ -158,6 +158,53 @@ describe("GitHub release checks", () => {
     expect(states).toHaveLength(2);
     await checker.check();
     expect(fetcher).toHaveBeenCalledTimes(1);
+    checker.dispose();
+  });
+  it("polls at the saved interval, applies changes once, and stops on disposal", async () => {
+    vi.useFakeTimers();
+    const { checker, fetcher } = fixture();
+    const hour = 60 * 60 * 1000;
+    try {
+      checker.start(false, 1);
+      checker.setIntervalHours(3);
+      await vi.advanceTimersByTimeAsync(24 * hour);
+      expect(fetcher).not.toHaveBeenCalled();
+
+      checker.start(true, 3);
+      await vi.advanceTimersByTimeAsync(2 * hour);
+      checker.setIntervalHours(3);
+      expect(fetcher).toHaveBeenCalledTimes(1);
+      await vi.advanceTimersByTimeAsync(hour);
+      expect(fetcher).toHaveBeenCalledTimes(2);
+
+      checker.setIntervalHours(1);
+      fetcher.mockRejectedValueOnce(new Error("offline"));
+      await vi.advanceTimersByTimeAsync(hour);
+      expect(checker.state.status).toBe("error");
+      await vi.advanceTimersByTimeAsync(hour);
+      expect(checker.state.status).toBe("available");
+      expect(fetcher).toHaveBeenCalledTimes(4);
+
+      checker.setIntervalHours(24);
+      await vi.advanceTimersByTimeAsync(24 * hour - 1);
+      expect(fetcher).toHaveBeenCalledTimes(4);
+      await vi.advanceTimersByTimeAsync(1);
+      expect(fetcher).toHaveBeenCalledTimes(5);
+      for (const phase of ["downloading", "ready"] as const) {
+        checker.installation({ phase, received: 1, total: 1, message: "" });
+        await vi.advanceTimersByTimeAsync(24 * hour);
+        expect(checker.state.installation?.phase).toBe(phase);
+        expect(fetcher).toHaveBeenCalledTimes(5);
+      }
+      checker.installation(undefined);
+      checker.dispose();
+      expect(vi.getTimerCount()).toBe(0);
+      await vi.advanceTimersByTimeAsync(24 * hour);
+      expect(fetcher).toHaveBeenCalledTimes(5);
+    } finally {
+      checker.dispose();
+      vi.useRealTimers();
+    }
   });
   it("does not offer downgrades and distinguishes equal versions from ahead-of-release builds", async () => {
     for (const version of ["1.0.0", "1.0.1"]) {

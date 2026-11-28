@@ -297,12 +297,12 @@ try {
   if (!Object.hasOwn(before.settings.terminal, "inlineAutosuggestions")) {
     before.settings.terminal.inlineAutosuggestions = false;
   }
-  assert.deepEqual(
-    await nextPage.evaluate(
-      async () => (await window.passport.call("bootstrap")).document,
-    ),
-    before,
+  const restored = await nextPage.evaluate(
+    async () => (await window.passport.call("bootstrap")).document,
   );
+  if (Object.hasOwn(restored.settings, "updateCheckIntervalHours"))
+    before.settings.updateCheckIntervalHours ??= 1;
+  assert.deepEqual(restored, before);
   if (!flowOnly) {
     assert.equal(
       await app.evaluate(({ safeStorage, app }, profileId) => {

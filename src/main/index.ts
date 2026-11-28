@@ -292,6 +292,7 @@ function isPaneViewed(paneId: string) {
 }
 function publishDocument(document = store.read()) {
   documentCache = document;
+  updates?.setIntervalHours(document.settings.updateCheckIntervalHours);
   resume?.configure(document);
   terminalControl?.configure(document.settings.terminal.cliAccess);
   const localIds = new Set(
@@ -2609,6 +2610,7 @@ void app
       app.isPackaged &&
         !developmentBuild &&
         process.env.PASSPORT_DISABLE_UPDATE_CHECK !== "1",
+      store.read().settings.updateCheckIntervalHours,
     );
     app.on("activate", () => {
       if (!window) void createWindow();

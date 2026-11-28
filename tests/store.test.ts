@@ -244,6 +244,7 @@ it("upgrades v0.1 metadata without losing hosts and rejects a future database ve
     delete old.tunnels;
     delete old.hosts[0].inherit;
     delete old.settings.shortcuts;
+    delete old.settings.updateCheckIntervalHours;
     delete old.settings.customThemes;
     store.db
       .prepare("UPDATE metadata SET value=? WHERE id=1")
@@ -257,6 +258,7 @@ it("upgrades v0.1 metadata without losing hosts and rejects a future database ve
     expect(store.read().tunnels).toEqual([]);
     expect(store.read().settings.shortcuts.darwin.newTab).toEqual(["Meta+N"]);
     expect(store.read().settings.shortcuts.win32.newTab).toEqual(["Ctrl+N"]);
+    expect(store.read().settings.updateCheckIntervalHours).toBe(1);
     store.close();
     const future = new Database(path.join(dir, "passport.sqlite"));
     future.pragma("user_version=8");

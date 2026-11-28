@@ -1,3 +1,5 @@
+export const maxUpdateCheckIntervalHours = 24;
+
 export type UpdateState = {
   status: "idle" | "checking" | "current" | "available" | "error";
   currentVersion: string;

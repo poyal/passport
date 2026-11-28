@@ -1,4 +1,5 @@
 import { Download, ExternalLink, RefreshCw } from "lucide-react";
+import { maxUpdateCheckIntervalHours } from "../shared/updates";
 import { api } from "./api";
 import { useApp } from "./context";
 
@@ -23,6 +24,28 @@ export function UpdatesPanel() {
           {checking ? "확인 중…" : "업데이트 확인"}
         </button>
       </div>
+      <label>
+        자동 업데이트 확인 간격
+        <select
+          value={app.document.settings.updateCheckIntervalHours}
+          onChange={(event) => {
+            const hours = Number(event.currentTarget.value);
+            void app.update((doc) => ({
+              ...doc,
+              settings: { ...doc.settings, updateCheckIntervalHours: hours },
+            }));
+          }}
+        >
+          {Array.from({ length: maxUpdateCheckIntervalHours }, (_, index) => {
+            const hours = index + 1;
+            return (
+              <option key={hours} value={hours}>
+                {hours === 24 ? "24시간마다 (하루)" : `${hours}시간마다`}
+              </option>
+            );
+          })}
+        </select>
+      </label>
       <div
         className={`update-result ${state.status}`}
         role="status"
@@ -145,9 +168,9 @@ export function UpdatesPanel() {
         </>
       )}
       <p className="hint">
-        앱을 시작할 때 새 버전을 자동으로 확인합니다. 업데이트 파일을 받은 뒤
-        재시작 시점을 직접 선택할 수 있습니다. 앱 내 업데이트를 지원하지 않는
-        배포본은 설치 파일 다운로드로 안내합니다.
+        앱을 시작할 때와 실행 중에 선택한 간격마다 새 버전을 확인합니다.
+        업데이트 파일을 받은 뒤 재시작 시점을 직접 선택할 수 있습니다. 앱 내
+        업데이트를 지원하지 않는 배포본은 설치 파일 다운로드로 안내합니다.
       </p>
     </section>
   );

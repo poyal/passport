@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { maxUpdateCheckIntervalHours } from "./updates";
 import { workspaceIconSchema, workspaceColorSchema } from "./workspace-style";
 import { shortcutSettingsSchema, type ShortcutContext } from "./shortcuts";
 import {
@@ -280,6 +281,12 @@ export const workspaceTemplateSchema = z.object({
 });
 export type WorkspaceTemplate = z.infer<typeof workspaceTemplateSchema>;
 export const settingsSchema = z.object({
+  updateCheckIntervalHours: z
+    .number()
+    .int()
+    .min(1)
+    .max(maxUpdateCheckIntervalHours)
+    .default(1),
   sessionResume: z.boolean().default(false),
   terminal: terminalSettingsSchema.default(() =>
     terminalSettingsSchema.parse({}),

@@ -88,6 +88,8 @@ export class UpdateChecker {
   private controller?: AbortController;
   private release?: ReturnType<typeof releaseDetails>;
   private started = false;
+  private intervalHours?: number;
+  private timer?: NodeJS.Timeout;
   private disposed = false;
   installation(state: UpdateState["installation"]) {
     this.set({ ...this.state, installation: state });
@@ -95,10 +97,18 @@ export class UpdateChecker {
   constructor(private options: Options) {
     this.state = initialUpdateState(options.version);
   }
-  start(enabled: boolean) {
+  start(enabled: boolean, intervalHours: number) {
     if (!enabled || this.started || this.disposed) return;
     this.started = true;
+    this.setIntervalHours(intervalHours);
     void this.check();
+  }
+  setIntervalHours(hours: number) {
+    if (!this.started || this.disposed || hours === this.intervalHours) return;
+    clearInterval(this.timer);
+    this.intervalHours = hours;
+    this.timer = setInterval(() => void this.check(), hours * 60 * 60 * 1000);
+    this.timer.unref();
   }
   check(): Promise<UpdateState> {
     if (
@@ -129,6 +139,7 @@ export class UpdateChecker {
   }
   dispose() {
     this.disposed = true;
+    clearInterval(this.timer);
     this.controller?.abort();
   }
   private set(state: UpdateState) {
